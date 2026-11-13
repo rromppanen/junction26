@@ -126,13 +126,17 @@ The same groups are missed in all three programmes. These are individual-level r
 | --- | --- | --- |
 | Follow-up colonoscopy after a positive screening test should be scheduled within 31 days of referral (acceptable above 90%, desirable above 95%) | European guidelines for quality assurance in colorectal cancer screening and diagnosis, 1st edition, recommendation 3.16 (Endoscopy 2012) | Wording seen in a search snippet of the guideline. Confirm against the full text and check for a newer edition. |
 | Colonoscopy 10–12 months after a positive test was associated with more colorectal cancer (odds ratio 1.48) and more advanced-stage disease (1.97) than colonoscopy at 8–30 days; no significant increase up to 9 months | Corley et al., JAMA 2017;317(16), 70,124 patients | From summaries of the paper, not the full text. Observational: the authors do not claim cause. |
-| Patient navigators and provider reminders raise colonoscopy completion after a positive test (moderate evidence; differences from −7 to +25 percentage points across studies) | Selby et al., Annals of Internal Medicine 2017;167:565–575, systematic review of 23 studies | From summaries, not the full text. Over half the studies had a high risk of bias. |
+| Patient navigators and provider reminders raise colonoscopy completion after a positive test (moderate evidence). Across all 17 comparative studies of any intervention, differences ranged from −7 to +25 percentage points | Selby et al., Annals of Internal Medicine 2017;167:565–575, systematic review of 23 studies | From summaries, not the full text. Over half the studies had a high risk of bias. |
 | Reminders for non-participants and invitations in additional languages | FICAN cervical screening quality handbook 2024, pp. 18–19 | Already in `feat/care-equity-mvp`'s `web/src/data/evidence.ts`, with page links. |
 
 The European guideline counts from referral and the Registry counts from the positive test, so the two are not the same clock. Say so wherever they are compared.
 
+## Unit costs
+
+- Pohjois-Pohjanmaa wellbeing services county, service price list 2025 (<https://pohde.fi/wp-content/uploads/2023/10/Palveluhinnasto-2024.pdf>, despite the file name): colonoscopy incl. pathology €614 (code 213), with polyp removal €1,151 (code 214), a nurse's care phone contact €100. These are prices charged to other payers, not production costs.
+
 ## Not found yet
 
-- A Finnish unit cost for a screening colonoscopy, a reminder, or a navigation call. Leave these as the county's own figures unless a source is found.
+- A public Finnish price for a FIT kit and its analysis, or for a reminder letter or SMS.
 - The target times in THL guidance 21/2016. The PDF could not be fetched; it is still an open question in `docs/challenge.md`.
 - Whether the Finnish colorectal programme has its own target for the wait to colonoscopy. Ask the mentors or check the programme's quality handbook.

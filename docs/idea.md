@@ -6,7 +6,7 @@ NULLPATH shows a wellbeing services county the exact step where people fall off 
 
 A *null path* is a pathway that ends in nothing: an invitation with no screening, or a positive test with no examination.
 
-Status: proposed direction, 14.11.2026. It combines what is already built on `main`, `feat/start-screen`, `feat/screening-simulator-page` and `feat/care-equity-mvp`. The team has not agreed it yet. Data and sources are in the [research note on pathway drop-off](research/2026-11-14-screening-pathway-drop-off.md).
+Status: proposed direction, 14.11.2026. The funnel, break ranking, decision board and memo proposal are built on `feat/pathway-funnel` (based on `feat/start-screen`). The team has not agreed the direction yet. Data and sources are in the [research note on pathway drop-off](research/2026-11-14-screening-pathway-drop-off.md).
 
 ## The insight
 
@@ -17,8 +17,8 @@ Colorectal screening, whole country:
 - **One in five positive tests is never followed by a colonoscopy in the programme**: 3,536 of 16,501 in 2023 (21.4%), and the same share in 2022.
 - **The share varies threefold between counties**: 10.3% in Etelä-Savo, 31.5% in Helsinki (2023).
 - **The wait varies more than fourfold**: the median from positive test to colonoscopy is about 1.9 months nationally, about 3.7 months in Päijät-Häme and Pohjois-Savo, and about 0.8 months in Keski-Uusimaa (2024, read from the Registry's chart). The European quality guideline asks for 31 days from referral.
-- **The breaks cost cancers found late.** Of the 1,241 bowel cancers among people eligible in 2022, 259 were in people who never returned the test and 87 in people with a positive test and no screening colonoscopy. That is 28% of the cancers.
-- **The same people are missed everywhere.** People whose mother tongue is not Finnish, Swedish or Sami take part at 53% in colorectal, 61% in breast and 56% in cervical screening, against 75–83% for everyone else (2024).
+- **The breaks are where cancers are missed by the programme.** Of the 1,241 bowel cancers among people eligible in 2022, 259 were in people who never returned the test and 87 in people with a positive test and no screening colonoscopy. That is 28% of the cancers.
+- **The same groups are missed in every programme.** Nationally, people whose mother tongue is not Finnish, Swedish or Sami take part at 53% in colorectal, 61% in breast and 56% in cervical screening, against 75–83% for everyone else (2024, the Registry's published tables; no county breakdown).
 
 Across the three screening programmes, about 249,000 invitations a year lead to no screening.
 
@@ -42,10 +42,11 @@ One flow, five steps. Each step answers one question a county lead has.
 
 The funnel uses Registry counts for all three programmes. Colorectal screening goes furthest: it reaches colonoscopy and treatment, so it covers all four stages in the brief (detection, referral, diagnosis, treatment initiation).
 
-The break is classified by rule, not by AI:
+The break is ranked by rule, not by AI, in one common unit: **findings the programme misses compared with the best quarter of counties** (`web/src/lib/pathway.ts`).
 
-- **Access break:** participation below the 80% target or the national level. The "who is left behind" panel shows which groups, using the Registry's own breakdowns by language, education, birthplace and sex.
-- **Service break:** people take part, but positives are not examined, or wait long. Shown with the county's share without colonoscopy and its median wait.
+- **Access break:** people who don't return the test, beyond the best quarter's rate. Each missed participant carries the county's own positivity and follow-up rates and Finland's yield per colonoscopy.
+- **Service break:** positives without a colonoscopy in the programme, beyond the best quarter's rate. Each carries Finland's yield per colonoscopy.
+- Ranking by people would always pick access (111,000 non-returners against 3,500 unexamined positives nationally); ranking by findings follows where the Registry's linked data finds the missed cancers.
 - **Unmeasured:** symptom to referral, and diagnosis to treatment start. Shown as "no public data", leading to step 5.
 
 ### Step 3: the decision board
@@ -79,29 +80,32 @@ No effect size or cost is invented. An option without a sourced effect shows "se
 
 ## The demo: one programme, two counties, two different fixes
 
+Figures below are 2023, the latest year with complete follow-up, as the app shows them.
+
 **Päijät-Häme: a service break.**
 
-- 75.2% return the colorectal test, above the national 73.5%. People come.
-- 26.0% of positives had no colonoscopy in the programme (192 of 739 in 2023), against 21.4% nationally.
-- The median wait to colonoscopy is about 3.7 months, the longest in Finland together with Pohjois-Savo, and about twice the national median.
-- Bowel cancer 5-year survival is 63%, against 68% nationally (Sotkanet 3627).
-- Decision board: matching the best quarter of counties (16% without colonoscopy) means 74 more colonoscopies a year, and about 4 cancers and 30 advanced precursors found (assumption: the same yield as in those examined in 2023).
-- Memo target: "Positives examined in the programme: from 74% (2023) to 84% in the 2027 round. Median wait: from about 3.7 months to under 2 by the end of 2027."
+- 76.2% return the colorectal test, at the best quarter of counties. People come.
+- 74.0% of positives had a colonoscopy in the programme (547 of 739), against 78.6% nationally and 82.9% in the best quarter.
+- The median wait to colonoscopy is about 3.7 months in 2024, among the longest in Finland, about twice the national median (read from the Registry's chart).
+- Decision board: matching the best quarter means 66 more colonoscopies a year, and about 4 cancers and 27 advanced precursors found at Finland's yield. With a nurse call to all 192 unexamined positives (€100 each) and €614 per colonoscopy (Pohjois-Pohjanmaa's 2025 price list), that is about €60,000 a year, or €1,900 per cancer or advanced precursor found.
+- Memo target: "Positives examined in the programme: from 74.0% (2023) to 82.9% in the next screening round." Followed up monthly with the county's own figures; the Registry confirms it about 18 months later.
 
-**Helsinki: an access break first.**
+**Varsinais-Suomi: an access break.**
 
-- 69.6% return the test, the lowest in Finland. Reaching 80% means 4,386 more participants a year.
-- The reach kit shows the largest languages in the lagging areas and drafts the invitations.
-- Helsinki also has the highest share of positives without colonoscopy (31.5%), so the board shows both breaks and lets the user compare what each costs.
+- 84.9% of positives have a colonoscopy, in the best quarter of counties. The service step works.
+- 74.1% return the test, against 76.2% in the best quarter: 764 fewer participants a year.
+- The board's top option is bringing more people to the test; the reach kit drafts invitations in the largest languages of the lagging areas.
+
+**Helsinki is worst at both steps** (69.7% return the test; 68.5% of positives examined). Ranked by findings, its service break comes first: 209 colonoscopies, about 12 cancers and 85 advanced precursors a year. It is the hard question for Q&A, not the demo pair.
 
 The contrast is the point: the same programme breaks at different steps in different counties, so the same recommendation for everyone would be wrong.
 
 ## Strategy goals covered
 
-- **Goal 3, sub-goal 3.2** (reliable information on regional differences in diagnostics): the share of positives examined, per county.
-- **Goal 3, sub-goal 3.1** (delay-free care): the wait from positive test to colonoscopy, and from positive mammogram to confirmatory examination, per county. Treatment-start times are not published; the recording kit covers them.
-- **Goal 3 headline** (survival): 5-year survival per county for bowel, breast and cervical cancer (Sotkanet 3627, 3625, 3626), shown as the outcome, never as an effect of one year's screening.
-- **Goal 2** (80% participation in every programme in every county): the participation step. Screening participation is labelled Goal 2.
+- **Goal 3, sub-goal 3.2, primary** (reliable information on regional differences in diagnostics): the share of positives examined, and the wait to diagnostic colonoscopy, per county.
+- **Goal 3, sub-goal 3.1** (equal, delay-free care along national pathways): the recording kit for referral, diagnosis and treatment-start times, which have no public data. Colonoscopy is diagnostics, so the wait is not claimed as a treatment target time.
+- **Goal 3, equal outcomes:** 5-year survival per county for bowel, breast and cervical cancer (Sotkanet 3627, 3625, 3626), shown as context. The headline survival target concerns lung, pancreatic and liver cancer, which have no county data; NULLPATH does not claim it.
+- **Goal 2** (80% participation in every programme in every county): the participation step, labelled Goal 2.
 
 ## Where the AI is
 
@@ -119,7 +123,7 @@ AI never produces a number, never classifies the break and never chooses the opt
 | Criterion | Weight | What the judges see |
 | --- | --- | --- |
 | Actionability | 30% | Options with people, cost and expected findings; a target with baseline, value and date; a board memo and invitation drafts ready to use |
-| Insight | 25% | A measured break at a named step, in people, per county, including referral-to-diagnosis; who is left behind from individual-level registry data |
+| Insight | 25% | A measured break at a named step (positive test to diagnostic colonoscopy), per county, ranked by findings missed; who is left behind from the Registry's published group tables |
 | Data quality & transparency | 20% | Registry counts with a link per figure; assumptions cited, editable and marked; limits stated on screen |
 | Execution | 15% | One live flow in a deployed app; rule-based fallbacks so the demo never depends on a model call |
 | Clarity | 10% | "Where do we lose people" as a funnel; the answer and the action fit one printed page |
@@ -131,8 +135,10 @@ Minimum requirements: sources on every claim; Goal 3 covered by measured indicat
 - "No colonoscopy in the programme" is not proof that no examination happened. Some people are examined elsewhere or have a medical reason.
 - The latest year is incomplete. Use 2023 for the share examined, and label 2024.
 - Waiting times are read from the Registry's charts until exact values are obtained.
-- The European 31-day standard counts from referral; the Registry counts from the positive test.
-- Expected findings assume the yield seen in those who were examined. People who do not attend may differ.
+- The European standard is a share (over 90% within 31 days of referral); the Registry publishes a median from the positive test. They are not compared directly.
+- Extra colonoscopies use the same capacity that sets the wait, so the service options compete with any wait target.
+- Expected findings use Finland's yield per colonoscopy, not the county's. People who do not attend may differ.
+- Pre-filled prices are one county's prices to other payers (Pohjois-Pohjanmaa 2025), not production costs.
 - Survival pools 15 years of diagnoses, mostly before colorectal screening began in 2022. It is context, not an effect.
 - Language and education groups include missing data, as the Registry defines them.
 - Symptom-based pathways, which most cancers follow, have no public county data. The tool says so and offers the recording kit.
@@ -149,14 +155,15 @@ Minimum requirements: sources on every claim; Goal 3 covered by measured indicat
 | Upload pipeline (map, validate, analyse) | `feat/care-equity-mvp` | Reuse as step 5: the county's own monthly figures |
 | County survival for cervical cancer | PR #6 | Rebase onto the pipeline refactor, or port into `main`'s indicators |
 
-Build order for Saturday, most valuable first:
+Build status (14.11.2026, `feat/pathway-funnel`):
 
-1. **Colorectal funnel per county** from the Registry report: counts for each step, 2022–2024, with Finland and the best quarter. Done when the Päijät-Häme and Helsinki figures above appear on the county page with source links.
-2. **Break classification** by rule, with the "who is left behind" panel from Registry group tables. Done when Päijät-Häme shows a service break and Helsinki an access break, with tests.
-3. **Decision board** for the two break types. Done when changing a target or a unit cost recalculates every row, and no pre-filled figure lacks a source.
-4. **Memo** carries the chosen option, budget line and target. Done when the printed page for Päijät-Häme matches the demo above.
-5. **Deploy and pre-warm** the two demo counties. Done when the flow runs in an incognito window without a model call.
-6. Stretch: upload of the recording kit CSV; breast and cervical funnels; exact waiting times.
+1. **Done: colorectal funnel per county** from the Registry report (`web/scripts/ingest-registry.ts` → `web/src/data/registry.json`, checksummed; county totals reconcile with the national total for 2022–2024).
+2. **Done: break ranking** by findings missed against the best quarter (`web/src/lib/pathway.ts`, tested). "Who doesn't take part" shows the Registry's national group tables.
+3. **Done: decision board** for both breaks, with sourced colonoscopy and nurse-call prices and editable targets (`web/src/components/DecisionBoard.tsx`).
+4. **Done: memo proposal.** Each board row opens the Finnish memo with that option: baseline, target, findings, cost, owner, follow-up.
+5. **Done: Goal 3 context.** County cervical cancer survival (Sotkanet 3626) added to the indicators.
+6. **To do: deploy and pre-warm** the demo counties. Done when the flow runs in an incognito window.
+7. Stretch: exact waiting times from the Registry; FIT kit and reminder prices; breast and cervical funnels; upload of the recording kit CSV.
 
 The two `web/` apps cannot be merged by Git; one has to host the other's modules. Most of the pieces above already run in the `main` app, so the smaller job is to port the Registry parser and the upload pipeline into it. This is the team's decision to make first thing Saturday.
 

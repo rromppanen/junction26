@@ -17,6 +17,10 @@ import { getReachDrafts } from "@/lib/reachDrafts";
 import { peoplePer1000ToReach } from "@/lib/impact";
 import { MEASURES } from "@/data/measureKit";
 import { MeasureKit } from "@/components/MeasureKit";
+import { PathwayFunnel } from "@/components/PathwayFunnel";
+import { DecisionBoard } from "@/components/DecisionBoard";
+import { loadPathway } from "@/lib/pathwayData";
+import { PATHWAY_COSTS } from "@/data/pathwayCosts";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
 import { Colophon } from "@/components/Colophon";
@@ -25,7 +29,7 @@ import { OpenOnHash } from "@/components/OpenOnHash";
 import { STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, host } from "@/components/format";
 import type { GapFacts, PathwayStage } from "@/lib/types";
 import {
-  ArrowLeft, BookOpen, Megaphone, CalendarClock, FileText, Globe, Handshake, LineChart, Link2, ListChecks, Route, Ruler,
+  ArrowLeft, BookOpen, Filter, Megaphone, Scale, CalendarClock, FileText, Globe, Handshake, LineChart, Link2, ListChecks, Route, Ruler,
   SlidersHorizontal, Sparkles, Target, TriangleAlert, UserRound, Users, type LucideIcon,
 } from "lucide-react";
 
@@ -116,7 +120,10 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
   const reach = reachInd ? reachPlan(ds, regionId, reachInd, equity) : null;
   const reachDrafts = reach && reachInd ? await getReachDrafts(reach, reachInd) : null;
 
+  const pathwayView = loadPathway(regionId);
+
   const parts: { id: string; icon: LucideIcon; label: string }[] = [
+    ...(pathwayView ? [{ id: "funnel", icon: Filter, label: "Where people fall off" }, { id: "decide", icon: Scale, label: "Decide" }] : []),
     { id: "path", icon: Route, label: "Pathway" },
     { id: "what-if", icon: SlidersHorizontal, label: "What if" },
     { id: "rec", icon: ListChecks, label: "Next steps" },
@@ -169,6 +176,23 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
           ))}
         </ul>
       </nav>
+
+      {pathwayView && (
+        <>
+          <Part {...part("funnel")} title={`Where ${name} loses people`}>
+            <PathwayFunnel view={pathwayView} name={name} />
+          </Part>
+          <Part {...part("decide")} title={`Decide: options for ${name}`}>
+            <DecisionBoard
+              p={pathwayView.pathway}
+              order={pathwayView.breaks.map((b) => b.kind)}
+              defaults={PATHWAY_COSTS}
+              regionId={regionId}
+              name={name}
+            />
+          </Part>
+        </>
+      )}
 
       <Part {...part("path")} title="Where along the pathway">
         <PathwayFingerprint facts={facts} indicators={INDICATORS} />
@@ -250,7 +274,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         <MeasureKit regionId={regionId} sourceNo={sourceIndex.get(MEASURES[0].evidenceId)} />
       </Part>
 
-      <Part {...part("ind")} title="The five measures">
+      <Part {...part("ind")} title={`The ${INDICATORS.length} measures`}>
         {INDICATORS.map((ind, i) => {
           const f = facts[i];
           return (

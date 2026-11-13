@@ -1,0 +1,1563 @@
+{
+ "sources": [
+  {
+   "programme": "colorectal",
+   "url": "https://stats.cancerregistry.fi/joukkistilastot/suolisto.html",
+   "retrievedAt": "2026-11-13T22:13:03.983Z",
+   "sha256": "8700c9618456bb29ed7465b04b70492c408e4c47cf1259dbc18638ee2e5e7e52"
+  },
+  {
+   "programme": "breast",
+   "url": "https://stats.cancerregistry.fi/joukkistilastot/rinta.html",
+   "retrievedAt": "2026-11-13T22:13:04.010Z",
+   "sha256": "736943ae3ee8d665173e52affd00dae9bf328c37962c3ae89f54504fc046380c"
+  },
+  {
+   "programme": "cervical",
+   "url": "https://stats.cancerregistry.fi/joukkistilastot/kohtu.html",
+   "retrievedAt": "2026-11-13T22:13:04.041Z",
+   "sha256": "275e967bd2c9e38455f21261fa15d88e8ea9407cc67f01d282044463ac58f5b7"
+  }
+ ],
+ "colorectal": {
+  "years": [
+   2022,
+   2023,
+   2024
+  ],
+  "national": {
+   "2022": {
+    "all": {
+     "selected": 354174,
+     "participated": 273708,
+     "positive": 14020,
+     "colonoscopy": 11041,
+     "treated": 876
+    },
+    "men": {
+     "selected": 172687,
+     "participated": 126332,
+     "positive": 8307,
+     "colonoscopy": 6579,
+     "treated": 534
+    },
+    "women": {
+     "selected": 181487,
+     "participated": 147376,
+     "positive": 5713,
+     "colonoscopy": 4462,
+     "treated": 342
+    },
+    "findings": {
+     "positive": 14020,
+     "noColonoscopy": 2982,
+     "noFinding": 2829,
+     "precursor": 3038,
+     "advancedPrecursor": 4171,
+     "cancer": 632,
+     "other": 393
+    }
+   },
+   "2023": {
+    "all": {
+     "selected": 422650,
+     "participated": 314303,
+     "positive": 16501,
+     "colonoscopy": 12971,
+     "treated": 975
+    },
+    "men": {
+     "selected": 206044,
+     "participated": 143623,
+     "positive": 9587,
+     "colonoscopy": 7602,
+     "treated": 584
+    },
+    "women": {
+     "selected": 216606,
+     "participated": 170680,
+     "positive": 6914,
+     "colonoscopy": 5369,
+     "treated": 391
+    },
+    "findings": {
+     "positive": 16501,
+     "noColonoscopy": 3536,
+     "noFinding": 3051,
+     "precursor": 3484,
+     "advancedPrecursor": 5258,
+     "cancer": 771,
+     "other": 439
+    }
+   },
+   "2024": {
+    "all": {
+     "selected": 421365,
+     "participated": 309871,
+     "positive": 14083,
+     "colonoscopy": 10244,
+     "treated": 548
+    },
+    "men": {
+     "selected": 205202,
+     "participated": 141922,
+     "positive": 8074,
+     "colonoscopy": 5832,
+     "treated": 295
+    },
+    "women": {
+     "selected": 216163,
+     "participated": 167949,
+     "positive": 6009,
+     "colonoscopy": 4412,
+     "treated": 253
+    },
+    "findings": {
+     "positive": 14083,
+     "noColonoscopy": 3840,
+     "noFinding": 2607,
+     "precursor": 3004,
+     "advancedPrecursor": 3824,
+     "cancer": 413,
+     "other": 412
+    }
+   }
+  },
+  "counties": {
+   "2022": {
+    "957": {
+     "funnel": {
+      "selected": 9465,
+      "participated": 7456,
+      "positive": 419,
+      "colonoscopy": 325,
+      "treated": 32
+     },
+     "findings": {
+      "positive": 419,
+      "noColonoscopy": 94,
+      "noFinding": 79,
+      "precursor": 75,
+      "advancedPrecursor": 143,
+      "cancer": 21,
+      "other": 7
+     }
+    },
+    "958": {
+     "funnel": {
+      "selected": 13622,
+      "participated": 10539,
+      "positive": 540,
+      "colonoscopy": 451,
+      "treated": 40
+     },
+     "findings": {
+      "positive": 540,
+      "noColonoscopy": 90,
+      "noFinding": 121,
+      "precursor": 133,
+      "advancedPrecursor": 153,
+      "cancer": 29,
+      "other": 15
+     }
+    },
+    "959": {
+     "funnel": {
+      "selected": 11145,
+      "participated": 9058,
+      "positive": 476,
+      "colonoscopy": 421,
+      "treated": 23
+     },
+     "findings": {
+      "positive": 476,
+      "noColonoscopy": 55,
+      "noFinding": 85,
+      "precursor": 122,
+      "advancedPrecursor": 158,
+      "cancer": 31,
+      "other": 26
+     }
+    },
+    "960": {
+     "funnel": {
+      "selected": 35103,
+      "participated": 25691,
+      "positive": 1282,
+      "colonoscopy": 933,
+      "treated": 59
+     },
+     "findings": {
+      "positive": 1282,
+      "noColonoscopy": 349,
+      "noFinding": 169,
+      "precursor": 217,
+      "advancedPrecursor": 453,
+      "cancer": 52,
+      "other": 42
+     }
+    },
+    "961": {
+     "funnel": {
+      "selected": 6523,
+      "participated": 4936,
+      "positive": 266,
+      "colonoscopy": 206,
+      "treated": 18
+     },
+     "findings": {
+      "positive": 266,
+      "noColonoscopy": 60,
+      "noFinding": 55,
+      "precursor": 55,
+      "advancedPrecursor": 71,
+      "cancer": 15,
+      "other": 10
+     }
+    },
+    "962": {
+     "funnel": {
+      "selected": 6019,
+      "participated": 4780,
+      "positive": 269,
+      "colonoscopy": 210,
+      "treated": 13
+     },
+     "findings": {
+      "positive": 269,
+      "noColonoscopy": 59,
+      "noFinding": 64,
+      "precursor": 59,
+      "advancedPrecursor": 77,
+      "cancer": 7,
+      "other": 3
+     }
+    },
+    "963": {
+     "funnel": {
+      "selected": 12157,
+      "participated": 9532,
+      "positive": 521,
+      "colonoscopy": 425,
+      "treated": 51
+     },
+     "findings": {
+      "positive": 521,
+      "noColonoscopy": 96,
+      "noFinding": 96,
+      "precursor": 106,
+      "advancedPrecursor": 167,
+      "cancer": 33,
+      "other": 23
+     }
+    },
+    "964": {
+     "funnel": {
+      "selected": 4225,
+      "participated": 3219,
+      "positive": 158,
+      "colonoscopy": 137,
+      "treated": 17
+     },
+     "findings": {
+      "positive": 158,
+      "noColonoscopy": 21,
+      "noFinding": 41,
+      "precursor": 33,
+      "advancedPrecursor": 53,
+      "cancer": 5,
+      "other": 5
+     }
+    },
+    "965": {
+     "funnel": {
+      "selected": 17979,
+      "participated": 14388,
+      "positive": 665,
+      "colonoscopy": 548,
+      "treated": 44
+     },
+     "findings": {
+      "positive": 665,
+      "noColonoscopy": 117,
+      "noFinding": 198,
+      "precursor": 167,
+      "advancedPrecursor": 137,
+      "cancer": 32,
+      "other": 14
+     }
+    },
+    "966": {
+     "funnel": {
+      "selected": 12475,
+      "participated": 9828,
+      "positive": 515,
+      "colonoscopy": 361,
+      "treated": 24
+     },
+     "findings": {
+      "positive": 515,
+      "noColonoscopy": 154,
+      "noFinding": 94,
+      "precursor": 98,
+      "advancedPrecursor": 135,
+      "cancer": 21,
+      "other": 14
+     }
+    },
+    "967": {
+     "funnel": {
+      "selected": 12228,
+      "participated": 9029,
+      "positive": 540,
+      "colonoscopy": 412,
+      "treated": 22
+     },
+     "findings": {
+      "positive": 540,
+      "noColonoscopy": 128,
+      "noFinding": 109,
+      "precursor": 113,
+      "advancedPrecursor": 145,
+      "cancer": 24,
+      "other": 21
+     }
+    },
+    "968": {
+     "funnel": {
+      "selected": 13972,
+      "participated": 10837,
+      "positive": 588,
+      "colonoscopy": 469,
+      "treated": 35
+     },
+     "findings": {
+      "positive": 588,
+      "noColonoscopy": 119,
+      "noFinding": 119,
+      "precursor": 140,
+      "advancedPrecursor": 166,
+      "cancer": 28,
+      "other": 16
+     }
+    },
+    "969": {
+     "funnel": {
+      "selected": 26432,
+      "participated": 20061,
+      "positive": 991,
+      "colonoscopy": 763,
+      "treated": 76
+     },
+     "findings": {
+      "positive": 991,
+      "noColonoscopy": 228,
+      "noFinding": 161,
+      "precursor": 220,
+      "advancedPrecursor": 317,
+      "cancer": 47,
+      "other": 23
+     }
+    },
+    "970": {
+     "funnel": {
+      "selected": 31540,
+      "participated": 24528,
+      "positive": 1252,
+      "colonoscopy": 976,
+      "treated": 81
+     },
+     "findings": {
+      "positive": 1252,
+      "noColonoscopy": 276,
+      "noFinding": 318,
+      "precursor": 307,
+      "advancedPrecursor": 294,
+      "cancer": 36,
+      "other": 22
+     }
+    },
+    "971": {
+     "funnel": {
+      "selected": 10335,
+      "participated": 8071,
+      "positive": 374,
+      "colonoscopy": 294,
+      "treated": 29
+     },
+     "findings": {
+      "positive": 374,
+      "noColonoscopy": 80,
+      "noFinding": 49,
+      "precursor": 83,
+      "advancedPrecursor": 142,
+      "cancer": 16,
+      "other": 5
+     }
+    },
+    "972": {
+     "funnel": {
+      "selected": 12737,
+      "participated": 9968,
+      "positive": 336,
+      "colonoscopy": 301,
+      "treated": 25
+     },
+     "findings": {
+      "positive": 336,
+      "noColonoscopy": 36,
+      "noFinding": 91,
+      "precursor": 85,
+      "advancedPrecursor": 84,
+      "cancer": 23,
+      "other": 18
+     }
+    },
+    "973": {
+     "funnel": {
+      "selected": 25116,
+      "participated": 19809,
+      "positive": 955,
+      "colonoscopy": 752,
+      "treated": 51
+     },
+     "findings": {
+      "positive": 955,
+      "noColonoscopy": 203,
+      "noFinding": 243,
+      "precursor": 216,
+      "advancedPrecursor": 234,
+      "cancer": 29,
+      "other": 31
+     }
+    },
+    "974": {
+     "funnel": {
+      "selected": 18463,
+      "participated": 14520,
+      "positive": 807,
+      "colonoscopy": 605,
+      "treated": 43
+     },
+     "findings": {
+      "positive": 807,
+      "noColonoscopy": 202,
+      "noFinding": 115,
+      "precursor": 156,
+      "advancedPrecursor": 288,
+      "cancer": 34,
+      "other": 12
+     }
+    },
+    "975": {
+     "funnel": {
+      "selected": 14481,
+      "participated": 11501,
+      "positive": 564,
+      "colonoscopy": 451,
+      "treated": 38
+     },
+     "findings": {
+      "positive": 564,
+      "noColonoscopy": 113,
+      "noFinding": 84,
+      "precursor": 120,
+      "advancedPrecursor": 212,
+      "cancer": 29,
+      "other": 12
+     }
+    },
+    "976": {
+     "funnel": {
+      "selected": 15346,
+      "participated": 11627,
+      "positive": 660,
+      "colonoscopy": 565,
+      "treated": 42
+     },
+     "findings": {
+      "positive": 660,
+      "noColonoscopy": 95,
+      "noFinding": 251,
+      "precursor": 141,
+      "advancedPrecursor": 127,
+      "cancer": 29,
+      "other": 19
+     }
+    },
+    "977": {
+     "funnel": {
+      "selected": 14235,
+      "participated": 10698,
+      "positive": 545,
+      "colonoscopy": 410,
+      "treated": 36
+     },
+     "findings": {
+      "positive": 545,
+      "noColonoscopy": 135,
+      "noFinding": 64,
+      "precursor": 109,
+      "advancedPrecursor": 201,
+      "cancer": 29,
+      "other": 7
+     }
+    },
+    "978": {
+     "funnel": {
+      "selected": 30576,
+      "participated": 23632,
+      "positive": 1297,
+      "colonoscopy": 1026,
+      "treated": 77
+     },
+     "findings": {
+      "positive": 1297,
+      "noColonoscopy": 272,
+      "noFinding": 223,
+      "precursor": 283,
+      "advancedPrecursor": 414,
+      "cancer": 62,
+      "other": 48
+     }
+    }
+   },
+   "2023": {
+    "957": {
+     "funnel": {
+      "selected": 11221,
+      "participated": 8354,
+      "positive": 474,
+      "colonoscopy": 398,
+      "treated": 27
+     },
+     "findings": {
+      "positive": 474,
+      "noColonoscopy": 76,
+      "noFinding": 87,
+      "precursor": 107,
+      "advancedPrecursor": 161,
+      "cancer": 25,
+      "other": 18
+     }
+    },
+    "958": {
+     "funnel": {
+      "selected": 15910,
+      "participated": 11911,
+      "positive": 616,
+      "colonoscopy": 519,
+      "treated": 34
+     },
+     "findings": {
+      "positive": 616,
+      "noColonoscopy": 98,
+      "noFinding": 119,
+      "precursor": 124,
+      "advancedPrecursor": 236,
+      "cancer": 29,
+      "other": 11
+     }
+    },
+    "959": {
+     "funnel": {
+      "selected": 13092,
+      "participated": 10183,
+      "positive": 584,
+      "colonoscopy": 524,
+      "treated": 36
+     },
+     "findings": {
+      "positive": 584,
+      "noColonoscopy": 60,
+      "noFinding": 108,
+      "precursor": 168,
+      "advancedPrecursor": 185,
+      "cancer": 42,
+      "other": 21
+     }
+    },
+    "960": {
+     "funnel": {
+      "selected": 41047,
+      "participated": 28615,
+      "positive": 1452,
+      "colonoscopy": 995,
+      "treated": 51
+     },
+     "findings": {
+      "positive": 1452,
+      "noColonoscopy": 457,
+      "noFinding": 173,
+      "precursor": 220,
+      "advancedPrecursor": 494,
+      "cancer": 51,
+      "other": 57
+     }
+    },
+    "961": {
+     "funnel": {
+      "selected": 7899,
+      "participated": 5705,
+      "positive": 292,
+      "colonoscopy": 240,
+      "treated": 23
+     },
+     "findings": {
+      "positive": 292,
+      "noColonoscopy": 52,
+      "noFinding": 55,
+      "precursor": 71,
+      "advancedPrecursor": 87,
+      "cancer": 20,
+      "other": 10
+     }
+    },
+    "962": {
+     "funnel": {
+      "selected": 7171,
+      "participated": 5540,
+      "positive": 308,
+      "colonoscopy": 243,
+      "treated": 21
+     },
+     "findings": {
+      "positive": 308,
+      "noColonoscopy": 65,
+      "noFinding": 65,
+      "precursor": 75,
+      "advancedPrecursor": 90,
+      "cancer": 12,
+      "other": 1
+     }
+    },
+    "963": {
+     "funnel": {
+      "selected": 14767,
+      "participated": 11095,
+      "positive": 596,
+      "colonoscopy": 480,
+      "treated": 59
+     },
+     "findings": {
+      "positive": 596,
+      "noColonoscopy": 116,
+      "noFinding": 110,
+      "precursor": 120,
+      "advancedPrecursor": 191,
+      "cancer": 42,
+      "other": 17
+     }
+    },
+    "964": {
+     "funnel": {
+      "selected": 5187,
+      "participated": 3796,
+      "positive": 203,
+      "colonoscopy": 165,
+      "treated": 7
+     },
+     "findings": {
+      "positive": 203,
+      "noColonoscopy": 38,
+      "noFinding": 34,
+      "precursor": 48,
+      "advancedPrecursor": 73,
+      "cancer": 8,
+      "other": 4
+     }
+    },
+    "965": {
+     "funnel": {
+      "selected": 21788,
+      "participated": 16906,
+      "positive": 832,
+      "colonoscopy": 645,
+      "treated": 40
+     },
+     "findings": {
+      "positive": 832,
+      "noColonoscopy": 187,
+      "noFinding": 238,
+      "precursor": 184,
+      "advancedPrecursor": 186,
+      "cancer": 28,
+      "other": 13
+     }
+    },
+    "966": {
+     "funnel": {
+      "selected": 15025,
+      "participated": 11016,
+      "positive": 591,
+      "colonoscopy": 451,
+      "treated": 35
+     },
+     "findings": {
+      "positive": 591,
+      "noColonoscopy": 140,
+      "noFinding": 120,
+      "precursor": 132,
+      "advancedPrecursor": 157,
+      "cancer": 33,
+      "other": 9
+     }
+    },
+    "967": {
+     "funnel": {
+      "selected": 14795,
+      "participated": 10288,
+      "positive": 616,
+      "colonoscopy": 452,
+      "treated": 38
+     },
+     "findings": {
+      "positive": 616,
+      "noColonoscopy": 164,
+      "noFinding": 123,
+      "precursor": 106,
+      "advancedPrecursor": 168,
+      "cancer": 38,
+      "other": 17
+     }
+    },
+    "968": {
+     "funnel": {
+      "selected": 16630,
+      "participated": 12455,
+      "positive": 701,
+      "colonoscopy": 554,
+      "treated": 32
+     },
+     "findings": {
+      "positive": 701,
+      "noColonoscopy": 147,
+      "noFinding": 148,
+      "precursor": 157,
+      "advancedPrecursor": 206,
+      "cancer": 28,
+      "other": 15
+     }
+    },
+    "969": {
+     "funnel": {
+      "selected": 31569,
+      "participated": 22938,
+      "positive": 1157,
+      "colonoscopy": 891,
+      "treated": 84
+     },
+     "findings": {
+      "positive": 1157,
+      "noColonoscopy": 266,
+      "noFinding": 161,
+      "precursor": 242,
+      "advancedPrecursor": 399,
+      "cancer": 63,
+      "other": 27
+     }
+    },
+    "970": {
+     "funnel": {
+      "selected": 37894,
+      "participated": 28652,
+      "positive": 1427,
+      "colonoscopy": 1101,
+      "treated": 89
+     },
+     "findings": {
+      "positive": 1427,
+      "noColonoscopy": 327,
+      "noFinding": 348,
+      "precursor": 311,
+      "advancedPrecursor": 355,
+      "cancer": 64,
+      "other": 23
+     }
+    },
+    "971": {
+     "funnel": {
+      "selected": 12484,
+      "participated": 9464,
+      "positive": 473,
+      "colonoscopy": 371,
+      "treated": 31
+     },
+     "findings": {
+      "positive": 473,
+      "noColonoscopy": 103,
+      "noFinding": 65,
+      "precursor": 99,
+      "advancedPrecursor": 178,
+      "cancer": 23,
+      "other": 8
+     }
+    },
+    "972": {
+     "funnel": {
+      "selected": 15442,
+      "participated": 11779,
+      "positive": 417,
+      "colonoscopy": 366,
+      "treated": 34
+     },
+     "findings": {
+      "positive": 417,
+      "noColonoscopy": 52,
+      "noFinding": 96,
+      "precursor": 100,
+      "advancedPrecursor": 125,
+      "cancer": 27,
+      "other": 18
+     }
+    },
+    "973": {
+     "funnel": {
+      "selected": 29925,
+      "participated": 22783,
+      "positive": 1111,
+      "colonoscopy": 902,
+      "treated": 52
+     },
+     "findings": {
+      "positive": 1111,
+      "noColonoscopy": 209,
+      "noFinding": 280,
+      "precursor": 246,
+      "advancedPrecursor": 305,
+      "cancer": 30,
+      "other": 42
+     }
+    },
+    "974": {
+     "funnel": {
+      "selected": 21822,
+      "participated": 16861,
+      "positive": 944,
+      "colonoscopy": 699,
+      "treated": 34
+     },
+     "findings": {
+      "positive": 944,
+      "noColonoscopy": 245,
+      "noFinding": 133,
+      "precursor": 197,
+      "advancedPrecursor": 321,
+      "cancer": 33,
+      "other": 16
+     }
+    },
+    "975": {
+     "funnel": {
+      "selected": 17480,
+      "participated": 13312,
+      "positive": 739,
+      "colonoscopy": 547,
+      "treated": 55
+     },
+     "findings": {
+      "positive": 739,
+      "noColonoscopy": 192,
+      "noFinding": 87,
+      "precursor": 146,
+      "advancedPrecursor": 281,
+      "cancer": 41,
+      "other": 5
+     }
+    },
+    "976": {
+     "funnel": {
+      "selected": 18084,
+      "participated": 13500,
+      "positive": 824,
+      "colonoscopy": 685,
+      "treated": 50
+     },
+     "findings": {
+      "positive": 824,
+      "noColonoscopy": 139,
+      "noFinding": 231,
+      "precursor": 184,
+      "advancedPrecursor": 218,
+      "cancer": 38,
+      "other": 16
+     }
+    },
+    "977": {
+     "funnel": {
+      "selected": 17037,
+      "participated": 12197,
+      "positive": 677,
+      "colonoscopy": 496,
+      "treated": 46
+     },
+     "findings": {
+      "positive": 677,
+      "noColonoscopy": 181,
+      "noFinding": 84,
+      "precursor": 123,
+      "advancedPrecursor": 233,
+      "cancer": 35,
+      "other": 21
+     }
+    },
+    "978": {
+     "funnel": {
+      "selected": 36381,
+      "participated": 26953,
+      "positive": 1467,
+      "colonoscopy": 1247,
+      "treated": 97
+     },
+     "findings": {
+      "positive": 1467,
+      "noColonoscopy": 222,
+      "noFinding": 186,
+      "precursor": 324,
+      "advancedPrecursor": 609,
+      "cancer": 61,
+      "other": 70
+     }
+    }
+   },
+   "2024": {
+    "957": {
+     "funnel": {
+      "selected": 11131,
+      "participated": 8241,
+      "positive": 375,
+      "colonoscopy": 284,
+      "treated": 20
+     },
+     "findings": {
+      "positive": 375,
+      "noColonoscopy": 91,
+      "noFinding": 62,
+      "precursor": 81,
+      "advancedPrecursor": 114,
+      "cancer": 14,
+      "other": 13
+     }
+    },
+    "958": {
+     "funnel": {
+      "selected": 15941,
+      "participated": 11899,
+      "positive": 588,
+      "colonoscopy": 481,
+      "treated": 18
+     },
+     "findings": {
+      "positive": 588,
+      "noColonoscopy": 107,
+      "noFinding": 107,
+      "precursor": 168,
+      "advancedPrecursor": 171,
+      "cancer": 19,
+      "other": 16
+     }
+    },
+    "959": {
+     "funnel": {
+      "selected": 13122,
+      "participated": 10093,
+      "positive": 441,
+      "colonoscopy": 339,
+      "treated": 14
+     },
+     "findings": {
+      "positive": 441,
+      "noColonoscopy": 102,
+      "noFinding": 84,
+      "precursor": 123,
+      "advancedPrecursor": 98,
+      "cancer": 17,
+      "other": 17
+     }
+    },
+    "960": {
+     "funnel": {
+      "selected": 42015,
+      "participated": 29226,
+      "positive": 1284,
+      "colonoscopy": 870,
+      "treated": 46
+     },
+     "findings": {
+      "positive": 1284,
+      "noColonoscopy": 414,
+      "noFinding": 167,
+      "precursor": 215,
+      "advancedPrecursor": 408,
+      "cancer": 38,
+      "other": 42
+     }
+    },
+    "961": {
+     "funnel": {
+      "selected": 7884,
+      "participated": 5679,
+      "positive": 261,
+      "colonoscopy": 171,
+      "treated": 10
+     },
+     "findings": {
+      "positive": 261,
+      "noColonoscopy": 90,
+      "noFinding": 48,
+      "precursor": 57,
+      "advancedPrecursor": 52,
+      "cancer": 11,
+      "other": 3
+     }
+    },
+    "962": {
+     "funnel": {
+      "selected": 7009,
+      "participated": 5362,
+      "positive": 280,
+      "colonoscopy": 182,
+      "treated": 8
+     },
+     "findings": {
+      "positive": 280,
+      "noColonoscopy": 98,
+      "noFinding": 78,
+      "precursor": 44,
+      "advancedPrecursor": 58,
+      "cancer": 2,
+      "other": 0
+     }
+    },
+    "963": {
+     "funnel": {
+      "selected": 14399,
+      "participated": 10705,
+      "positive": 544,
+      "colonoscopy": 406,
+      "treated": 29
+     },
+     "findings": {
+      "positive": 544,
+      "noColonoscopy": 138,
+      "noFinding": 119,
+      "precursor": 111,
+      "advancedPrecursor": 151,
+      "cancer": 11,
+      "other": 14
+     }
+    },
+    "964": {
+     "funnel": {
+      "selected": 4928,
+      "participated": 3612,
+      "positive": 168,
+      "colonoscopy": 125,
+      "treated": 9
+     },
+     "findings": {
+      "positive": 168,
+      "noColonoscopy": 43,
+      "noFinding": 27,
+      "precursor": 29,
+      "advancedPrecursor": 61,
+      "cancer": 8,
+      "other": 1
+     }
+    },
+    "965": {
+     "funnel": {
+      "selected": 21191,
+      "participated": 16219,
+      "positive": 669,
+      "colonoscopy": 506,
+      "treated": 43
+     },
+     "findings": {
+      "positive": 669,
+      "noColonoscopy": 163,
+      "noFinding": 193,
+      "precursor": 112,
+      "advancedPrecursor": 151,
+      "cancer": 29,
+      "other": 22
+     }
+    },
+    "966": {
+     "funnel": {
+      "selected": 15179,
+      "participated": 11236,
+      "positive": 567,
+      "colonoscopy": 398,
+      "treated": 13
+     },
+     "findings": {
+      "positive": 567,
+      "noColonoscopy": 169,
+      "noFinding": 131,
+      "precursor": 138,
+      "advancedPrecursor": 98,
+      "cancer": 12,
+      "other": 19
+     }
+    },
+    "967": {
+     "funnel": {
+      "selected": 14431,
+      "participated": 10098,
+      "positive": 496,
+      "colonoscopy": 308,
+      "treated": 19
+     },
+     "findings": {
+      "positive": 496,
+      "noColonoscopy": 188,
+      "noFinding": 84,
+      "precursor": 86,
+      "advancedPrecursor": 112,
+      "cancer": 16,
+      "other": 10
+     }
+    },
+    "968": {
+     "funnel": {
+      "selected": 16183,
+      "participated": 11925,
+      "positive": 571,
+      "colonoscopy": 415,
+      "treated": 15
+     },
+     "findings": {
+      "positive": 571,
+      "noColonoscopy": 156,
+      "noFinding": 119,
+      "precursor": 137,
+      "advancedPrecursor": 133,
+      "cancer": 10,
+      "other": 17
+     }
+    },
+    "969": {
+     "funnel": {
+      "selected": 32139,
+      "participated": 22976,
+      "positive": 946,
+      "colonoscopy": 705,
+      "treated": 49
+     },
+     "findings": {
+      "positive": 946,
+      "noColonoscopy": 241,
+      "noFinding": 144,
+      "precursor": 207,
+      "advancedPrecursor": 294,
+      "cancer": 34,
+      "other": 27
+     }
+    },
+    "970": {
+     "funnel": {
+      "selected": 37764,
+      "participated": 28058,
+      "positive": 1236,
+      "colonoscopy": 868,
+      "treated": 44
+     },
+     "findings": {
+      "positive": 1236,
+      "noColonoscopy": 369,
+      "noFinding": 214,
+      "precursor": 279,
+      "advancedPrecursor": 303,
+      "cancer": 31,
+      "other": 43
+     }
+    },
+    "971": {
+     "funnel": {
+      "selected": 12299,
+      "participated": 9334,
+      "positive": 418,
+      "colonoscopy": 308,
+      "treated": 11
+     },
+     "findings": {
+      "positive": 418,
+      "noColonoscopy": 110,
+      "noFinding": 56,
+      "precursor": 90,
+      "advancedPrecursor": 147,
+      "cancer": 9,
+      "other": 6
+     }
+    },
+    "972": {
+     "funnel": {
+      "selected": 14800,
+      "participated": 10833,
+      "positive": 425,
+      "colonoscopy": 338,
+      "treated": 14
+     },
+     "findings": {
+      "positive": 425,
+      "noColonoscopy": 87,
+      "noFinding": 97,
+      "precursor": 123,
+      "advancedPrecursor": 87,
+      "cancer": 10,
+      "other": 21
+     }
+    },
+    "973": {
+     "funnel": {
+      "selected": 29646,
+      "participated": 22423,
+      "positive": 953,
+      "colonoscopy": 701,
+      "treated": 43
+     },
+     "findings": {
+      "positive": 953,
+      "noColonoscopy": 252,
+      "noFinding": 226,
+      "precursor": 203,
+      "advancedPrecursor": 218,
+      "cancer": 26,
+      "other": 29
+     }
+    },
+    "974": {
+     "funnel": {
+      "selected": 21844,
+      "participated": 16465,
+      "positive": 739,
+      "colonoscopy": 513,
+      "treated": 16
+     },
+     "findings": {
+      "positive": 739,
+      "noColonoscopy": 226,
+      "noFinding": 121,
+      "precursor": 180,
+      "advancedPrecursor": 183,
+      "cancer": 19,
+      "other": 14
+     }
+    },
+    "975": {
+     "funnel": {
+      "selected": 17272,
+      "participated": 12996,
+      "positive": 565,
+      "colonoscopy": 402,
+      "treated": 22
+     },
+     "findings": {
+      "positive": 565,
+      "noColonoscopy": 163,
+      "noFinding": 66,
+      "precursor": 105,
+      "advancedPrecursor": 215,
+      "cancer": 14,
+      "other": 5
+     }
+    },
+    "976": {
+     "funnel": {
+      "selected": 18076,
+      "participated": 13115,
+      "positive": 693,
+      "colonoscopy": 499,
+      "treated": 19
+     },
+     "findings": {
+      "positive": 693,
+      "noColonoscopy": 194,
+      "noFinding": 213,
+      "precursor": 147,
+      "advancedPrecursor": 105,
+      "cancer": 14,
+      "other": 20
+     }
+    },
+    "977": {
+     "funnel": {
+      "selected": 17443,
+      "participated": 12433,
+      "positive": 604,
+      "colonoscopy": 441,
+      "treated": 22
+     },
+     "findings": {
+      "positive": 604,
+      "noColonoscopy": 163,
+      "noFinding": 78,
+      "precursor": 101,
+      "advancedPrecursor": 217,
+      "cancer": 19,
+      "other": 26
+     }
+    },
+    "978": {
+     "funnel": {
+      "selected": 36669,
+      "participated": 26943,
+      "positive": 1260,
+      "colonoscopy": 984,
+      "treated": 64
+     },
+     "findings": {
+      "positive": 1260,
+      "noColonoscopy": 276,
+      "noFinding": 173,
+      "precursor": 268,
+      "advancedPrecursor": 448,
+      "cancer": 50,
+      "other": 47
+     }
+    }
+   }
+  },
+  "intervalCancers": {
+   "cohortYear": 2022,
+   "screenDetected": 719,
+   "nonParticipant": 259,
+   "afterNegativeTest": 176,
+   "positiveNoColonoscopy": 87
+  }
+ },
+ "groups": {
+  "colorectal": {
+   "year": 2024,
+   "rows": [
+    {
+     "dimension": "language",
+     "group": "Finnish, Swedish or Sami",
+     "invited": 401645,
+     "participated": 299347
+    },
+    {
+     "dimension": "language",
+     "group": "Other or missing",
+     "invited": 19720,
+     "participated": 10524
+    },
+    {
+     "dimension": "education",
+     "group": "Basic or unknown",
+     "invited": 68571,
+     "participated": 42155
+    },
+    {
+     "dimension": "education",
+     "group": "Upper secondary",
+     "invited": 191571,
+     "participated": 139923
+    },
+    {
+     "dimension": "education",
+     "group": "Tertiary",
+     "invited": 161223,
+     "participated": 127793
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Africa",
+     "invited": 1453,
+     "participated": 588
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Oceania",
+     "invited": 74,
+     "participated": 44
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Americas",
+     "invited": 837,
+     "participated": 464
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Asia",
+     "invited": 3889,
+     "participated": 2156
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Other Europe",
+     "invited": 14654,
+     "participated": 8301
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Finland",
+     "invited": 400375,
+     "participated": 298265
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Unknown",
+     "invited": 83,
+     "participated": 53
+    }
+   ]
+  },
+  "breast": {
+   "year": 2024,
+   "rows": [
+    {
+     "dimension": "language",
+     "group": "Finnish, Swedish or Sami",
+     "invited": 320048,
+     "participated": 266278
+    },
+    {
+     "dimension": "language",
+     "group": "Other or missing",
+     "invited": 24803,
+     "participated": 15091
+    },
+    {
+     "dimension": "education",
+     "group": "Basic or unknown",
+     "invited": 37116,
+     "participated": 23585
+    },
+    {
+     "dimension": "education",
+     "group": "Upper secondary",
+     "invited": 138014,
+     "participated": 112034
+    },
+    {
+     "dimension": "education",
+     "group": "Tertiary",
+     "invited": 169721,
+     "participated": 145750
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Africa",
+     "invited": 1462,
+     "participated": 659
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Oceania",
+     "invited": 95,
+     "participated": 68
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Americas",
+     "invited": 963,
+     "participated": 604
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Asia",
+     "invited": 6153,
+     "participated": 3756
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Other Europe",
+     "invited": 18642,
+     "participated": 12317
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Finland",
+     "invited": 317454,
+     "participated": 263911
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Unknown",
+     "invited": 82,
+     "participated": 54
+    }
+   ]
+  },
+  "cervical": {
+   "year": 2024,
+   "rows": [
+    {
+     "dimension": "language",
+     "group": "Finnish, Swedish or Sami",
+     "invited": 257719,
+     "participated": 196304
+    },
+    {
+     "dimension": "language",
+     "group": "Other or missing",
+     "invited": 34391,
+     "participated": 19374
+    },
+    {
+     "dimension": "education",
+     "group": "Basic or unknown",
+     "invited": 31338,
+     "participated": 15927
+    },
+    {
+     "dimension": "education",
+     "group": "Upper secondary",
+     "invited": 112462,
+     "participated": 80606
+    },
+    {
+     "dimension": "education",
+     "group": "Tertiary",
+     "invited": 148310,
+     "participated": 119145
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Africa",
+     "invited": 2919,
+     "participated": 1429
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Oceania",
+     "invited": 99,
+     "participated": 52
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Americas",
+     "invited": 1413,
+     "participated": 818
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Asia",
+     "invited": 12134,
+     "participated": 6495
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Other Europe",
+     "invited": 19217,
+     "participated": 12075
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Finland",
+     "invited": 256229,
+     "participated": 194743
+    },
+    {
+     "dimension": "birthplace",
+     "group": "Unknown",
+     "invited": 99,
+     "participated": 66
+    }
+   ]
+  }
+ }
+}
