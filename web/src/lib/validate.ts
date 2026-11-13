@@ -3,8 +3,13 @@ import type { Brief, GapFacts } from "./types";
 /** Allowed absolute difference between a number in the text and a fact. */
 const TOLERANCE = 0.15;
 
-/** Matches numbers like 12, 12.5 and Finnish-style 12,5. */
-const NUMBER_RE = /\d+(?:[.,]\d+)?/g;
+/** Matches numbers like 12, 12.5, Finnish-style 12,5 and thousands like 2,000 or 21,000. */
+const NUMBER_RE = /\d{1,3}(?:,\d{3})+(?!\d)|\d+(?:[.,]\d+)?/g;
+
+/** A comma followed by exactly three digits is a thousands separator ("2,000"); otherwise it is a decimal comma ("74,3"). */
+function parseNumber(raw: string): number {
+  return /^\d{1,3}(?:,\d{3})+$/.test(raw) ? Number(raw.replace(/,/g, "")) : parseFloat(raw.replace(",", "."));
+}
 
 /** Document references that contain digits but are not figures: "THL guidance 21/2016", roadmap action "3.1.2". */
 const REFERENCE_RE = /\b\d{1,3}\/(?:19|20)\d{2}\b|\b\d\.\d\.\d\b|\b1[ \u00a0]000\b/g; // also Finnish "1 000"
@@ -36,7 +41,8 @@ export function factNumbers(facts: GapFacts[], extra: number[] = []): number[] {
 
 /**
  * Checks an AI-generated brief against the computed facts. Returns error messages; empty = valid.
- * Numbers are checked in headline, finding, limitations and each recommendation's action, owner, timeframe and goal.
+ * Numbers are checked in headline, finding, limitations and each recommendation's action, owner and goal.
+ * Timeframes are schedules ("within 6 months", "Q1–Q2 2027"), not data claims, so they are not number-checked.
  */
 export function validateBrief(brief: Brief, facts: GapFacts[], knownSourceIds: string[], extra: number[] = []): string[] {
   const errors: string[] = [];
@@ -60,13 +66,12 @@ export function validateBrief(brief: Brief, facts: GapFacts[], knownSourceIds: s
     ...brief.recommendations.flatMap((r, i): [string, string][] => [
       [`recommendation ${i + 1}`, r.action],
       [`recommendation ${i + 1} owner`, r.owner],
-      [`recommendation ${i + 1} timeframe`, r.timeframe],
       [`recommendation ${i + 1} goal3Indicator`, r.goal3Indicator],
     ]),
   ];
   for (const [field, text] of texts) {
     for (const raw of text.replace(REFERENCE_RE, " ").match(NUMBER_RE) ?? []) {
-      const n = parseFloat(raw.replace(",", "."));
+      const n = parseNumber(raw);
       if (isExempt(raw, n)) continue;
       if (!allowed.some((a) => Math.abs(a - n) <= TOLERANCE)) {
         errors.push(`Number ${raw} in ${field} is not supported by the facts`);

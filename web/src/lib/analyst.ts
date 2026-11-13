@@ -5,7 +5,7 @@ import { impactFacts } from "./impact";
 import { validateBrief } from "./validate";
 import type { LiveSnippet } from "./context";
 import { diagnosePathway, type GapPattern } from "./fingerprint";
-import { equityNumbers, measurePhrase, type EquityFacts } from "./equity";
+import { MIN_ASSOCIATION_N, MIN_MUNICIPALITY_POPULATION, equityNumbers, measurePhrase, type EquityFacts } from "./equity";
 
 // Light model for development; set GEMINI_MODEL (e.g. gemini-3.8-flash) for the real demo.
 // gemini-2.5-flash is no longer offered to new API keys.
@@ -387,7 +387,7 @@ function impactNumbers(facts: GapFacts[]): number[] {
 export function extraNumbers(input: AnalystInput): number[] {
   return [
     ...impactNumbers(input.facts),
-    ...(input.equity ? equityNumbers(input.equity) : []),
+    ...(input.equity ? [...equityNumbers(input.equity), MIN_MUNICIPALITY_POPULATION, MIN_ASSOCIATION_N] : []),
     ...(input.peer ? [input.peer.twinValue, input.peer.countyValue] : []),
   ];
 }

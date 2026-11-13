@@ -4,6 +4,8 @@ import type { Dataset, Indicator, IndicatorValue, Region } from "./types";
 const POPULATION_ID = 127;
 /** Fewest municipalities for which a rank correlation is reported. */
 export const MIN_ASSOCIATION_N = 6;
+/** Municipalities smaller than this are left out of rankings and correlations (their figures swing too much). */
+export const MIN_MUNICIPALITY_POPULATION = 2000;
 /** Correlations at least this strong (either sign) are put into words. */
 export const ASSOCIATION_THRESHOLD = 0.4;
 
@@ -28,7 +30,7 @@ function latestValuesUpTo(ds: Dataset, indicatorId: number, year: number): Map<n
 }
 
 /** The county's municipalities with at least `minPopulation` residents (latest population figure), by name. */
-export function municipalitiesOf(ds: Dataset, countyId: number, minPopulation = 2000): Region[] {
+export function municipalitiesOf(ds: Dataset, countyId: number, minPopulation = MIN_MUNICIPALITY_POPULATION): Region[] {
   const pop = latestValuesUpTo(ds, POPULATION_ID, Infinity);
   return ds.regions
     .filter((r) => r.kind === "municipality" && r.parentId === countyId)

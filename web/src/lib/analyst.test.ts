@@ -122,3 +122,13 @@ describe("equityPrompt", () => {
     expect(p.lagging[0].worstMunicipalities.map((m) => m.name)).toEqual(["Siuntio"]);
   });
 });
+
+describe("extraNumbers covers the equity thresholds", () => {
+  it("includes the 2,000-resident cut-off and the minimum of 6 municipalities when equity is present", async () => {
+    const { MIN_ASSOCIATION_N, MIN_MUNICIPALITY_POPULATION } = await import("./equity");
+    const equity = { applicable: true, municipalityCount: 10, lagging: [], associations: [] } as unknown as import("./equity").EquityFacts;
+    const nums = extraNumbers({ regionName: "X", facts: [], indicators: [], equity });
+    expect(nums).toEqual(expect.arrayContaining([MIN_MUNICIPALITY_POPULATION, MIN_ASSOCIATION_N]));
+    expect(MIN_MUNICIPALITY_POPULATION).toBe(2000);
+  });
+});

@@ -74,4 +74,18 @@ describe("validateBrief covers every text field", () => {
     const b = valid(); b.recommendations[0].timeframe = "Q1–Q2 2027";
     expect(validateBrief(b, facts, known)).toEqual([]);
   });
+  it("does not number-check timeframes: they are schedules, not data claims", () => {
+    const b = valid(); b.recommendations[0].timeframe = "within 6 months, then every 12 months";
+    expect(validateBrief(b, facts, known)).toEqual([]);
+  });
+  it("reads a comma followed by exactly three digits as a thousands separator", () => {
+    const b = valid(); b.limitations = ["Only municipalities with 2,000 or more residents are shown"];
+    expect(validateBrief(b, facts, known, [2000])).toEqual([]);
+    expect(validateBrief(b, facts, known).join()).toMatch(/2,000 in limitation 1/);
+    b.limitations = ["About 21,000 people were invited"]; // used to slip through as 21.0 (= rankOf)
+    expect(validateBrief(b, facts, known).join()).toMatch(/21,000/);
+    b.finding = "Coverage is 70,0 and falling"; // Finnish decimal comma still works
+    b.limitations = [];
+    expect(validateBrief(b, facts, known)).toEqual([]);
+  });
 });
