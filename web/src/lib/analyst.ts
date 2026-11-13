@@ -1,8 +1,10 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { EVIDENCE } from "@/data/evidence";
 import type { Brief, GapFacts, Indicator, PathwayStage, Recommendation } from "./types";
+import { impactFacts } from "./impact";
 import { validateBrief } from "./validate";
 import type { LiveSnippet } from "./context";
+import { diagnosePathway, type GapPattern } from "./fingerprint";
 
 // Light model for development; set GEMINI_MODEL (e.g. gemini-3.8-flash) for the real demo.
 // gemini-2.5-flash is no longer offered to new API keys.
@@ -20,6 +22,14 @@ const LIMITATIONS = [
   "County-level cancer mortality and lung cancer survival are not published in Sotkanet, so two of Goal 3's headline indicators cannot be shown per county.",
   "Small counties (e.g. Åland) have few cases, so year-to-year changes in survival can be random variation.",
 ];
+
+const PATTERN_PHRASE: Record<GapPattern, string> = {
+  detection: "the gap starts at detection",
+  "after-detection": "the gap appears after detection",
+  both: "the gap runs through detection and outcomes",
+  none: "no gap against the national level",
+  unknown: "too little data to place the gap",
+};
 
 function fmt(n: number): string {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -123,13 +133,14 @@ export function fallbackBrief(input: AnalystInput): Brief {
   const sotk = ind ? `sotkanet:${ind.id}` : indicators[0] ? `sotkanet:${indicators[0].id}` : "strategy-p35-3.2";
   const goal3 = ind?.strategyGoal ?? "3.2 Quality register and systematic review of results";
 
-  let headline = `${regionName}: no clear gap found in the available indicators`;
+  const pattern = diagnosePathway(facts, indicators).pattern;
+  let headline = `${regionName}: ${PATTERN_PHRASE[pattern]}; no clear gap found in the available indicators`;
   let finding =
     "The available public indicators do not show a clear gap to the national level for this county.";
   if (worst && ind && worst.value !== null) {
     const unit = ind.unit === "%" ? "%" : ` ${ind.unit}`;
     const nat = worst.national !== null ? ` vs ${fmt(worst.national)}${unit} nationally` : "";
-    headline = `${regionName}: ${ind.nameEn} is ${fmt(worst.value)}${unit}${nat} (${worst.year})`;
+    headline = `${regionName}: ${PATTERN_PHRASE[pattern]}. ${ind.nameEn} is ${fmt(worst.value)}${unit}${nat} (${worst.year})`;
     const parts = [
       `In ${worst.year}, ${regionName} had ${fmt(worst.value)}${unit} for ${ind.nameEn}${nat}.`,
     ];
@@ -138,6 +149,14 @@ export function fallbackBrief(input: AnalystInput): Brief {
       parts.push(`The best-performing quarter of counties is at ${fmt(worst.bestQuartile)}${unit}.`);
     parts.push(`This sits in the ${stage} stage of the cancer pathway.`);
     finding = parts.join(" ");
+  }
+  const biggest = impactFacts(facts)
+    .filter((r) => r.toTarget !== null && r.toTarget > 0)
+    .sort((a, b) => (b.toTarget as number) - (a.toTarget as number))[0];
+  if (biggest) {
+    const bi = indicators.find((i) => i.id === biggest.indicatorId);
+    const t = facts.find((f) => f.indicatorId === biggest.indicatorId)?.target;
+    if (bi) finding += ` The largest screening gap is ${bi.nameEn}: about ${biggest.toTarget} more of every 1,000 invited people would need to attend to reach the ${t}% target.`;
   }
 
   return {
@@ -180,6 +199,10 @@ const RESPONSE_SCHEMA = {
   required: ["headline", "finding", "pathwayStage", "recommendations", "limitations"],
 };
 
+function impactNumbers(facts: GapFacts[]): number[] {
+  return impactFacts(facts).flatMap((r) => [r.toTarget, r.toNational]).filter((x): x is number => x !== null);
+}
+
 function buildPrompt(input: AnalystInput, allowed: string[], errors?: string[]): string {
   const indicatorMeta = input.indicators.map((i) => ({
     sourceId: `sotkanet:${i.id}`,
@@ -197,7 +220,7 @@ RULES:
 - Plain English, short sentences, no jargon.
 - Use ONLY numbers that appear in FACTS below. Do not compute or invent any other numbers (years from FACTS are fine).
 - gapToNational and gapToBestQuartile are sign-corrected: negative means worse than the comparison.
-- Name the most important gap in the headline.
+- PATTERN (below) says where along the pathway the gap starts: detection = screening behind, survival not; after-detection = survival behind, screening not; both; none; unknown. Lead with the pattern in the headline, then name the most important gap.
 - Differences between percentages are "percentage points", never "percent".
 - Screening indicators have an official national target (FACTS.target, 80% in every county, strategy Goal 2). Say whether the county meets it, using gapToTarget.
 - Goal 3 is measured by survival, mortality and access within the target times of THL guidance 21/2016. Cancer-specific access times are still being defined (2026–2028). Never say that no target times exist.
@@ -211,7 +234,11 @@ ALLOWED_SOURCE_IDS: ${JSON.stringify(allowed)}
 
 INDICATORS: ${JSON.stringify(indicatorMeta)}
 
+PATTERN: ${diagnosePathway(input.facts, input.indicators).pattern}
+
 FACTS: ${JSON.stringify(input.facts)}
+
+IMPACT (people per 1,000 invited who must attend to reach the target / the national rate; you may quote these): ${JSON.stringify(impactFacts(input.facts))}
 
 EVIDENCE: ${JSON.stringify(evidence)}
 
@@ -258,11 +285,11 @@ export async function generateBrief(input: AnalystInput): Promise<Brief> {
       return { ...parsed, generatedBy: "gemini" };
     };
     let brief = await ask();
-    let errors = validateBrief(brief, input.facts, allowed);
+    let errors = validateBrief(brief, input.facts, allowed, impactNumbers(input.facts));
     if (errors.length) {
       console.warn("[analyst] brief rejected, retrying:", errors);
       brief = await ask(errors);
-      errors = validateBrief(brief, input.facts, allowed);
+      errors = validateBrief(brief, input.facts, allowed, impactNumbers(input.facts));
       if (errors.length) {
         console.warn("[analyst] retry rejected, using fallback:", errors);
         return fallbackBrief(input);
