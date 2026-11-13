@@ -39,9 +39,18 @@ Data on Finnish cancer care is limited, and **working around that data gap is pa
 
 ## Key facts from the provided documents
 
-Sources: *Kansallinen syöpästrategia 2026–2035* (the "strategy", 64 pp.), *Toimeenpanon tiekartta 2026–2031* (the "roadmap", 111 pp.), and the *Syöpästrategiat ja syöpädata* link collection. Page numbers refer to the PDFs.
+Sources: *Kansallinen syöpästrategia 2026–2035* (the "strategy", 64 pp.), *Toimeenpanon tiekartta 2026–2031* (the "roadmap", 111 pp.), and the *Syöpästrategiat ja syöpädata* link collection. Page numbers refer to the PDFs. A longer write-up of the situation and gaps is in [research/AstraZeneca cancer care challenge situation and gaps.md](research/AstraZeneca%20cancer%20care%20challenge%20situation%20and%20gaps.md).
+
+### Current situation
+
+- **The burden is growing.** New cases are projected to rise about 20% by 2035, from just under 38,000 to nearly 45,000 a year, mostly in people over 75.
+- **Costs are growing faster.** Cancer care cost €1.5 bn in 2023 and is forecast to reach €2.6 bn by 2035 (+74%), well above other health spending.
+- **Overall quality is good, with known weak spots.** Finland lags the other Nordics in some cancers, such as lung cancer and myeloma.
+- **Equity is the cross-cutting theme.** The strategy names six lenses: regional, socioeconomic, the elderly, poor-prognosis cancers, rare cancers, and children and young people.
 
 ### Headline targets of the strategy (strategy p. 5)
+
+Our solution must cover at least one of the Goal 3 targets.
 
 Verified against the strategy text; see also Inka's [situation and gaps](research/AstraZeneca%20cancer%20care%20challenge%20situation%20and%20gaps.md).
 
@@ -55,7 +64,7 @@ Verified against the strategy text; see also Inka's [situation and gaps](researc
 
 Distance matters (roadmap p. 13): some people live over 400 km from a central hospital and over 700 km from a university hospital, and outcomes are weaker already beyond 50 km from a treatment unit.
 
-### Goal 3 = "Varmistetaan yhdenvertainen ja vaikuttava syövänhoito" (ensure equal and effective cancer care), strategy pp. 32–42
+### Goal 3 sub-goals = "Varmistetaan yhdenvertainen ja vaikuttava syövänhoito" (ensure equal and effective cancer care), strategy pp. 32–42
 
 | Sub-goal | Indicators we could cover |
 | --- | --- |
@@ -76,6 +85,32 @@ Distance matters (roadmap p. 13): some people live over 400 km from a central ho
 - Early-detection target: **≥70% of cancers diagnosed at stage I–II by 2035** (roadmap p. 52). The early-detection indicators are stage at diagnosis, access times, the share treated with curative intent, and survival (roadmap pp. 23–24).
 - Action 3.5.3 explicitly promotes digital tools and AI in cancer care, measured by the usage rate of digital pathways and AI applications.
 
+### Gaps by pathway stage
+
+| Stage | What the documents say |
+| --- | --- |
+| Detection | Primary care access is the main obstacle (staff shortages, congestion). People in rural areas are diagnosed at a more advanced stage on average. |
+| Referral to specialist care | There are no standardised national referral criteria. Time from first symptom to treatment varies widely by region and by entry route. |
+| Entry route | Public health centres are under-resourced, while occupational and private care are fast. The unpublished lymphoma study found diagnosis takes twice as long via the public route. |
+| Treatment | Practices vary by region. Some people live over 400 km from a central hospital and over 700 km from a university hospital. One cited study found worse lung cancer outcomes beyond 50 km from a treatment unit. |
+| Steering | No national system coordinates guidelines, pathways or indicators, and regional comparison is sporadic. |
+
+### The data gap is itself a finding
+
+Nobody can currently monitor the "within target times" indicator properly, so our solution will have to use proxies and be open about that.
+
+- Stage information reaches the Cancer Registry for only about 40% of cases (the target is 90% by 2030).
+- Time from first symptom to diagnosis is not collected systematically.
+- There is no cancer quality register yet. The first reports, covering five cancers, are due in 2029–2031.
+
+### Build recommendations on what the roadmap already plans
+
+Recommendations are more credible if they build on these than if they invent new ones.
+
+- **Standardised pathways:** the Nordic models above, with referral criteria and target times for five cancers by 2026–2028.
+- **Primary care:** more doctors and a national personal-doctor model.
+- **Quality register:** benchmarking between counties and a mechanism to react to deviations.
+
 ### Public data sources (from the link collection)
 
 - **Finnish Cancer Registry (Syöpärekisteri):** cancer statistics app, screening statistics; survival and mortality nationally and by region
@@ -94,3 +129,10 @@ Distance matters (roadmap p. 13): some people live over 400 km from a central ho
 - **Contacts:** Joanna Tuormaa (main), Laura Aaltonen (questions; phone number on the challenge page)
 
 AstraZeneca shares "key insights" at their stand on **Fri at 20:00**. Go, and write down what they say, because mentor insights count as evidence.
+
+## Open questions
+
+- [ ] What are the actual target times in THL guidance 21/2016?
+- [ ] What do the Cancer Registry and Sotkanet publish at county level?
+- [ ] Which cancer would the mentors focus on? The documents point to lung cancer.
+- [ ] Does "account level" in the brief mean a single county or hospital, as we assume?
