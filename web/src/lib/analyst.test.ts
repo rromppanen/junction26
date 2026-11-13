@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extraNumbers, fallbackBrief } from "./analyst";
+import { extraNumbers, fallbackBrief, knownSourceIds } from "./analyst";
 import type { EquityFacts } from "./equity";
 import { validateBrief } from "./validate";
 import type { GapFacts, Indicator } from "./types";
@@ -51,5 +51,24 @@ describe("equity in the brief", () => {
     brief.headline = "Siuntio is at 66.8%, 7.5 points below; rho 0.88 across 10 municipalities";
     expect(validateBrief(brief, [f], ["strategy-goal2-screening-80"], extraNumbers(input)).filter((e) => e.startsWith("Number"))).toEqual([]);
     expect(validateBrief(brief, [f], [], []).filter((e) => e.startsWith("Number")).length).toBeGreaterThan(0);
+  });
+});
+
+describe("peer twin in the analyst", () => {
+  const peer = {
+    twinName: "Pohjois-Savo", indicator: ind, countyValue: 74.3, twinValue: 85.1,
+    snippets: [{ id: "peer:1", title: "t", url: "https://x.fi", text: "Kutsu ja muistutus" }],
+  };
+  it("passes the twin and county values to the validator and makes peer ids citable", () => {
+    const input = { regionName: "Helsinki", facts: [f], indicators: [ind], peer };
+    expect(extraNumbers(input)).toEqual(expect.arrayContaining([85.1, 74.3]));
+    expect(knownSourceIds([ind], [], peer.snippets)).toContain("peer:1");
+    const brief = {
+      headline: "h", finding: "Pohjois-Savo reaches 85.1% against 74.3%.", pathwayStage: "detection" as const,
+      recommendations: [1, 2, 3].map(() => ({ action: "a", owner: "o", timeframe: "t", goal3Indicator: "g", sources: ["peer:1"] })),
+      limitations: [], generatedBy: "gemini" as const,
+    };
+    expect(validateBrief(brief, [f], knownSourceIds([ind], [], peer.snippets), extraNumbers(input))).toEqual([]);
+    expect(validateBrief(brief, [f], knownSourceIds([ind], []), extraNumbers(input))).toHaveLength(3);
   });
 });

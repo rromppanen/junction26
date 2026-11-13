@@ -5,7 +5,9 @@ import { CONTEXT_INDICATORS, INDICATORS, indicatorById } from "@/data/indicators
 import { EVIDENCE } from "@/data/evidence";
 import { computeGap, latestYear } from "@/lib/gap";
 import { generateBrief } from "@/lib/analyst";
-import { getLiveContext, type LiveSnippet } from "@/lib/context";
+import { getLiveContext, getPeerPractices, type LiveContext, type LiveSnippet } from "@/lib/context";
+import { findPeerTwin, worstIndicator } from "@/lib/peers";
+import { PeerTwin } from "@/components/PeerTwin";
 import { TrendChart } from "@/components/TrendChart";
 import { PathwayFingerprint } from "@/components/PathwayFingerprint";
 import { WhatItTakes } from "@/components/WhatItTakes";
@@ -20,10 +22,10 @@ export const dynamic = "force-dynamic";
 type Source = { id: string; label: string; url: string; detail?: string };
 
 function resolveSource(id: string, live: LiveSnippet[] = []): Source {
-  if (id.startsWith("live:")) {
+  if (id.startsWith("live:") || id.startsWith("peer:")) {
     const s = live.find((l) => l.id === id);
     return s
-      ? { id, label: `Web page: ${s.title}`, url: s.url, detail: s.text }
+      ? { id, label: `${id.startsWith("peer:") ? "Peer county web page" : "Web page"}: ${s.title}`, url: s.url, detail: s.text }
       : { id, label: id, url: "#" };
   }
   if (id.startsWith("sotkanet:")) {
@@ -55,11 +57,20 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
 
   const facts = INDICATORS.map((ind) => computeGap(ds, ind, regionId, latestYear(ds, ind)));
   const live = await getLiveContext(region.name);
+  const worst = worstIndicator(facts);
+  const worstInd = worst ? INDICATORS.find((i) => i.id === worst.indicatorId) : undefined;
+  const twin = worst && worstInd && worst.value !== null ? findPeerTwin(ds, worstInd, regionId, worst.year) : null;
+  const practices: LiveContext | null = twin && worstInd ? await getPeerPractices(twin.twin.name, worstInd) : null;
+  const peer =
+    twin && worstInd && worst && worst.value !== null && practices
+      ? { twinName: shortName(twin.twin.name), indicator: worstInd, countyValue: worst.value, twinValue: twin.twinValue, snippets: practices.snippets }
+      : undefined;
   const equity = equityFacts(ds, regionId, INDICATORS, CONTEXT_INDICATORS);
-  const brief = await generateBrief({ regionName: name, facts, indicators: INDICATORS, live: live.snippets, equity });
+  const brief = await generateBrief({ regionName: name, facts, indicators: INDICATORS, live: live.snippets, equity, peer });
 
+  const citable = [...live.snippets, ...(peer?.snippets ?? [])];
   const sourceIds = [...new Set(brief.recommendations.flatMap((r) => r.sources))];
-  const sources = sourceIds.map((s) => resolveSource(s, live.snippets));
+  const sources = sourceIds.map((s) => resolveSource(s, citable));
   const sourceIndex = new Map(sources.map((s, i) => [s.id, i + 1]));
 
   // Best-quartile boundary for every year the indicator has county figures (independent of the county).
@@ -97,6 +108,17 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
 
       <LeftBehind equity={equity} name={name} />
 
+      {peer && practices && (
+        <PeerTwin
+          name={name}
+          twinName={peer.twinName}
+          indicator={peer.indicator}
+          countyValue={peer.countyValue}
+          twinValue={peer.twinValue}
+          practices={practices}
+        />
+      )}
+
       <section className="mb-14 print-break" aria-labelledby="stage-h">
         <h2 id="stage-h" className="mb-3 text-sm text-muted">
           The pathway breaks at <span className="font-semibold text-ink">{STAGE_LABEL[brief.pathwayStage].toLowerCase()}</span>
@@ -116,9 +138,9 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
                 <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted">
                   <span>Based on</span>
                   {r.sources.map((s) => (
-                    <a key={s} href={`#src-${sourceIndex.get(s)}`} className="link" title={resolveSource(s, live.snippets).label}>
+                    <a key={s} href={`#src-${sourceIndex.get(s)}`} className="link" title={resolveSource(s, citable).label}>
                       [{sourceIndex.get(s)}]{" "}
-                      {s.startsWith("sotkanet:") ? "Sotkanet" : resolveSource(s, live.snippets).label.split(":")[0]}
+                      {s.startsWith("sotkanet:") ? "Sotkanet" : resolveSource(s, citable).label.split(":")[0]}
                     </a>
                   ))}
                 </p>
