@@ -30,5 +30,4 @@ Only facts that are already confirmed go here. Mark everything else _TBD_, and n
 
 - Operations requiring approval: force-pushes are denied. Pushes to `main` need the team's agreement.
 - Licensing: all code is MIT ([`LICENSE`](../LICENSE)) and written during the event (from Fri 13.11 19:30).
-- Approved external services: Elsevier Scopus API (`api.elsevier.com`) via the `scopus` MCP server in [`.mcp.json`](../.mcp.json). Setup is in the README.
-- Secrets: in `.env` files only (template: [`.env.example`](../.env.example)). These are gitignored, and agents are denied read access. Never commit API keys.
+- Secrets: in `.env` files only. These are gitignored, and agents are denied read access. Never commit API keys.
