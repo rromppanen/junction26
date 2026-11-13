@@ -16,6 +16,8 @@ This is the team's one place for decisions, the task split and the submission ch
 
 ## Decision
 
+- Proposed design for team review: [Cancer equity analyst](design/2026-11-13-cancer-equity-agent.md). Start with one Finnish Cancer Registry extract; prove reproducible outcome comparisons and sourced actions before expanding data coverage. Implementation has not started on this branch.
+- Next checkpoint: verify the export, metadata and reuse terms, then reproduce source rows. Resolve whether pathway attribution has sufficient evidence before claiming full challenge coverage. See the design's delivery checkpoints and acceptance criteria.
 - Challenge(s): _TBD_
 - Why us / why this: _TBD_
 - Main judging criteria to hit: **Innovation** (unlike other projects), **Impact** (share of affected people actually helped), **Implementation** (realistic, viable, feasible). Each partner also judges its own challenge with its own criteria.

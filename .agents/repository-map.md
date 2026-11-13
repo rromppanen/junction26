@@ -7,6 +7,7 @@ Only facts that are already confirmed go here. Mark everything else _TBD_, and n
 - Product or artifact: Junction 2026 hackathon project. The challenge and users are _TBD_. See [`docs/PLAN.md`](../docs/PLAN.md).
 - Main components: _TBD once the stack is chosen._
 - Generated artifacts: pitch deck PDF in `docs/pitch/` (exported, not generated from source).
+- Proposed prototype design: [`docs/design/2026-11-13-cancer-equity-agent.md`](../docs/design/2026-11-13-cancer-equity-agent.md). Covers the data contract, evidence boundaries, demo and implementation acceptance criteria; not an implemented system.
 - Existing instructions: [`AGENTS.md`](../AGENTS.md) (agent working agreement), `.agents/instructions/` (principles, workflow, writing), `.claude/skills/` (change procedures).
 
 ## Environment and checks
