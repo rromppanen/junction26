@@ -7,6 +7,7 @@ import { computeGap, latestYear } from "@/lib/gap";
 import { generateBrief } from "@/lib/analyst";
 import { getLiveContext, type LiveSnippet } from "@/lib/context";
 import { TrendChart } from "@/components/TrendChart";
+import { PathwayFingerprint } from "@/components/PathwayFingerprint";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
 import { STATUS_LABEL, STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, shortName } from "@/components/format";
@@ -84,6 +85,8 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         <p className="mt-6 max-w-3xl font-serif text-2xl leading-snug sm:text-[1.75rem]">{brief.headline}</p>
         <p className="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-ink/80">{brief.finding}</p>
       </header>
+
+      <PathwayFingerprint facts={facts} indicators={INDICATORS} />
 
       <section className="mb-14 print-break" aria-labelledby="stage-h">
         <h2 id="stage-h" className="mb-3 text-sm text-muted">
