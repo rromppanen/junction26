@@ -10,6 +10,7 @@ import { TrendChart } from "@/components/TrendChart";
 import { PathwayFingerprint } from "@/components/PathwayFingerprint";
 import { WhatItTakes } from "@/components/WhatItTakes";
 import { LeftBehind } from "@/components/LeftBehind";
+import { MeasureKit } from "@/components/MeasureKit";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
 import { STATUS_LABEL, STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, host } from "@/components/format";
@@ -110,6 +111,8 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         </h2>
         <PathwayStrip active={brief.pathwayStage} />
       </section>
+
+      <MeasureKit regionId={regionId} name={name} />
 
       <section className="mb-14" aria-labelledby="rec-h">
         <h2 id="rec-h" className="mb-2 text-2xl font-semibold tracking-tight">What {name} could do next</h2>
