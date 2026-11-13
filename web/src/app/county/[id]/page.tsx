@@ -11,6 +11,8 @@ import { PathwayFingerprint } from "@/components/PathwayFingerprint";
 import { WhatItTakes } from "@/components/WhatItTakes";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
+import { Wordmark } from "@/components/Wordmark";
+import { Colophon } from "@/components/Colophon";
 import { STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, shortName } from "@/components/format";
 import type { GapFacts, PathwayStage } from "@/lib/types";
 
@@ -74,7 +76,8 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
-      <nav className="no-print mb-10 text-sm">
+      <nav className="no-print mb-10 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 text-sm">
+        <Wordmark />
         <Link href="/" className="link">Back to the map</Link>
       </nav>
 
@@ -235,6 +238,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
       <footer className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-ink pt-4 text-xs text-muted">
         <DataBadge ds={ds} />
         <span>{region.name}</span>
+        <Colophon className="w-full" />
       </footer>
     </main>
   );

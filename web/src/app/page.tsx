@@ -6,6 +6,8 @@ import type { GapFacts, GapStatus, Indicator, PathwayStage } from "@/lib/types";
 import { CountyMap } from "@/components/CountyMap";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
+import { Wordmark } from "@/components/Wordmark";
+import { Colophon } from "@/components/Colophon";
 import { STATUS_LABEL, STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, shortName } from "@/components/format";
 
 export const dynamic = "force-dynamic";
@@ -92,7 +94,7 @@ export default async function RadarPage({
     <main className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
       <header className="mb-8">
         <p className="mb-10 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-          <span className="text-lg font-semibold tracking-tight">Gap Radar</span>
+          <Wordmark />
           <DataBadge ds={ds} />
         </p>
         <h1 className="max-w-4xl text-[2rem] font-semibold leading-[1.08] tracking-[-0.02em] sm:text-5xl">
@@ -280,6 +282,7 @@ export default async function RadarPage({
         <a href={ind.sourceUrl} className="link" target="_blank" rel="noreferrer">
           This measure on Sotkanet ({ind.nameFi})
         </a>
+        <Colophon className="w-full" />
       </footer>
     </main>
   );
