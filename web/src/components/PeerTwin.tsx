@@ -1,15 +1,7 @@
 import type { LiveContext } from "@/lib/context";
 import type { Indicator } from "@/lib/types";
 import { MIN_BETTER } from "@/lib/peers";
-import { fmt } from "@/components/format";
-
-function host(url: string): string {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return url;
-  }
-}
+import { fmt, host } from "@/components/format";
 
 /** Most similar county doing better on this county's weakest measure, and what it publishes about it. */
 export function PeerTwin({

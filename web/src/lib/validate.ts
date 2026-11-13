@@ -7,7 +7,7 @@ const TOLERANCE = 0.15;
 const NUMBER_RE = /\d+(?:[.,]\d+)?/g;
 
 /** Document references that contain digits but are not figures: "THL guidance 21/2016", roadmap action "3.1.2". */
-const REFERENCE_RE = /\b\d{1,3}\/(?:19|20)\d{2}\b|\b\d\.\d\.\d\b/g;
+const REFERENCE_RE = /\b\d{1,3}\/(?:19|20)\d{2}\b|\b\d\.\d\.\d\b|\b1[ \u00a0]000\b/g; // also Finnish "1 000"
 
 /**
  * Numbers that may appear without being backed by facts:

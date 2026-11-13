@@ -1,21 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDataset } from "@/lib/data";
 import { CONTEXT_INDICATORS, INDICATORS, indicatorById } from "@/data/indicators";
 import { EVIDENCE } from "@/data/evidence";
-import { computeGap, latestYear } from "@/lib/gap";
-import { generateBrief } from "@/lib/analyst";
-import { getLiveContext, getPeerPractices, type LiveContext, type LiveSnippet } from "@/lib/context";
-import { findPeerTwin, worstIndicator } from "@/lib/peers";
+import { computeGap } from "@/lib/gap";
+import { loadCountyBrief } from "@/lib/countyBrief";
+import type { LiveSnippet } from "@/lib/context";
 import { PeerTwin } from "@/components/PeerTwin";
 import { TrendChart } from "@/components/TrendChart";
 import { PathwayFingerprint } from "@/components/PathwayFingerprint";
 import { WhatItTakes } from "@/components/WhatItTakes";
 import { LeftBehind } from "@/components/LeftBehind";
-import { equityFacts } from "@/lib/equity";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
-import { STATUS_LABEL, STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, shortName } from "@/components/format";
+import { STATUS_LABEL, STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, host } from "@/components/format";
 
 export const dynamic = "force-dynamic";
 
@@ -49,24 +46,9 @@ function resolveSource(id: string, live: LiveSnippet[] = []): Source {
 export default async function CountyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const regionId = Number(id);
-  const ds = await getDataset();
-  const region = ds.regions.find((r) => r.id === regionId && r.kind === "county"); // municipalities 404
-  if (!region) notFound();
-  const nationalRegion = ds.regions.find((r) => r.isNational);
-  const name = shortName(region.name);
-
-  const facts = INDICATORS.map((ind) => computeGap(ds, ind, regionId, latestYear(ds, ind)));
-  const live = await getLiveContext(region.name);
-  const worst = worstIndicator(facts);
-  const worstInd = worst ? INDICATORS.find((i) => i.id === worst.indicatorId) : undefined;
-  const twin = worst && worstInd && worst.value !== null ? findPeerTwin(ds, worstInd, regionId, worst.year) : null;
-  const practices: LiveContext | null = twin && worstInd ? await getPeerPractices(twin.twin.name, worstInd) : null;
-  const peer =
-    twin && worstInd && worst && worst.value !== null && practices
-      ? { twinName: shortName(twin.twin.name), indicator: worstInd, countyValue: worst.value, twinValue: twin.twinValue, snippets: practices.snippets }
-      : undefined;
-  const equity = equityFacts(ds, regionId, INDICATORS, CONTEXT_INDICATORS);
-  const brief = await generateBrief({ regionName: name, facts, indicators: INDICATORS, live: live.snippets, equity, peer });
+  const loaded = await loadCountyBrief(regionId, "en");
+  if (!loaded) notFound(); // municipalities 404
+  const { ds, region, nationalRegion, name, facts, live, practices, peer, equity, brief } = loaded;
 
   const citable = [...live.snippets, ...(peer?.snippets ?? [])];
   const sourceIds = [...new Set(brief.recommendations.flatMap((r) => r.sources))];
@@ -87,7 +69,10 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
   return (
     <main className="mx-auto max-w-5xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
       <nav className="no-print mb-10 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 text-sm">
-        <Link href="/" className="link">Back to the map</Link>
+        <span className="flex gap-x-6">
+          <Link href="/" className="link">Back to the map</Link>
+          <Link href={`/county/${regionId}/memo`} className="link">Hallitusmuistio (FI)</Link>
+        </span>
         <span className="text-xs text-muted">
           {byGemini
             ? "Written by Gemini from the figures on this page"
@@ -245,7 +230,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
             {live.snippets.map((l) => (
               <li key={l.id} className="print-break">
                 <a href={l.url} target="_blank" rel="noreferrer" className="link font-medium">{l.title}</a>
-                <span className="mt-0.5 block truncate text-xs text-muted">{new URL(l.url).hostname}</span>
+                <span className="mt-0.5 block truncate text-xs text-muted">{host(l.url)}</span>
                 <span className="mt-1.5 block leading-relaxed">{l.text}</span>
               </li>
             ))}

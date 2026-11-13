@@ -11,8 +11,12 @@ import { equityNumbers, measurePhrase, type EquityFacts } from "./equity";
 // gemini-2.5-flash is no longer offered to new API keys.
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 
+export type Language = "en" | "fi";
+
 export type AnalystInput = {
   regionName: string;
+  language?: Language; // text language of the brief; default "en"
+
   facts: GapFacts[];
   indicators: Indicator[];
   live?: LiveSnippet[];
@@ -56,6 +60,146 @@ const PATTERN_PHRASE: Record<GapPattern, string> = {
   none: "no gap against the national level",
   unknown: "too little data to place the gap",
 };
+
+const LIMITATIONS_FI = [
+  "Julkista maakuntatason tietoa lähete- ja diagnoosiviiveistä ei ole, joten viiveitä hoitopolulla ei voi mitata suoraan.",
+  "Tiedot ovat vain koottuja: kuntatason luvut näyttävät, missä osallistuminen on vähäistä, mutta ryhmien (esim. kieli- tai tuloryhmien) välisiä eroja ei näy, eivätkä aluetason kuviot kerro yksilöistä.",
+  "Syöpäkuolleisuutta ja keuhkosyövän elossaoloa ei julkaista Sotkanetissa hyvinvointialueittain, joten kaksi tavoite 3:n päämittaria ei näy aluekohtaisesti.",
+  "Pienillä alueilla (esim. Ahvenanmaa) tapauksia on vähän, joten elossaolon vuosimuutokset voivat olla satunnaisvaihtelua.",
+];
+
+const PATTERN_PHRASE_FI: Record<GapPattern, string> = {
+  detection: "ero alkaa havaitsemisesta",
+  "after-detection": "ero ilmenee havaitsemisen jälkeen",
+  both: "ero ulottuu havaitsemisesta tuloksiin",
+  none: "ei eroa valtakunnalliseen tasoon",
+  unknown: "tietoja liian vähän eron sijoittamiseen",
+};
+
+const STAGE_FI: Record<PathwayStage, string> = {
+  detection: "havaitsemis",
+  referral: "lähete",
+  diagnosis: "diagnoosi",
+  treatment: "hoito",
+  outcome: "tulos",
+};
+
+function fmtFiNum(n: number): string {
+  return fmt(n).replace(".", ",");
+}
+
+function templatesFi(stage: PathwayStage, sotk: string, goal3: string): Recommendation[] {
+  const detection: Recommendation[] = [
+    {
+      action: "Lähetä kohdennetut seulontakutsut ja muistutukset, myös muilla kielillä, ryhmille ja alueille, joilla seulontaosallistuminen on vähäistä.",
+      owner: "Hyvinvointialueen seulontapalvelut",
+      timeframe: "Q1–Q2 2027",
+      goal3Indicator: goal3,
+      sources: ["roadmap-p10-socioeconomic", sotk],
+    },
+    {
+      action: "Kokeile yhtenäisiä lähetekriteerejä syöpäepäilyissä terveysasemilla, jotta oireiset potilaat pääsevät nopeasti tutkimuksiin.",
+      owner: "Hyvinvointialueen perusterveydenhuolto",
+      timeframe: "Q2–Q4 2027",
+      goal3Indicator: "3.1 Valtakunnalliset hoitosuositukset ja hoitopolut",
+      sources: ["roadmap-p52-2.5.2", "roadmap-p11-lymphoma"],
+    },
+    {
+      action: "Osallistu kansalliseen laaturekisterin vertaisarviointiin, vertaa tuloksia muihin alueisiin ja seuraa tätä mittaria vuosittain.",
+      owner: "Hyvinvointialueen johto ja laatuyksikkö",
+      timeframe: "2027–2028",
+      goal3Indicator: "3.2 Laaturekisteri ja tulosten systemaattinen arviointi",
+      sources: ["strategy-p35-3.2", "strategy-p35-regional-comparison", sotk],
+    },
+  ];
+  const outcome: Recommendation[] = [
+    {
+      action: "Ota käyttöön kansalliset syöpäkohtaiset hoitopolut ja hoitoon pääsyn tavoiteajat heti niiden valmistuttua ja seuraa niiden toteutumista.",
+      owner: "Hyvinvointialueen erikoissairaanhoito (syöpätaudit)",
+      timeframe: "2027–2028",
+      goal3Indicator: "3.1 Valtakunnalliset hoitosuositukset ja hoitopolut",
+      sources: ["roadmap-p56-3.1.2", "strategy-p33-3.1", sotk],
+    },
+    {
+      action: "Nopeuta varhaista havaitsemista kokeilemalla yhtenäisiä lähetekriteerejä perus- ja erikoissairaanhoidon välillä, tavoitteena löytää useampi syöpä levinneisyysasteella I–II.",
+      owner: "Hyvinvointialueen perusterveydenhuolto",
+      timeframe: "Q2–Q4 2027",
+      goal3Indicator: "3.1 Valtakunnalliset hoitosuositukset ja hoitopolut",
+      sources: ["roadmap-p52-2.5.2", "roadmap-p52-stage-target"],
+    },
+    {
+      action: "Osallistu kansalliseen laaturekisterin vertaisarviointiin, vertaa hoitotuloksia muihin alueisiin ja opi parhailta.",
+      owner: "Hyvinvointialueen johto ja laatuyksikkö",
+      timeframe: "2027–2028",
+      goal3Indicator: "3.2 Laaturekisteri ja tulosten systemaattinen arviointi",
+      sources: ["strategy-p35-3.2", "strategy-p35-regional-comparison", sotk],
+    },
+  ];
+  const middle: Recommendation[] = [
+    {
+      action: "Kokeile yhtenäisiä lähetekriteerejä syöpäepäilyissä, jotta potilaat etenevät perusterveydenhuollosta tutkimuksiin viipymättä.",
+      owner: "Hyvinvointialueen perusterveydenhuolto",
+      timeframe: "Q1–Q2 2027",
+      goal3Indicator: "3.1 Valtakunnalliset hoitosuositukset ja hoitopolut",
+      sources: ["roadmap-p52-2.5.2", "roadmap-p11-lymphoma", sotk],
+    },
+    {
+      action: "Valmistaudu ottamaan käyttöön kansalliset syöpäkohtaiset hoitopolut ja hoitoon pääsyn tavoiteajat, joita määritellään vuosina 2026–2028.",
+      owner: "Hyvinvointialueen erikoissairaanhoito (syöpätaudit)",
+      timeframe: "2027–2028",
+      goal3Indicator: "3.1 Valtakunnalliset hoitosuositukset ja hoitopolut",
+      sources: ["roadmap-p56-3.1.2", "strategy-p33-3.1"],
+    },
+    {
+      action: "Osallistu kansalliseen laaturekisterin vertaisarviointiin ja tarkista henkilöstön riittävyys hoitopolun pullonkaulavaiheessa.",
+      owner: "Hyvinvointialueen johto ja laatuyksikkö",
+      timeframe: "2027–2028",
+      goal3Indicator: goal3,
+      sources: ["strategy-p35-3.2", "strategy-p41-3.5", sotk],
+    },
+  ];
+  if (stage === "detection") return detection;
+  if (stage === "outcome") return outcome;
+  return middle;
+}
+
+function fallbackBriefFi(input: AnalystInput): Brief {
+  const { regionName, facts, indicators } = input;
+  const worst = worstFact(facts);
+  const ind = worst ? indicators.find((i) => i.id === worst.indicatorId) : undefined;
+  const stage: PathwayStage = ind?.stage ?? "detection";
+  const sotk = ind ? `sotkanet:${ind.id}` : indicators[0] ? `sotkanet:${indicators[0].id}` : "strategy-p35-3.2";
+  const goal3 = ind?.strategyGoal ?? "3.2 Laaturekisteri ja tulosten systemaattinen arviointi";
+  const pattern = diagnosePathway(facts, indicators).pattern;
+  const u = (i: Indicator) => (i.unit === "%" ? " %" : ` ${i.unit}`);
+  let headline = `${regionName}: ${PATTERN_PHRASE_FI[pattern]}; saatavilla olevissa mittareissa ei selvää eroa`;
+  let finding = "Saatavilla olevat julkiset mittarit eivät osoita selvää eroa valtakunnalliseen tasoon.";
+  if (worst && ind && worst.value !== null) {
+    const nat = worst.national !== null ? `, valtakunnallisesti ${fmtFiNum(worst.national)}${u(ind)}` : "";
+    headline = `${regionName}: ${PATTERN_PHRASE_FI[pattern]}. ${ind.nameFi}: ${fmtFiNum(worst.value)}${u(ind)}${nat} (${worst.year})`;
+    const parts = [`Vuonna ${worst.year} alueen ${ind.nameFi} oli ${fmtFiNum(worst.value)}${u(ind)}${nat}.`];
+    if (worst.rank !== null) parts.push(`Alue on sijalla ${worst.rank} (${worst.rankOf} alueesta, joilla on tietoa).`);
+    if (worst.bestQuartile !== null) parts.push(`Parhaan neljänneksen alueet yltävät tasolle ${fmtFiNum(worst.bestQuartile)}${u(ind)}.`);
+    parts.push(`Tämä kuuluu syöpäpolun ${STAGE_FI[stage]}vaiheeseen.`);
+    finding = parts.join(" ");
+  }
+  const biggest = impactFacts(facts)
+    .filter((r) => r.toTarget !== null && r.toTarget > 0)
+    .sort((a, b) => (b.toTarget as number) - (a.toTarget as number))[0];
+  if (biggest) {
+    const bi = indicators.find((i) => i.id === biggest.indicatorId);
+    const t = facts.find((f) => f.indicatorId === biggest.indicatorId)?.target;
+    if (bi) finding += ` Suurin seulontaero on ${bi.nameFi}: tavoitteeseen (${t} %) pääsemiseksi 1 000 kutsutusta noin ${biggest.toTarget} lisää osallistujaa tarvittaisiin.`;
+  }
+  return {
+    headline,
+    finding,
+    pathwayStage: stage,
+    recommendations: templatesFi(stage, sotk, goal3),
+    limitations: [...LIMITATIONS_FI],
+    generatedBy: "fallback",
+  };
+}
 
 function fmt(n: number): string {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -152,6 +296,7 @@ function templates(stage: PathwayStage, sotk: string, goal3: string): Recommenda
 }
 
 export function fallbackBrief(input: AnalystInput): Brief {
+  if (input.language === "fi") return fallbackBriefFi(input);
   const { regionName, facts, indicators } = input;
   const worst = worstFact(facts);
   const ind = worst ? indicators.find((i) => i.id === worst.indicatorId) : undefined;
@@ -282,6 +427,7 @@ function buildPrompt(input: AnalystInput, allowed: string[], errors?: string[]):
     sourceId: `sotkanet:${i.id}`,
     id: i.id,
     nameEn: i.nameEn,
+    nameFi: i.nameFi,
     unit: i.unit,
     higherIsBetter: i.higherIsBetter,
     stage: i.stage,
@@ -291,7 +437,7 @@ function buildPrompt(input: AnalystInput, allowed: string[], errors?: string[]):
   let p = `You are a health-policy analyst writing a one-page brief for a non-technical decision-maker in the Finnish wellbeing services county "${input.regionName}", about equal cancer care (Finnish National Cancer Strategy 2026–2035).
 
 RULES:
-- Plain English, short sentences, no jargon.
+- ${input.language === "fi" ? "Write ALL text fields (headline, finding, every action, owner, timeframe, goal3Indicator, limitations) in plain Finnish (selkokieli), short sentences, no jargon. Use a decimal comma in numbers (74,3) and write percentages as \"74,3 %\". The EVIDENCE and INDICATOR names have Finnish equivalents; use nameFi for indicators. Source ids stay unchanged. goal3Indicator must be Finnish too, e.g. \"Tavoite 2: 80 %:n osallistuminen seulontoihin\" or \"3.1 Yhdenvertainen, viiveetön hoito\"." : "Plain English, short sentences, no jargon."}
 - Use ONLY numbers that appear in FACTS below. Do not compute or invent any other numbers (years from FACTS are fine).
 - gapToNational and gapToBestQuartile are sign-corrected: negative means worse than the comparison.
 - PATTERN (below) says where along the pathway the gap starts: detection = screening behind, survival not; after-detection = survival behind, screening not; both; none; unknown. Lead with the pattern in the headline, then name the most important gap.

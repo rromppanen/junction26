@@ -72,3 +72,12 @@ export const STATUS_TEXT: Record<GapStatus, string> = {
   ahead: "text-ahead",
   "no-data": "text-muted",
 };
+
+/** Hostname of a URL for display; the raw string when it is malformed. */
+export function host(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}

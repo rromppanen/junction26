@@ -72,3 +72,21 @@ describe("peer twin in the analyst", () => {
     expect(validateBrief(brief, [f], knownSourceIds([ind], []), extraNumbers(input))).toHaveLength(3);
   });
 });
+
+describe("fallbackBrief in Finnish", () => {
+  it("writes Finnish text with decimal commas that still validates", () => {
+    const b = fallbackBrief({ regionName: "Helsinki", facts: [f], indicators: [ind], language: "fi" });
+    expect(b.headline).toMatch(/74,3/);
+    expect(b.finding).toMatch(/57/);
+    expect(b.finding).not.toMatch(/\bthe\b|nationally/);
+    expect(b.recommendations).toHaveLength(3);
+    expect(validateBrief(b, [f], knownSourceIds([ind]), extraNumbers({ regionName: "Helsinki", facts: [f], indicators: [ind] }))).toEqual([]);
+  });
+  it("accepts a Finnish decimal comma in a brief", () => {
+    const b = fallbackBrief({ regionName: "Helsinki", facts: [f], indicators: [ind], language: "fi" });
+    b.headline = "Seulontaosallistuminen 74,3 % vs 76 %";
+    expect(validateBrief(b, [f], knownSourceIds([ind]), [57])).toEqual([]);
+    b.headline = "Seulontaosallistuminen 64,3 %";
+    expect(validateBrief(b, [f], knownSourceIds([ind]), [57])).not.toEqual([]);
+  });
+});
