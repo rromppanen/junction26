@@ -24,11 +24,11 @@ Our challenge is AstraZeneca's. Score it separately the way their jury will, 1-5
 
 Then check the minimum requirements as pass/fail. Any fail is disqualifying, so list it first:
 1. Every claim shows its source.
-2. Covers at least one indicator of Goal 3 of the national cancer strategy (sub-goals 3.1-3.5 in docs/challenge.md), named explicitly.
+2. Covers at least one Goal 3 indicator of the national cancer strategy (headline targets on strategy p. 5, or sub-goals 3.1-3.5 in docs/challenge.md), named explicitly.
 3. Gives concrete improvement proposals, not only analysis.
 4. Has a working demo.
 
-Also check for these traps: using patient-level or personal data (the challenge allows public aggregate data only); presenting estimates as facts; claiming target times that Finland has not defined yet (the roadmap only plans to define cancer-specific access times in 2026-2028); and an AI layer that adds nothing a table couldn't show.
+Also check for these traps: using patient-level or personal data (the challenge allows public aggregate data only); presenting estimates as facts; claiming that Finland has no target times (general ones exist in THL guidance 21/2016; only cancer-specific access times are planned for 2026-2028); labelling screening as Goal 3 (screening participation is the Goal 2 target, 80% in every county); and an AI layer that adds nothing a table couldn't show.
 
 ## Output
 

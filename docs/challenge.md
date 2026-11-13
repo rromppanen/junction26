@@ -48,15 +48,21 @@ Sources: *Kansallinen syöpästrategia 2026–2035* (the "strategy", 64 pp.), *T
 - **Overall quality is good, with known weak spots.** Finland lags the other Nordics in some cancers, such as lung cancer and myeloma.
 - **Equity is the cross-cutting theme.** The strategy names six lenses: regional, socioeconomic, the elderly, poor-prognosis cancers, rare cancers, and children and young people.
 
-### Goal 3 headline targets
+### Headline targets of the strategy (strategy p. 5)
 
-Our solution must cover at least one of these.
+Our solution must cover at least one of the Goal 3 targets.
 
-1. **Survival:** five-year survival in poor-prognosis cancers reaches the Nordic level (Sweden–Norway average). That means +14 percentage points in lung, +6 in pancreatic and +14 in liver cancer from the 2023 Nordcan level.
-2. **Mortality:** cancer deaths fall 10% from the current 13,300 a year.
-3. **Timeliness:** patients start treatment within target times. The general target times are in THL guidance 21/2016; cancer-specific ones don't exist yet (see below).
+Verified against the strategy text; see also Inka's [situation and gaps](research/AstraZeneca%20cancer%20care%20challenge%20situation%20and%20gaps.md).
 
-The closely related Goal 2 targets are at least 70% of cancers diagnosed at stage I–II and 80% screening participation in every county.
+| Goal | Headline indicator | Usable per county? |
+| --- | --- | --- |
+| **Goal 2** (prevention, early detection) | **80% participation in every screening programme in every county** | Yes: Sotkanet breast, cervical, colorectal screening |
+| Goal 2 | At least 70% of cancers diagnosed at stage I–II | No public county data |
+| **Goal 3** (equal, effective care) | 5-year survival in poor-prognosis cancers reaches the Nordic level (Sweden–Norway average): +14 percentage points in lung, +6 in pancreatic, +14 in liver cancer from the 2023 Nordcan level | Not per county; Sotkanet has breast, cervical, bowel survival per county |
+| Goal 3 | Cancer mortality falls 10% from 13,300 deaths a year | Not per county in Sotkanet |
+| Goal 3 | Patients start treatment within the target times of THL guidance 21/2016 | No public data |
+
+Distance matters (roadmap p. 13): some people live over 400 km from a central hospital and over 700 km from a university hospital, and outcomes are weaker already beyond 50 km from a treatment unit.
 
 ### Goal 3 sub-goals = "Varmistetaan yhdenvertainen ja vaikuttava syövänhoito" (ensure equal and effective cancer care), strategy pp. 32–42
 
@@ -72,7 +78,7 @@ The closely related Goal 2 targets are at least 70% of cancers diagnosed at stag
 
 - Regional differences in resources, service availability, treatment practices and support services weaken patients' equality (strategy p. 32).
 - Regional comparison is done only occasionally, using crude and fragmented measures, "if at all". There is **no national cancer-care quality register yet**, and clinical cancer data is poorly recorded (strategy p. 35).
-- **Cancer-specific target times for access to care don't exist yet.** The roadmap plans to define them for five cancers in 2026–2028, using Nordic models: Denmark's *Kræftpakkeforløb*, Sweden's *SVF* and Norway's *Pakkeforløp* (roadmap p. 56, action 3.1.2).
+- **Target times: general ones exist, cancer-specific ones don't yet.** Access to cancer care is monitored against the general target times in THL guidance 21/2016 (strategy p. 5). Cancer-specific pathways with their own access times are planned for five cancers in 2026–2028, using Nordic models: Denmark's *Kræftpakkeforløb*, Sweden's *SVF* and Norway's *Pakkeforløp* (roadmap p. 56, action 3.1.2).
 - Standardized referral criteria from primary to specialist care, for at least the five most common cancers, are planned for 2026–2028 (roadmap p. 52, action 2.5.2).
 - Socioeconomic gap: a not-yet-published lymphoma study found that **time to diagnosis is twice as long when a patient with symptoms goes to public primary care** rather than private providers. Occupational health care is well resourced, while public health centers are under-resourced (roadmap p. 11).
 - Immigrants participate less in cancer screening; low socioeconomic status is linked to suspected diagnostic delay, weaker access and lower screening participation (roadmap pp. 10–11).

@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+/*
+  Gap Radar palette.
+  Paper is a cool lichen grey, not cream. Status colours are a rust/lake-blue pair
+  so "behind" and "ahead" stay distinguishable for red-green colour-blind readers.
+  Links use ink, so the two status colours only ever mean status.
+*/
+:root {
+  --paper: #eef0ec;
+  --surface: #f8f9f6;
+  --ink: #172226;
+  --muted: #56636a;
+  --rule: #cdd3d0;
+  --nordic: #172226; /* kept as an alias for older class names; now ink */
+  --behind: #b0412e;
+  --behind-soft: #f3ddd5;
+  --ahead: #2a5c7d;
+  --ahead-soft: #dce7ee;
+  --par: #8a969b;
+  --par-soft: #e1e5e3;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-nordic: var(--nordic);
+  --color-behind: var(--behind);
+  --color-behind-soft: var(--behind-soft);
+  --color-ahead: var(--ahead);
+  --color-ahead-soft: var(--ahead-soft);
+  --color-par: var(--par);
+  --color-par-soft: var(--par-soft);
+  --font-sans: var(--font-archivo);
+  --font-serif: var(--font-source-serif);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-feature-settings: "tnum" 0;
+}
+
+/* Long Finnish compound names ("Pohjois-Pohjanmaa") set in Archivo's condensed width. */
+.font-narrow {
+  font-stretch: 72%;
+}
+
+.link {
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.link:hover {
+  text-decoration-color: currentColor;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--behind-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-break {
+    break-inside: avoid;
+  }
+}
