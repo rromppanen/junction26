@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDataset } from "@/lib/data";
-import { INDICATORS, indicatorById } from "@/data/indicators";
+import { CONTEXT_INDICATORS, INDICATORS, indicatorById } from "@/data/indicators";
 import { EVIDENCE } from "@/data/evidence";
 import { computeGap, latestYear } from "@/lib/gap";
 import { generateBrief } from "@/lib/analyst";
@@ -9,6 +9,8 @@ import { getLiveContext, type LiveSnippet } from "@/lib/context";
 import { TrendChart } from "@/components/TrendChart";
 import { PathwayFingerprint } from "@/components/PathwayFingerprint";
 import { WhatItTakes } from "@/components/WhatItTakes";
+import { LeftBehind } from "@/components/LeftBehind";
+import { equityFacts } from "@/lib/equity";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
 import { STATUS_LABEL, STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, shortName } from "@/components/format";
@@ -25,7 +27,8 @@ function resolveSource(id: string, live: LiveSnippet[] = []): Source {
       : { id, label: id, url: "#" };
   }
   if (id.startsWith("sotkanet:")) {
-    const ind = indicatorById(Number(id.slice(9)));
+    const n = Number(id.slice(9));
+    const ind = indicatorById(n) ?? CONTEXT_INDICATORS.find((c) => c.id === n);
     return ind
       ? { id, label: `Sotkanet: ${ind.nameEn}`, url: ind.sourceUrl, detail: ind.nameFi }
       : { id, label: id, url: "https://sotkanet.fi" };
@@ -52,7 +55,8 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
 
   const facts = INDICATORS.map((ind) => computeGap(ds, ind, regionId, latestYear(ds, ind)));
   const live = await getLiveContext(region.name);
-  const brief = await generateBrief({ regionName: name, facts, indicators: INDICATORS, live: live.snippets });
+  const equity = equityFacts(ds, regionId, INDICATORS, CONTEXT_INDICATORS);
+  const brief = await generateBrief({ regionName: name, facts, indicators: INDICATORS, live: live.snippets, equity });
 
   const sourceIds = [...new Set(brief.recommendations.flatMap((r) => r.sources))];
   const sources = sourceIds.map((s) => resolveSource(s, live.snippets));
@@ -90,6 +94,8 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
       <PathwayFingerprint facts={facts} indicators={INDICATORS} />
 
       <WhatItTakes facts={facts} indicators={INDICATORS} />
+
+      <LeftBehind equity={equity} name={name} />
 
       <section className="mb-14 print-break" aria-labelledby="stage-h">
         <h2 id="stage-h" className="mb-3 text-sm text-muted">
