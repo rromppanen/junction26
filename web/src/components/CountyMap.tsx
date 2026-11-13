@@ -40,7 +40,7 @@ export function CountyMap({
   facts: Map<number, GapFacts>;
   unit: string;
 }) {
-  const counties = regions.filter((r) => !r.isNational);
+  const counties = regions.filter((r) => r.kind === "county");
   if (counties.some((r) => !BY_NAME.has(r.name))) return <TileMap regions={regions} facts={facts} unit={unit} />;
 
   const items = counties.map((r) => {

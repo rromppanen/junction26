@@ -76,6 +76,27 @@ export const INDICATORS: Indicator[] = [
   },
 ];
 
+// Context indicators for the equity lens (municipality level). Never shown on the radar.
+// higherIsBetter is only a reading convention here: these are descriptions of the population, not targets.
+const CONTEXT_GOAL = "Context only: describes the population, not a strategy indicator";
+const context = (id: number, slug: string, nameEn: string, nameFi: string, unit: string): Indicator => ({
+  id, slug, nameEn, nameFi, unit, higherIsBetter: true, stage: "detection",
+  strategyGoal: CONTEXT_GOAL, gender: "total", sourceUrl: src(id),
+});
+
+export const CONTEXT_INDICATORS: Indicator[] = [
+  context(127, "population", "Population at year end", "Väestö 31.12.", "people"),
+  // Average theoretical years of education after basic education, x100 (e.g. 246 = 2.5 years). Higher = more educated.
+  context(180, "education-level", "Measure of educational level", "Koulutustasomittain", "score"),
+  context(3074, "foreign-nationals", "Foreign nationals as % of total population", "Ulkomaan kansalaiset, % väestöstä", "%"),
+  context(5102, "foreign-background", "Persons with foreign background per 1,000 inhabitants", "Ulkomaalaistaustaiset / 1 000 asukasta", "per 1,000"),
+  context(181, "unemployment", "Unemployed people, as % of labour force", "Työttömät, % työvoimasta", "%"),
+];
+
+export function contextIndicatorBySlug(slug: string): Indicator | undefined {
+  return CONTEXT_INDICATORS.find((i) => i.slug === slug);
+}
+
 export function indicatorBySlug(slug: string): Indicator | undefined {
   return INDICATORS.find((i) => i.slug === slug);
 }

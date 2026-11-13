@@ -45,7 +45,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
   const { id } = await params;
   const regionId = Number(id);
   const ds = await getDataset();
-  const region = ds.regions.find((r) => r.id === regionId && !r.isNational);
+  const region = ds.regions.find((r) => r.id === regionId && r.kind === "county"); // municipalities 404
   if (!region) notFound();
   const nationalRegion = ds.regions.find((r) => r.isNational);
   const name = shortName(region.name);

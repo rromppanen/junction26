@@ -44,7 +44,7 @@ export function TileMap({
   facts: Map<number, GapFacts>;
   unit: string;
 }) {
-  const counties = regions.filter((r) => !r.isNational);
+  const counties = regions.filter((r) => r.kind === "county");
   const placed: { r: Region; col: number; row: number }[] = [];
   const unplaced: Region[] = [];
   for (const r of counties) {

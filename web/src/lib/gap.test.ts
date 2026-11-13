@@ -13,11 +13,11 @@ const down: Indicator = { ...base, id: 2, higherIsBetter: false };
 const v = (indicatorId: number, regionId: number, year: number, value: number) => ({ indicatorId, regionId, year, value });
 const ds: Dataset = {
   regions: [
-    { id: 0, name: "Koko maa", isNational: true },
-    { id: 10, name: "A", isNational: false },
-    { id: 11, name: "B", isNational: false },
-    { id: 12, name: "C", isNational: false },
-    { id: 13, name: "D", isNational: false },
+    { id: 0, name: "Koko maa", isNational: true, kind: "national", parentId: null },
+    { id: 10, name: "A", isNational: false, kind: "county", parentId: null },
+    { id: 11, name: "B", isNational: false, kind: "county", parentId: null },
+    { id: 12, name: "C", isNational: false, kind: "county", parentId: null },
+    { id: 13, name: "D", isNational: false, kind: "county", parentId: null },
   ],
   values: [
     v(1, 0, 2023, 70), v(1, 10, 2023, 60), v(1, 11, 2023, 71), v(1, 12, 2023, 80),
@@ -78,5 +78,34 @@ describe("gap engine", () => {
   it("rankCounties sorts best first, no-data last, excludes national", () => {
     expect(rankCounties(ds, up, 2023).map((g) => g.regionId)).toEqual([12, 11, 10, 13]);
     expect(rankCounties(ds, down, 2023).map((g) => g.regionId)).toEqual([11, 12, 10, 13]);
+  });
+
+  describe("with municipalities in the dataset", () => {
+    // Municipalities 100 (in A) and 101 (in C) with extreme values, also in a later year with no county data.
+    const withMunis: Dataset = {
+      ...ds,
+      regions: [
+        ...ds.regions,
+        { id: 100, name: "a1", isNational: false, kind: "municipality", parentId: 10 },
+        { id: 101, name: "c1", isNational: false, kind: "municipality", parentId: 12 },
+      ],
+      values: [...ds.values, v(1, 100, 2023, 99), v(1, 101, 2023, 1), v(2, 100, 2023, 0), v(1, 100, 2025, 50)],
+    };
+
+    it("leaves county ranks, rankOf and bestQuartile unchanged", () => {
+      for (const ind of [up, down]) {
+        for (const id of [10, 11, 12, 13]) {
+          expect(computeGap(withMunis, ind, id, 2023)).toEqual(computeGap(ds, ind, id, 2023));
+        }
+      }
+    });
+
+    it("rankCounties lists counties only", () => {
+      expect(rankCounties(withMunis, up, 2023).map((g) => g.regionId)).toEqual([12, 11, 10, 13]);
+    });
+
+    it("latestYear ignores municipality-only years", () => {
+      expect(latestYear(withMunis, up)).toBe(2023);
+    });
   });
 });
