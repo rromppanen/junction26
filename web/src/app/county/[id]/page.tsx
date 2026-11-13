@@ -20,7 +20,7 @@ import { OpenOnHash } from "@/components/OpenOnHash";
 import { STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, host } from "@/components/format";
 import type { GapFacts, PathwayStage } from "@/lib/types";
 import {
-  ArrowLeft, BookOpen, CalendarClock, FileText, Globe, Handshake, LineChart, Link2, ListChecks, Route, Ruler,
+  ArrowLeft, BookOpen, CalendarClock, FileText, Gauge, Globe, Handshake, LineChart, Link2, ListChecks, Route, Ruler,
   Sparkles, Target, TriangleAlert, UserRound, Users, type LucideIcon,
 } from "lucide-react";
 
@@ -104,6 +104,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
       <AppHeader>
         <HeaderLink href="/" icon={ArrowLeft} label="Map" />
         <HeaderLink href={`/county/${regionId}/memo`} icon={FileText} label="Memo (FI)" title="One-page board memo in Finnish" />
+        <HeaderLink href={`/simulator?county=${regionId}`} icon={Gauge} label="Simulate" title="What raising breast screening attendance here would be worth" />
       </AppHeader>
 
       <header className="mb-8">
