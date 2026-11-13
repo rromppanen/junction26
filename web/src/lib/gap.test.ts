@@ -4,7 +4,7 @@ import type { Dataset, Indicator } from "./types";
 
 const base: Omit<Indicator, "id" | "higherIsBetter"> = {
   slug: "x", nameEn: "x", nameFi: "x", unit: "%", stage: "detection",
-  goal3: "3.2", gender: "total", sourceUrl: "",
+  strategyGoal: "3.2", gender: "total", sourceUrl: "",
 };
 const up: Indicator = { ...base, id: 1, higherIsBetter: true };
 const down: Indicator = { ...base, id: 2, higherIsBetter: false };
@@ -66,6 +66,13 @@ describe("gap engine", () => {
     const g = computeGap(ds, up, 13, 2023);
     expect(g).toMatchObject({ value: null, gapToNational: null, rank: null, trend3y: null, status: "no-data", rankOf: 3 });
     expect(computeGap(ds, up, 11, 2023).trend3y).toBeNull();
+  });
+
+  it("computes the gap to an official target", () => {
+    const withTarget: Indicator = { ...up, target: { value: 75, label: "", evidenceId: "" } };
+    expect(computeGap(ds, withTarget, 10, 2023)).toMatchObject({ target: 75, gapToTarget: -15 });
+    expect(computeGap(ds, withTarget, 12, 2023)).toMatchObject({ target: 75, gapToTarget: 5 });
+    expect(computeGap(ds, up, 10, 2023)).toMatchObject({ target: null, gapToTarget: null });
   });
 
   it("rankCounties sorts best first, no-data last, excludes national", () => {

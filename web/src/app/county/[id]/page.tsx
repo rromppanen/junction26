@@ -88,7 +88,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
               <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
                 <dt className="text-muted">Owner</dt><dd>{r.owner}</dd>
                 <dt className="text-muted">When</dt><dd>{r.timeframe}</dd>
-                <dt className="text-muted">Goal 3</dt><dd>{r.goal3Indicator}</dd>
+                <dt className="text-muted">Strategy goal</dt><dd>{r.goal3Indicator}</dd>
               </dl>
               <div className="mt-auto flex flex-wrap gap-1.5 pt-3">
                 {r.sources.map((s) => (
@@ -126,6 +126,17 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
                   <span className="text-muted"> vs {fmt(f.national, ind.unit)} nationally · gap </span>
                   <span className={`font-semibold tabular-nums ${f.status === "behind" ? "text-behind" : f.status === "ahead" ? "text-ahead" : ""}`}>{fmtGap(f.gapToNational)}</span>
                   {f.rank !== null && <span className="text-muted"> · rank {f.rank}/{f.rankOf}</span>}
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  {ind.strategyGoal}
+                  {f.target !== null && f.gapToTarget !== null && (
+                    <>
+                      {" · "}
+                      <span className={f.gapToTarget >= 0 ? "text-ahead font-semibold" : "text-behind font-semibold"}>
+                        {f.gapToTarget >= 0 ? "meets" : "below"} the {f.target}% target ({fmtGap(f.gapToTarget)})
+                      </span>
+                    </>
+                  )}
                 </p>
                 <div className="mt-3">
                   <TrendChart county={series(ind.id, regionId)} national={series(ind.id, nationalRegion?.id)} unit={ind.unit} />

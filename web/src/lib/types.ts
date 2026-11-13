@@ -12,7 +12,8 @@ export type Indicator = {
   unit: string; // e.g. "%"
   higherIsBetter: boolean;
   stage: PathwayStage;
-  goal3: string; // e.g. "3.2 Reliable information on regional differences"
+  strategyGoal: string; // national cancer strategy goal, e.g. "Goal 2: 80% screening participation in every county"
+  target?: { value: number; label: string; evidenceId: string }; // official national target, if one exists
   gender: "total" | "female";
   sourceUrl: string; // public Sotkanet page for the indicator
 };
@@ -51,6 +52,8 @@ export type GapFacts = {
   rank: number | null; // 1 = best among counties with data
   rankOf: number; // number of counties with data
   trend3y: number | null; // value(year) - value(year-3), raw (not sign-corrected)
+  target: number | null; // official national target for this indicator, if any
+  gapToTarget: number | null; // positive = above target (sign-corrected)
   status: GapStatus;
 };
 

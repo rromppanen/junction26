@@ -23,7 +23,7 @@ function isExempt(raw: string, n: number): boolean {
 function factNumbers(facts: GapFacts[]): number[] {
   const out: number[] = [];
   for (const f of facts) {
-    for (const x of [f.value, f.national, f.bestQuartile, f.gapToNational, f.gapToBestQuartile, f.rank, f.rankOf, f.trend3y, f.year]) {
+    for (const x of [f.value, f.national, f.bestQuartile, f.gapToNational, f.gapToBestQuartile, f.rank, f.rankOf, f.trend3y, f.year, f.target, f.gapToTarget]) {
       if (x !== null && Number.isFinite(x)) out.push(Math.abs(x));
     }
   }

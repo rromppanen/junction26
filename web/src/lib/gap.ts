@@ -78,6 +78,8 @@ export function computeGap(ds: Dataset, ind: Indicator, regionId: number, year: 
     rank,
     rankOf: counties.length,
     trend3y,
+    target: ind.target?.value ?? null,
+    gapToTarget: value !== null && ind.target ? round1(sign * (value - ind.target.value)) : null,
     status,
   };
 }

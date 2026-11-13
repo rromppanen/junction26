@@ -16,6 +16,8 @@ export function knownSourceIds(indicators: Indicator[]): string[] {
 const LIMITATIONS = [
   "No public county-level data on referral or diagnosis delays exists, so delays in the pathway cannot be measured directly.",
   "Aggregate, county-level data only: differences between groups (e.g. socioeconomic or language groups) inside the county are not visible.",
+  "County-level cancer mortality and lung cancer survival are not published in Sotkanet, so two of Goal 3's headline indicators cannot be shown per county.",
+  "Small counties (e.g. Åland) have few cases, so year-to-year changes in survival can be random variation.",
 ];
 
 function fmt(n: number): string {
@@ -118,7 +120,7 @@ export function fallbackBrief(input: AnalystInput): Brief {
   const ind = worst ? indicators.find((i) => i.id === worst.indicatorId) : undefined;
   const stage: PathwayStage = ind?.stage ?? "detection";
   const sotk = ind ? `sotkanet:${ind.id}` : indicators[0] ? `sotkanet:${indicators[0].id}` : "strategy-p35-3.2";
-  const goal3 = ind?.goal3 ?? "3.2 Quality register and systematic review of results";
+  const goal3 = ind?.strategyGoal ?? "3.2 Quality register and systematic review of results";
 
   let headline = `${regionName}: no clear gap found in the available indicators`;
   let finding =
@@ -185,17 +187,21 @@ function buildPrompt(input: AnalystInput, allowed: string[], errors?: string[]):
     unit: i.unit,
     higherIsBetter: i.higherIsBetter,
     stage: i.stage,
-    goal3: i.goal3,
+    strategyGoal: i.strategyGoal, target: i.target,
   }));
   const evidence = EVIDENCE.map((e) => ({ id: e.id, title: e.titleEn, summary: e.summaryEn }));
-  let p = `You are a health-policy analyst writing a one-page brief for a non-technical decision-maker in the Finnish wellbeing services county "${input.regionName}", about equal cancer care (Finnish National Cancer Strategy, Goal 3).
+  let p = `You are a health-policy analyst writing a one-page brief for a non-technical decision-maker in the Finnish wellbeing services county "${input.regionName}", about equal cancer care (Finnish National Cancer Strategy 2026–2035).
 
 RULES:
 - Plain English, short sentences, no jargon.
 - Use ONLY numbers that appear in FACTS below. Do not compute or invent any other numbers (years from FACTS are fine).
 - gapToNational and gapToBestQuartile are sign-corrected: negative means worse than the comparison.
 - Name the most important gap in the headline.
-- Exactly 3 recommendations, each with a concrete action, an owner (a unit of the wellbeing services county), a timeframe (e.g. "Q1–Q2 2027"), a goal3Indicator (a Goal 3 sub-goal), and sources.
+- Differences between percentages are "percentage points", never "percent".
+- Screening indicators have an official national target (FACTS.target, 80% in every county, strategy Goal 2). Say whether the county meets it, using gapToTarget.
+- Goal 3 is measured by survival, mortality and access within the target times of THL guidance 21/2016. Cancer-specific access times are still being defined (2026–2028). Never say that no target times exist.
+- Actions must be specific enough for a county to start: who does what, for which group or area, and how progress is measured. Avoid vague verbs like "improve" or "increase outreach" on their own.
+- Exactly 3 recommendations, each with a concrete action, an owner (a unit of the wellbeing services county), a timeframe in the future (2027 or later, e.g. "Q1–Q2 2027"), a goal3Indicator (the strategy goal or sub-goal it moves, e.g. "Goal 2: 80% screening participation" or "3.1 Equal, delay-free care"), and sources.
 - Every recommendation's sources must be ids from ALLOWED_SOURCE_IDS only, at least one each.
 - Include limitations, at minimum: no public county-level referral/diagnosis delay data exists; data is aggregate (county-level) only.
 

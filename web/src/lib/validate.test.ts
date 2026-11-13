@@ -4,7 +4,7 @@ import type { Brief, GapFacts } from "./types";
 
 const facts: GapFacts[] = [{
   indicatorId: 1, regionId: 10, year: 2023, value: 60.4, national: 70, bestQuartile: 75.5,
-  gapToNational: -9.6, gapToBestQuartile: -15.1, rank: 18, rankOf: 21, trend3y: -2.3, status: "behind",
+  gapToNational: -9.6, gapToBestQuartile: -15.1, rank: 18, rankOf: 21, trend3y: -2.3, target: null, gapToTarget: null, status: "behind",
 }];
 const known = ["strategy-p33-3.1", "sotkanet:1"];
 const rec = (action: string, sources = ["sotkanet:1"]) => ({ action, owner: "o", timeframe: "6 months", goal3Indicator: "3.2", sources });

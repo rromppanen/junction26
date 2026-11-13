@@ -1,8 +1,13 @@
 import type { Indicator } from "@/lib/types";
 
 const src = (id: number) => `https://sotkanet.fi/sotkanet/en/taulukko?indicator=${id}`;
-const GOAL_32 = "3.2 Reliable information on regional differences in diagnostics and care";
-const GOAL_31 = "3.1 Equal, delay-free and effective care";
+
+// National cancer strategy 2026–2035, headline indicators (strategy p. 7 overview):
+// Goal 2 = prevention and early detection, Goal 3 = equal and effective care.
+const GOAL_2_SCREENING = "Goal 2: 80% participation in every screening programme in every county";
+const GOAL_3_SURVIVAL = "Goal 3: equal and effective care (5-year survival)";
+
+const SCREENING_TARGET = { value: 80, label: "National target 80% in every county", evidenceId: "strategy-goal2-screening-80" };
 
 // Note: Sotkanet publishes these indicators under gender "total" (no "female" rows exist).
 export const INDICATORS: Indicator[] = [
@@ -14,7 +19,8 @@ export const INDICATORS: Indicator[] = [
     unit: "%",
     higherIsBetter: true,
     stage: "detection",
-    goal3: GOAL_32,
+    strategyGoal: GOAL_2_SCREENING,
+    target: SCREENING_TARGET,
     gender: "total",
     sourceUrl: src(3621),
   },
@@ -26,9 +32,23 @@ export const INDICATORS: Indicator[] = [
     unit: "%",
     higherIsBetter: true,
     stage: "detection",
-    goal3: GOAL_32,
+    strategyGoal: GOAL_2_SCREENING,
+    target: SCREENING_TARGET,
     gender: "total",
     sourceUrl: src(6103),
+  },
+  {
+    id: 3620,
+    slug: "cervical-screening",
+    nameEn: "Cervical cancer screening attendance",
+    nameFi: "Kohdunkaulasyövän seulontoihin osallistuminen",
+    unit: "%",
+    higherIsBetter: true,
+    stage: "detection",
+    strategyGoal: GOAL_2_SCREENING,
+    target: SCREENING_TARGET,
+    gender: "total",
+    sourceUrl: src(3620),
   },
   {
     id: 3625,
@@ -38,9 +58,21 @@ export const INDICATORS: Indicator[] = [
     unit: "%",
     higherIsBetter: true,
     stage: "outcome",
-    goal3: GOAL_31,
+    strategyGoal: GOAL_3_SURVIVAL,
     gender: "total",
     sourceUrl: src(3625),
+  },
+  {
+    id: 3627,
+    slug: "bowel-survival",
+    nameEn: "5-year relative survival of bowel cancer patients",
+    nameFi: "Suolistosyöpäpotilaiden 5 vuoden suhteellinen elossaololuku",
+    unit: "%",
+    higherIsBetter: true,
+    stage: "outcome",
+    strategyGoal: GOAL_3_SURVIVAL,
+    gender: "total",
+    sourceUrl: src(3627),
   },
 ];
 

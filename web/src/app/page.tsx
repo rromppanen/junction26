@@ -88,6 +88,18 @@ export default async function RadarPage({
             {ind.higherIsBetter ? "higher is better" : "lower is better"} ·{" "}
             <span className="text-behind font-semibold">{behind}</span> of {ranked.length} counties behind
           </p>
+          <p className="-mt-2 mb-4 text-xs text-muted">
+            {ind.strategyGoal}
+            {ind.target && (
+              <>
+                {" · "}
+                <strong className="text-ink">
+                  {ranked.filter((f) => f.value !== null && f.value >= ind.target!.value).length} of {ranked.filter((f) => f.value !== null).length}
+                </strong>{" "}
+                counties meet the {ind.target.value}% target
+              </>
+            )}
+          </p>
           <TileMap regions={ds.regions} facts={factsById} unit={ind.unit} />
         </section>
 

@@ -14,7 +14,7 @@ export const EVIDENCE: EvidenceItem[] = [
     summaryEn:
       "Sub-goal 3.1: national treatment recommendations and care pathways should steer equal, delay-free cancer care across Finland.",
     quoteFi:
-      "Kansalliset hoitosuositukset ja hoitoketjut ohjaavat yhdenvertaista, viiveetöntä ja vaikuttavaa syövän hoitoa",
+      "Kansalliset hoitosuositukset ja hoitoketjut ohjaavat yhdenvertaista, viiveetöntä ja vaikuttavaa hoitoa",
     url: STRATEGY_URL,
   },
   {
@@ -89,7 +89,7 @@ export const EVIDENCE: EvidenceItem[] = [
     page: 56,
     titleEn: "Action 3.1.2: Cancer-specific care pathways and access times",
     summaryEn:
-      "Cancer-specific target access times do not exist yet; they are to be defined for five cancers in 2026–2028 using Nordic models (Denmark's Kræftpakkeforløb, Sweden's SVF, Norway's Pakkeforløp).",
+      "General target times for access to cancer care already exist (THL guidance 21/2016). Cancer-specific pathways with their own access times are to be defined for five cancers in 2026–2028, using Nordic models (Denmark's Kræftpakkeforløb, Sweden's SVF, Norway's Pakkeforløp).",
     quoteFi:
       "Tanskan Kræftpakkeforløb; Ruotsin standardiserade vårdförlopp [SVF]; Norjan Pakkeforløp – kreft",
     url: ROADMAP_URL,
@@ -124,6 +124,39 @@ export const EVIDENCE: EvidenceItem[] = [
     summaryEn:
       "Early-detection target: at least 70% of cancers diagnosed at stage I–II by 2035.",
     quoteFi: "Vähintään 70 % syövistä diagnosoidaan levinneisyysluokissa I–II",
+    url: ROADMAP_URL,
+  },
+  {
+    id: "strategy-goal2-screening-80",
+    doc: "strategy",
+    page: 5,
+    titleEn: "Goal 2 target: 80% screening participation in every county",
+    summaryEn:
+      "Headline indicator of Goal 2 (prevention and early detection): every cancer screening programme reaches 80% participation in every wellbeing services county.",
+    quoteFi:
+      "Kaikissa syöpäseulontaohjelmissa saavutetaan 80 %:n osallistumisaste jokaisella hyvinvointialueella",
+    url: STRATEGY_URL,
+  },
+  {
+    id: "strategy-goal3-headline",
+    doc: "strategy",
+    page: 5,
+    titleEn: "Goal 3 headline indicators: survival, mortality, target times",
+    summaryEn:
+      "Goal 3 (equal and effective care) is measured by three headline indicators: 5-year survival in poor-prognosis cancers reaches the Nordic level (Sweden–Norway average; +14 percentage points in lung, +6 in pancreatic and +14 in liver cancer from the 2023 Nordcan level), cancer mortality falls 10% from the current 13,300 deaths a year, and patients start treatment within the target times of THL guidance 21/2016.",
+    quoteFi:
+      "Syöpäkuolleisuus pienenee 10 % (nykyisin 13 300 henkilöä vuodessa) • Potilaat pääsevät hoitoon tavoiteaikojen puitteissa (THL, Ohjaus 21/2016)",
+    url: STRATEGY_URL,
+  },
+  {
+    id: "roadmap-p13-distance",
+    doc: "roadmap",
+    page: 13,
+    titleEn: "Distance to care worsens outcomes",
+    summaryEn:
+      "For some people the nearest central hospital is over 400 km and the nearest university hospital over 700 km away. Treatment results are weaker already when a patient lives more than 50 km from a treatment unit.",
+    quoteFi:
+      "hoitotulokset ovat heikompia jo silloin, jos potilas asuu yli 50 km:n päässä hoitoyksiköstä",
     url: ROADMAP_URL,
   },
 ];
