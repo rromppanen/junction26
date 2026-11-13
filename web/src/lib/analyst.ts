@@ -2,15 +2,16 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { EVIDENCE } from "@/data/evidence";
 import type { Brief, GapFacts, Indicator, PathwayStage, Recommendation } from "./types";
 import { validateBrief } from "./validate";
+import type { LiveSnippet } from "./context";
 
 // Light model for development; set GEMINI_MODEL (e.g. gemini-3.8-flash) for the real demo.
 // gemini-2.5-flash is no longer offered to new API keys.
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 
-export type AnalystInput = { regionName: string; facts: GapFacts[]; indicators: Indicator[] };
+export type AnalystInput = { regionName: string; facts: GapFacts[]; indicators: Indicator[]; live?: LiveSnippet[] };
 
-export function knownSourceIds(indicators: Indicator[]): string[] {
-  return [...EVIDENCE.map((e) => e.id), ...indicators.map((i) => `sotkanet:${i.id}`)];
+export function knownSourceIds(indicators: Indicator[], live: LiveSnippet[] = []): string[] {
+  return [...EVIDENCE.map((e) => e.id), ...indicators.map((i) => `sotkanet:${i.id}`), ...live.map((s) => s.id)];
 }
 
 const LIMITATIONS = [
@@ -212,7 +213,14 @@ INDICATORS: ${JSON.stringify(indicatorMeta)}
 FACTS: ${JSON.stringify(input.facts)}
 
 EVIDENCE: ${JSON.stringify(evidence)}
-`;
+${
+  input.live && input.live.length
+    ? `
+LIVE_COUNTY_PAGES (public web pages found for this county via Context.dev; cite by id when an action builds on what the county already does, e.g. an existing pathway or service; do not take numbers from them):
+${JSON.stringify(input.live.map((s) => ({ id: s.id, title: s.title, url: s.url, text: s.text })))}
+`
+    : ""
+}`;
   if (errors && errors.length) {
     p += `\nYour previous answer failed validation with these errors. Fix all of them:\n- ${errors.join("\n- ")}\n`;
   }
@@ -238,7 +246,7 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 export async function generateBrief(input: AnalystInput): Promise<Brief> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return fallbackBrief(input);
-  const allowed = knownSourceIds(input.indicators);
+  const allowed = knownSourceIds(input.indicators, input.live);
   try {
     const ai = new GoogleGenAI({ apiKey });
     const ask = async (errors?: string[]): Promise<Brief> => {
