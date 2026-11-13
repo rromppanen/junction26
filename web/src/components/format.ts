@@ -16,17 +16,17 @@ export function fmtGap(v: number | null | undefined): string {
 }
 
 export const STATUS_LABEL: Record<GapStatus, string> = {
-  behind: "Behind national",
-  "on-par": "On par",
-  ahead: "Ahead of national",
-  "no-data": "No data",
+  behind: "Behind",
+  "on-par": "Level",
+  ahead: "Ahead",
+  "no-data": "No figure",
 };
 
 export const STATUS_CLASSES: Record<GapStatus, string> = {
   behind: "bg-behind text-white",
   "on-par": "bg-par-soft text-ink",
   ahead: "bg-ahead text-white",
-  "no-data": "bg-white text-muted border border-dashed border-rule",
+  "no-data": "bg-transparent text-muted border border-dashed border-par",
 };
 
 export const STAGE_LABEL: Record<PathwayStage, string> = {
@@ -35,4 +35,12 @@ export const STAGE_LABEL: Record<PathwayStage, string> = {
   diagnosis: "Diagnosis",
   treatment: "Treatment",
   outcome: "Outcome",
+};
+
+/** Text colour for a status figure (gap numbers, inline mentions). */
+export const STATUS_TEXT: Record<GapStatus, string> = {
+  behind: "text-behind",
+  "on-par": "text-muted",
+  ahead: "text-ahead",
+  "no-data": "text-muted",
 };

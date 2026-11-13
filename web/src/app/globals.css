@@ -1,18 +1,24 @@
 @import "tailwindcss";
 
+/*
+  Gap Radar palette.
+  Paper is a cool lichen grey, not cream. Status colours are a rust/lake-blue pair
+  so "behind" and "ahead" stay distinguishable for red-green colour-blind readers.
+  Links use ink, so the two status colours only ever mean status.
+*/
 :root {
-  --paper: #f4f6f7;
-  --surface: #ffffff;
-  --ink: #17262f;
-  --muted: #5b6b74;
-  --rule: #d8dfe3;
-  --nordic: #1f4e79;
-  --behind: #b8473b;
-  --behind-soft: #f6e1dd;
-  --ahead: #2c7a57;
-  --ahead-soft: #dcefe5;
-  --par: #8d9aa2;
-  --par-soft: #e7ebee;
+  --paper: #eef0ec;
+  --surface: #f8f9f6;
+  --ink: #172226;
+  --muted: #56636a;
+  --rule: #cdd3d0;
+  --nordic: #172226; /* kept as an alias for older class names; now ink */
+  --behind: #b0412e;
+  --behind-soft: #f3ddd5;
+  --ahead: #2a5c7d;
+  --ahead-soft: #dce7ee;
+  --par: #8a969b;
+  --par-soft: #e1e5e3;
 }
 
 @theme inline {
@@ -28,23 +34,59 @@
   --color-ahead-soft: var(--ahead-soft);
   --color-par: var(--par);
   --color-par-soft: var(--par-soft);
-  --font-sans: var(--font-public-sans);
+  --font-sans: var(--font-archivo);
   --font-serif: var(--font-source-serif);
 }
 
 body {
   background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-public-sans), system-ui, sans-serif;
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-feature-settings: "tnum" 0;
 }
 
-a:focus-visible, button:focus-visible {
-  outline: 2px solid var(--nordic);
+/* Long Finnish compound names ("Pohjois-Pohjanmaa") set in Archivo's condensed width. */
+.font-narrow {
+  font-stretch: 72%;
+}
+
+.link {
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.link:hover {
+  text-decoration-color: currentColor;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
 
+::selection {
+  background: var(--behind-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 @media print {
-  body { background: #fff; }
-  .no-print { display: none !important; }
-  .print-break { break-inside: avoid; }
+  body {
+    background: #fff;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-break {
+    break-inside: avoid;
+  }
 }

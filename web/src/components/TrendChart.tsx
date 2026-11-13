@@ -5,7 +5,7 @@ type Pt = { year: number; value: number };
 export function TrendChart({ county, national, unit }: { county: Pt[]; national: Pt[]; unit: string }) {
   const W = 320, H = 120, P = { l: 34, r: 8, t: 10, b: 20 };
   const all = [...county, ...national];
-  if (all.length === 0) return <p className="text-sm text-muted">No time series available.</p>;
+  if (all.length === 0) return <p className="text-sm text-muted">No yearly figures to draw for this one.</p>;
   const years = all.map((p) => p.year);
   const x0 = Math.min(...years), x1 = Math.max(...years);
   let y0 = Math.min(...all.map((p) => p.value)), y1 = Math.max(...all.map((p) => p.value));
@@ -27,14 +27,14 @@ export function TrendChart({ county, national, unit }: { county: Pt[]; national:
         ))}
         <text x={P.l} y={H - 4} fontSize={9} fill="var(--muted)">{x0}</text>
         <text x={W - P.r} y={H - 4} fontSize={9} fill="var(--muted)" textAnchor="end">{x1}</text>
-        <path d={path(national)} fill="none" stroke="var(--par)" strokeWidth={2} strokeDasharray="4 3" />
-        <path d={path(county)} fill="none" stroke="var(--nordic)" strokeWidth={2.5} />
-        {lastC && <circle cx={sx(lastC.year)} cy={sy(lastC.value)} r={3.5} fill="var(--nordic)" />}
+        <path d={path(national)} fill="none" stroke="var(--par)" strokeWidth={1.5} strokeDasharray="3 3" />
+        <path d={path(county)} fill="none" stroke="var(--ink)" strokeWidth={2.25} strokeLinejoin="round" />
+        {lastC && <circle cx={sx(lastC.year)} cy={sy(lastC.value)} r={3.5} fill="var(--ink)" />}
       </svg>
       <figcaption className="mt-1 flex gap-4 text-[11px] text-muted">
-        <span className="inline-flex items-center gap-1"><span className="inline-block h-0.5 w-4 bg-nordic" />County</span>
+        <span className="inline-flex items-center gap-1"><span className="inline-block h-0.5 w-4 bg-ink" />This county</span>
         <span className="inline-flex items-center gap-1"><span className="inline-block h-0.5 w-4 border-t-2 border-dashed border-par" />Whole country</span>
-        {unit && <span>Unit: {unit}</span>}
+        {unit && unit !== "%" && <span>{unit}</span>}
       </figcaption>
     </figure>
   );

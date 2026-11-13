@@ -9,7 +9,7 @@ import { getCountyContext, liveContextEnabled, type LiveSnippet } from "@/lib/co
 import { TrendChart } from "@/components/TrendChart";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
-import { STATUS_CLASSES, STATUS_LABEL, STAGE_LABEL, fmt, fmtGap, shortName } from "@/components/format";
+import { STATUS_LABEL, STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, shortName } from "@/components/format";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,7 @@ function resolveSource(id: string, live: LiveSnippet[] = []): Source {
   if (id.startsWith("live:")) {
     const s = live.find((l) => l.id === id);
     return s
-      ? { id, label: `Live web (Context.dev): ${s.title}`, url: s.url, detail: s.text }
+      ? { id, label: `County website: ${s.title}`, url: s.url, detail: s.text }
       : { id, label: id, url: "#" };
   }
   if (id.startsWith("sotkanet:")) {
@@ -59,149 +59,158 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
   const series = (indId: number, rId: number | undefined) =>
     ds.values.filter((v) => v.indicatorId === indId && v.regionId === rId).map((v) => ({ year: v.year, value: v.value }));
 
+  const byGemini = brief.generatedBy === "gemini";
+
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <nav className="no-print mb-6 flex items-center justify-between text-sm">
-        <Link href="/" className="text-nordic underline-offset-2 hover:underline">Back to all counties</Link>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-medium ${
-            brief.generatedBy === "gemini" ? "bg-nordic text-white" : "border border-rule bg-surface text-muted"
-          }`}
-        >
-          {brief.generatedBy === "gemini" ? "AI analyst (Gemini)" : "Rule-based fallback"}
+    <main className="mx-auto max-w-5xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
+      <nav className="no-print mb-10 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 text-sm">
+        <Link href="/" className="link">Back to the map</Link>
+        <span className="text-xs text-muted">
+          {byGemini
+            ? "Written by Gemini from the figures on this page"
+            : "Written from a fixed template; the AI analyst didn\u2019t answer"}
         </span>
       </nav>
 
-      <header className="mb-8 border-b border-rule pb-6">
-        <p className="text-sm text-muted">Cancer care brief · {region.name}</p>
-        <h1 className="mt-1 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">{name}</h1>
-        <p className="mt-4 max-w-3xl font-serif text-xl leading-snug">{brief.headline}</p>
-        <p className="mt-3 max-w-3xl leading-relaxed text-muted">{brief.finding}</p>
+      <header className="mb-12">
+        <p className="text-sm text-muted">Cancer care brief for</p>
+        <h1 className="font-narrow mt-1 text-5xl font-bold leading-[0.95] tracking-[-0.01em] break-words sm:text-7xl">{name}</h1>
+        <p className="mt-6 max-w-3xl font-serif text-2xl leading-snug sm:text-[1.75rem]">{brief.headline}</p>
+        <p className="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-ink/80">{brief.finding}</p>
       </header>
 
-      <section className="mb-10 print-break" aria-labelledby="stage-h">
-        <h2 id="stage-h" className="mb-2 text-sm font-semibold text-muted">
-          Where the pathway breaks: {STAGE_LABEL[brief.pathwayStage].toLowerCase()}
+      <section className="mb-14 print-break" aria-labelledby="stage-h">
+        <h2 id="stage-h" className="mb-3 text-sm text-muted">
+          The pathway breaks at <span className="font-semibold text-ink">{STAGE_LABEL[brief.pathwayStage].toLowerCase()}</span>
         </h2>
         <PathwayStrip active={brief.pathwayStage} />
       </section>
 
-      <section className="mb-10" aria-labelledby="rec-h">
-        <h2 id="rec-h" className="mb-4 font-serif text-2xl font-semibold">Three actions</h2>
-        <ol className="grid gap-4 md:grid-cols-3">
+      <section className="mb-14" aria-labelledby="rec-h">
+        <h2 id="rec-h" className="mb-2 text-2xl font-semibold tracking-tight">What {name} could do next</h2>
+        <p className="mb-6 text-sm text-muted">Each one says who would do it, by when, and which sources it rests on.</p>
+        <ol className="border-t border-ink">
           {brief.recommendations.map((r, i) => (
-            <li key={i} className="print-break flex flex-col rounded-lg border border-rule bg-surface p-4">
-              <span className="font-serif text-2xl text-nordic">{i + 1}</span>
-              <p className="mt-1 font-medium leading-snug">{r.action}</p>
-              <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-                <dt className="text-muted">Owner</dt><dd>{r.owner}</dd>
-                <dt className="text-muted">When</dt><dd>{r.timeframe}</dd>
+            <li key={i} className="print-break grid gap-x-6 border-b border-rule py-5 sm:grid-cols-[3rem_minmax(0,1fr)_16rem]">
+              <span className="font-narrow text-4xl font-bold leading-none text-ink tabular-nums" aria-hidden>{i + 1}</span>
+              <div>
+                <p className="font-serif text-lg leading-snug">{r.action}</p>
+                <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted">
+                  <span>Based on</span>
+                  {r.sources.map((s) => (
+                    <a key={s} href={`#src-${sourceIndex.get(s)}`} className="link" title={resolveSource(s, live).label}>
+                      [{sourceIndex.get(s)}]{" "}
+                      {s.startsWith("sotkanet:") ? "Sotkanet" : resolveSource(s, live).label.split(":")[0]}
+                    </a>
+                  ))}
+                </p>
+              </div>
+              <dl className="mt-3 grid grid-cols-[6.5rem_1fr] gap-x-3 gap-y-1 text-sm sm:mt-0">
+                <dt className="text-muted">Who</dt><dd>{r.owner}</dd>
+                <dt className="text-muted">By when</dt><dd>{r.timeframe}</dd>
                 <dt className="text-muted">Strategy goal</dt><dd>{r.goal3Indicator}</dd>
               </dl>
-              <div className="mt-auto flex flex-wrap gap-1.5 pt-3">
-                {r.sources.map((s) => (
-                  <a
-                    key={s}
-                    href={`#src-${sourceIndex.get(s)}`}
-                    className="rounded border border-rule bg-paper px-1.5 py-0.5 text-[11px] text-muted hover:border-nordic hover:text-nordic"
-                    title={resolveSource(s, live).label}
-                  >
-                    [{sourceIndex.get(s)}] {s.startsWith("sotkanet:") ? "Sotkanet" : s.startsWith("live:") ? "Live web" : resolveSource(s, live).label.split(":")[0]}
-                  </a>
-                ))}
-              </div>
             </li>
           ))}
         </ol>
       </section>
 
-      <section className="mb-10" aria-labelledby="ind-h">
-        <h2 id="ind-h" className="mb-4 font-serif text-2xl font-semibold">Indicators against the whole country</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
+      <section className="mb-14" aria-labelledby="ind-h">
+        <h2 id="ind-h" className="mb-2 text-2xl font-semibold tracking-tight">{name} against the whole country</h2>
+        <p className="mb-6 text-sm text-muted">Latest year for each measure. The solid line is {name}, the dashed one is Finland.</p>
+        <div className="border-t border-ink">
           {INDICATORS.map((ind, i) => {
             const f = facts[i];
             return (
-              <article key={ind.id} className="print-break rounded-lg border border-rule bg-surface p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold leading-snug">{ind.nameEn}</h3>
-                    <p className="text-xs text-muted">{STAGE_LABEL[ind.stage]} · {f.year} · {ind.higherIsBetter ? "higher is better" : "lower is better"}</p>
-                  </div>
-                  <span className={`shrink-0 rounded px-1.5 py-0.5 text-[11px] ${STATUS_CLASSES[f.status]}`}>{STATUS_LABEL[f.status]}</span>
-                </div>
-                <p className="mt-2 text-sm">
-                  <strong className="tabular-nums">{fmt(f.value, ind.unit)}</strong>
-                  <span className="text-muted"> vs {fmt(f.national, ind.unit)} nationally · gap </span>
-                  <span className={`font-semibold tabular-nums ${f.status === "behind" ? "text-behind" : f.status === "ahead" ? "text-ahead" : ""}`}>{fmtGap(f.gapToNational)}</span>
-                  {f.rank !== null && <span className="text-muted"> · rank {f.rank}/{f.rankOf}</span>}
-                </p>
-                <p className="mt-1 text-xs text-muted">
-                  {ind.strategyGoal}
+              <article key={ind.id} className="print-break grid gap-x-8 gap-y-3 border-b border-rule py-5 md:grid-cols-[minmax(0,1fr)_20rem]">
+                <div>
+                  <h3 className="font-semibold leading-snug">{ind.nameEn}</h3>
+                  <p className="mt-0.5 text-xs text-muted">
+                    {STAGE_LABEL[ind.stage]}, {f.year}. {ind.higherIsBetter ? "Higher is better." : "Lower is better."}
+                  </p>
+                  <p className="mt-3 flex flex-wrap items-baseline gap-x-3">
+                    <strong className="font-narrow text-4xl font-bold tabular-nums">{fmt(f.value, ind.unit)}</strong>
+                    <span className={`font-semibold tabular-nums ${STATUS_TEXT[f.status]}`}>
+                      {fmtGap(f.gapToNational)}{" "}
+                      {f.status === "no-data" ? "" : f.status === "on-par" ? "(about level)" : STATUS_LABEL[f.status].toLowerCase()}
+                    </span>
+                  </p>
+                  <p className="mt-1 text-sm text-muted">
+                    Finland: {fmt(f.national, ind.unit)}
+                    {f.rank !== null && <>. Ranked {f.rank} of {f.rankOf} counties.</>}
+                  </p>
                   {f.target !== null && f.gapToTarget !== null && (
-                    <>
-                      {" · "}
-                      <span className={f.gapToTarget >= 0 ? "text-ahead font-semibold" : "text-behind font-semibold"}>
-                        {f.gapToTarget >= 0 ? "meets" : "below"} the {f.target}% target ({fmtGap(f.gapToTarget)})
-                      </span>
-                    </>
+                    <p className="mt-1 text-sm">
+                      {f.gapToTarget >= 0 ? (
+                        <span className="text-ahead">Meets the {f.target}% national target</span>
+                      ) : (
+                        <span className="text-behind">
+                          {fmtGap(f.gapToTarget).slice(1)} points short of the {f.target}% national target
+                        </span>
+                      )}
+                    </p>
                   )}
-                </p>
-                <div className="mt-3">
-                  <TrendChart county={series(ind.id, regionId)} national={series(ind.id, nationalRegion?.id)} unit={ind.unit} />
+                  <p className="mt-2 text-xs text-muted">{ind.strategyGoal}</p>
                 </div>
+                <TrendChart county={series(ind.id, regionId)} national={series(ind.id, nationalRegion?.id)} unit={ind.unit} />
               </article>
             );
           })}
         </div>
       </section>
 
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-10 md:grid-cols-2">
         <section aria-labelledby="src-h" className="print-break">
-          <h2 id="src-h" className="mb-3 font-serif text-xl font-semibold">Sources</h2>
-          <ol className="space-y-2 text-sm">
-            {sources.map((s, i) => (
-              <li key={s.id} id={`src-${i + 1}`} className="flex gap-2">
-                <span className="tabular-nums text-muted">[{i + 1}]</span>
-                <span>
-                  <a href={s.url} target="_blank" rel="noreferrer" className="text-nordic underline-offset-2 hover:underline">{s.label}</a>
-                  {s.detail && <span className="block text-xs text-muted">{s.detail}</span>}
-                </span>
-              </li>
-            ))}
-          </ol>
+          <h2 id="src-h" className="mb-3 text-lg font-semibold tracking-tight">Where this comes from</h2>
+          {sources.length === 0 ? (
+            <p className="text-sm text-muted">This brief cites no sources beyond the figures above.</p>
+          ) : (
+            <ol className="space-y-3 text-sm">
+              {sources.map((s, i) => (
+                <li key={s.id} id={`src-${i + 1}`} className="grid grid-cols-[2rem_1fr] scroll-mt-6 target:bg-behind-soft">
+                  <span className="tabular-nums text-muted">[{i + 1}]</span>
+                  <span>
+                    <a href={s.url} target="_blank" rel="noreferrer" className="link">{s.label}</a>
+                    {s.detail && <span className="mt-0.5 block text-xs text-muted">{s.detail}</span>}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
         </section>
         <section aria-labelledby="lim-h" className="print-break">
-          <h2 id="lim-h" className="mb-3 font-serif text-xl font-semibold">Limitations</h2>
-          <ul className="list-disc space-y-1.5 pl-5 text-sm text-muted">
+          <h2 id="lim-h" className="mb-3 text-lg font-semibold tracking-tight">What this can&rsquo;t tell you</h2>
+          <ul className="list-[square] space-y-2 pl-5 text-sm text-muted marker:text-par">
             {brief.limitations.map((l, i) => <li key={i}>{l}</li>)}
           </ul>
         </section>
       </div>
 
-      <section aria-labelledby="live-h" className="print-break mt-8 rounded-lg border border-rule bg-surface p-4">
-        <h2 id="live-h" className="font-serif text-xl font-semibold">What {name} already publishes</h2>
-        <p className="mb-3 mt-1 text-xs text-muted">
-          Live from the open web via Context.dev: the county&apos;s own pages on cancer care and access times. The analyst can build its actions on these.
+      <section aria-labelledby="live-h" className="print-break mt-14 border-t border-rule pt-6">
+        <h2 id="live-h" className="text-lg font-semibold tracking-tight">What {name} already publishes</h2>
+        <p className="mb-4 mt-1 max-w-2xl text-sm text-muted">
+          The county&rsquo;s own web pages about cancer care and waiting times, found today through Context.dev. The
+          analyst can cite them when it suggests actions.
         </p>
         {!liveContextEnabled() ? (
-          <p className="text-sm text-muted">Live web search is off (no Context.dev key configured).</p>
+          <p className="text-sm text-muted">The web search is switched off here, because no Context.dev key is set.</p>
         ) : live.length === 0 ? (
-          <p className="text-sm text-muted">No relevant public pages found right now.</p>
+          <p className="text-sm text-muted">The search found no county pages on cancer care today.</p>
         ) : (
-          <ul className="space-y-2 text-sm">
+          <ul className="grid gap-x-10 gap-y-4 text-sm md:grid-cols-2">
             {live.map((s) => (
               <li key={s.id}>
-                <a href={s.url} target="_blank" rel="noreferrer" className="text-nordic underline-offset-2 hover:underline">{s.title}</a>
-                {s.text && <span className="block text-xs text-muted">{s.text}</span>}
+                <a href={s.url} target="_blank" rel="noreferrer" className="link">{s.title}</a>
+                {s.text && <span className="mt-0.5 block text-xs text-muted">{s.text}</span>}
               </li>
             ))}
           </ul>
         )}
       </section>
 
-      <footer className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4 text-xs text-muted">
+      <footer className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4 text-xs text-muted">
         <DataBadge ds={ds} />
-        <span>{brief.generatedBy === "gemini" ? "Brief drafted by AI analyst (Gemini) from the figures above" : "Brief generated by rule-based fallback from the figures above"}</span>
+        <span>{region.name}</span>
       </footer>
     </main>
   );

@@ -59,18 +59,18 @@ export function TileMap({
       <Link
         href={`/county/${r.id}`}
         title={`${shortName(r.name)}: ${fmt(f?.value, unit)}`}
-        className={`flex h-full flex-col justify-between rounded-md p-1.5 text-left leading-tight transition hover:ring-2 hover:ring-nordic ${STATUS_CLASSES[status]}`}
+        className={`flex h-full flex-col justify-between rounded-[3px] px-1.5 pb-1 pt-1.5 text-left leading-none outline-offset-2 hover:outline-2 hover:outline-ink ${STATUS_CLASSES[status]}`}
       >
-        <span className="line-clamp-2 text-[10px] sm:text-[11px]">{shortName(r.name)}</span>
-        <span className="text-sm font-semibold tabular-nums sm:text-base">{fmt(f?.value, unit)}</span>
+        <span lang="fi" className="font-narrow line-clamp-2 hyphens-auto text-[11px] leading-[1.1] [overflow-wrap:anywhere] sm:text-xs">{shortName(r.name)}</span>
+        <span className="font-narrow text-base font-semibold tabular-nums sm:text-lg">{fmt(f?.value, unit)}</span>
       </Link>
     );
   };
   return (
     <div>
       <div
-        className="grid gap-1.5"
-        style={{ gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gridAutoRows: "minmax(58px, auto)" }}
+        className="grid gap-1"
+        style={{ gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gridAutoRows: "minmax(56px, auto)" }}
         role="list"
         aria-label="Tile map of wellbeing services counties"
       >
@@ -81,17 +81,17 @@ export function TileMap({
         ))}
       </div>
       {unplaced.length > 0 && (
-        <div className="mt-2 grid grid-cols-5 gap-1.5">
+        <div className="mt-1 grid grid-cols-5 gap-1">
           {unplaced.map((r) => (
-            <div key={r.id} className="h-[58px]">{tile(r)}</div>
+            <div key={r.id} className="h-[56px]">{tile(r)}</div>
           ))}
         </div>
       )}
-      <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted">
-        <Legend cls="bg-behind" label="Behind national" />
-        <Legend cls="bg-par-soft border border-rule" label="On par" />
-        <Legend cls="bg-ahead" label="Ahead of national" />
-        <Legend cls="bg-white border border-dashed border-rule" label="No data" />
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+        <Legend cls="bg-behind" label="Behind the whole country" />
+        <Legend cls="bg-par-soft border border-rule" label="About level" />
+        <Legend cls="bg-ahead" label="Ahead" />
+        <Legend cls="border border-dashed border-par" label="No figure" />
       </div>
     </div>
   );
@@ -100,7 +100,7 @@ export function TileMap({
 function Legend({ cls, label }: { cls: string; label: string }) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      <span className={`inline-block h-3 w-3 rounded-sm ${cls}`} />
+      <span className={`inline-block h-3 w-3 rounded-[2px] ${cls}`} />
       {label}
     </span>
   );
