@@ -55,7 +55,16 @@ The engine compares each group against the remaining disjoint groups in the same
 
 Source locators and illustrative Wilson binomial intervals are available under result details. Missing or insufficient comparisons do not establish a pathway gap. The app does not adjust for confounding or perform a systematic literature review. Actions come from reviewed guideline summaries in `src/data/evidence.ts`; recommendations require human assessment of applicability. Proposed planning windows are not clinical targets.
 
-Screening participation primarily relates to Goal 2. Full challenge coverage still needs a validated direct Goal 3 measure such as survival, mortality or timely treatment.
+Screening participation primarily relates to Goal 2. Goal 3 (equal and effective cancer care) is covered by an outcome measure: cervical cancer 5-year relative survival per wellbeing services county ([THL Sotkanet indicator 3626](https://sotkanet.fi/sotkanet/en/taulukko?indicator=3626), 2019–2024). It appears when comparing by Region: as a column in the analysis and as an outcome panel in the recommendations. A county 5 or more percentage points below the national value gets an extra outcome-review action. Each statistical year pools patients diagnosed over 15 years, values are whole percentages without intervals, and small counties vary by chance. Survival does not show where in the pathway a difference arises, and a screening gap next to a survival gap does not prove cause. The strategy's headline survival targets (lung, pancreatic, liver cancer) and waiting times have no public county data.
+
+The Goal 3 snapshot `src/data/goal3.json` is owned by `scripts/ingest_goal3.py`, which validates that every screening region and year is present. To regenerate deliberately:
+
+```bash
+curl -fL "https://sotkanet.fi/rest/1.1/json?indicator=3626&years=2019&years=2020&years=2021&years=2022&years=2023&years=2024&genders=total" -o /tmp/sotkanet-3626.json
+curl -fL https://sotkanet.fi/rest/1.1/regions -o /tmp/sotkanet-regions.json
+npm run ingest:goal3 -- /tmp/sotkanet-3626.json /tmp/sotkanet-regions.json
+npm test
+```
 
 ## Optional AI interpretation
 

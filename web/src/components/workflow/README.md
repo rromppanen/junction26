@@ -45,4 +45,4 @@ npm run build
 
 Use the [app README](../../../README.md) for run instructions and data limitations. Unit tests cover shared data/method boundaries; browser tests cover all four steps, invalidation, failure recovery and mobile layout. Add meaningful checks for each new capability, and keep at least one reproducible real-data example and an appropriate abstention example.
 
-This separation enables parallel team ownership. It does not mean every stage already meets a research-grade standard. Broader dataset support, causal inference, evidence appraisal and a direct Goal 3 indicator remain substantive work.
+This separation enables parallel team ownership. It does not mean every stage already meets a research-grade standard. Broader dataset support, causal inference and evidence appraisal remain substantive work. The Goal 3 outcome (county cervical cancer survival, `src/lib/goal3.ts`) is contextual: it is not part of the counts contract and is shown only for Region comparisons.

@@ -1,3 +1,5 @@
+import { OUTCOME_REVIEW_GAP, type Goal3Outcome } from "./goal3";
+
 export type Observation = {
   year: number; dimension: string; group: string; cohort: string;
   invited: number; attended: number; referred: number | null; completed: number | null;
@@ -70,7 +72,14 @@ export function analyse(rows: Observation[], year: number, dimension: string, co
 }
 
 export type Action = { id: string; title: string; owner: string; timeframe: string; steps: string[]; measure: string; evidenceIds: string[] };
-export function recommend(finding: Finding): Action[] {
+/** Process actions for the finding, plus a Goal 3 outcome review when the county's survival is well below the national level. */
+export function recommend(finding: Finding, outcome: Goal3Outcome | null = null): Action[] {
+  const actions = processActions(finding);
+  if (outcome && outcome.gap <= -OUTCOME_REVIEW_GAP) actions.push({ id: "outcome", title: "Review why cervical cancer survival is below the national level", owner: "County cancer-care lead + gynaecological oncology unit", timeframe: "Proposed: initial review within three months", steps: ["From the county's own records, check stage at diagnosis and time from diagnosis to treatment start; neither is published per county.", "Check whether the screening or follow-up gaps found here concern the same areas or groups as the late-stage diagnoses.", "Take the findings to the county's cancer-care steering group for comparison with better-performing counties."], measure: "Cervical cancer 5-year relative survival (Goal 3), plus stage at diagnosis and diagnosis-to-treatment time from local records", evidenceIds: ["survival", "strategy"] });
+  return actions;
+}
+
+function processActions(finding: Finding): Action[] {
   if (finding.status !== "review") return [{ id: "monitor", title: "Maintain monitoring before changing services", owner: "Screening programme lead", timeframe: "Next comparable reporting period", steps: ["Review source completeness and preserve comparable group definitions.", "Reassess the same measure when the next complete reporting period is available."], measure: metricLabel(finding.metric), evidenceIds: ["quality"] }];
   if (finding.metric === "followup") return [{ id: "reconcile", title: "Reconcile referrals with recorded examinations", owner: "Screening coordinator + diagnostic service lead", timeframe: "Proposed: initial review within four weeks", steps: ["Verify whether unrecorded examinations reflect missing reports, ongoing follow-up, or non-attendance.", "Agree responsibility for referral reconciliation and review aggregate unresolved counts.", "Only if access problems are confirmed, design and evaluate a local service pilot."], measure: "Recorded completion among referred participants, plus reporting completeness", evidenceIds: ["quality", "report"] }];
   const actions: Action[] = [{ id: "invitation", title: "Audit invitation and reminder delivery", owner: "County screening programme lead", timeframe: "Proposed: initial review within four weeks", steps: ["Check whether invitation delivery, booking instructions and reminders reach the affected group.", "Review reminder practice against the screening handbook.", "Evaluate changes using the same participation definition; preserve the choice to decline screening."], measure: "Participation among invited participants; reminder delivery and patient feedback", evidenceIds: ["reminders", "quality"] }];

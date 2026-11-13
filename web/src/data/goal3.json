@@ -1,0 +1,850 @@
+{
+  "manifest": {
+    "publisher": "THL Sotkanet (data: Finnish Cancer Registry)",
+    "indicator": 3626,
+    "title": "Five-year relative survival of cervical cancer patients, %",
+    "sourceUrl": "https://sotkanet.fi/sotkanet/en/taulukko?indicator=3626",
+    "retrievedAt": "2026-11-13T21:16:28.380568+00:00",
+    "sha256": "6223894c3d3465a5f6ea5aa4746580f6031b32ff6ef1a79f58c0cbddb129c9c4",
+    "adapterVersion": "1.0.0",
+    "note": "Age-standardised to the national patient age structure. Each statistical year follows patients diagnosed in that year and the 14 preceding years, so it reflects care over a long period, not one year. Published as whole percentages without intervals."
+  },
+  "national": {
+    "2019": 70,
+    "2020": 70,
+    "2021": 71,
+    "2022": 71,
+    "2023": 72,
+    "2024": 73
+  },
+  "rows": [
+    {
+      "region": "Ahvenanmaa",
+      "sotkanetRegion": 956,
+      "year": 2019,
+      "value": 80
+    },
+    {
+      "region": "Etelä-Karjala",
+      "sotkanetRegion": 957,
+      "year": 2019,
+      "value": 52
+    },
+    {
+      "region": "Etelä-Pohjanmaa",
+      "sotkanetRegion": 958,
+      "year": 2019,
+      "value": 68
+    },
+    {
+      "region": "Etelä-Savo",
+      "sotkanetRegion": 959,
+      "year": 2019,
+      "value": 75
+    },
+    {
+      "region": "Helsingin kaupunki",
+      "sotkanetRegion": 960,
+      "year": 2019,
+      "value": 67
+    },
+    {
+      "region": "Itä-Uusimaa",
+      "sotkanetRegion": 961,
+      "year": 2019,
+      "value": 68
+    },
+    {
+      "region": "Kainuu",
+      "sotkanetRegion": 962,
+      "year": 2019,
+      "value": 73
+    },
+    {
+      "region": "Kanta-Häme",
+      "sotkanetRegion": 963,
+      "year": 2019,
+      "value": 80
+    },
+    {
+      "region": "Keski-Pohjanmaa",
+      "sotkanetRegion": 964,
+      "year": 2019,
+      "value": 67
+    },
+    {
+      "region": "Keski-Suomi",
+      "sotkanetRegion": 965,
+      "year": 2019,
+      "value": 72
+    },
+    {
+      "region": "Keski-Uusimaa",
+      "sotkanetRegion": 966,
+      "year": 2019,
+      "value": 74
+    },
+    {
+      "region": "Kymenlaakso",
+      "sotkanetRegion": 967,
+      "year": 2019,
+      "value": 70
+    },
+    {
+      "region": "Lappi",
+      "sotkanetRegion": 968,
+      "year": 2019,
+      "value": 72
+    },
+    {
+      "region": "Länsi-Uusimaa",
+      "sotkanetRegion": 969,
+      "year": 2019,
+      "value": 75
+    },
+    {
+      "region": "Pirkanmaa",
+      "sotkanetRegion": 970,
+      "year": 2019,
+      "value": 70
+    },
+    {
+      "region": "Pohjanmaa",
+      "sotkanetRegion": 971,
+      "year": 2019,
+      "value": 67
+    },
+    {
+      "region": "Pohjois-Karjala",
+      "sotkanetRegion": 972,
+      "year": 2019,
+      "value": 59
+    },
+    {
+      "region": "Pohjois-Pohjanmaa",
+      "sotkanetRegion": 973,
+      "year": 2019,
+      "value": 69
+    },
+    {
+      "region": "Pohjois-Savo",
+      "sotkanetRegion": 974,
+      "year": 2019,
+      "value": 69
+    },
+    {
+      "region": "Päijät-Häme",
+      "sotkanetRegion": 975,
+      "year": 2019,
+      "value": 68
+    },
+    {
+      "region": "Satakunta",
+      "sotkanetRegion": 976,
+      "year": 2019,
+      "value": 65
+    },
+    {
+      "region": "Vantaa ja Kerava",
+      "sotkanetRegion": 977,
+      "year": 2019,
+      "value": 71
+    },
+    {
+      "region": "Varsinais-Suomi",
+      "sotkanetRegion": 978,
+      "year": 2019,
+      "value": 80
+    },
+    {
+      "region": "Ahvenanmaa",
+      "sotkanetRegion": 956,
+      "year": 2020,
+      "value": 64
+    },
+    {
+      "region": "Etelä-Karjala",
+      "sotkanetRegion": 957,
+      "year": 2020,
+      "value": 51
+    },
+    {
+      "region": "Etelä-Pohjanmaa",
+      "sotkanetRegion": 958,
+      "year": 2020,
+      "value": 67
+    },
+    {
+      "region": "Etelä-Savo",
+      "sotkanetRegion": 959,
+      "year": 2020,
+      "value": 79
+    },
+    {
+      "region": "Helsingin kaupunki",
+      "sotkanetRegion": 960,
+      "year": 2020,
+      "value": 67
+    },
+    {
+      "region": "Itä-Uusimaa",
+      "sotkanetRegion": 961,
+      "year": 2020,
+      "value": 67
+    },
+    {
+      "region": "Kainuu",
+      "sotkanetRegion": 962,
+      "year": 2020,
+      "value": 73
+    },
+    {
+      "region": "Kanta-Häme",
+      "sotkanetRegion": 963,
+      "year": 2020,
+      "value": 81
+    },
+    {
+      "region": "Keski-Pohjanmaa",
+      "sotkanetRegion": 964,
+      "year": 2020,
+      "value": 71
+    },
+    {
+      "region": "Keski-Suomi",
+      "sotkanetRegion": 965,
+      "year": 2020,
+      "value": 73
+    },
+    {
+      "region": "Keski-Uusimaa",
+      "sotkanetRegion": 966,
+      "year": 2020,
+      "value": 74
+    },
+    {
+      "region": "Kymenlaakso",
+      "sotkanetRegion": 967,
+      "year": 2020,
+      "value": 69
+    },
+    {
+      "region": "Lappi",
+      "sotkanetRegion": 968,
+      "year": 2020,
+      "value": 75
+    },
+    {
+      "region": "Länsi-Uusimaa",
+      "sotkanetRegion": 969,
+      "year": 2020,
+      "value": 77
+    },
+    {
+      "region": "Pirkanmaa",
+      "sotkanetRegion": 970,
+      "year": 2020,
+      "value": 72
+    },
+    {
+      "region": "Pohjanmaa",
+      "sotkanetRegion": 971,
+      "year": 2020,
+      "value": 67
+    },
+    {
+      "region": "Pohjois-Karjala",
+      "sotkanetRegion": 972,
+      "year": 2020,
+      "value": 57
+    },
+    {
+      "region": "Pohjois-Pohjanmaa",
+      "sotkanetRegion": 973,
+      "year": 2020,
+      "value": 68
+    },
+    {
+      "region": "Pohjois-Savo",
+      "sotkanetRegion": 974,
+      "year": 2020,
+      "value": 70
+    },
+    {
+      "region": "Päijät-Häme",
+      "sotkanetRegion": 975,
+      "year": 2020,
+      "value": 68
+    },
+    {
+      "region": "Satakunta",
+      "sotkanetRegion": 976,
+      "year": 2020,
+      "value": 67
+    },
+    {
+      "region": "Vantaa ja Kerava",
+      "sotkanetRegion": 977,
+      "year": 2020,
+      "value": 71
+    },
+    {
+      "region": "Varsinais-Suomi",
+      "sotkanetRegion": 978,
+      "year": 2020,
+      "value": 81
+    },
+    {
+      "region": "Ahvenanmaa",
+      "sotkanetRegion": 956,
+      "year": 2021,
+      "value": 59
+    },
+    {
+      "region": "Etelä-Karjala",
+      "sotkanetRegion": 957,
+      "year": 2021,
+      "value": 51
+    },
+    {
+      "region": "Etelä-Pohjanmaa",
+      "sotkanetRegion": 958,
+      "year": 2021,
+      "value": 69
+    },
+    {
+      "region": "Etelä-Savo",
+      "sotkanetRegion": 959,
+      "year": 2021,
+      "value": 81
+    },
+    {
+      "region": "Helsingin kaupunki",
+      "sotkanetRegion": 960,
+      "year": 2021,
+      "value": 66
+    },
+    {
+      "region": "Itä-Uusimaa",
+      "sotkanetRegion": 961,
+      "year": 2021,
+      "value": 74
+    },
+    {
+      "region": "Kainuu",
+      "sotkanetRegion": 962,
+      "year": 2021,
+      "value": 76
+    },
+    {
+      "region": "Kanta-Häme",
+      "sotkanetRegion": 963,
+      "year": 2021,
+      "value": 82
+    },
+    {
+      "region": "Keski-Pohjanmaa",
+      "sotkanetRegion": 964,
+      "year": 2021,
+      "value": 72
+    },
+    {
+      "region": "Keski-Suomi",
+      "sotkanetRegion": 965,
+      "year": 2021,
+      "value": 74
+    },
+    {
+      "region": "Keski-Uusimaa",
+      "sotkanetRegion": 966,
+      "year": 2021,
+      "value": 70
+    },
+    {
+      "region": "Kymenlaakso",
+      "sotkanetRegion": 967,
+      "year": 2021,
+      "value": 68
+    },
+    {
+      "region": "Lappi",
+      "sotkanetRegion": 968,
+      "year": 2021,
+      "value": 77
+    },
+    {
+      "region": "Länsi-Uusimaa",
+      "sotkanetRegion": 969,
+      "year": 2021,
+      "value": 79
+    },
+    {
+      "region": "Pirkanmaa",
+      "sotkanetRegion": 970,
+      "year": 2021,
+      "value": 73
+    },
+    {
+      "region": "Pohjanmaa",
+      "sotkanetRegion": 971,
+      "year": 2021,
+      "value": 67
+    },
+    {
+      "region": "Pohjois-Karjala",
+      "sotkanetRegion": 972,
+      "year": 2021,
+      "value": 60
+    },
+    {
+      "region": "Pohjois-Pohjanmaa",
+      "sotkanetRegion": 973,
+      "year": 2021,
+      "value": 67
+    },
+    {
+      "region": "Pohjois-Savo",
+      "sotkanetRegion": 974,
+      "year": 2021,
+      "value": 70
+    },
+    {
+      "region": "Päijät-Häme",
+      "sotkanetRegion": 975,
+      "year": 2021,
+      "value": 63
+    },
+    {
+      "region": "Satakunta",
+      "sotkanetRegion": 976,
+      "year": 2021,
+      "value": 69
+    },
+    {
+      "region": "Vantaa ja Kerava",
+      "sotkanetRegion": 977,
+      "year": 2021,
+      "value": 71
+    },
+    {
+      "region": "Varsinais-Suomi",
+      "sotkanetRegion": 978,
+      "year": 2021,
+      "value": 83
+    },
+    {
+      "region": "Ahvenanmaa",
+      "sotkanetRegion": 956,
+      "year": 2022,
+      "value": 61
+    },
+    {
+      "region": "Etelä-Karjala",
+      "sotkanetRegion": 957,
+      "year": 2022,
+      "value": 59
+    },
+    {
+      "region": "Etelä-Pohjanmaa",
+      "sotkanetRegion": 958,
+      "year": 2022,
+      "value": 69
+    },
+    {
+      "region": "Etelä-Savo",
+      "sotkanetRegion": 959,
+      "year": 2022,
+      "value": 77
+    },
+    {
+      "region": "Helsingin kaupunki",
+      "sotkanetRegion": 960,
+      "year": 2022,
+      "value": 68
+    },
+    {
+      "region": "Itä-Uusimaa",
+      "sotkanetRegion": 961,
+      "year": 2022,
+      "value": 71
+    },
+    {
+      "region": "Kainuu",
+      "sotkanetRegion": 962,
+      "year": 2022,
+      "value": 71
+    },
+    {
+      "region": "Kanta-Häme",
+      "sotkanetRegion": 963,
+      "year": 2022,
+      "value": 80
+    },
+    {
+      "region": "Keski-Pohjanmaa",
+      "sotkanetRegion": 964,
+      "year": 2022,
+      "value": 64
+    },
+    {
+      "region": "Keski-Suomi",
+      "sotkanetRegion": 965,
+      "year": 2022,
+      "value": 75
+    },
+    {
+      "region": "Keski-Uusimaa",
+      "sotkanetRegion": 966,
+      "year": 2022,
+      "value": 70
+    },
+    {
+      "region": "Kymenlaakso",
+      "sotkanetRegion": 967,
+      "year": 2022,
+      "value": 66
+    },
+    {
+      "region": "Lappi",
+      "sotkanetRegion": 968,
+      "year": 2022,
+      "value": 76
+    },
+    {
+      "region": "Länsi-Uusimaa",
+      "sotkanetRegion": 969,
+      "year": 2022,
+      "value": 77
+    },
+    {
+      "region": "Pirkanmaa",
+      "sotkanetRegion": 970,
+      "year": 2022,
+      "value": 71
+    },
+    {
+      "region": "Pohjanmaa",
+      "sotkanetRegion": 971,
+      "year": 2022,
+      "value": 69
+    },
+    {
+      "region": "Pohjois-Karjala",
+      "sotkanetRegion": 972,
+      "year": 2022,
+      "value": 60
+    },
+    {
+      "region": "Pohjois-Pohjanmaa",
+      "sotkanetRegion": 973,
+      "year": 2022,
+      "value": 68
+    },
+    {
+      "region": "Pohjois-Savo",
+      "sotkanetRegion": 974,
+      "year": 2022,
+      "value": 73
+    },
+    {
+      "region": "Päijät-Häme",
+      "sotkanetRegion": 975,
+      "year": 2022,
+      "value": 65
+    },
+    {
+      "region": "Satakunta",
+      "sotkanetRegion": 976,
+      "year": 2022,
+      "value": 68
+    },
+    {
+      "region": "Vantaa ja Kerava",
+      "sotkanetRegion": 977,
+      "year": 2022,
+      "value": 74
+    },
+    {
+      "region": "Varsinais-Suomi",
+      "sotkanetRegion": 978,
+      "year": 2022,
+      "value": 84
+    },
+    {
+      "region": "Ahvenanmaa",
+      "sotkanetRegion": 956,
+      "year": 2023,
+      "value": 58
+    },
+    {
+      "region": "Etelä-Karjala",
+      "sotkanetRegion": 957,
+      "year": 2023,
+      "value": 59
+    },
+    {
+      "region": "Etelä-Pohjanmaa",
+      "sotkanetRegion": 958,
+      "year": 2023,
+      "value": 69
+    },
+    {
+      "region": "Etelä-Savo",
+      "sotkanetRegion": 959,
+      "year": 2023,
+      "value": 76
+    },
+    {
+      "region": "Helsingin kaupunki",
+      "sotkanetRegion": 960,
+      "year": 2023,
+      "value": 68
+    },
+    {
+      "region": "Itä-Uusimaa",
+      "sotkanetRegion": 961,
+      "year": 2023,
+      "value": 72
+    },
+    {
+      "region": "Kainuu",
+      "sotkanetRegion": 962,
+      "year": 2023,
+      "value": 69
+    },
+    {
+      "region": "Kanta-Häme",
+      "sotkanetRegion": 963,
+      "year": 2023,
+      "value": 81
+    },
+    {
+      "region": "Keski-Pohjanmaa",
+      "sotkanetRegion": 964,
+      "year": 2023,
+      "value": 68
+    },
+    {
+      "region": "Keski-Suomi",
+      "sotkanetRegion": 965,
+      "year": 2023,
+      "value": 73
+    },
+    {
+      "region": "Keski-Uusimaa",
+      "sotkanetRegion": 966,
+      "year": 2023,
+      "value": 71
+    },
+    {
+      "region": "Kymenlaakso",
+      "sotkanetRegion": 967,
+      "year": 2023,
+      "value": 69
+    },
+    {
+      "region": "Lappi",
+      "sotkanetRegion": 968,
+      "year": 2023,
+      "value": 74
+    },
+    {
+      "region": "Länsi-Uusimaa",
+      "sotkanetRegion": 969,
+      "year": 2023,
+      "value": 81
+    },
+    {
+      "region": "Pirkanmaa",
+      "sotkanetRegion": 970,
+      "year": 2023,
+      "value": 75
+    },
+    {
+      "region": "Pohjanmaa",
+      "sotkanetRegion": 971,
+      "year": 2023,
+      "value": 70
+    },
+    {
+      "region": "Pohjois-Karjala",
+      "sotkanetRegion": 972,
+      "year": 2023,
+      "value": 59
+    },
+    {
+      "region": "Pohjois-Pohjanmaa",
+      "sotkanetRegion": 973,
+      "year": 2023,
+      "value": 69
+    },
+    {
+      "region": "Pohjois-Savo",
+      "sotkanetRegion": 974,
+      "year": 2023,
+      "value": 73
+    },
+    {
+      "region": "Päijät-Häme",
+      "sotkanetRegion": 975,
+      "year": 2023,
+      "value": 71
+    },
+    {
+      "region": "Satakunta",
+      "sotkanetRegion": 976,
+      "year": 2023,
+      "value": 65
+    },
+    {
+      "region": "Vantaa ja Kerava",
+      "sotkanetRegion": 977,
+      "year": 2023,
+      "value": 73
+    },
+    {
+      "region": "Varsinais-Suomi",
+      "sotkanetRegion": 978,
+      "year": 2023,
+      "value": 83
+    },
+    {
+      "region": "Ahvenanmaa",
+      "sotkanetRegion": 956,
+      "year": 2024,
+      "value": 55
+    },
+    {
+      "region": "Etelä-Karjala",
+      "sotkanetRegion": 957,
+      "year": 2024,
+      "value": 56
+    },
+    {
+      "region": "Etelä-Pohjanmaa",
+      "sotkanetRegion": 958,
+      "year": 2024,
+      "value": 73
+    },
+    {
+      "region": "Etelä-Savo",
+      "sotkanetRegion": 959,
+      "year": 2024,
+      "value": 80
+    },
+    {
+      "region": "Helsingin kaupunki",
+      "sotkanetRegion": 960,
+      "year": 2024,
+      "value": 68
+    },
+    {
+      "region": "Itä-Uusimaa",
+      "sotkanetRegion": 961,
+      "year": 2024,
+      "value": 71
+    },
+    {
+      "region": "Kainuu",
+      "sotkanetRegion": 962,
+      "year": 2024,
+      "value": 70
+    },
+    {
+      "region": "Kanta-Häme",
+      "sotkanetRegion": 963,
+      "year": 2024,
+      "value": 81
+    },
+    {
+      "region": "Keski-Pohjanmaa",
+      "sotkanetRegion": 964,
+      "year": 2024,
+      "value": 75
+    },
+    {
+      "region": "Keski-Suomi",
+      "sotkanetRegion": 965,
+      "year": 2024,
+      "value": 73
+    },
+    {
+      "region": "Keski-Uusimaa",
+      "sotkanetRegion": 966,
+      "year": 2024,
+      "value": 70
+    },
+    {
+      "region": "Kymenlaakso",
+      "sotkanetRegion": 967,
+      "year": 2024,
+      "value": 67
+    },
+    {
+      "region": "Lappi",
+      "sotkanetRegion": 968,
+      "year": 2024,
+      "value": 75
+    },
+    {
+      "region": "Länsi-Uusimaa",
+      "sotkanetRegion": 969,
+      "year": 2024,
+      "value": 83
+    },
+    {
+      "region": "Pirkanmaa",
+      "sotkanetRegion": 970,
+      "year": 2024,
+      "value": 75
+    },
+    {
+      "region": "Pohjanmaa",
+      "sotkanetRegion": 971,
+      "year": 2024,
+      "value": 73
+    },
+    {
+      "region": "Pohjois-Karjala",
+      "sotkanetRegion": 972,
+      "year": 2024,
+      "value": 61
+    },
+    {
+      "region": "Pohjois-Pohjanmaa",
+      "sotkanetRegion": 973,
+      "year": 2024,
+      "value": 70
+    },
+    {
+      "region": "Pohjois-Savo",
+      "sotkanetRegion": 974,
+      "year": 2024,
+      "value": 74
+    },
+    {
+      "region": "Päijät-Häme",
+      "sotkanetRegion": 975,
+      "year": 2024,
+      "value": 67
+    },
+    {
+      "region": "Satakunta",
+      "sotkanetRegion": 976,
+      "year": 2024,
+      "value": 69
+    },
+    {
+      "region": "Vantaa ja Kerava",
+      "sotkanetRegion": 977,
+      "year": 2024,
+      "value": 72
+    },
+    {
+      "region": "Varsinais-Suomi",
+      "sotkanetRegion": 978,
+      "year": 2024,
+      "value": 86
+    }
+  ]
+}

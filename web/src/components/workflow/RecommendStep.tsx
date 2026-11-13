@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { count, Draft, fallbackDraft, metricLabel, pct, pp, recommend } from "@/lib/analysis";
 import { evidence } from "@/data/evidence";
+import { goal3Note, goal3Outcome, GOAL3_LABEL } from "@/lib/goal3";
 import type { AnalysisResult, PreparedDataset } from "./types";
 import { findingStatus } from "./types";
 
@@ -15,10 +16,11 @@ export default function RecommendStep({ dataset, analysis, onBack, onRestart }: 
   onRestart: () => void;
 }) {
   const finding = analysis.findings.find(f => f.row.group === analysis.selectedGroup)!;
-  const actions = recommend(finding);
+  const outcome = analysis.selection.dimension === "Region" ? goal3Outcome(finding.row.group, analysis.selection.year) : null;
+  const actions = recommend(finding, outcome);
   const [brief, setBrief] = useState<BriefResult>({ draft: fallbackDraft(finding), mode: "template", reason: "Source-based interpretation template." });
   const [loading, setLoading] = useState(dataset.official);
-  const sourceIds = new Set(["report", "quality", ...actions.flatMap(action => action.evidenceIds), ...brief.draft.evidenceIds]);
+  const sourceIds = new Set(["report", "quality", ...(outcome ? ["survival", "strategy"] : []), ...actions.flatMap(action => action.evidenceIds), ...brief.draft.evidenceIds]);
   const sources = evidence.filter(source => sourceIds.has(source.id));
 
   useEffect(() => {
@@ -42,7 +44,7 @@ export default function RecommendStep({ dataset, analysis, onBack, onRestart }: 
   }, [dataset.official, analysis, finding]);
 
   function exportResults() {
-    const data = JSON.stringify({ dataset: { name: dataset.name, sha256: dataset.sha256, sourceUrl: dataset.sourceUrl, official: dataset.official }, analysis, interpretation: brief, recommendations: actions, sources }, null, 2);
+    const data = JSON.stringify({ dataset: { name: dataset.name, sha256: dataset.sha256, sourceUrl: dataset.sourceUrl, official: dataset.official }, analysis, goal3Outcome: outcome, interpretation: brief, recommendations: actions, sources }, null, 2);
     const url = URL.createObjectURL(new Blob([data], { type: "application/json" }));
     const anchor = document.createElement("a"); anchor.href = url; anchor.download = "care-equity-results.json"; anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -62,6 +64,15 @@ export default function RecommendStep({ dataset, analysis, onBack, onRestart }: 
       <p>{brief.draft.interpretation}</p>
       <p className="muted"><strong>Next question:</strong> {brief.draft.nextQuestion}</p>
       <span className="mode-label">{brief.mode === "ai" ? "AI draft · needs source review" : brief.mode === "cached-ai" ? "Cached AI draft · needs source review" : "Source-based template"}</span>
+    </section>
+    <section className="finding-summary">
+      <h2>Outcome at the end of the pathway</h2>
+      <p className="muted small">{GOAL3_LABEL}</p>
+      {outcome ? <>
+        <p><strong>{outcome.value}%</strong> of cervical cancer patients in {outcome.region} are alive five years after diagnosis, compared with <strong>{outcome.national}%</strong> in Finland as a whole ({outcome.gap > 0 ? "+" : ""}{outcome.gap} pp, statistical year {outcome.year}).</p>
+        <p className="muted small">Screening and follow-up show where the pathway may be leaking; survival shows the result. A gap in both is a reason to look further, not proof that one causes the other. {goal3Note}</p>
+        <p className="source-links"><span>Source:</span><a href={outcome.sourceUrl} target="_blank" rel="noreferrer">THL Sotkanet, indicator 3626 ↗</a></p>
+      </> : <p>Survival is published per wellbeing services county only. Choose <strong>Compare by: Region</strong> in the analysis step to see this group&apos;s Goal 3 outcome.</p>}
     </section>
     <section>
       <h2>What to do next</h2>
@@ -84,7 +95,7 @@ export default function RecommendStep({ dataset, analysis, onBack, onRestart }: 
       {finding.interval && <p className="small">Illustrative 95% Wilson binomial interval: {pct(finding.interval[0])}–{pct(finding.interval[1])}. This is not the publisher’s inferential comparison.</p>}
       <p className="small">{brief.reason} {brief.generatedAt && `Generated ${brief.generatedAt}.`}</p>
       {sources.map(source => <div className="source" key={source.id}><a href={source.url} target="_blank" rel="noreferrer">{source.title} ↗</a><p className="small">{source.locator}</p><p className="small muted">{source.limitation}</p></div>)}
-      <p className="small">This prototype measures screening processes. It does not directly measure Goal 3 survival, mortality or timely treatment, and is not a systematic literature review.</p>
+      <p className="small">This prototype measures screening processes and, per county, the Goal 3 outcome of cervical cancer survival. It does not measure waiting times or mortality, and is not a systematic literature review.</p>
     </details>
     <div className="step-actions"><button className="secondary" onClick={onBack}>Back to analysis</button><button onClick={exportResults}>Download results</button></div>
     <button className="text-button restart" onClick={onRestart}>Start a new analysis</button>

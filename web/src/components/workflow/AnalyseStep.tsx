@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { analyse, count, metricLabel, Metric, pct, pp } from "@/lib/analysis";
+import { goal3Note, goal3Outcome } from "@/lib/goal3";
 import type { AnalysisResult, AnalysisSelection, PreparedDataset } from "./types";
 import { findingStatus } from "./types";
 
@@ -25,6 +26,7 @@ export default function AnalyseStep({ dataset, previous, onAnalysed, onContinue,
   const [result, setResult] = useState<AnalysisResult | null>(previous);
   const selection: AnalysisSelection = { year, dimension: selectedDimension, cohort: selectedCohort, metric };
   const current = result && JSON.stringify(result.selection) === JSON.stringify(selection) ? result : null;
+  const showOutcome = current?.selection.dimension === "Region";
 
   function run() {
     const findings = analyse(dataset.rows, year, selectedDimension, selectedCohort, metric);
@@ -51,18 +53,20 @@ export default function AnalyseStep({ dataset, previous, onAnalysed, onContinue,
     {current && <section aria-live="polite">
       <h2>Findings</h2>
       <p className="muted">Select a group for the recommendation step.</p>
-      <div className="table-wrap"><table><thead><tr><th>Group</th><th>Rate</th><th>Rest of groups</th><th>Difference</th><th>Assessment</th></tr></thead><tbody>
+      <div className="table-wrap"><table><thead><tr><th>Group</th><th>Rate</th><th>Rest of groups</th><th>Difference</th><th>Assessment</th>{showOutcome && <th>Cervical cancer survival (Goal 3)</th>}</tr></thead><tbody>
         {current.findings.map(finding => <tr key={finding.row.group} className={current.selectedGroup === finding.row.group ? "selected-row" : ""}>
           <th scope="row"><button className="group-button" aria-pressed={current.selectedGroup === finding.row.group} onClick={() => selectGroup(finding.row.group)}>{finding.row.group}</button><span className="row-note">{count(finding.denominator)} {metric === "participation" ? "invited" : "referred"}</span></th>
           <td>{finding.denominator ? pct(finding.rate) : "No data"}</td>
           <td>{finding.benchmark === null ? "—" : pct(finding.benchmark)}</td>
           <td>{finding.gap === null ? "—" : pp(finding.gap)}</td>
           <td><span className={`status ${finding.status}`}>{findingStatus(finding.status)}</span></td>
+          {showOutcome && <td>{(() => { const o = goal3Outcome(finding.row.group, current.selection.year); return o ? <>{o.value}% <span className="row-note">Finland {o.national}% · {o.year}</span></> : "No data"; })()}</td>}
         </tr>)}
       </tbody></table></div>
       {!current.findings.length && <p>No population groups are available for this selection.</p>}
       <details><summary>How this analysis works</summary>
         <p>{metricLabel(metric)} is compared with the remaining disjoint groups using their actual denominators. A review signal means at least 5 percentage points below those groups, with at least 30 observations in both denominators.</p>
+        {showOutcome && <p>The last column is the strategy's Goal 3 outcome: 5-year relative survival of cervical cancer patients in each wellbeing services county (<a href="https://sotkanet.fi/sotkanet/en/taulukko?indicator=3626" target="_blank" rel="noreferrer">THL Sotkanet 3626 ↗</a>). {goal3Note}</p>}
         <p>These are descriptive, unadjusted comparisons, not significance tests or causal findings. Unknown categories are retained. Population tables are separate views and cannot be joined into individual records.</p>
       </details>
     </section>}

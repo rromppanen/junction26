@@ -45,6 +45,27 @@ test("the four steps take real data through findings to sourced recommendations"
   expect(errors).toEqual([]);
 });
 
+test("region comparisons show the Goal 3 survival outcome and add an outcome review where it is low", async ({ page }) => {
+  await page.route("**/api/brief", route => route.fulfill({ status: 503, body: "" }));
+  await prepareDemo(page);
+  await page.getByLabel("Compare by").selectOption("Region");
+  await page.getByRole("button", { name: "Run analysis" }).click();
+  await expect(page.getByRole("columnheader", { name: "Cervical cancer survival (Goal 3)" })).toBeVisible();
+  await expect(page.getByRole("row").filter({ hasText: "Etelä-Karjala" })).toContainText("56% Finland 73% · 2024");
+  await page.getByRole("button", { name: "Etelä-Karjala" }).click();
+  await page.getByRole("button", { name: "Continue to recommendations" }).click();
+  await expect(page.getByRole("heading", { name: "Outcome at the end of the pathway" })).toBeVisible();
+  await expect(page.getByText("-17 pp, statistical year 2024", { exact: false })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Review why cervical cancer survival is below the national level/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "THL Sotkanet, indicator 3626 ↗" })).toHaveAttribute("href", /indicator=3626$/);
+  await page.getByRole("button", { name: "Back to analysis" }).click();
+  await page.getByLabel("Compare by").selectOption("Language");
+  await page.getByRole("button", { name: "Run analysis" }).click();
+  await expect(page.getByRole("columnheader", { name: "Cervical cancer survival (Goal 3)" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Continue to recommendations" }).click();
+  await expect(page.getByText("Survival is published per wellbeing services county only.", { exact: false })).toBeVisible();
+});
+
 test("upload mapping is confirmed, missing follow-up abstains, and uploaded records stay local", async ({ page }) => {
   let modelCalls = 0;
   page.on("request", request => { if (request.url().includes("/api/brief")) modelCalls++; });
