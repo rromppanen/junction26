@@ -16,7 +16,7 @@ This is the team's one place for decisions, the task split and the submission ch
 
 ## Decision
 
-- Challenge(s): _TBD_
+- Challenge(s): AstraZeneca "Equal Care Across Finland" (main), plus the Gemini API and Context.dev tech bounties. Pre-submission text is in the README's submission fields; it can be changed until Sun 10:00.
 - Why us / why this: _TBD_
 - Main judging criteria to hit: **Innovation** (unlike other projects), **Impact** (share of affected people actually helped), **Implementation** (realistic, viable, feasible). Each partner also judges its own challenge with its own criteria.
 
