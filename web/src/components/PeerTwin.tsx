@@ -2,6 +2,7 @@ import type { LiveContext } from "@/lib/context";
 import type { Indicator } from "@/lib/types";
 import { MIN_BETTER } from "@/lib/peers";
 import { fmt, host } from "@/components/format";
+import { More } from "@/components/ui";
 
 /** Most similar county doing better on this county's weakest measure, and what it publishes about it. */
 export function PeerTwin({
@@ -16,16 +17,17 @@ export function PeerTwin({
 }) {
   return (
     <>
-      <p className="mb-4 max-w-2xl text-sm text-muted">
-        The county most like {name} in size and education level that does better on {name}&rsquo;s weakest
-        measure, at least {MIN_BETTER} points ahead.
+      <p className="text-xl leading-snug">
+        <strong>{twinName}</strong>{" "}
+        <span className="font-narrow font-bold tabular-nums">{fmt(twinValue, indicator.unit)}</span>
+        <span className="text-muted"> vs {name} </span>
+        <span className="font-narrow font-bold tabular-nums">{fmt(countyValue, indicator.unit)}</span>
       </p>
-      <p className="border-t border-ink pt-5 font-serif text-xl leading-snug">
-        Most similar county doing better: <strong>{twinName}</strong>{" "}
-        (<span className="tabular-nums">{fmt(twinValue, indicator.unit)}</span> vs{" "}
-        <span className="tabular-nums">{fmt(countyValue, indicator.unit)}</span>).
-      </p>
-      <p className="mt-1 text-xs text-muted">{indicator.nameEn}</p>
+      <p className="mt-1 text-sm text-muted">{indicator.nameEn}</p>
+      <More label="Why this county" className="mt-1">
+        The county most like {name} in size and education level that does better on {name}&rsquo;s weakest measure,
+        at least {MIN_BETTER} points ahead.
+      </More>
       <h3 className="mb-2 mt-5 text-sm font-semibold">
         {indicator.stage === "outcome" ? "What they publish about their care pathway" : "What they publish about invitations and reminders"}
       </h3>

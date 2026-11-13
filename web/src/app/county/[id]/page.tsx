@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CONTEXT_INDICATORS, INDICATORS, indicatorById } from "@/data/indicators";
 import { EVIDENCE } from "@/data/evidence";
@@ -15,10 +14,15 @@ import { MEASURES } from "@/data/measureKit";
 import { MeasureKit } from "@/components/MeasureKit";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
-import { Wordmark } from "@/components/Wordmark";
 import { Colophon } from "@/components/Colophon";
+import { AppHeader, HeaderLink, More, Stat, StatusIcon } from "@/components/ui";
+import { OpenOnHash } from "@/components/OpenOnHash";
 import { STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, host } from "@/components/format";
 import type { GapFacts, PathwayStage } from "@/lib/types";
+import {
+  ArrowLeft, BookOpen, CalendarClock, FileText, Globe, Handshake, LineChart, Link2, ListChecks, Route, Ruler,
+  Sparkles, Target, TriangleAlert, UserRound, Users, type LucideIcon,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -79,82 +83,111 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
       ? `No stage is behind Finland; the weakest relative stage is ${stageLabel}.`
       : `The filled stop is ${stageLabel}, where ${author} puts the main break.`;
 
-  return (
-    <main className="mx-auto max-w-5xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
-      <nav className="no-print mb-10 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 text-sm">
-        <Wordmark />
-        <span className="flex gap-x-6">
-          <Link href="/" className="link">Back to the map</Link>
-          <Link href={`/county/${regionId}/memo`} className="link">Hallitusmuistio (FI)</Link>
-        </span>
-      </nav>
+  const behindCount = facts.filter((f) => f.status === "behind").length;
+  const screening = facts.filter((f) => f.target !== null && f.value !== null);
+  const meets = screening.filter((f) => (f.gapToTarget ?? -1) >= 0).length;
 
-      <header className="mb-10">
+  const parts: { id: string; icon: LucideIcon; label: string }[] = [
+    { id: "path", icon: Route, label: "Pathway" },
+    { id: "rec", icon: ListChecks, label: "Next steps" },
+    { id: "lb", icon: Users, label: "Left behind" },
+    ...(peer && practices ? [{ id: "peer", icon: Handshake, label: "Learn from" }] : []),
+    { id: "mk", icon: Ruler, label: "Measure" },
+    { id: "ind", icon: LineChart, label: "Figures" },
+    { id: "ev", icon: BookOpen, label: "Evidence" },
+  ];
+  const part = (pid: string) => parts.find((x) => x.id === pid)!;
+
+  return (
+    <main className="mx-auto max-w-5xl px-4 pb-10 pt-5 sm:px-6">
+      <OpenOnHash />
+      <AppHeader>
+        <HeaderLink href="/" icon={ArrowLeft} label="Map" />
+        <HeaderLink href={`/county/${regionId}/memo`} icon={FileText} label="Memo (FI)" title="One-page board memo in Finnish" />
+      </AppHeader>
+
+      <header className="mb-8">
         <p className="text-sm text-muted">Cancer care brief</p>
-        <h1 className="font-narrow mt-1 text-5xl font-bold leading-[0.92] tracking-[-0.01em] break-words sm:text-[5.5rem]">{name}</h1>
-        <div className="mt-7 max-w-3xl">
-          <p className="font-serif text-[1.35rem] leading-snug sm:text-[1.7rem]">{brief.headline}</p>
-          <p className="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-ink/85">{brief.finding}</p>
-        </div>
-        <p className="mt-6 max-w-2xl border-l-2 border-ink pl-3 text-sm leading-snug text-muted">
-          {byGemini ? (
-            <>Gemini wrote the passages set in <span className="font-serif text-ink">this serif type</span>, working only from the figures and strategy pages cited here. Everything in plain type is calculated straight from Sotkanet.</>
-          ) : (
-            <>The AI analyst didn&rsquo;t respond, so the passages in <span className="font-serif text-ink">this serif type</span> come from a fixed template filled in with {name}&rsquo;s figures. Everything in plain type is calculated straight from Sotkanet.</>
+        <h1 className="font-narrow mt-1 text-5xl font-bold leading-[0.92] tracking-[-0.01em] break-words sm:text-[5rem]">{name}</h1>
+        <p className="mt-6 max-w-3xl font-serif text-[1.3rem] leading-snug sm:text-[1.6rem]">{brief.headline}</p>
+        <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:flex sm:gap-x-12">
+          <Stat value={`${behindCount}/${facts.length}`} label="measures behind Finland" tone={behindCount ? "text-behind" : ""} />
+          {screening.length > 0 && (
+            <Stat value={`${meets}/${screening.length}`} label={`screenings at the ${screening[0].target}% target`} />
           )}
-        </p>
+        </div>
+        <More label="Read the full finding" icon={Sparkles} className="mt-5">
+          <p className="font-serif text-base leading-relaxed text-ink">{brief.finding}</p>
+          <p className="mt-3">
+            {byGemini
+              ? "Gemini wrote the serif text, working only from the figures and strategy pages cited here. Plain text is calculated straight from Sotkanet."
+              : `The AI analyst didn\u2019t respond, so the serif text comes from a fixed template filled in with ${name}\u2019s figures. Plain text is calculated straight from Sotkanet.`}
+          </p>
+        </More>
       </header>
 
-      <Part id="path" title="Where along the pathway">
+      <nav aria-label="Sections" className="no-print sticky top-0 z-10 -mx-4 mb-2 overflow-x-auto border-y border-rule bg-paper/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
+        <ul className="flex w-max gap-1 text-sm">
+          {parts.map((p) => (
+            <li key={p.id}>
+              <a href={`#${p.id}`} className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[3px] px-2.5 py-1.5 hover:bg-par-soft">
+                <p.icon aria-hidden size={15} strokeWidth={2} className="text-muted" />
+                {p.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <Part {...part("path")} title="Where along the pathway">
         <PathwayFingerprint facts={facts} indicators={INDICATORS} />
         <div className="mt-6 max-w-2xl">
-          <PathwayStrip
-            active={brief.pathwayStage}
-            note={`${stageNote} Referral and diagnosis have no public county figures, so nobody can see a gap there yet.`}
-          />
+          <PathwayStrip active={brief.pathwayStage} />
         </div>
+        <More label="What the pathway shows" className="mt-3">
+          {stageNote} Referral and diagnosis have no public county figures, so nobody can see a gap there yet.
+        </More>
         <div className="mt-8">
           <WhatItTakes facts={facts} indicators={INDICATORS} />
         </div>
       </Part>
 
-      <Part id="rec" title={`What ${name} could do next`}>
+      <Part {...part("rec")} title={`What ${name} could do next`}>
         <ol>
           {brief.recommendations.map((r, i) => (
             <li key={i} className={`print-break grid gap-x-4 py-5 sm:grid-cols-[1.75rem_minmax(0,1fr)] ${i ? "border-t border-rule" : "pt-0"}`}>
               <span className="font-narrow text-xl font-bold leading-snug tabular-nums text-muted" aria-hidden>{i + 1}</span>
               <div>
                 <p className="max-w-2xl font-serif text-lg leading-snug">{r.action}</p>
-                <dl className="mt-3 grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3 gap-y-1 text-sm">
-                  <dt className="text-muted">Who</dt><dd>{r.owner}</dd>
-                  <dt className="text-muted">By when</dt><dd>{r.timeframe}</dd>
-                  <dt className="text-muted">Counts towards</dt><dd>{r.goal3Indicator}</dd>
+                <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-muted">
+                  <Meta icon={UserRound} label="Who">{r.owner}</Meta>
+                  <Meta icon={CalendarClock} label="By when">{r.timeframe}</Meta>
+                  <Meta icon={Target} label="Counts towards">{r.goal3Indicator}</Meta>
                   {r.sources.length > 0 && (
-                    <>
-                      <dt className="text-muted">Rests on</dt>
-                      <dd className="flex flex-wrap gap-x-3 gap-y-1">
-                        {r.sources.map((s) => (
-                          <a key={s} href={`#src-${sourceIndex.get(s)}`} className="link" title={resolveSource(s, citable).label}>
-                            [{sourceIndex.get(s)}]{" "}
-                            {s.startsWith("sotkanet:") ? "Sotkanet" : resolveSource(s, citable).label.split(":")[0]}
+                    <Meta icon={Link2} label="Sources">
+                      {r.sources.map((src, k) => (
+                        <span key={src}>
+                          {k > 0 && ", "}
+                          <a href={`#src-${sourceIndex.get(src)}`} className="link" title={resolveSource(src, citable).label}>
+                            {src.startsWith("sotkanet:") ? "Sotkanet" : resolveSource(src, citable).label.split(":")[0]}
                           </a>
-                        ))}
-                      </dd>
-                    </>
+                        </span>
+                      ))}
+                    </Meta>
                   )}
-                </dl>
+                </ul>
               </div>
             </li>
           ))}
         </ol>
       </Part>
 
-      <Part id="lb" title={`Who is left behind inside ${name}`}>
+      <Part {...part("lb")} title={`Who is left behind inside ${name}`}>
         <LeftBehind equity={equity} name={name} />
       </Part>
 
       {peer && practices && (
-        <Part id="peer" title="A county to learn from">
+        <Part {...part("peer")} title="A county to learn from">
           <PeerTwin
             name={name}
             twinName={peer.twinName}
@@ -166,37 +199,37 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         </Part>
       )}
 
-      <Part id="mk" title="Start measuring">
+      <Part {...part("mk")} title="Start measuring">
         <MeasureKit regionId={regionId} sourceNo={sourceIndex.get(MEASURES[0].evidenceId)} />
       </Part>
 
-      <Part id="ind" title="The five measures behind this">
-        <p className="mb-2 max-w-2xl text-sm text-muted">
-          Latest year Sotkanet publishes for each. For all five, a higher share is better.
-        </p>
+      <Part {...part("ind")} title="The five measures">
         {INDICATORS.map((ind, i) => {
           const f = facts[i];
           return (
-            <article key={ind.id} className="print-break grid gap-x-8 gap-y-4 border-b border-rule py-6 last:border-b-0 md:grid-cols-[minmax(0,1fr)_21rem]">
+            <article key={ind.id} className="print-break grid gap-x-8 gap-y-4 border-b border-rule py-5 first:pt-0 last:border-b-0 md:grid-cols-[minmax(0,1fr)_21rem]">
               <div>
-                <h3 className="font-semibold leading-snug">{ind.nameEn}</h3>
+                <h3 className="font-semibold leading-snug" title={ind.strategyGoal}>{ind.nameEn}</h3>
                 <p className="mt-0.5 text-sm text-muted">{STAGE_WORD[ind.stage]}, {f.year}</p>
                 <p className="mt-3 flex flex-wrap items-baseline gap-x-3">
                   <strong className="font-narrow text-3xl font-bold tabular-nums">{fmt(f.value, ind.unit)}</strong>
-                  <span className={`text-sm font-semibold ${STATUS_TEXT[f.status]}`}>{compareToFinland(f, ind.unit)}</span>
+                  <span className={`inline-flex items-center gap-1 text-sm font-semibold ${STATUS_TEXT[f.status]}`}>
+                    {f.status !== "no-data" && <StatusIcon status={f.status} />}
+                    {compareToFinland(f, ind.unit)}
+                  </span>
                 </p>
                 <p className="mt-1 text-sm text-muted">
                   Finland {fmt(f.national, ind.unit)}
-                  {f.rank !== null && <>. {ordinal(f.rank)} of {f.rankOf} counties</>}.
+                  {f.rank !== null && <>. {ordinal(f.rank)} of {f.rankOf}</>}.
                 </p>
                 {f.target !== null && f.gapToTarget !== null && (
-                  <p className={`mt-1 text-sm ${f.gapToTarget >= 0 ? "text-ahead" : "text-behind"}`}>
+                  <p className={`mt-1 inline-flex items-center gap-1 text-sm ${f.gapToTarget >= 0 ? "text-ahead" : "text-behind"}`}>
+                    <Target aria-hidden size={14} />
                     {f.gapToTarget >= 0
-                      ? `Meets the ${f.target}% target.`
-                      : `${Math.abs(f.gapToTarget).toFixed(1)} points short of the ${f.target}% target.`}
+                      ? `Meets the ${f.target}% target`
+                      : `${Math.abs(f.gapToTarget).toFixed(1)} points short of ${f.target}%`}
                   </p>
                 )}
-                <p className="mt-3 text-xs text-muted">{ind.strategyGoal}</p>
               </div>
               <TrendChart
                 county={series(ind.id, regionId)}
@@ -211,63 +244,67 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         })}
       </Part>
 
-      <Part id="src" title="Sources">
-        {sources.length === 0 ? (
-          <p className="text-sm text-muted">The actions cite nothing beyond the Sotkanet figures above.</p>
-        ) : (
-          <ol className="max-w-2xl space-y-3 text-sm">
-            {sources.map((s, i) => (
-              <li key={s.id} id={`src-${i + 1}`} className="grid scroll-mt-6 grid-cols-[2rem_minmax(0,1fr)] target:bg-behind-soft">
-                <span className="tabular-nums text-muted">[{i + 1}]</span>
-                <span>
-                  <a href={s.url} target="_blank" rel="noreferrer" className="link">{s.label}</a>
-                  {s.detail && <span className="mt-0.5 block text-xs leading-relaxed text-muted">{s.detail}</span>}
-                </span>
-              </li>
-            ))}
-          </ol>
-        )}
-      </Part>
-
-      <Part id="lim" title={"What this can\u2019t tell you"}>
-        <ul className="max-w-2xl list-[square] space-y-2 pl-5 font-serif leading-relaxed marker:text-par">
-          {brief.limitations.map((l, i) => <li key={i}>{l}</li>)}
-        </ul>
-      </Part>
-
-      <Part id="live" title="What the web says now">
-        <p className="mb-5 max-w-2xl text-sm text-muted">
-          Public pages about {name}&rsquo;s cancer care and waiting times, found through Context.dev
-          {live.fetchedAt
-            ? ` on ${new Date(live.fetchedAt).toLocaleString("en-GB", { timeZone: "Europe/Helsinki", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}`
-            : ""}
-          . {byGemini ? "Gemini" : "The analyst"} may cite them for context, never for figures.
-        </p>
-        {live.snippets.length > 0 ? (
-          <ul className="grid gap-x-10 gap-y-6 text-sm md:grid-cols-2">
-            {live.snippets.map((l) => (
-              <li key={l.id} className="print-break">
-                <a href={l.url} target="_blank" rel="noreferrer" className="link font-medium">{l.title}</a>
-                <span className="mt-0.5 block truncate text-xs text-muted">{host(l.url)}</span>
-                <span className="mt-1.5 block leading-relaxed">{l.text}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="max-w-2xl text-sm">
-            {live.status === "not-configured"
-              ? "The web search is switched off here, because no Context.dev key is set."
-              : live.status === "empty"
-                ? "The search found no public pages about this county’s cancer care."
-                : "The web search didn’t answer just now, so this brief rests on the figures and strategy documents only."}
-          </p>
-        )}
+      <Part {...part("ev")} title="Evidence">
+        <div className="space-y-3">
+          <More label={`Sources (${sources.length})`} icon={BookOpen}>
+            {sources.length === 0 ? (
+              <p>The actions cite nothing beyond the Sotkanet figures above.</p>
+            ) : (
+              <ol className="space-y-3 text-ink">
+                {sources.map((src, i) => (
+                  <li key={src.id} id={`src-${i + 1}`} className="grid scroll-mt-16 grid-cols-[2rem_minmax(0,1fr)] target:bg-behind-soft">
+                    <span className="tabular-nums text-muted">[{i + 1}]</span>
+                    <span>
+                      <a href={src.url} target="_blank" rel="noreferrer" className="link">{src.label}</a>
+                      {src.detail && <span className="mt-0.5 block text-xs leading-relaxed text-muted">{src.detail}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </More>
+          <More label={`What this can\u2019t tell you (${brief.limitations.length})`} icon={TriangleAlert}>
+            <ul className="list-[square] space-y-2 pl-5 font-serif leading-relaxed text-ink marker:text-par">
+              {brief.limitations.map((l, i) => <li key={i}>{l}</li>)}
+            </ul>
+          </More>
+          <More label={`Web pages found today (${live.snippets.length})`} icon={Globe}>
+            <p className="mb-3">
+              Public pages about {name}&rsquo;s cancer care, found through Context.dev
+              {live.fetchedAt
+                ? ` on ${new Date(live.fetchedAt).toLocaleString("en-GB", { timeZone: "Europe/Helsinki", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}`
+                : ""}
+              . Cited for context, never for figures.
+            </p>
+            {live.snippets.length > 0 ? (
+              <ul className="space-y-4 text-ink">
+                {live.snippets.map((l) => (
+                  <li key={l.id} className="print-break">
+                    <a href={l.url} target="_blank" rel="noreferrer" className="link font-medium">{l.title}</a>
+                    <span className="mt-0.5 block truncate text-xs text-muted">{host(l.url)}</span>
+                    <span className="mt-1 block leading-relaxed">{l.text}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-ink">
+                {live.status === "not-configured"
+                  ? "The web search is switched off here, because no Context.dev key is set."
+                  : live.status === "empty"
+                    ? "The search found no public pages about this county\u2019s cancer care."
+                    : "The web search didn\u2019t answer just now, so this brief rests on the figures and strategy documents only."}
+              </p>
+            )}
+          </More>
+        </div>
       </Part>
 
       <footer className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-ink pt-4 text-xs text-muted">
         <DataBadge ds={ds} />
         <span>{region.name}</span>
-        <Colophon className="basis-full" />
+        <More label="About Gap Radar" className="basis-full">
+          <Colophon />
+        </More>
       </footer>
     </main>
   );
@@ -289,12 +326,28 @@ function compareToFinland(f: GapFacts, unit: string): string {
   return f.status === "behind" ? `${size} behind Finland` : `${size} ahead of Finland`;
 }
 
-/** A section of the brief: its name in the left margin, its content to the right. */
-function Part({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+/** A section of the brief: its icon and name on top, then the content. `id` is the jump-menu anchor. */
+function Part({ id, icon: Icon, title, children }: { id: string; icon: LucideIcon; label?: string; title: string; children: React.ReactNode }) {
   return (
-    <section aria-labelledby={`${id}-h`} className="print-break grid gap-x-10 gap-y-4 border-t border-ink py-8 md:grid-cols-[10.5rem_minmax(0,1fr)]">
-      <h2 id={`${id}-h`} className="text-lg font-semibold leading-tight tracking-tight md:text-base">{title}</h2>
+    <section id={id} aria-labelledby={`${id}-h`} className="print-break scroll-mt-14 border-t border-ink py-8 first-of-type:border-t-0">
+      <h2 id={`${id}-h`} className="mb-5 flex items-center gap-2 text-xl font-semibold leading-tight tracking-tight">
+        <Icon aria-hidden size={20} strokeWidth={2} className="shrink-0 text-muted" />
+        {title}
+      </h2>
       <div className="min-w-0">{children}</div>
     </section>
+  );
+}
+
+/** One fact about an action: icon, a label for screen readers, the value. */
+function Meta({ icon: Icon, label, children }: { icon: LucideIcon; label: string; children: React.ReactNode }) {
+  return (
+    <li className="inline-flex items-start gap-1.5" title={label}>
+      <Icon aria-hidden size={15} strokeWidth={2} className="mt-0.5 shrink-0" />
+      <span>
+        <span className="sr-only">{label}: </span>
+        <span className="text-ink">{children}</span>
+      </span>
+    </li>
   );
 }

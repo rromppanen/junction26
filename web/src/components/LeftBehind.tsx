@@ -1,5 +1,10 @@
 import { AREA_LEVEL_CAVEAT, MIN_ASSOCIATION_N, measurePhrase, type EquityFacts } from "@/lib/equity";
+import { ListPlus, TriangleAlert } from "lucide-react";
 import { fmt, fmtGap } from "@/components/format";
+import { More } from "@/components/ui";
+
+/** Patterns shown before the rest fold away. */
+const SHOWN = 3;
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -16,11 +21,12 @@ export function LeftBehind({ equity, name }: { equity: EquityFacts; name: string
         </p>
       ) : (
         <>
-          <p className="mb-6 max-w-2xl text-sm text-muted">
+          <p className="max-w-2xl">Municipalities furthest behind {name} as a whole, per screening.</p>
+          <More label="How these are picked" className="mb-5 mt-1">
             The five municipalities with the lowest attendance compared with {name} as a whole, for each screening
             programme (a plus sign means still above the county). Only municipalities with at least 2,000 residents
             ({equity.municipalityCount} here), because figures for tiny ones swing from year to year.
-          </p>
+          </More>
           {equity.lagging.length === 0 ? (
             <p className="text-sm text-muted">Sotkanet has no municipality figures for these measures here.</p>
           ) : (
@@ -42,7 +48,6 @@ export function LeftBehind({ equity, name }: { equity: EquityFacts; name: string
                       </li>
                     ))}
                   </ol>
-                  <p className="mt-1.5 text-xs text-muted">Last column: points against {name} as a whole. Sotkanet {l.indicator.id}.</p>
                 </article>
               ))}
             </div>
@@ -50,11 +55,22 @@ export function LeftBehind({ equity, name }: { equity: EquityFacts; name: string
 
           <h3 className="mb-2 mt-8 font-semibold">Patterns between municipalities</h3>
           {equity.associations.length > 0 ? (
-            <ul className="max-w-3xl list-[square] space-y-2 pl-5 font-serif text-lg leading-snug marker:text-par">
-              {equity.associations.map((a) => (
-                <li key={`${a.indicator.id}-${a.context.id}`}>{a.sentence}</li>
-              ))}
-            </ul>
+            <>
+              <ul className="max-w-3xl list-[square] space-y-2 pl-5 font-serif text-lg leading-snug marker:text-par">
+                {equity.associations.slice(0, SHOWN).map((a) => (
+                  <li key={`${a.indicator.id}-${a.context.id}`}>{a.sentence}</li>
+                ))}
+              </ul>
+              {equity.associations.length > SHOWN && (
+                <More label={`${equity.associations.length - SHOWN} more patterns`} icon={ListPlus} className="mt-2">
+                  <ul className="max-w-3xl list-[square] space-y-2 pl-5 font-serif text-lg leading-snug text-ink marker:text-par">
+                    {equity.associations.slice(SHOWN).map((a) => (
+                      <li key={`${a.indicator.id}-${a.context.id}`}>{a.sentence}</li>
+                    ))}
+                  </ul>
+                </More>
+              )}
+            </>
           ) : (
             <p className="max-w-2xl text-sm text-muted">
               {equity.municipalityCount < MIN_ASSOCIATION_N
@@ -63,14 +79,17 @@ export function LeftBehind({ equity, name }: { equity: EquityFacts; name: string
             </p>
           )}
           {equity.municipalityCount >= MIN_ASSOCIATION_N && (
-            <p className="mt-3 max-w-2xl text-xs text-muted">
-              Patterns shown are rank correlations of 0.4 or stronger (either direction), using Sotkanet 127, 180, 3074, 5102
-              and 181. Education level is Sotkanet&rsquo;s measure of average years of study after basic education.
-            </p>
+            <More label="How patterns are found" className="mt-3">
+              Patterns shown are rank correlations of 0.4 or stronger (either direction), using Sotkanet 127, 180, 3074,
+              5102 and 181. Education level is Sotkanet&rsquo;s measure of average years of study after basic
+              education. The last column in each list is points against {name} as a whole.
+            </More>
           )}
         </>
       )}
-      <p className="mt-4 max-w-2xl border-l-2 border-par pl-3 text-sm">{AREA_LEVEL_CAVEAT}</p>
+      <More label="Read before acting on patterns" icon={TriangleAlert} className="mt-3">
+        {AREA_LEVEL_CAVEAT}
+      </More>
     </>
   );
 }
