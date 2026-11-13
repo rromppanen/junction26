@@ -1,14 +1,14 @@
 import { MEASURES } from "@/data/measureKit";
 import { EVIDENCE } from "@/data/evidence";
+import { Download } from "lucide-react";
+import { More } from "@/components/ui";
 
 /** Turns the missing referral and diagnosis data into a monthly recording kit with a CSV template. */
 export function MeasureKit({ regionId, sourceNo }: { regionId: number; sourceNo?: number }) {
   const ev = EVIDENCE.find((e) => e.id === MEASURES[0].evidenceId);
   return (
     <>
-      <p className="mb-6 max-w-2xl text-sm text-muted">
-        No county in Finland publishes referral or diagnosis delay data, so these stages can&rsquo;t be compared yet. Start recording these three numbers monthly.
-      </p>
+      <p className="mb-5 max-w-2xl">No county publishes referral or diagnosis delays yet. Record these three numbers monthly.</p>
       <ol className="border-t border-ink">
         {MEASURES.map((m, i) => (
           <li key={m.id} className="print-break grid gap-x-6 border-b border-rule py-4 sm:grid-cols-[3rem_minmax(0,1fr)]">
@@ -21,17 +21,23 @@ export function MeasureKit({ regionId, sourceNo }: { regionId: number; sourceNo?
           </li>
         ))}
       </ol>
-      <p className="mt-3 text-xs text-muted">
-        Measures follow THL guidance 21/2016 on monitoring access to cancer care; the national strategy measures Goal 3 by whether patients start treatment within these target times.{" "}
+      <a
+        href={`/county/${regionId}/measure`}
+        download
+        className="no-print mt-4 inline-flex items-center gap-2 rounded-[3px] bg-ink px-3.5 py-2 text-sm font-semibold text-paper hover:bg-ink/85"
+      >
+        <Download aria-hidden size={16} />
+        Download CSV template
+      </a>
+      <More label="Where these measures come from" className="mt-3">
+        Measures follow THL guidance 21/2016 on monitoring access to cancer care; the national strategy measures Goal 3
+        by whether patients start treatment within these target times.{" "}
         {ev && (
           <a href={sourceNo ? `#src-${sourceNo}` : ev.url} className="link">
             {sourceNo ? `[${sourceNo}] ` : ""}{ev.titleEn}
           </a>
         )}
-      </p>
-      <a href={`/county/${regionId}/measure`} download className="no-print link mt-4 inline-block text-sm font-semibold">
-        Download the CSV template
-      </a>
+      </More>
     </>
   );
 }

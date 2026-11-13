@@ -234,3 +234,17 @@
     text-decoration: none;
   }
 }
+
+/* Disclosures (components/ui.tsx `More`): on paper everything is shown, the toggle line is not. */
+@media print {
+  details.more::details-content {
+    content-visibility: visible;
+    display: block;
+  }
+  details.more > summary {
+    display: none;
+  }
+  details.more > div {
+    margin-top: 0.25rem;
+  }
+}

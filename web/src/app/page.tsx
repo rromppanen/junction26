@@ -6,9 +6,10 @@ import type { GapFacts, GapStatus, Indicator, PathwayStage } from "@/lib/types";
 import { CountyMap } from "@/components/CountyMap";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
-import { Wordmark } from "@/components/Wordmark";
 import { Colophon } from "@/components/Colophon";
+import { AppHeader, IconHeading, More, Stat, StatusIcon } from "@/components/ui";
 import { STATUS_LABEL, STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, shortName } from "@/components/format";
+import { CalendarDays, ExternalLink, HeartPulse, ListOrdered, Map as MapIcon, Route, ScanSearch, type LucideIcon } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -24,9 +25,10 @@ const PHRASE: Record<string, { tab: string; inSentence: string }> = {
 
 // Measure tabs are grouped by pathway stage; these are the group names a reader sees.
 const GROUP_LABEL: Partial<Record<PathwayStage, string>> = {
-  detection: "Screening attendance",
-  outcome: "Five-year survival",
+  detection: "Screening",
+  outcome: "5-year survival",
 };
+const GROUP_ICON: Partial<Record<PathwayStage, LucideIcon>> = { detection: ScanSearch, outcome: HeartPulse };
 
 function measureGroups(): { stage: PathwayStage; items: Indicator[] }[] {
   const out: { stage: PathwayStage; items: Indicator[] }[] = [];
@@ -37,8 +39,6 @@ function measureGroups(): { stage: PathwayStage; items: Indicator[] }[] {
   }
   return out;
 }
-
-const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 export default async function RadarPage({
   searchParams,
@@ -68,15 +68,14 @@ export default async function RadarPage({
   const meetsTarget = ind.target ? ranked.filter((f) => f.value !== null && f.value >= ind.target!.value).length : null;
   const maxGap = Math.max(0.1, ...ranked.map((f) => Math.abs(f.gapToNational ?? 0)));
 
-  const pts = ind.unit === "%" ? "points" : ind.unit;
   const within = `${ON_PAR_THRESHOLD} ${ind.unit === "%" ? "percentage points" : ind.unit}`;
   // Table groups in reading order. Rows arrive best first, so each group keeps its own order.
   const groups: { status: GapStatus; title: string; rows: GapFacts[] }[] = (
     [
-      ["ahead", (n: number) => `${count(n, "county", "counties")} more than ${ON_PAR_THRESHOLD} ${pts} ahead`],
-      ["on-par", (n: number) => `${count(n, "county", "counties")} within ${ON_PAR_THRESHOLD} ${pts} of Finland`],
-      ["behind", (n: number) => `${count(n, "county", "counties")} more than ${ON_PAR_THRESHOLD} ${pts} behind`],
-      ["no-data", (n: number) => `No figure for ${n === 1 ? "this county" : "these counties"} in ${year}`],
+      ["ahead", (n: number) => `Ahead of Finland (${n})`],
+      ["on-par", (n: number) => `About level (${n})`],
+      ["behind", (n: number) => `Behind (${n})`],
+      ["no-data", (n: number) => `No figure (${n})`],
     ] as const
   )
     .map(([status, title]) => {
@@ -94,92 +93,92 @@ export default async function RadarPage({
     "no-data": "text-muted",
   };
 
-  return (
-    <main className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
-      <header className="mb-8">
-        <p className="mb-10 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-          <Wordmark />
-          <DataBadge ds={ds} />
-        </p>
-        <h1 className="max-w-4xl text-[2rem] font-semibold leading-[1.08] tracking-[-0.02em] sm:text-5xl">
-          {behind === 0 ? "No county" : `${behind} of ${withData} counties`}{" "}
-          {behind <= 1 ? "is" : "are"} behind the whole of Finland on {phrase.inSentence} in {year}.
-        </h1>
-        <p className="mt-4 max-w-2xl text-muted">
-          Finland as a whole reaches <strong className="font-semibold text-ink">{fmt(national, ind.unit)}</strong>
-          {ind.higherIsBetter ? "." : ", and lower is better here."}{" "}
-          {ind.target && meetsTarget !== null ? (
-            <>
-              The national cancer strategy asks for {ind.target.value}% in every county, and{" "}
-              <strong className="font-semibold text-ink">
-                {meetsTarget === 0 ? "none" : meetsTarget === withData ? "all" : `${meetsTarget} of ${withData}`}
-              </strong>{" "}
-              {meetsTarget === 1 ? "gets" : "get"} there.{" "}
-            </>
-          ) : (
-            <>{ind.strategyGoal}. </>
-          )}
-          Open a county for its brief and three things it could do next.
-        </p>
-      </header>
+  const GroupIcon = (st: PathwayStage) => GROUP_ICON[st] ?? Route;
 
-      <div className="mb-10 border-y border-rule py-3 text-sm">
-        <nav aria-label="Measure" className="flex flex-wrap gap-x-10 gap-y-3">
-          {measureGroups().map((g) => (
-            <div key={g.stage} className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-              <span className="text-muted">{GROUP_LABEL[g.stage] ?? STAGE_LABEL[g.stage]}</span>
-              {g.items.map((i) => {
-                const on = i.id === ind.id;
-                return (
-                  <Link
-                    key={i.slug}
-                    href={`/?ind=${i.slug}`}
-                    title={i.nameEn}
-                    className={`border-b-2 pb-0.5 ${on ? "border-ink font-semibold" : "border-transparent text-muted hover:border-rule hover:text-ink"}`}
-                    aria-current={on ? "page" : undefined}
-                  >
-                    {PHRASE[i.slug]?.tab ?? i.nameEn}
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
+  return (
+    <main className="mx-auto max-w-6xl px-4 pb-10 pt-5 sm:px-6">
+      <AppHeader>
+        <DataBadge ds={ds} />
+      </AppHeader>
+
+      <section className="mb-8" aria-labelledby="headline">
+        <h1 id="headline" className="max-w-4xl text-[1.85rem] font-semibold leading-[1.1] tracking-[-0.02em] sm:text-[2.75rem]">
+          {behind === 0 ? "No county" : `${behind} of ${withData} counties`}{" "}
+          {behind <= 1 ? "is" : "are"} behind Finland on {phrase.inSentence} in {year}.
+        </h1>
+        <div className="mt-6 grid grid-cols-3 gap-x-4 gap-y-5 sm:flex sm:gap-x-12">
+          <Stat value={fmt(national, ind.unit)} label="Finland as a whole" />
+          <Stat value={behind} label={behind === 1 ? "county behind" : "counties behind"} tone={behind ? "text-behind" : ""} />
+          {ind.target && meetsTarget !== null && (
+            <Stat value={`${meetsTarget}/${withData}`} label={`reach the ${ind.target.value}% target`} />
+          )}
+        </div>
+      </section>
+
+      <div className="mb-10 flex flex-col gap-3 rounded-[4px] bg-surface px-3 py-3 text-sm sm:px-4">
+        <nav aria-label="Measure" className="flex flex-wrap gap-x-8 gap-y-2">
+          {measureGroups().map((g) => {
+            const Icon = GroupIcon(g.stage);
+            return (
+              <div key={g.stage} role="group" aria-label={GROUP_LABEL[g.stage] ?? STAGE_LABEL[g.stage]} className="flex flex-wrap items-center gap-1">
+                <span className="mr-1 inline-flex items-center gap-1.5 text-muted">
+                  <Icon aria-hidden size={16} strokeWidth={2} />
+                  {GROUP_LABEL[g.stage] ?? STAGE_LABEL[g.stage]}
+                </span>
+                {g.items.map((i) => {
+                  const on = i.id === ind.id;
+                  return (
+                    <Link
+                      key={i.slug}
+                      href={`/?ind=${i.slug}`}
+                      title={i.nameEn}
+                      className={`rounded-[3px] px-2.5 py-1 ${on ? "bg-ink font-semibold text-paper" : "text-ink hover:bg-par-soft"}`}
+                      aria-current={on ? "page" : undefined}
+                    >
+                      {PHRASE[i.slug]?.tab ?? i.nameEn}
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          })}
         </nav>
         {recentYears.length > 1 && (
-          <nav aria-label="Year" className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-muted">Figures for</span>
+          <nav aria-label="Year" className="flex flex-wrap items-center gap-1">
+            <span className="mr-1 inline-flex items-center gap-1.5 text-muted">
+              <CalendarDays aria-hidden size={16} strokeWidth={2} />
+              Year
+            </span>
             {recentYears.map((y) => (
               <Link
                 key={y}
                 href={`/?ind=${ind.slug}&year=${y}`}
-                className={`font-narrow border-b-2 pb-0.5 tabular-nums ${y === year ? "border-ink font-semibold" : "border-transparent text-muted hover:border-rule hover:text-ink"}`}
+                className={`font-narrow rounded-[3px] px-2 py-1 tabular-nums ${y === year ? "bg-ink font-semibold text-paper" : "text-ink hover:bg-par-soft"}`}
                 aria-current={y === year ? "page" : undefined}
               >
                 {y}
               </Link>
             ))}
-            {year === latest && <span className="text-xs text-muted">the latest year published</span>}
           </nav>
         )}
       </div>
 
       <div className="grid gap-x-12 gap-y-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
         <section aria-labelledby="map-h">
-          <h2 id="map-h" className="sr-only">
-            Map: {ind.nameEn}, {year}
-          </h2>
-          <p className="mb-4 max-w-md text-sm text-muted">
-            Each county shows its own figure for {year}. Colour shows how far it is from Finland as a whole.
-          </p>
+          <IconHeading icon={MapIcon} id="map-h" className="text-xl">Map</IconHeading>
+          <More label="How to read the map" className="mb-4 mt-1">
+            Each county shows its {year} figure for {ind.nameEn.toLowerCase()}. Colour shows how far it is from
+            Finland as a whole. Click a county to open its brief.
+          </More>
           <CountyMap regions={ds.regions} facts={factsById} unit={ind.unit} />
         </section>
 
         <section aria-labelledby="rank-h">
-          <h2 id="rank-h" className="text-xl font-semibold tracking-tight">Every county, best first</h2>
-          <p className="mb-4 mt-1 max-w-lg text-sm text-muted">
-            The gap is in {ind.unit === "%" ? "percentage points" : ind.unit} from Finland as a whole. A county
-            within {within} counts as level.
-          </p>
+          <IconHeading icon={ListOrdered} id="rank-h" className="text-xl">Ranking</IconHeading>
+          <More label="How the gap works" className="mb-4 mt-1">
+            The gap is in {ind.unit === "%" ? "percentage points" : ind.unit} from Finland as a whole
+            ({fmt(national, ind.unit)}). A county within {within} counts as level. Click a county to open its brief.
+          </More>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-left text-xs text-muted">
@@ -203,7 +202,10 @@ export default async function RadarPage({
                       colSpan={5}
                       className={`pb-1 pt-5 text-left text-xs font-semibold ${groupTitleClass[grp.status]}`}
                     >
-                      {grp.title}
+                      <span className="inline-flex items-center gap-1">
+                        {grp.status !== "no-data" && <StatusIcon status={grp.status} />}
+                        {grp.title}
+                      </span>
                     </th>
                   </tr>
                   {grp.rows.map((f) => {
@@ -237,7 +239,8 @@ export default async function RadarPage({
                           </Link>
                         </td>
                         <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(f.value, ind.unit)}</td>
-                        <td className={`py-1.5 pr-3 text-right font-semibold tabular-nums ${STATUS_TEXT[f.status]}`}>
+                        <td className={`whitespace-nowrap py-1.5 pr-3 text-right font-semibold tabular-nums ${STATUS_TEXT[f.status]}`}>
+                          {(f.status === "ahead" || f.status === "behind") && <StatusIcon status={f.status} className="mr-0.5 -translate-y-px" />}
                           {fmtGap(f.gapToNational)}
                           <span className="sr-only"> ({STATUS_LABEL[f.status]})</span>
                         </td>
@@ -262,31 +265,36 @@ export default async function RadarPage({
             </table>
           </div>
           {ranked.some((f) => f.status === "no-data" && regionName.get(f.regionId) === "Ahvenanmaa") && (
-            <p className="mt-3 text-xs text-muted">
-              Åland runs its own health services outside the wellbeing services counties, so most national
-              figures leave it out.
-            </p>
+            <More label="Why Åland has no figure" className="mt-3">
+              Åland runs its own health services outside the wellbeing services counties, so most national figures
+              leave it out.
+            </More>
           )}
         </section>
       </div>
 
       <section className="mt-14 border-t border-rule pt-6" aria-labelledby="pathway-h">
-        <h2 id="pathway-h" className="mb-3 text-sm text-muted">
-          {phrase.inSentence.charAt(0).toUpperCase() + phrase.inSentence.slice(1)} is a measure of{" "}
-          <span className="font-semibold text-ink">{STAGE_LABEL[ind.stage].toLowerCase()}</span> on the care pathway
-        </h2>
-        <PathwayStrip
-          active={ind.stage}
-          note="Nobody publishes referral or diagnosis delays by county yet. The national cancer roadmap lists fixing that as action 3.1.2."
-        />
+        <IconHeading icon={Route} id="pathway-h" className="mb-4 text-lg">
+          Where this sits on the care pathway
+        </IconHeading>
+        <div className="max-w-3xl">
+          <PathwayStrip active={ind.stage} />
+        </div>
+        <More label="Why two stops have no figures" className="mt-3">
+          Nobody publishes referral or diagnosis delays by county yet. The national cancer roadmap lists fixing that
+          as action 3.1.2.
+        </More>
       </section>
 
       <footer className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4 text-xs text-muted">
         <DataBadge ds={ds} />
-        <a href={ind.sourceUrl} className="link" target="_blank" rel="noreferrer">
-          This measure on Sotkanet ({ind.nameFi})
+        <a href={ind.sourceUrl} className="link inline-flex items-center gap-1" target="_blank" rel="noreferrer">
+          This measure on Sotkanet
+          <ExternalLink aria-hidden size={12} />
         </a>
-        <Colophon className="basis-full" />
+        <More label="About Gap Radar" className="basis-full">
+          <Colophon />
+        </More>
       </footer>
     </main>
   );

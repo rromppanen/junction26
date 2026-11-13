@@ -1,6 +1,8 @@
 import type { GapFacts, Indicator } from "@/lib/types";
 import { peoplePer1000ToReach } from "@/lib/impact";
+import { Users } from "lucide-react";
 import { fmt } from "./format";
+import { IconHeading, More } from "./ui";
 
 /** "Breast cancer screening attendance (mammography)" -> "Breast". */
 const programme = (ind: Indicator) => ind.nameEn.match(/^(\w+) cancer screening/i)?.[1] ?? ind.nameEn;
@@ -14,11 +16,11 @@ export function WhatItTakes({ facts, indicators }: { facts: GapFacts[]; indicato
   const target = rows[0].ind.target?.value;
   return (
     <div>
-      <h3 className="font-semibold">The screening gap in people</h3>
-      <p className="mt-1 max-w-2xl text-sm text-muted">
-        The national strategy asks every county to get {target}% of invited people to each screening. For every 1,000
-        people invited here, that means:
-      </p>
+      <IconHeading icon={Users} as="h3">Extra people needed, per 1,000 invited</IconHeading>
+      <More label="How this is counted" className="mt-1">
+        The national strategy asks every county to get {target}% of invited people to each screening. Each row shows
+        how many more of every 1,000 people invited here would need to attend to reach {target}%, and to get halfway.
+      </More>
       <ul className="mt-3 border-t border-rule">
         {rows.map(({ ind, f }) => {
           const goal = ind.target?.value ?? f?.target ?? null;
@@ -35,12 +37,13 @@ export function WhatItTakes({ facts, indicators }: { facts: GapFacts[]; indicato
               {full === null || half === null ? (
                 <span className="text-muted">Sotkanet has no attendance figure for this year.</span>
               ) : full === 0 ? (
-                <span className="text-ahead">Already at {fmt(value, "%")}, above the target. Nobody extra needed.</span>
+                <span className="text-ahead">At {fmt(value, "%")}: target met.</span>
               ) : (
                 <span>
-                  <strong className="font-narrow text-xl font-bold tabular-nums">{full}</strong> more need to attend to
-                  reach {goal}%, or <strong className="font-narrow text-xl font-bold tabular-nums">{half}</strong> to get
-                  halfway. Now {fmt(value, "%")}.
+                  <strong className="font-narrow text-xl font-bold tabular-nums">+{full}</strong> to reach {goal}%
+                  <span className="text-muted">
+                    {" "}(+{half} halfway, now {fmt(value, "%")})
+                  </span>
                 </span>
               )}
             </li>
