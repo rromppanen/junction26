@@ -15,10 +15,19 @@ const KIND: Record<string, RegionKind> = { MAA: "national", HYVINVOINTIALUE: "co
 type SotkaRegion = { id: number; category: string; title: { fi: string }; memberOf?: number[] };
 type SotkaRow = { indicator: number; region: number; year: number; gender: string; value?: number };
 
-async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`${res.status} ${url}`);
-  return (await res.json()) as T;
+/** Sotkanet is occasionally slow; retry a few times so one hiccup doesn't fail a build. */
+async function getJson<T>(url: string, attempts = 4): Promise<T> {
+  for (let i = 1; ; i++) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(60_000) });
+      if (!res.ok) throw new Error(`${res.status} ${url}`);
+      return (await res.json()) as T;
+    } catch (e) {
+      if (i >= attempts) throw e;
+      console.warn(`retry ${i}/${attempts - 1} after: ${e instanceof Error ? e.message : e}`);
+      await new Promise((r) => setTimeout(r, 2_000 * i));
+    }
+  }
 }
 
 async function main() {
