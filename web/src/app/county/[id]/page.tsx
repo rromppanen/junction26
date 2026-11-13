@@ -10,6 +10,7 @@ import { TrendChart } from "@/components/TrendChart";
 import { PathwayFingerprint } from "@/components/PathwayFingerprint";
 import { WhatItTakes } from "@/components/WhatItTakes";
 import { LeftBehind } from "@/components/LeftBehind";
+import { MEASURES } from "@/data/measureKit";
 import { MeasureKit } from "@/components/MeasureKit";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
@@ -52,7 +53,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
   const { ds, region, nationalRegion, name, facts, live, practices, peer, equity, brief } = loaded;
 
   const citable = [...live.snippets, ...(peer?.snippets ?? [])];
-  const sourceIds = [...new Set(brief.recommendations.flatMap((r) => r.sources))];
+  const sourceIds = [...new Set([...brief.recommendations.flatMap((r) => r.sources), MEASURES[0].evidenceId])];
   const sources = sourceIds.map((s) => resolveSource(s, citable));
   const sourceIndex = new Map(sources.map((s, i) => [s.id, i + 1]));
 
@@ -112,7 +113,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         <PathwayStrip active={brief.pathwayStage} />
       </section>
 
-      <MeasureKit regionId={regionId} name={name} />
+      <MeasureKit regionId={regionId} sourceNo={sourceIndex.get(MEASURES[0].evidenceId)} />
 
       <section className="mb-14" aria-labelledby="rec-h">
         <h2 id="rec-h" className="mb-2 text-2xl font-semibold tracking-tight">What {name} could do next</h2>

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { GET } from "./route";
+import { getDataset } from "@/lib/data";
+import { EVIDENCE } from "@/data/evidence";
 import { MEASURES } from "@/data/measureKit";
 
 const call = (id: string) =>
@@ -20,11 +22,19 @@ describe("GET /county/[id]/measure", () => {
     expect((await call("999999")).status).toBe(404);
     expect((await call("abc")).status).toBe(404);
   });
+
+  it("404s for a real region that is not a county", async () => {
+    const ds = await getDataset();
+    const other = ds.regions.find((r) => r.kind !== "county");
+    expect(other).toBeDefined();
+    expect((await call(String(other!.id))).status).toBe(404);
+  });
 });
 
 describe("MEASURES", () => {
   it("has exactly three measures citing the Goal 3 evidence", () => {
     expect(MEASURES).toHaveLength(3);
+    expect(EVIDENCE.some((e) => e.id === "strategy-goal3-headline")).toBe(true);
     for (const m of MEASURES) expect(m.evidenceId).toBe("strategy-goal3-headline");
   });
 });

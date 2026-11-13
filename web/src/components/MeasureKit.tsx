@@ -2,13 +2,13 @@ import { MEASURES } from "@/data/measureKit";
 import { EVIDENCE } from "@/data/evidence";
 
 /** Turns the missing referral and diagnosis data into a monthly recording kit with a CSV template. */
-export function MeasureKit({ regionId, name }: { regionId: number; name: string }) {
+export function MeasureKit({ regionId, sourceNo }: { regionId: number; sourceNo?: number }) {
   const ev = EVIDENCE.find((e) => e.id === MEASURES[0].evidenceId);
   return (
     <section className="mb-14 print-break" aria-labelledby="mk-h">
       <h2 id="mk-h" className="mb-2 text-2xl font-semibold tracking-tight">Start measuring</h2>
       <p className="mb-6 max-w-2xl text-sm text-muted">
-        No public data exists for these stages. Start recording these three numbers monthly, so {name} can see its own delays.
+        No county in Finland publishes referral or diagnosis delay data, so these stages can&rsquo;t be compared yet. Start recording these three numbers monthly.
       </p>
       <ol className="border-t border-ink">
         {MEASURES.map((m, i) => (
@@ -23,8 +23,12 @@ export function MeasureKit({ regionId, name }: { regionId: number; name: string 
         ))}
       </ol>
       <p className="mt-3 text-xs text-muted">
-        Target times: THL guidance 21/2016, Goal 3 of the National Cancer Strategy
-        {ev && <> (<a href={ev.url} target="_blank" rel="noreferrer" className="link">{ev.titleEn}</a>)</>}.
+        Measures follow THL guidance 21/2016 on monitoring access to cancer care; the national strategy measures Goal 3 by whether patients start treatment within these target times.{" "}
+        {ev && (
+          <a href={sourceNo ? `#src-${sourceNo}` : ev.url} className="link">
+            {sourceNo ? `[${sourceNo}] ` : ""}{ev.titleEn}
+          </a>
+        )}
       </p>
       <a href={`/county/${regionId}/measure`} download className="no-print link mt-4 inline-block text-sm font-semibold">
         Download the CSV template
