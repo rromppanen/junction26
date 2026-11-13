@@ -1,0 +1,241 @@
+year,dimension,group,cohort,invited,attended,referred,completed
+2024,Age,30,Routine age-based screening,35723,23907,662,565
+2024,Age,35,Routine age-based screening,36398,25406,434,370
+2024,Age,40,Routine age-based screening,36653,26654,374,314
+2024,Age,45,Routine age-based screening,34415,25958,294,249
+2024,Age,50,Routine age-based screening,32313,24838,225,192
+2024,Age,55,Routine age-based screening,32680,24907,164,134
+2024,Age,60,Routine age-based screening,36807,27826,152,132
+2024,Age,65,Routine age-based screening,35823,26841,140,115
+2024,Age,All groups,Routine age-based screening,280812,206337,2445,2071
+2023,Age,30,Routine age-based screening,35085,23063,596,545
+2023,Age,35,Routine age-based screening,35710,24668,438,407
+2023,Age,40,Routine age-based screening,36523,26551,381,362
+2023,Age,45,Routine age-based screening,33924,25410,298,271
+2023,Age,50,Routine age-based screening,29058,22381,223,199
+2023,Age,55,Routine age-based screening,35104,26619,200,173
+2023,Age,60,Routine age-based screening,37155,28063,191,172
+2023,Age,65,Routine age-based screening,34808,26071,141,125
+2023,Age,All groups,Routine age-based screening,277367,202826,2468,2254
+2022,Age,30,Routine age-based screening,35821,22818,467,453
+2022,Age,35,Routine age-based screening,33470,22638,370,363
+2022,Age,40,Routine age-based screening,35724,25723,353,342
+2022,Age,45,Routine age-based screening,34273,25436,292,281
+2022,Age,50,Routine age-based screening,30100,22833,201,191
+2022,Age,55,Routine age-based screening,36015,27228,178,172
+2022,Age,60,Routine age-based screening,36879,27761,142,136
+2022,Age,65,Routine age-based screening,36491,27304,114,112
+2022,Age,All groups,Routine age-based screening,278773,201741,2117,2050
+2021,Age,30,Routine age-based screening,35045,22911,540,502
+2021,Age,35,Routine age-based screening,33512,22995,392,355
+2021,Age,40,Routine age-based screening,34329,25084,305,281
+2021,Age,45,Routine age-based screening,34064,25488,269,245
+2021,Age,50,Routine age-based screening,31245,23897,196,183
+2021,Age,55,Routine age-based screening,36243,27470,182,160
+2021,Age,60,Routine age-based screening,36791,27918,118,101
+2021,Age,65,Routine age-based screening,15864,11674,42,38
+2021,Age,All groups,Routine age-based screening,257093,187437,2044,1865
+2020,Age,30,Routine age-based screening,35169,22240,372,363
+2020,Age,35,Routine age-based screening,34331,22732,315,312
+2020,Age,40,Routine age-based screening,33775,23823,267,265
+2020,Age,45,Routine age-based screening,33213,23987,200,199
+2020,Age,50,Routine age-based screening,32247,23996,168,168
+2020,Age,55,Routine age-based screening,36443,26962,147,147
+2020,Age,60,Routine age-based screening,36848,27365,127,126
+2020,Age,65,Routine age-based screening,15730,11278,33,33
+2020,Age,All groups,Routine age-based screening,257756,182383,1629,1613
+2024,Language,Finnish / Swedish / Sami,Routine + risk-group screening,257719,196304,6020,5103
+2024,Language,Other / missing language,Routine + risk-group screening,34391,19374,557,485
+2024,Language,All groups,Routine + risk-group screening,292110,215678,6577,5588
+2023,Language,Finnish / Swedish / Sami,Routine + risk-group screening,256144,192995,5482,4870
+2023,Language,Other / missing language,Routine + risk-group screening,30786,17731,483,424
+2023,Language,All groups,Routine + risk-group screening,286930,210726,5965,5294
+2022,Language,Finnish / Swedish / Sami,Routine + risk-group screening,261145,194117,5169,4980
+2022,Language,Other / missing language,Routine + risk-group screening,28408,16089,459,447
+2022,Language,All groups,Routine + risk-group screening,289553,210206,5628,5427
+2021,Language,Finnish / Swedish / Sami,Routine + risk-group screening,242289,181381,4643,4375
+2021,Language,Other / missing language,Routine + risk-group screening,26088,15346,417,395
+2021,Language,All groups,Routine + risk-group screening,268377,196727,5060,4770
+2020,Language,Finnish / Swedish / Sami,Routine + risk-group screening,236544,170791,1843,1829
+2020,Language,Other / missing language,Routine + risk-group screening,25006,14144,167,164
+2020,Language,All groups,Routine + risk-group screening,261550,184935,2010,1993
+2024,Education,Basic / unknown education,Routine + risk-group screening,31338,15927,499,423
+2024,Education,Secondary education,Routine + risk-group screening,112462,80606,2780,2368
+2024,Education,Higher education,Routine + risk-group screening,148310,119145,3298,2797
+2024,Education,All groups,Routine + risk-group screening,292110,215678,6577,5588
+2023,Education,Basic / unknown education,Routine + risk-group screening,30510,15806,478,426
+2023,Education,Secondary education,Routine + risk-group screening,111926,79823,2491,2227
+2023,Education,Higher education,Routine + risk-group screening,144494,115097,2996,2641
+2023,Education,All groups,Routine + risk-group screening,286930,210726,5965,5294
+2022,Education,Basic / unknown education,Routine + risk-group screening,30271,15735,431,416
+2022,Education,Secondary education,Routine + risk-group screening,114247,80809,2348,2270
+2022,Education,Higher education,Routine + risk-group screening,145035,113662,2849,2741
+2022,Education,All groups,Routine + risk-group screening,289553,210206,5628,5427
+2021,Education,Basic / unknown education,Routine + risk-group screening,27817,14717,434,407
+2021,Education,Secondary education,Routine + risk-group screening,104763,75061,2086,1955
+2021,Education,Higher education,Routine + risk-group screening,135797,106949,2540,2408
+2021,Education,All groups,Routine + risk-group screening,268377,196727,5060,4770
+2020,Education,Basic / unknown education,Routine + risk-group screening,27987,14407,173,170
+2020,Education,Secondary education,Routine + risk-group screening,103546,71949,933,929
+2020,Education,Higher education,Routine + risk-group screening,130017,98579,904,894
+2020,Education,All groups,Routine + risk-group screening,261550,184935,2010,1993
+2024,Birthplace,Africa,Routine + risk-group screening,2919,1429,35,29
+2024,Birthplace,Oceania,Routine + risk-group screening,99,52,1,1
+2024,Birthplace,Americas,Routine + risk-group screening,1413,818,30,24
+2024,Birthplace,Asia,Routine + risk-group screening,12134,6495,173,151
+2024,Birthplace,Other Europe,Routine + risk-group screening,19217,12075,354,309
+2024,Birthplace,Finland,Routine + risk-group screening,256229,194743,5981,5071
+2024,Birthplace,Unknown,Routine + risk-group screening,99,66,3,3
+2024,Birthplace,All groups,Routine + risk-group screening,292110,215678,6577,5588
+2023,Birthplace,Africa,Routine + risk-group screening,2753,1328,22,20
+2023,Birthplace,Oceania,Routine + risk-group screening,89,45,1,0
+2023,Birthplace,Americas,Routine + risk-group screening,1362,786,28,22
+2023,Birthplace,Asia,Routine + risk-group screening,10713,5851,158,138
+2023,Birthplace,Other Europe,Routine + risk-group screening,18618,11812,343,301
+2023,Birthplace,Finland,Routine + risk-group screening,253304,190839,5412,4812
+2023,Birthplace,Unknown,Routine + risk-group screening,91,65,1,1
+2023,Birthplace,All groups,Routine + risk-group screening,286930,210726,5965,5294
+2022,Birthplace,Africa,Routine + risk-group screening,2518,1154,28,28
+2022,Birthplace,Oceania,Routine + risk-group screening,102,57,0,0
+2022,Birthplace,Americas,Routine + risk-group screening,1279,713,15,13
+2022,Birthplace,Asia,Routine + risk-group screening,9445,5128,141,137
+2022,Birthplace,Other Europe,Routine + risk-group screening,18281,11431,344,332
+2022,Birthplace,Finland,Routine + risk-group screening,257849,191672,5099,4916
+2022,Birthplace,Unknown,Routine + risk-group screening,79,51,1,1
+2022,Birthplace,All groups,Routine + risk-group screening,289553,210206,5628,5427
+2021,Birthplace,Africa,Routine + risk-group screening,2149,1036,25,25
+2021,Birthplace,Oceania,Routine + risk-group screening,102,57,2,2
+2021,Birthplace,Americas,Routine + risk-group screening,1181,659,19,18
+2021,Birthplace,Asia,Routine + risk-group screening,8538,4959,136,128
+2021,Birthplace,Other Europe,Routine + risk-group screening,17463,11148,297,280
+2021,Birthplace,Finland,Routine + risk-group screening,238869,178822,4580,4316
+2021,Birthplace,Unknown,Routine + risk-group screening,75,46,1,1
+2021,Birthplace,All groups,Routine + risk-group screening,268377,196727,5060,4770
+2020,Birthplace,Africa,Routine + risk-group screening,2321,1119,12,12
+2020,Birthplace,Oceania,Routine + risk-group screening,80,33,0,0
+2020,Birthplace,Americas,Routine + risk-group screening,1035,557,6,6
+2020,Birthplace,Asia,Routine + risk-group screening,7965,4403,57,54
+2020,Birthplace,Other Europe,Routine + risk-group screening,16723,10291,128,128
+2020,Birthplace,Finland,Routine + risk-group screening,233355,168487,1806,1792
+2020,Birthplace,Unknown,Routine + risk-group screening,71,45,1,1
+2020,Birthplace,All groups,Routine + risk-group screening,261550,184935,2010,1993
+2024,Region,Ahvenanmaa,Routine age-based screening,1545,1235,6,0
+2024,Region,Etelä-Karjala,Routine age-based screening,5942,4560,59,49
+2024,Region,Etelä-Pohjanmaa,Routine age-based screening,8922,7315,95,89
+2024,Region,Etelä-Savo,Routine age-based screening,6029,4955,63,57
+2024,Region,Helsingin kaupunki,Routine age-based screening,38382,27514,277,260
+2024,Region,Itä-Uusimaa,Routine age-based screening,5125,3909,24,23
+2024,Region,Kainuu,Routine age-based screening,3305,2594,13,10
+2024,Region,Kanta-Häme,Routine age-based screening,8312,5814,88,80
+2024,Region,Keski-Pohjanmaa,Routine age-based screening,3114,2152,30,28
+2024,Region,Keski-Suomi,Routine age-based screening,13086,9182,111,91
+2024,Region,Keski-Uusimaa,Routine age-based screening,10808,8294,89,87
+2024,Region,Kymenlaakso,Routine age-based screening,7751,5968,63,57
+2024,Region,Lappi,Routine age-based screening,8555,6825,123,100
+2024,Region,Länsi-Uusimaa,Routine age-based screening,26151,19429,181,174
+2024,Region,Pirkanmaa,Routine age-based screening,27033,19198,255,242
+2024,Region,Pohjanmaa,Routine age-based screening,8088,5841,80,78
+2024,Region,Pohjois-Karjala,Routine age-based screening,7572,5135,93,91
+2024,Region,Pohjois-Pohjanmaa,Routine age-based screening,19455,14288,146,107
+2024,Region,Pohjois-Savo,Routine age-based screening,12037,8367,110,106
+2024,Region,Päijät-Häme,Routine age-based screening,9996,6817,111,107
+2024,Region,Satakunta,Routine age-based screening,10022,7170,99,97
+2024,Region,Vantaa ja Kerava,Routine age-based screening,15285,10952,139,134
+2024,Region,Varsinais-Suomi,Routine age-based screening,24297,18823,190,4
+2024,Region,All groups,Routine age-based screening,280812,206337,2445,2071
+2023,Region,Ahvenanmaa,Routine age-based screening,1581,1235,27,26
+2023,Region,Etelä-Karjala,Routine age-based screening,5922,4574,54,53
+2023,Region,Etelä-Pohjanmaa,Routine age-based screening,8907,7037,82,80
+2023,Region,Etelä-Savo,Routine age-based screening,6052,5032,48,47
+2023,Region,Helsingin kaupunki,Routine age-based screening,37770,27385,333,311
+2023,Region,Itä-Uusimaa,Routine age-based screening,5047,3870,37,36
+2023,Region,Kainuu,Routine age-based screening,3222,2464,20,12
+2023,Region,Kanta-Häme,Routine age-based screening,8288,5677,82,79
+2023,Region,Keski-Pohjanmaa,Routine age-based screening,2995,2145,27,27
+2023,Region,Keski-Suomi,Routine age-based screening,12867,8702,131,125
+2023,Region,Keski-Uusimaa,Routine age-based screening,10638,8045,84,80
+2023,Region,Kymenlaakso,Routine age-based screening,7718,5967,56,53
+2023,Region,Lappi,Routine age-based screening,8633,6208,80,63
+2023,Region,Länsi-Uusimaa,Routine age-based screening,25305,18762,174,168
+2023,Region,Pirkanmaa,Routine age-based screening,26461,18603,254,248
+2023,Region,Pohjanmaa,Routine age-based screening,8156,6222,41,37
+2023,Region,Pohjois-Karjala,Routine age-based screening,7651,4926,80,77
+2023,Region,Pohjois-Pohjanmaa,Routine age-based screening,19144,14068,128,118
+2023,Region,Pohjois-Savo,Routine age-based screening,11969,8250,103,99
+2023,Region,Päijät-Häme,Routine age-based screening,10080,7055,128,121
+2023,Region,Satakunta,Routine age-based screening,10081,7317,149,147
+2023,Region,Vantaa ja Kerava,Routine age-based screening,14711,10665,124,123
+2023,Region,Varsinais-Suomi,Routine age-based screening,24169,18617,226,124
+2023,Region,All groups,Routine age-based screening,277367,202826,2468,2254
+2022,Region,Ahvenanmaa,Routine age-based screening,1611,1252,26,25
+2022,Region,Etelä-Karjala,Routine age-based screening,5990,4328,17,17
+2022,Region,Etelä-Pohjanmaa,Routine age-based screening,8797,6716,53,53
+2022,Region,Etelä-Savo,Routine age-based screening,6205,4790,48,48
+2022,Region,Helsingin kaupunki,Routine age-based screening,37763,26753,330,321
+2022,Region,Itä-Uusimaa,Routine age-based screening,5197,3856,31,31
+2022,Region,Kainuu,Routine age-based screening,3327,2486,17,17
+2022,Region,Kanta-Häme,Routine age-based screening,8416,6057,47,45
+2022,Region,Keski-Pohjanmaa,Routine age-based screening,3187,2388,19,19
+2022,Region,Keski-Suomi,Routine age-based screening,12927,9232,77,76
+2022,Region,Keski-Uusimaa,Routine age-based screening,10531,7849,73,71
+2022,Region,Kymenlaakso,Routine age-based screening,7995,6007,69,67
+2022,Region,Lappi,Routine age-based screening,8593,6229,62,60
+2022,Region,Länsi-Uusimaa,Routine age-based screening,25483,18495,143,136
+2022,Region,Pirkanmaa,Routine age-based screening,26280,18811,182,178
+2022,Region,Pohjanmaa,Routine age-based screening,8067,6164,63,63
+2022,Region,Pohjois-Karjala,Routine age-based screening,7691,5127,69,67
+2022,Region,Pohjois-Pohjanmaa,Routine age-based screening,19550,14372,161,141
+2022,Region,Pohjois-Savo,Routine age-based screening,12239,8229,85,84
+2022,Region,Päijät-Häme,Routine age-based screening,10045,7136,72,71
+2022,Region,Satakunta,Routine age-based screening,10255,7549,73,72
+2022,Region,Vantaa ja Kerava,Routine age-based screening,14552,10181,135,130
+2022,Region,Varsinais-Suomi,Routine age-based screening,24072,17734,265,258
+2022,Region,All groups,Routine age-based screening,278773,201741,2117,2050
+2021,Region,Ahvenanmaa,Routine age-based screening,1383,1069,13,7
+2021,Region,Etelä-Karjala,Routine age-based screening,5083,3791,28,28
+2021,Region,Etelä-Pohjanmaa,Routine age-based screening,7573,5928,42,40
+2021,Region,Etelä-Savo,Routine age-based screening,5178,3750,36,35
+2021,Region,Helsingin kaupunki,Routine age-based screening,37239,26570,370,356
+2021,Region,Itä-Uusimaa,Routine age-based screening,5000,3605,42,41
+2021,Region,Kainuu,Routine age-based screening,3374,2610,19,11
+2021,Region,Kanta-Häme,Routine age-based screening,7332,5223,55,52
+2021,Region,Keski-Pohjanmaa,Routine age-based screening,2721,2020,17,10
+2021,Region,Keski-Suomi,Routine age-based screening,11094,8068,102,102
+2021,Region,Keski-Uusimaa,Routine age-based screening,10324,7627,71,70
+2021,Region,Kymenlaakso,Routine age-based screening,7953,6060,44,43
+2021,Region,Lappi,Routine age-based screening,7366,5398,48,40
+2021,Region,Länsi-Uusimaa,Routine age-based screening,25276,18165,172,166
+2021,Region,Pirkanmaa,Routine age-based screening,22747,16781,229,229
+2021,Region,Pohjanmaa,Routine age-based screening,7264,5595,43,36
+2021,Region,Pohjois-Karjala,Routine age-based screening,6467,4697,48,33
+2021,Region,Pohjois-Pohjanmaa,Routine age-based screening,17031,12518,113,64
+2021,Region,Pohjois-Savo,Routine age-based screening,11242,7383,71,60
+2021,Region,Päijät-Häme,Routine age-based screening,8441,6074,95,90
+2021,Region,Satakunta,Routine age-based screening,10306,7615,102,102
+2021,Region,Vantaa ja Kerava,Routine age-based screening,14589,10515,144,140
+2021,Region,Varsinais-Suomi,Routine age-based screening,22110,16375,140,110
+2021,Region,All groups,Routine age-based screening,257093,187437,2044,1865
+2020,Region,Ahvenanmaa,Routine age-based screening,1394,1105,13,13
+2020,Region,Etelä-Karjala,Routine age-based screening,5189,3714,34,34
+2020,Region,Etelä-Pohjanmaa,Routine age-based screening,7895,6146,48,48
+2020,Region,Etelä-Savo,Routine age-based screening,5482,4166,33,33
+2020,Region,Helsingin kaupunki,Routine age-based screening,37752,25531,239,228
+2020,Region,Itä-Uusimaa,Routine age-based screening,4978,3643,27,27
+2020,Region,Kainuu,Routine age-based screening,3510,2643,13,13
+2020,Region,Kanta-Häme,Routine age-based screening,7266,4815,43,43
+2020,Region,Keski-Pohjanmaa,Routine age-based screening,2742,2017,18,18
+2020,Region,Keski-Suomi,Routine age-based screening,11090,7503,66,66
+2020,Region,Keski-Uusimaa,Routine age-based screening,10269,7658,61,61
+2020,Region,Kymenlaakso,Routine age-based screening,8164,6095,49,49
+2020,Region,Lappi,Routine age-based screening,7379,5370,35,35
+2020,Region,Länsi-Uusimaa,Routine age-based screening,24607,17204,110,108
+2020,Region,Pirkanmaa,Routine age-based screening,22546,15621,164,164
+2020,Region,Pohjanmaa,Routine age-based screening,7329,5533,43,43
+2020,Region,Pohjois-Karjala,Routine age-based screening,6610,4946,53,53
+2020,Region,Pohjois-Pohjanmaa,Routine age-based screening,17230,12389,117,117
+2020,Region,Pohjois-Savo,Routine age-based screening,10979,6917,76,76
+2020,Region,Päijät-Häme,Routine age-based screening,8580,5782,46,46
+2020,Region,Satakunta,Routine age-based screening,10416,7459,84,84
+2020,Region,Vantaa ja Kerava,Routine age-based screening,14144,10113,96,93
+2020,Region,Varsinais-Suomi,Routine age-based screening,22205,16013,161,161
+2020,Region,All groups,Routine age-based screening,257756,182383,1629,1613

@@ -16,10 +16,10 @@ This is the team's one place for decisions, the task split and the submission ch
 
 ## Decision
 
-- Proposed design for team review: [Cancer equity analyst](design/2026-11-13-cancer-equity-agent.md). Start with one Finnish Cancer Registry extract; prove reproducible outcome comparisons and sourced actions before expanding data coverage. Implementation has not started on this branch.
-- Next checkpoint: verify the export, metadata and reuse terms, then reproduce source rows. Resolve whether pathway attribution has sufficient evidence before claiming full challenge coverage. See the design's delivery checkpoints and acceptance criteria.
-- Challenge(s): _TBD_
-- Why us / why this: _TBD_
+- Product vision: [adaptive cancer equity analyst](idea.md). The [earlier design](design/2026-11-13-cancer-equity-agent.md) is a proposal; the implemented MVP now uses the Registry's cervical-screening tables rather than lung-cancer outcomes. Current scope and run instructions are in [the app README](../web/README.md).
+- Next checkpoint: expert review of findings and recommendation applicability; select an additional validated Goal 3 measure before claiming full challenge coverage. The current prototype does not infer root causes or treatment delays.
+- Challenge(s): AstraZeneca — Equal Care Across Finland.
+- Why us / why this: demonstrate the whole reusable workflow with public counts, explicit evidence limits and traceable proposed actions.
 - Main judging criteria to hit: **Innovation** (unlike other projects), **Impact** (share of affected people actually helped), **Implementation** (realistic, viable, feasible). Each partner also judges its own challenge with its own criteria.
 
 ## Workshops worth attending
@@ -47,10 +47,15 @@ Mark the ones we actually go to and who goes.
 
 ## MVP scope
 
-- Must have for the demo: _TBD_
-- The "wow" moment, which has to work in a 2:00 video and a live 3:00 demo: _TBD_
-- Riskiest part, and the fallback if it fails: _TBD_
-- Out of scope: _TBD_
+- Active implementation: a local Next.js/TypeScript prototype in `web/`, using the existing available JavaScript toolchain. This replaces the proposed Python UI for this increment; the product workflow in `idea.md` remains the authority for behavior.
+- First source: Finnish Cancer Registry cervical-screening report. Extract public aggregate screening-chain counts for 2020–2024 with distinct cohort/dimension metadata. Demonstrate import/mapping, descriptive disparities, measured transitions, reviewed evidence, an action register and subsequent-year comparisons.
+- Acceptance: source-backed demo data, recalculation on dimension/year/group changes, validated CSV import, explicit unresolved causes, traceable recommendation evidence, optional server-side model drafting with a labelled deterministic fallback, local action persistence and JSON export. Verify numerical/CSV boundaries with tests and build/type checks; exercise the UI if browser tooling is available.
+- Scope limit: screening/process measures are not survival outcomes or measured treatment-start times. Goal 3 context must be distinguished from a directly measured Goal 3 outcome. No confidential records, causal guarantees, or general-purpose dataset support.
+- Must have for the demo: import/mapping → population comparisons → measured transition → evidence → action plan → repeat-period monitoring. Implemented in `web/`.
+- The "wow" moment: switch the population dimension and follow a real disparity through to a sourced action, then append a reporting period without losing the action register.
+- Riskiest part: overclaiming from incomplete follow-up or AI prose. The app labels descriptive results and unresolved causes; optional model failure returns a labelled deterministic template. Recommendation actions use reviewed guideline summaries.
+- Out of scope: confidential/patient-level data, arbitrary study formats, autonomous causal identification, live systematic reviews, shared cloud persistence and deployment. Live provider generation requires credentials and remains separate from mocked integration verification.
+- Verified on 13 November: 19 unit/integration tests, 5 browser tests, TypeScript and production build passed. Browser coverage includes the official-data workflow, renamed CSV headers, missing follow-up, invalid counts, local action persistence, report download, mobile layout, endpoint validation and appending a new reporting period. Desktop/mobile screenshots were inspected locally. Dependency installation reported no known vulnerabilities. Live model-provider generation was not verified with credentials.
 
 ## Submission checklist
 

@@ -4,21 +4,22 @@ Only facts that are already confirmed go here. Mark everything else _TBD_, and n
 
 ## Purpose and boundaries
 
-- Product or artifact: Junction 2026 hackathon project. The challenge and users are _TBD_. See [`docs/PLAN.md`](../docs/PLAN.md).
-- Main components: _TBD once the stack is chosen._
+- Product or artifact: Care Equity Lab for AstraZeneca's Equal Care Across Finland challenge. Intended users are county cancer-care leads, service planners and researchers. See [`docs/PLAN.md`](../docs/PLAN.md).
+- Main components: local Next.js/TypeScript MVP in `web/`; [operating instructions and scope](../web/README.md).
+- Screening data artifacts: `web/src/data/screening.json` and `web/public/data/screening.csv`, owned by `web/scripts/ingest.py`. Do not hand-edit them. Reviewed evidence summaries live in `web/src/data/evidence.ts`.
 - Generated artifacts: pitch deck PDF in `docs/pitch/` (exported, not generated from source).
 - Proposed prototype design: [`docs/design/2026-11-13-cancer-equity-agent.md`](../docs/design/2026-11-13-cancer-equity-agent.md). Covers the data contract, evidence boundaries, demo and implementation acceptance criteria; not an implemented system.
-- Existing instructions: [`AGENTS.md`](../AGENTS.md) (agent working agreement), `.agents/instructions/` (principles, workflow, writing), `.claude/skills/` (change procedures).
+- Existing instructions: [`AGENTS.md`](../AGENTS.md) (agent working agreement), `.agents/instructions/` (principles, workflow, writing), `.claude/skills/` (change procedures), `web/AGENTS.md` (framework-generated guidance; Next.js owns its managed block).
 
 ## Environment and checks
 
 | Operation | Verified command or owning document | Expected evidence |
 | --- | --- | --- |
-| Prepare local environment | _TBD_ | |
-| Run affected tests | _TBD_ (`npm test` is pre-allowed in `.claude/settings.json`) | |
-| Check static constraints | _TBD_ (`npm run check` is pre-allowed) | |
-| Build or render | _TBD_ | |
-| Reproduce user behavior | _TBD_: the demo flow | Demo works end to end |
+| Prepare local environment | Node 24; `cd web && npm ci` | Dependencies from lockfile |
+| Run affected tests | `cd web && npm test` | Source, calculation, import and model-boundary tests |
+| Check static constraints | `cd web && npm run check` | TypeScript passes |
+| Build or render | `cd web && npm run build` | Next.js production build passes |
+| Reproduce user behavior | `cd web && npm run test:e2e`; [walkthrough](../web/README.md) | Public-data flow, imports, action persistence, monitoring, mobile and endpoint checks |
 
 ## Delivery and operation
 
