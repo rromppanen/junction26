@@ -85,7 +85,45 @@ A new section on the county brief, right after "Where along the pathway". For ea
 ## Data changes
 
 - Ingest: add 6103 male/female county rows (new `gender` field on `IndicatorValue`, default "total"; existing code filters `gender === "total"` unless a lens asks otherwise).
-- No new external services for the core. NORDCAN only if the stretch path is verified.
+- **Finnish Cancer Registry statistics** (see next section): the biggest data upgrade. It fills Goal 3's mortality indicator and Goal 2's stage target per county.
+- NORDCAN only if the stretch path is verified.
+
+## Finnish Cancer Registry statistics
+
+Source: Suomen Syöpärekisteri, statistics app at `tilastot.syoparekisteri.fi` (linked in AstraZeneca's link collection). Checked Fri 13.11.2026 evening.
+
+### What is available
+
+| Theme (app name) | Regions | Useful breakdowns |
+| --- | --- | --- |
+| New cases, *Uudet syöpätapaukset (ilmaantuvuus)* | **All 23 wellbeing services counties** (incl. Helsinki, Åland), the 5 collaboration areas (YTA), whole country | **Stage at diagnosis, *Syövän levinneisyys* (2020–2024)**; **how it was found, *Toteamistapa*, e.g. screening vs symptoms (2020–2024)**; education level (≥ 25 y); sex; age; per cancer type (ICD-10) |
+| Cancer deaths, *Syöpien aiheuttamat kuolemat (kuolleisuus)* | **All 23 counties**, YTA, whole country | Age-standardised rate per 100,000; education level; sex; age; per cancer type |
+| Survival, *Syöpäpotilaiden ennusteet (eloonjääminen)* | **Only whole country + 5 YTA**, not counties | Relative survival (age-standardised) 2022–2024; education level; age group |
+
+### Access
+
+- **No API.** The app is an R Shiny interface; each selection has **CSV / XLSX download buttons**.
+- So these figures **cannot be fetched at build time** like Sotkanet. Plan: a one-off export of a small set of tables, committed as files in `web/data/cancer-registry/` with a `README.md` stating the exact selection, export date and source, plus a parser that merges them into the dataset as new indicators. They are small (dozens to hundreds of rows), so committing them is fine.
+- Downloading the files is a manual step (a teammate clicks the CSV buttons, or the agent does it with the user's go-ahead).
+
+### Tables to export (priority order)
+
+1. **Stage at diagnosis by county** (all cancers and the screening cancers: breast, colorectal, cervix; 2020–2024). Gives each county's **share diagnosed at stage I–II**, measured against the Goal 2 target of ≥ 70% (strategy p. 5, roadmap p. 52). This is the strongest "where along the pathway" signal we can get.
+2. **Cancer mortality by county** (all cancers, age-standardised, latest 5-year period). **Goal 3 headline indicator**, previously listed as "no county data".
+3. **How it was found by county** (*Toteamistapa*: share found through screening, 2020–2024, for breast, colorectal and cervical cancer).
+4. **Mortality and incidence by education level** (national, 2020–2024). This is **individual-level** registry data, unlike our municipality correlations, so it is real evidence for the equity story (AstraZeneca's talk stressed education).
+5. **Survival by YTA** for lung, pancreatic and liver cancer: Goal 3's poor-prognosis cancers, shown as regional context (5 areas), never as a county figure.
+
+### How it changes the design
+
+- **New radar and brief indicators:** "Share diagnosed at stage I–II" (stage: diagnosis, target 70%) and "Cancer mortality, age-standardised" (stage: outcome, lower is better). The pathway's **Diagnosis** stage stops being "no public data".
+- **Barrier lens, new rules** (added to `classifyBarriers`):
+  - Stage I–II share below the national level or the 70% target, and screening-found share also low → **Access** (cancers aren't being caught early through screening). Evidence: roadmap p. 52, strategy p. 5.
+  - Stage I–II share low while screening attendance is on par → **Service** at detection (cancers found late outside screening, e.g. slow primary-care referral). Evidence: `roadmap-p11-lymphoma`, roadmap 2.5.2.
+  - Mortality behind with incidence on par → **Service** (after detection). Evidence: strategy Goal 3 headline.
+- **Equity:** the education-level tables add an individual-level gradient beside the area-level municipality correlations, labelled clearly as national.
+- **Survival stays at the YTA level** and is labelled "regional (5 areas)", never shown as a county value.
+- The limitation "County-level cancer mortality and lung cancer survival are not published" is updated: mortality now exists per county; poor-prognosis survival exists only by YTA.
 
 ## Testing
 
@@ -99,3 +137,4 @@ A new section on the county brief, right after "Where along the pathway". For ea
 1. Should the start screen replace the map at `/`, or sit above it on the same page? (Draft: replace, and keep the map at `/radar`.)
 2. Is the Nordic path worth a verification spike tonight, or drop it?
 3. Which path opens the demo? (Suggestion: "Who is being left behind?" for Helsinki, because it shows equity, the barrier lens and actions in one flow.)
+4. Who does the Cancer Registry CSV exports (5 tables, about 15 minutes of clicking), and in what order relative to the start screen? (Suggestion: exports first, since stage and mortality strengthen every path.)
