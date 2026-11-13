@@ -5,6 +5,7 @@ import { INDICATORS, indicatorById } from "@/data/indicators";
 import { EVIDENCE } from "@/data/evidence";
 import { computeGap, latestYear } from "@/lib/gap";
 import { generateBrief } from "@/lib/analyst";
+import { getLiveContext, type LiveSnippet } from "@/lib/context";
 import { TrendChart } from "@/components/TrendChart";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
@@ -14,7 +15,11 @@ export const dynamic = "force-dynamic";
 
 type Source = { id: string; label: string; url: string; detail?: string };
 
-function resolveSource(id: string): Source {
+function resolveSource(id: string, live: LiveSnippet[] = []): Source {
+  if (id.startsWith("live:")) {
+    const l = live.find((x) => x.id === id);
+    return l ? { id, label: `Live web (Context.dev): ${l.title}`, url: l.url, detail: l.text } : { id, label: id, url: "#" };
+  }
   if (id.startsWith("sotkanet:")) {
     const ind = indicatorById(Number(id.slice(9)));
     return ind
@@ -42,10 +47,11 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
   const name = shortName(region.name);
 
   const facts = INDICATORS.map((ind) => computeGap(ds, ind, regionId, latestYear(ds, ind)));
-  const brief = await generateBrief({ regionName: name, facts, indicators: INDICATORS });
+  const live = await getLiveContext(region.name);
+  const brief = await generateBrief({ regionName: name, facts, indicators: INDICATORS, live: live.snippets });
 
   const sourceIds = [...new Set(brief.recommendations.flatMap((r) => r.sources))];
-  const sources = sourceIds.map(resolveSource);
+  const sources = sourceIds.map((s) => resolveSource(s, live.snippets));
   const sourceIndex = new Map(sources.map((s, i) => [s.id, i + 1]));
 
   const series = (indId: number, rId: number | undefined) =>
@@ -96,15 +102,43 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
                     key={s}
                     href={`#src-${sourceIndex.get(s)}`}
                     className="rounded border border-rule bg-paper px-1.5 py-0.5 text-[11px] text-muted hover:border-nordic hover:text-nordic"
-                    title={resolveSource(s).label}
+                    title={resolveSource(s, live.snippets).label}
                   >
-                    [{sourceIndex.get(s)}] {s.startsWith("sotkanet:") ? "Sotkanet" : resolveSource(s).label.split(":")[0]}
+                    [{sourceIndex.get(s)}] {s.startsWith("sotkanet:") ? "Sotkanet" : resolveSource(s, live.snippets).label.split(":")[0]}
                   </a>
                 ))}
               </div>
             </li>
           ))}
         </ol>
+      </section>
+
+      <section className="mb-10" aria-labelledby="live-h">
+        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="live-h" className="font-serif text-2xl font-semibold">What the web says now</h2>
+          <span className="text-xs text-muted">
+            Live search via Context.dev{live.fetchedAt ? ` · ${new Date(live.fetchedAt).toLocaleString("en-GB", { timeZone: "Europe/Helsinki" })}` : ""}
+          </span>
+        </div>
+        {live.snippets.length > 0 ? (
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {live.snippets.map((l) => (
+              <li key={l.id} className="print-break rounded-lg border border-rule bg-surface p-4 text-sm">
+                <a href={l.url} target="_blank" rel="noreferrer" className="font-medium text-nordic underline-offset-2 hover:underline">{l.title}</a>
+                <p className="mt-0.5 truncate text-xs text-muted">{new URL(l.url).hostname} · {l.id}</p>
+                <p className="mt-2 leading-relaxed">{l.text}</p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="rounded-lg border border-rule bg-surface p-4 text-sm text-muted">
+            {live.status === "not-configured"
+              ? "Live web context is off (CONTEXT_DEV_API_KEY is not set)."
+              : live.status === "empty"
+                ? "No public pages about this county's cancer care were found."
+                : "Live web search is unavailable right now; the brief uses the figures and strategy documents only."}
+          </p>
+        )}
       </section>
 
       <section className="mb-10" aria-labelledby="ind-h">
