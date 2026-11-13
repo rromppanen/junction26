@@ -10,7 +10,11 @@
     "test": "vitest run",
     "ingest": "tsx scripts/ingest.ts",
     "shapes": "tsx scripts/shapes.ts",
-    "check": "npm run lint && npm test && npm run build"
+    "check": "npm run lint && npm test && npm run build",
+    "data": "node scripts/ensure-data.mjs",
+    "predev": "npm run data",
+    "pretest": "npm run data",
+    "prebuild": "npm run data"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
