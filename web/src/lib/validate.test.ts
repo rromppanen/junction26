@@ -33,6 +33,13 @@ describe("validateBrief", () => {
     const b = valid(); b.finding = "Coverage dropped by 42.7 points";
     expect(validateBrief(b, facts, known).join()).toMatch(/42.7/);
   });
+  it("ignores document references like THL guidance 21/2016 and action 3.1.2", () => {
+    const b = valid();
+    b.recommendations[1] = rec("Track access against THL guidance 21/2016 and roadmap action 3.1.2.");
+    expect(validateBrief(b, facts, known)).toEqual([]);
+    b.finding = "Guidance 21/2016 says 42.7 days";
+    expect(validateBrief(b, facts, known).join()).toMatch(/42.7/);
+  });
   it("rejects wrong recommendation count", () => {
     const b = valid(); b.recommendations.pop();
     expect(validateBrief(b, facts, known).join()).toMatch(/exactly 3/);
