@@ -6,6 +6,9 @@ const TOLERANCE = 0.15;
 /** Matches numbers like 12, 12.5 and Finnish-style 12,5. */
 const NUMBER_RE = /\d+(?:[.,]\d+)?/g;
 
+/** Document references that contain digits but are not figures: "THL guidance 21/2016", roadmap action "3.1.2". */
+const REFERENCE_RE = /\b\d{1,3}\/(?:19|20)\d{2}\b|\b\d\.\d\.\d\b/g;
+
 /**
  * Numbers that may appear without being backed by facts:
  * - years 2019–2035
@@ -55,7 +58,7 @@ export function validateBrief(brief: Brief, facts: GapFacts[], knownSourceIds: s
     ...brief.recommendations.map((r, i): [string, string] => [`recommendation ${i + 1}`, r.action]),
   ];
   for (const [field, text] of texts) {
-    for (const raw of text.match(NUMBER_RE) ?? []) {
+    for (const raw of text.replace(REFERENCE_RE, " ").match(NUMBER_RE) ?? []) {
       const n = parseFloat(raw.replace(",", "."));
       if (isExempt(raw, n)) continue;
       if (!allowed.some((a) => Math.abs(a - n) <= TOLERANCE)) {

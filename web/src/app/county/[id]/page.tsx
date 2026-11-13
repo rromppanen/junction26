@@ -5,7 +5,7 @@ import { INDICATORS, indicatorById } from "@/data/indicators";
 import { EVIDENCE } from "@/data/evidence";
 import { computeGap, latestYear } from "@/lib/gap";
 import { generateBrief } from "@/lib/analyst";
-import { getCountyContext, liveContextEnabled, type LiveSnippet } from "@/lib/context";
+import { getLiveContext, type LiveSnippet } from "@/lib/context";
 import { TrendChart } from "@/components/TrendChart";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
@@ -19,7 +19,7 @@ function resolveSource(id: string, live: LiveSnippet[] = []): Source {
   if (id.startsWith("live:")) {
     const s = live.find((l) => l.id === id);
     return s
-      ? { id, label: `County website: ${s.title}`, url: s.url, detail: s.text }
+      ? { id, label: `Web page: ${s.title}`, url: s.url, detail: s.text }
       : { id, label: id, url: "#" };
   }
   if (id.startsWith("sotkanet:")) {
@@ -49,11 +49,11 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
   const name = shortName(region.name);
 
   const facts = INDICATORS.map((ind) => computeGap(ds, ind, regionId, latestYear(ds, ind)));
-  const live = await getCountyContext(region.name);
-  const brief = await generateBrief({ regionName: name, facts, indicators: INDICATORS, live });
+  const live = await getLiveContext(region.name);
+  const brief = await generateBrief({ regionName: name, facts, indicators: INDICATORS, live: live.snippets });
 
   const sourceIds = [...new Set(brief.recommendations.flatMap((r) => r.sources))];
-  const sources = sourceIds.map((s) => resolveSource(s, live));
+  const sources = sourceIds.map((s) => resolveSource(s, live.snippets));
   const sourceIndex = new Map(sources.map((s, i) => [s.id, i + 1]));
 
   // Best-quartile boundary for every year the indicator has county figures (independent of the county).
@@ -104,9 +104,9 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
                 <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted">
                   <span>Based on</span>
                   {r.sources.map((s) => (
-                    <a key={s} href={`#src-${sourceIndex.get(s)}`} className="link" title={resolveSource(s, live).label}>
+                    <a key={s} href={`#src-${sourceIndex.get(s)}`} className="link" title={resolveSource(s, live.snippets).label}>
                       [{sourceIndex.get(s)}]{" "}
-                      {s.startsWith("sotkanet:") ? "Sotkanet" : resolveSource(s, live).label.split(":")[0]}
+                      {s.startsWith("sotkanet:") ? "Sotkanet" : resolveSource(s, live.snippets).label.split(":")[0]}
                     </a>
                   ))}
                 </p>
@@ -198,24 +198,32 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
       </div>
 
       <section aria-labelledby="live-h" className="print-break mt-14 border-t border-rule pt-6">
-        <h2 id="live-h" className="text-lg font-semibold tracking-tight">What {name} already publishes</h2>
+        <h2 id="live-h" className="text-lg font-semibold tracking-tight">What the web says now</h2>
         <p className="mb-4 mt-1 max-w-2xl text-sm text-muted">
-          The county&rsquo;s own web pages about cancer care and waiting times, found today through Context.dev. The
-          analyst can cite them when it suggests actions.
+          Public pages about {name}&rsquo;s cancer care and waiting times, found through Context.dev
+          {live.fetchedAt
+            ? ` on ${new Date(live.fetchedAt).toLocaleString("en-GB", { timeZone: "Europe/Helsinki", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}`
+            : ""}
+          . The analyst may cite them for context, never for figures.
         </p>
-        {!liveContextEnabled() ? (
-          <p className="text-sm text-muted">The web search is switched off here, because no Context.dev key is set.</p>
-        ) : live.length === 0 ? (
-          <p className="text-sm text-muted">The search found no county pages on cancer care today.</p>
-        ) : (
-          <ul className="grid gap-x-10 gap-y-4 text-sm md:grid-cols-2">
-            {live.map((s) => (
-              <li key={s.id}>
-                <a href={s.url} target="_blank" rel="noreferrer" className="link">{s.title}</a>
-                {s.text && <span className="mt-0.5 block text-xs text-muted">{s.text}</span>}
+        {live.snippets.length > 0 ? (
+          <ul className="grid gap-x-10 gap-y-5 text-sm md:grid-cols-2">
+            {live.snippets.map((l) => (
+              <li key={l.id} className="print-break">
+                <a href={l.url} target="_blank" rel="noreferrer" className="link font-medium">{l.title}</a>
+                <span className="mt-0.5 block truncate text-xs text-muted">{new URL(l.url).hostname}</span>
+                <span className="mt-1.5 block leading-relaxed">{l.text}</span>
               </li>
             ))}
           </ul>
+        ) : (
+          <p className="text-sm text-muted">
+            {live.status === "not-configured"
+              ? "The web search is switched off here, because no Context.dev key is set."
+              : live.status === "empty"
+                ? "The search found no public pages about this county\u2019s cancer care."
+                : "The web search didn\u2019t answer just now, so this brief rests on the figures and strategy documents only."}
+          </p>
         )}
       </section>
 

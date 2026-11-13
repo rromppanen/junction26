@@ -31,6 +31,8 @@ Use `.agents/instructions/principles.md` as the north star for engineering judgm
 
 ## Read when relevant
 
+For challenge context, product decisions, or cancer-care recommendations, read `docs/challenge.md` and `docs/context/README.md`. The latter links the supplied talk transcript and explains its evidence limitations.
+
 | Work | Guidance |
 | --- | --- |
 | Plan, execute or hand off a task | `.agents/instructions/workflow.md` |
