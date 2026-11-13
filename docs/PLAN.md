@@ -65,6 +65,11 @@ Mark the ones we actually go to and who goes.
 - [ ] Final submission before Sun 10:00
 - [ ] Whole team at peer review at 10:30
 
+## Research sources
+
+- **Scopus (now):** search it through the browser at <https://www.scopus.com> with university sign-in (Aalto). No API key needed.
+- **Scopus via MCP (option, not active):** [scopus-mcp](https://github.com/qwe4559999/scopus-mcp) gives Claude Code direct tools: search, abstracts, authors, citing papers. A working, tested setup is in commit `c1df85a`; restore it with `git revert 76422a7`. It needs an Elsevier API key from <https://dev.elsevier.com/> in `.env`, plus `uv`. Keep the `mcp>=1.0,<2` pin, because the server crashes with MCP SDK 2.x.
+
 ## Mentor questions
 
 _Write down what we ask and what we hear back._
