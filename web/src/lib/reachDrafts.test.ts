@@ -8,7 +8,15 @@ const plan = (langs: string[]): ReachPlan => ({
   indicatorId: 1, areas: [{ regionId: 1, name: "A" }], year: 2025, actions: [],
   languages: langs.map((language) => ({ language, count: 10, sharePct: 1 })),
 });
-const draft = (language: string): Draft => ({ language, invitation: `inv ${language} [phone] [link]`, sms: "sms", backTranslation: "back" });
+// Script-correct sample text per language, with both placeholders.
+const SAMPLE: Record<string, string> = {
+  Russian: "Приглашаем на бесплатный скрининг. Звоните [phone] или [link].",
+  Arabic: "ندعوكم إلى فحص مجاني. اتصلوا [phone] أو [link].",
+  Somali: "Waxaan kugu casuumaynaa baaritaan bilaash ah. Wac [phone] ama [link].",
+  English: "You are invited to free screening. Call [phone] or go to [link].",
+};
+const draft = (language: string, invitation = SAMPLE[language] ?? `Invitation ${language} [phone] [link]`): Draft =>
+  ({ language, invitation, sms: invitation.slice(0, 150), backTranslation: "You are invited. Call [phone] or [link]." });
 
 beforeEach(() => resetReachDraftsCache());
 
@@ -20,7 +28,7 @@ describe("getReachDrafts", () => {
     expect(r.drafts.map((d) => d.language)).toEqual(["Russian", "Arabic"]);
   });
   it("caches per indicator and sorted language list (order-insensitive)", async () => {
-    const gen = vi.fn().mockResolvedValue([draft("Russian")]);
+    const gen = vi.fn().mockResolvedValue([draft("Russian"), draft("Arabic")]);
     await getReachDrafts(plan(["Russian", "Arabic"]), ind, gen);
     await getReachDrafts(plan(["Arabic", "Russian"]), ind, gen);
     expect(gen).toHaveBeenCalledTimes(1);
@@ -55,5 +63,33 @@ describe("getReachDrafts", () => {
     } finally {
       if (prev !== undefined) process.env.GEMINI_API_KEY = prev;
     }
+  });
+
+  it("rejects a draft that uses the wrong alphabet, retries once, and withholds it if still wrong", async () => {
+    const bad = draft("Somali", "Waxaad ballansan kartaa ё badali kartaa [phone] [link]");
+    const gen = vi.fn().mockResolvedValue([draft("Russian"), bad]);
+    const r = await getReachDrafts(plan(["Russian", "Somali"]), ind, gen);
+    expect(gen).toHaveBeenCalledTimes(2);
+    expect(r.status).toBe("ok");
+    expect(r.drafts.map((d) => d.language)).toEqual(["Russian"]);
+    expect(r.withheld).toEqual([{ language: "Somali", reason: expect.stringMatching(/alphabet/) }]);
+  });
+
+  it("keeps the retry's answer when it fixes the problem", async () => {
+    const gen = vi.fn()
+      .mockResolvedValueOnce([draft("Russian", "Приглашаем free screening [phone] [link] ё ok"), draft("Somali", "Wac ё [phone] [link]")])
+      .mockResolvedValueOnce([draft("Russian"), draft("Somali")]);
+    const r = await getReachDrafts(plan(["Russian", "Somali"]), ind, gen);
+    expect(r.drafts.map((d) => d.language)).toEqual(["Russian", "Somali"]);
+    expect(r.withheld).toEqual([]);
+  });
+
+  it("rejects missing placeholders and an SMS over 160 characters", async () => {
+    const noLink = draft("English", "You are invited. Call [phone].");
+    const longSms = { ...draft("Arabic"), sms: "ا".repeat(161) + " [phone] [link]" };
+    const gen = vi.fn().mockResolvedValue([noLink, longSms]);
+    const r = await getReachDrafts(plan(["English", "Arabic"]), ind, gen);
+    expect(r.status).toBe("fallback");
+    expect(r.withheld.map((w) => w.reason).join(" ")).toMatch(/\[link\][\s\S]*160|160[\s\S]*\[link\]/);
   });
 });

@@ -85,6 +85,12 @@ export function ReachThem({
               The AI translator didn&rsquo;t answer, so only an English template is shown. Translate it into the languages above.
             </p>
           )}
+          {drafts.withheld.length > 0 && (
+            <p className="mt-1 max-w-2xl text-sm text-muted">
+              Withheld after an automatic check, because the AI&rsquo;s text failed twice:{" "}
+              {drafts.withheld.map((w) => `${w.language} (${w.reason})`).join("; ")}. Have these translated by a person.
+            </p>
+          )}
           <div className="mt-4 grid gap-x-8 gap-y-6 md:grid-cols-2">
             {drafts.drafts.map((d) => (
               <article key={d.language} className="border-t border-ink pt-3">
