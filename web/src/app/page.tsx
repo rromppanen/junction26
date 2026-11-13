@@ -282,7 +282,7 @@ export default async function RadarPage({
         <a href={ind.sourceUrl} className="link" target="_blank" rel="noreferrer">
           This measure on Sotkanet ({ind.nameFi})
         </a>
-        <Colophon className="w-full" />
+        <Colophon className="basis-full" />
       </footer>
     </main>
   );

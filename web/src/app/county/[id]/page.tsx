@@ -238,7 +238,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
       <footer className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-ink pt-4 text-xs text-muted">
         <DataBadge ds={ds} />
         <span>{region.name}</span>
-        <Colophon className="w-full" />
+        <Colophon className="basis-full" />
       </footer>
     </main>
   );
