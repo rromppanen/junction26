@@ -1,5 +1,9 @@
 import type { GapFacts, Indicator } from "@/lib/types";
 import { peoplePer1000ToReach } from "@/lib/impact";
+import { fmt } from "./format";
+
+/** "Breast cancer screening attendance (mammography)" -> "Breast". */
+const programme = (ind: Indicator) => ind.nameEn.match(/^(\w+) cancer screening/i)?.[1] ?? ind.nameEn;
 
 /** Sizes each screening gap in people per 1,000 invited, in full and halfway. */
 export function WhatItTakes({ facts, indicators }: { facts: GapFacts[]; indicators: Indicator[] }) {
@@ -7,37 +11,42 @@ export function WhatItTakes({ facts, indicators }: { facts: GapFacts[]; indicato
     .filter((i) => i.target)
     .map((ind) => ({ ind, f: facts.find((x) => x.indicatorId === ind.id) }));
   if (rows.length === 0) return null;
+  const target = rows[0].ind.target?.value;
   return (
-    <section className="mb-14 print-break" aria-labelledby="wit-h">
-      <h2 id="wit-h" className="mb-2 text-2xl font-semibold tracking-tight">What would it take?</h2>
-      <p className="mb-6 text-sm text-muted">The screening gap in people: how many more of every 1,000 invited need to attend.</p>
-      <div className="border-t border-ink">
+    <div>
+      <h3 className="font-semibold">The screening gap in people</h3>
+      <p className="mt-1 max-w-2xl text-sm text-muted">
+        The national strategy asks every county to get {target}% of invited people to each screening. For every 1,000
+        people invited here, that means:
+      </p>
+      <ul className="mt-3 border-t border-rule">
         {rows.map(({ ind, f }) => {
-          const target = ind.target?.value ?? f?.target ?? null;
+          const goal = ind.target?.value ?? f?.target ?? null;
           const value = f?.value ?? null;
-          const full = peoplePer1000ToReach(value, target);
-          const half = value === null || target === null ? null : peoplePer1000ToReach(value, value + (target - value) / 2);
+          const full = peoplePer1000ToReach(value, goal);
+          const half = value === null || goal === null ? null : peoplePer1000ToReach(value, value + (goal - value) / 2);
           return (
-            <article key={ind.id} className="print-break border-b border-rule py-5">
-              <h3 className="font-semibold leading-snug">{ind.nameEn}</h3>
+            <li
+              key={ind.id}
+              className="grid gap-x-4 border-b border-rule py-2.5 sm:grid-cols-[7.5rem_minmax(0,1fr)]"
+              title={`Sotkanet ${ind.id}; target from ${ind.target?.evidenceId}`}
+            >
+              <span className="font-semibold">{programme(ind)}</span>
               {full === null || half === null ? (
-                <p className="mt-2 text-sm text-muted">No data for this year.</p>
+                <span className="text-muted">Sotkanet has no attendance figure for this year.</span>
               ) : full === 0 ? (
-                <p className="mt-2 text-ahead">Already at or above the {target}% target.</p>
+                <span className="text-ahead">Already at {fmt(value, "%")}, above the target. Nobody extra needed.</span>
               ) : (
-                <ul className="mt-2 space-y-1 font-serif text-lg leading-snug">
-                  <li>To reach {target}%: about <strong className="tabular-nums">{full}</strong> more of every 1,000 invited people need to attend.</li>
-                  <li>Halfway there: about <strong className="tabular-nums">{half}</strong> more of every 1,000.</li>
-                </ul>
+                <span>
+                  <strong className="font-narrow text-xl font-bold tabular-nums">{full}</strong> more need to attend to
+                  reach {goal}%, or <strong className="font-narrow text-xl font-bold tabular-nums">{half}</strong> to get
+                  halfway. Now {fmt(value, "%")}.
+                </span>
               )}
-              <p className="mt-2 flex flex-wrap gap-x-3 text-xs text-muted">
-                <span>Sotkanet {ind.id}</span>
-                <span>{ind.target?.evidenceId}</span>
-              </p>
-            </article>
+            </li>
           );
         })}
-      </div>
-    </section>
+      </ul>
+    </div>
   );
 }
