@@ -23,8 +23,8 @@ function isExempt(raw: string, n: number): boolean {
   return false;
 }
 
-function factNumbers(facts: GapFacts[]): number[] {
-  const out: number[] = [];
+export function factNumbers(facts: GapFacts[], extra: number[] = []): number[] {
+  const out: number[] = extra.filter((x) => Number.isFinite(x)).map(Math.abs);
   for (const f of facts) {
     for (const x of [f.value, f.national, f.bestQuartile, f.gapToNational, f.gapToBestQuartile, f.rank, f.rankOf, f.trend3y, f.year, f.target, f.gapToTarget]) {
       if (x !== null && Number.isFinite(x)) out.push(Math.abs(x));
@@ -37,7 +37,7 @@ function factNumbers(facts: GapFacts[]): number[] {
  * Checks an AI-generated brief against the computed facts. Returns error messages; empty = valid.
  * Numbers are checked in headline, finding and each recommendation's action.
  */
-export function validateBrief(brief: Brief, facts: GapFacts[], knownSourceIds: string[]): string[] {
+export function validateBrief(brief: Brief, facts: GapFacts[], knownSourceIds: string[], extra: number[] = []): string[] {
   const errors: string[] = [];
   const known = new Set(knownSourceIds);
 
@@ -51,7 +51,7 @@ export function validateBrief(brief: Brief, facts: GapFacts[], knownSourceIds: s
     }
   });
 
-  const allowed = factNumbers(facts);
+  const allowed = factNumbers(facts, extra);
   const texts: [string, string][] = [
     ["headline", brief.headline],
     ["finding", brief.finding],

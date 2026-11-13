@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { EVIDENCE } from "@/data/evidence";
 import type { Brief, GapFacts, Indicator, PathwayStage, Recommendation } from "./types";
+import { impactFacts } from "./impact";
 import { validateBrief } from "./validate";
 import type { LiveSnippet } from "./context";
 import { diagnosePathway, type GapPattern } from "./fingerprint";
@@ -190,6 +191,10 @@ const RESPONSE_SCHEMA = {
   required: ["headline", "finding", "pathwayStage", "recommendations", "limitations"],
 };
 
+function impactNumbers(facts: GapFacts[]): number[] {
+  return impactFacts(facts).flatMap((r) => [r.toTarget, r.toNational]).filter((x): x is number => x !== null);
+}
+
 function buildPrompt(input: AnalystInput, allowed: string[], errors?: string[]): string {
   const indicatorMeta = input.indicators.map((i) => ({
     sourceId: `sotkanet:${i.id}`,
@@ -224,6 +229,8 @@ INDICATORS: ${JSON.stringify(indicatorMeta)}
 PATTERN: ${diagnosePathway(input.facts, input.indicators).pattern}
 
 FACTS: ${JSON.stringify(input.facts)}
+
+IMPACT (people per 1,000 invited who must attend to reach the target / the national rate; you may quote these): ${JSON.stringify(impactFacts(input.facts))}
 
 EVIDENCE: ${JSON.stringify(evidence)}
 
@@ -270,11 +277,11 @@ export async function generateBrief(input: AnalystInput): Promise<Brief> {
       return { ...parsed, generatedBy: "gemini" };
     };
     let brief = await ask();
-    let errors = validateBrief(brief, input.facts, allowed);
+    let errors = validateBrief(brief, input.facts, allowed, impactNumbers(input.facts));
     if (errors.length) {
       console.warn("[analyst] brief rejected, retrying:", errors);
       brief = await ask(errors);
-      errors = validateBrief(brief, input.facts, allowed);
+      errors = validateBrief(brief, input.facts, allowed, impactNumbers(input.facts));
       if (errors.length) {
         console.warn("[analyst] retry rejected, using fallback:", errors);
         return fallbackBrief(input);
