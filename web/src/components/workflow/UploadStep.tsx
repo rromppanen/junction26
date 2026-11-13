@@ -1,55 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { parseCSV } from "@/lib/csv";
-import type { InputDataset } from "./types";
+import type { PipelineInput } from "@/lib/pipeline/types";
 
-export default function UploadStep({ onUpload, onDemo }: {
-  onUpload: (dataset: InputDataset) => void;
-  onDemo: () => void;
-}) {
+export default function UploadStep({ onUpload }: { onUpload: (input: PipelineInput) => void }) {
   const [error, setError] = useState("");
   const [reading, setReading] = useState(false);
-
-  async function readFile(file: File) {
-    setError("");
-    setReading(true);
+  async function read(file: File) {
+    setError(""); setReading(true);
     try {
       if (file.size > 1_000_000) throw new Error("Choose a CSV under 1 MB.");
-      const text = await file.text();
-      const table = parseCSV(text);
-      const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-      const sha256 = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("");
-      onUpload({ kind: "csv", name: file.name, table, sha256 });
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The file could not be read.");
-    } finally { setReading(false); }
+      onUpload({ kind: "csv", name: file.name, csv: await file.text() });
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not read the file."); }
+    finally { setReading(false); }
   }
-
   return <>
-    <h1>Upload a dataset</h1>
-    <p className="intro">Start with public aggregate cervical-screening counts.</p>
+    <p className="eyebrow">FROM DATA TO AN EVIDENCE-BASED NEXT STEP</p>
+    <h1>Upload your data.<br/>We’ll take it from here.</h1>
+    <p className="intro">We standardise and clean the dataset, find population differences, and generate recommendations with their evidence.</p>
     <div className="upload-area">
-      <label htmlFor="dataset-file">Choose a CSV file</label>
-      <input id="dataset-file" type="file" accept=".csv,text/csv"
-        disabled={reading} onChange={event => {
-          const file = event.target.files?.[0];
-          if (file) void readFile(file);
-          event.target.value = "";
-        }}/>
-      <p className="muted">Up to 1 MB. Files stay in this tab. Do not upload patient records.</p>
+      <label htmlFor="dataset-file">Upload a public screening dataset</label>
+      <input id="dataset-file" type="file" accept=".csv,text/csv" disabled={reading} onChange={event => {
+        const file = event.target.files?.[0]; if (file) void read(file); event.target.value = "";
+      }}/>
+      <p className="muted small">CSV · up to 1 MB · public aggregate cervical-screening counts</p>
     </div>
-    {reading && <p role="status">Reading and checking the file…</p>}
-    {error && <p className="error" role="alert">{error}</p>}
-    <div className="demo-option">
-      <p>Don’t have a file ready?</p>
-      <button className="secondary" onClick={onDemo} disabled={reading}>Use the public demo dataset</button>
-      <a href="/data/screening.csv" download>Download the example CSV</a>
-    </div>
-    <details>
-      <summary>Required data</summary>
-      <p>Year, population group, invited count and attended count. Optionally include paired referred and completed counts. Groups in each cohort and year must be disjoint and comparable.</p>
-      <p>This prototype supports screening counts, not arbitrary clinical studies. Column names can be mapped in the next step.</p>
-    </details>
+    {error && <p role="alert" className="error">{error}</p>}
+    <p className="privacy-note">Uploading starts processing automatically. Gemini may receive column examples and aggregate findings; Context.dev searches public evidence. Do not upload patient records.</p>
+    <div className="demo-option"><button className="secondary" onClick={() => onUpload({ kind: "demo" })} disabled={reading}>Try the public Registry dataset</button><a href="/data/screening.csv" download>Example CSV</a></div>
+    <details><summary>What data can I use?</summary><p>This first prototype supports year, population group, invited and attended counts, plus optional paired referral and examination counts. Different column names and common numeric formatting are handled automatically. If a field’s meaning cannot be established, we ask one focused question.</p></details>
   </>;
 }

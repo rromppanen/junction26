@@ -6,7 +6,7 @@ Only facts that are already confirmed go here. Mark everything else _TBD_, and n
 
 - Product or artifact: Care Equity Lab for AstraZeneca's Equal Care Across Finland challenge. Intended users are county cancer-care leads, service planners and researchers. See [`docs/PLAN.md`](../docs/PLAN.md).
 - Main components: local Next.js/TypeScript MVP in `web/`; [operating instructions and scope](../web/README.md).
-- Workflow: four independent step components with [contracts and ownership boundaries](../web/src/components/workflow/README.md). `web/src/app/page.tsx` is the shared integration shell.
+- Workflow: upload-once server pipeline in `web/src/lib/pipeline/`, streamed by `/api/pipeline`, with [contracts and ownership boundaries](../web/src/components/workflow/README.md). Gemini and Context.dev adapters reuse Gap Radar's environment names. `web/src/app/page.tsx` manages upload, progress, clarification and results.
 - Screening data artifacts: `web/src/data/screening.json` and `web/public/data/screening.csv`, owned by `web/scripts/ingest.py`. Do not hand-edit them. Reviewed evidence summaries live in `web/src/data/evidence.ts`.
 - Generated artifacts: pitch deck PDF in `docs/pitch/` (exported, not generated from source).
 - Proposed prototype design: [`docs/design/2026-11-13-cancer-equity-agent.md`](../docs/design/2026-11-13-cancer-equity-agent.md). Covers the data contract, evidence boundaries, demo and implementation acceptance criteria; not an implemented system.
@@ -20,7 +20,7 @@ Only facts that are already confirmed go here. Mark everything else _TBD_, and n
 | Run affected tests | `cd web && npm test` | Source, calculation, import and model-boundary tests |
 | Check static constraints | `cd web && npm run check` | TypeScript passes |
 | Build or render | `cd web && npm run build` | Next.js production build passes |
-| Reproduce user behavior | `cd web && npm run test:e2e`; [walkthrough](../web/README.md) | Four-step public-data flow, imports, result invalidation, recommendations, export, mobile and endpoint checks |
+| Reproduce user behavior | `cd web && npm run test:e2e`; [walkthrough](../web/README.md) | Upload starts automatic processing; progress, targeted clarification, result evidence, cancellation, export and mobile checks |
 
 ## Delivery and operation
 

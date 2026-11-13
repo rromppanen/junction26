@@ -1,48 +1,44 @@
-# Workflow ownership
+# Automatic workflow and team ownership
 
-Assign one teammate to each step. Improve the implementation behind its contract without adding unrelated screens. The user follows **Upload → Prepare → Analyse → Recommend**.
+The user uploads once. The four stages run on the server, emit real progress, and return insights with evidence-linked recommendations. There are no routine mapping, analysis-selection or continue screens. Only unresolved column meanings interrupt the run.
 
-| Step | Main file | Input → output | Supporting code |
+Assign one teammate per stage:
+
+| Stage | Implementation owner | Input → output | Main improvement work |
 | --- | --- | --- | --- |
-| 1. Upload | [UploadStep.tsx](UploadStep.tsx) | Public CSV file → `InputDataset` with parsed table and source checksum | [CSV parser](../../lib/csv.ts); [source adapter](../../../scripts/ingest.py) |
-| 2. Prepare | [PrepareStep.tsx](PrepareStep.tsx) | `InputDataset` + confirmed mapping → `PreparedDataset` | [Mapping and normalisation](../../lib/csv.ts); `validateRows` in [analysis.ts](../../lib/analysis.ts) |
-| 3. Analyse | [AnalyseStep.tsx](AnalyseStep.tsx) | `PreparedDataset` + selection → `AnalysisResult` | `analyse`, intervals and triage rules in [analysis.ts](../../lib/analysis.ts) |
-| 4. Recommend | [RecommendStep.tsx](RecommendStep.tsx) | `PreparedDataset` + `AnalysisResult` → interpretation, sourced proposals and downloadable report | `recommend` / `fallbackDraft` in [analysis.ts](../../lib/analysis.ts), [evidence library](../../data/evidence.ts), [brief endpoint](../../app/api/brief/route.ts), [draft validator](../../lib/brief.ts) |
+| Standardise & clean | [`prepare.ts`](../../lib/pipeline/prepare.ts) | `PipelineInput` → `PreparedData` | Semantic mapping, formats, units, provenance, missingness and data-quality checks |
+| Find disparities | [`analyse.ts`](../../lib/pipeline/analyse.ts) | `PreparedData` → `Findings` | Estimands, comparability, uncertainty, adjustment, multiplicity and valid pathway localisation |
+| Find evidence | [`research.ts`](../../lib/pipeline/research.ts), [`context.ts`](../../lib/context.ts) | `Findings` → sources and retrieval status | Search strategy, source relevance, original passages, evidence appraisal and applicability |
+| Recommend | [`recommend.ts`](../../lib/pipeline/recommend.ts) | Findings + sources → checked interpretation and proposals | Evidence entailment, alternative explanations, action specificity, evaluation and abstention |
 
-## Shared integration boundary
+## Shared boundaries
 
-[types.ts](types.ts) owns the cross-step contracts. The [page](../../app/page.tsx) only holds step state and passes outputs forward. Assign one integration owner to these shared files. Coordinate contract changes before editing consumers.
+- [`types.ts`](../../lib/pipeline/types.ts) owns cross-stage contracts. Assign one integration owner for coordinated changes.
+- [`run.ts`](../../lib/pipeline/run.ts) orchestrates stages and emits progress. It contains no UI decisions.
+- [`/api/pipeline`](../../app/api/pipeline/route.ts) validates bounded requests and streams NDJSON. `GET` returns configuration flags, never secrets.
+- [`gemini.ts`](../../lib/gemini.ts) owns structured Gemini requests, timeouts and one validation retry. It adapts the Gap Radar analyst pattern using the same environment variable names and model default.
+- [`csv.ts`](../../lib/csv.ts) and [`analysis.ts`](../../lib/analysis.ts) contain shared parsing, numerical validation, calculations and fallback templates. Coordinate edits to these shared files.
+- [`page.tsx`](../../app/page.tsx) owns request cancellation, stream consumption and upload/progress/attention/result state. It does not calculate findings or execute an analysis plan in the browser.
 
-The numerical engine currently contains validation, calculation and recommendation functions. Step owners should change only their relevant functions or coordinate with the integration owner; these shared files are not independent writing surfaces.
+## UI components
 
-- Keep original source meaning and provenance. Do not silently reinterpret columns.
-- A new upload or confirmed preparation invalidates downstream results.
-- Changing analysis settings requires another run before continuing.
-- Interpretations and recommendations refer to the selected calculated finding.
-- Errors stay in the responsible step and block invalid progression.
-- Steps do not import other step components. Share contracts and supporting functions instead.
+- [`UploadStep.tsx`](UploadStep.tsx): one upload starts the request; an official demo is available.
+- [`PipelineProgress.tsx`](PipelineProgress.tsx): actual stage messages, not simulated percentages or user navigation.
+- [`AttentionPanel.tsx`](AttentionPanel.tsx): targeted clarification only when preparation cannot resolve a field safely; resumes the same dataset.
+- [`ResultsPanel.tsx`](ResultsPanel.tsx): prioritised insights with linked recommendations and evidence. Cleaning details and the full comparison set are expandable.
 
-## What each owner should make rigorous
+## Contracts to preserve
 
-**Upload:** supported formats, bounded parsing, faithful missing values and source provenance. Preserve local-only handling of uploaded records. Test malformed input as well as valid unfamiliar headers.
+- Uploaded public data are processed on the server. Gemini may receive column examples and aggregate findings; Context.dev receives a topic query, not raw rows or filenames. The app does not write uploads to disk.
+- Models never rewrite numerical observations or execute arbitrary code. Safe format cleaning is recorded; absent outcomes are not imputed.
+- A finding always retains its cohort, dimension, period, denominator, measured transition and source locator.
+- Automatic scanning currently uses each cohort/dimension's latest period. Threshold signals are descriptive, not significance tests or causal findings.
+- Live search results are untrusted excerpts, not automatically appraised studies. Generated actions require reviewed guideline support, not only a matching citation ID or search result.
+- Missing keys or failed providers are visible in results; never label fallback templates as Gemini output or claim that live research succeeded.
+- Invalid data stop the pipeline. Ambiguity requests a specific correction. Cancelled or replaced runs cannot overwrite a new result.
 
-**Prepare:** semantic mappings, units, population and cohort definitions, denominators, duplicate detection, comparability and missingness. Header matching is currently a deterministic suggestion, not reliable semantic inference. Test that ambiguous or invalid input requires correction.
+## Verification
 
-**Analyse:** define the estimand and comparison population; assess power, uncertainty, missingness, dependence, confounding and multiplicity when adding methods. The current five-point rule is descriptive triage. Do not silently promote it to statistical significance or causation. Test positive, negative and insufficient-data cases.
+From `web/`, run `npm test`, `npm run check`, `npm run test:e2e`, and `npm run build`. If a dev server already owns the checkout, set `PLAYWRIGHT_BASE_URL` to its URL for browser checks. See [the app README](../../../README.md).
 
-**Recommend:** distinguish the measured transition from a possible cause, verify evidence applicability and source entailment, consider harms and contrary evidence, and abstain when support is missing. Currently actions come from guideline templates; optional AI drafts only the interpretation. Do not describe it as a systematic evidence review or causal intervention estimate.
-
-## Integration checks
-
-From `web/`:
-
-```bash
-npm test
-npm run check
-npm run test:e2e
-npm run build
-```
-
-Use the [app README](../../../README.md) for run instructions and data limitations. Unit tests cover shared data/method boundaries; browser tests cover all four steps, invalidation, failure recovery and mobile layout. Add meaningful checks for each new capability, and keep at least one reproducible real-data example and an appropriate abstention example.
-
-This separation enables parallel team ownership. It does not mean every stage already meets a research-grade standard. Broader dataset support, causal inference, evidence appraisal and a direct Goal 3 indicator remain substantive work.
+Provider tests mock Gemini and Context.dev and exercise the full pipeline, including uploaded-data standardisation, retrieval and generated recommendations. The local app can run without keys, but that is not evidence of live-provider quality. Broader study formats, causal inference, expert evidence grading and direct Goal 3 outcomes remain substantive work for stage owners.

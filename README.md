@@ -22,7 +22,7 @@ Keep this section current. On Sunday morning it becomes the submission form text
 
 ## Description
 
-A simple four-step app: upload data, prepare and validate it, run an analysis, then review sourced recommendations. The first prototype uses public aggregate cervical-screening data from the Finnish Cancer Registry and accepts mapped screening-count CSVs. Each step has a [separate implementation and contract](web/src/components/workflow/README.md) for team ownership.
+Upload a public aggregate screening dataset once. The app automatically standardises and cleans it, analyses population differences, retrieves evidence with Context.dev, and generates recommendations with Gemini. The results lead with prioritised insights and evidence-linked actions. Only unresolved data meanings interrupt processing. Each backend stage has a [separate implementation and contract](web/src/components/workflow/README.md) for team ownership.
 
 The app distinguishes descriptive gaps from unresolved causes, and guidance-supported proposals from proven local effects. Survival and treatment-start timing are not measured in this first dataset. See [the product idea](docs/idea.md) for the broader adaptive analyst vision.
 
@@ -38,7 +38,7 @@ npm run dev
 
 Open the printed localhost URL. If port 3000 is occupied, use `npm run dev -- --port 3001`.
 
-The demo includes real public Finnish Cancer Registry counts and runs without credentials. See [the app README](web/README.md) for the four-step walkthrough, optional AI setup, data limitations and verification commands.
+The demo includes real public Finnish Cancer Registry counts. Configure the same Gemini and Context.dev environment variables as Gap Radar to enable live integrations; missing keys and fallback proposals are explicitly labelled. See [the app README](web/README.md) for setup, the automatic workflow, data limitations and verification commands.
 
 ## Team
 
