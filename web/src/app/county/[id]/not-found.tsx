@@ -6,10 +6,12 @@ export default function CountyNotFound() {
       <p className="mb-10 text-sm">
         <Link href="/" className="link">Back to the map</Link>
       </p>
-      <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">There&rsquo;s no county at this address</h1>
-      <p className="mt-4 max-w-xl text-muted">
-        County pages use Sotkanet region numbers, and this one doesn&rsquo;t match any of Finland&rsquo;s wellbeing
-        services counties. Pick a county from the map instead.
+      <p className="text-sm text-muted">Cancer care brief</p>
+      <h1 className="font-narrow mt-1 text-4xl font-bold leading-[0.95] sm:text-6xl">No county at this address</h1>
+      <p className="mt-6 max-w-xl leading-relaxed">
+        County pages are numbered with Sotkanet&rsquo;s region codes, and this number doesn&rsquo;t match any of
+        Finland&rsquo;s wellbeing services counties. <Link href="/" className="link">Choose a county on the map</Link> to
+        open its brief.
       </p>
     </main>
   );
