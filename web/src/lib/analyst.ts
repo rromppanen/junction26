@@ -84,10 +84,6 @@ const STAGE_FI: Record<PathwayStage, string> = {
   outcome: "tulos",
 };
 
-function fmtFiNum(n: number): string {
-  return fmt(n).replace(".", ",");
-}
-
 function templatesFi(stage: PathwayStage, sotk: string, goal3: string): Recommendation[] {
   const detection: Recommendation[] = [
     {
@@ -161,44 +157,6 @@ function templatesFi(stage: PathwayStage, sotk: string, goal3: string): Recommen
   if (stage === "detection") return detection;
   if (stage === "outcome") return outcome;
   return middle;
-}
-
-function fallbackBriefFi(input: AnalystInput): Brief {
-  const { regionName, facts, indicators } = input;
-  const worst = worstFact(facts);
-  const ind = worst ? indicators.find((i) => i.id === worst.indicatorId) : undefined;
-  const stage: PathwayStage = ind?.stage ?? "detection";
-  const sotk = ind ? `sotkanet:${ind.id}` : indicators[0] ? `sotkanet:${indicators[0].id}` : "strategy-p35-3.2";
-  const goal3 = ind?.strategyGoal ?? "3.2 Laaturekisteri ja tulosten systemaattinen arviointi";
-  const pattern = diagnosePathway(facts, indicators).pattern;
-  const u = (i: Indicator) => (i.unit === "%" ? " %" : ` ${i.unit}`);
-  let headline = `${regionName}: ${PATTERN_PHRASE_FI[pattern]}; saatavilla olevissa mittareissa ei selvää eroa`;
-  let finding = "Saatavilla olevat julkiset mittarit eivät osoita selvää eroa valtakunnalliseen tasoon.";
-  if (worst && ind && worst.value !== null) {
-    const nat = worst.national !== null ? `, valtakunnallisesti ${fmtFiNum(worst.national)}${u(ind)}` : "";
-    headline = `${regionName}: ${PATTERN_PHRASE_FI[pattern]}. ${ind.nameFi}: ${fmtFiNum(worst.value)}${u(ind)}${nat} (${worst.year})`;
-    const parts = [`Vuonna ${worst.year} alueen ${ind.nameFi} oli ${fmtFiNum(worst.value)}${u(ind)}${nat}.`];
-    if (worst.rank !== null) parts.push(`Alue on sijalla ${worst.rank} (${worst.rankOf} alueesta, joilla on tietoa).`);
-    if (worst.bestQuartile !== null) parts.push(`Parhaan neljänneksen alueet yltävät tasolle ${fmtFiNum(worst.bestQuartile)}${u(ind)}.`);
-    parts.push(`Tämä kuuluu syöpäpolun ${STAGE_FI[stage]}vaiheeseen.`);
-    finding = parts.join(" ");
-  }
-  const biggest = impactFacts(facts)
-    .filter((r) => r.toTarget !== null && r.toTarget > 0)
-    .sort((a, b) => (b.toTarget as number) - (a.toTarget as number))[0];
-  if (biggest) {
-    const bi = indicators.find((i) => i.id === biggest.indicatorId);
-    const t = facts.find((f) => f.indicatorId === biggest.indicatorId)?.target;
-    if (bi) finding += ` Suurin seulontaero on ${bi.nameFi}: tavoitteeseen (${t} %) pääsemiseksi 1 000 kutsutusta noin ${biggest.toTarget} lisää osallistujaa tarvittaisiin.`;
-  }
-  return {
-    headline,
-    finding,
-    pathwayStage: stage,
-    recommendations: templatesFi(stage, sotk, goal3),
-    limitations: [...LIMITATIONS_FI],
-    generatedBy: "fallback",
-  };
 }
 
 function fmt(n: number): string {
@@ -295,44 +253,76 @@ function templates(stage: PathwayStage, sotk: string, goal3: string): Recommenda
   return middle;
 }
 
+/** Finnish wording for the English strategy-goal labels in INDICATORS. */
+const GOAL_FI: [string, string][] = [
+  ["Goal 2", "Tavoite 2: 80 %:n osallistuminen jokaiseen seulontaohjelmaan jokaisella hyvinvointialueella"],
+  ["Goal 3", "Tavoite 3: yhdenvertainen ja vaikuttava hoito (5 vuoden elossaolo)"],
+  ["Context only", "Vain taustatieto: kuvaa väestöä, ei strategian mittari"],
+];
+export function goalFi(goal: string): string {
+  return GOAL_FI.find(([k]) => goal.startsWith(k))?.[1] ?? goal;
+}
+
 export function fallbackBrief(input: AnalystInput): Brief {
-  if (input.language === "fi") return fallbackBriefFi(input);
+  const fi = input.language === "fi";
   const { regionName, facts, indicators } = input;
+  // Selection logic, shared by both languages.
   const worst = worstFact(facts);
   const ind = worst ? indicators.find((i) => i.id === worst.indicatorId) : undefined;
   const stage: PathwayStage = ind?.stage ?? "detection";
   const sotk = ind ? `sotkanet:${ind.id}` : indicators[0] ? `sotkanet:${indicators[0].id}` : "strategy-p35-3.2";
-  const goal3 = ind?.strategyGoal ?? "3.2 Quality register and systematic review of results";
-
+  const goal3 = ind
+    ? fi ? goalFi(ind.strategyGoal) : ind.strategyGoal
+    : fi ? "3.2 Laaturekisteri ja tulosten systemaattinen arviointi" : "3.2 Quality register and systematic review of results";
   const pattern = diagnosePathway(facts, indicators).pattern;
-  let headline = `${regionName}: ${PATTERN_PHRASE[pattern]}; no clear gap found in the available indicators`;
-  let finding =
-    "The available public indicators do not show a clear gap to the national level for this county.";
-  if (worst && ind && worst.value !== null) {
-    const unit = ind.unit === "%" ? "%" : ` ${ind.unit}`;
-    const nat = worst.national !== null ? ` vs ${fmt(worst.national)}${unit} nationally` : "";
-    headline = `${regionName}: ${PATTERN_PHRASE[pattern]}. ${ind.nameEn} is ${fmt(worst.value)}${unit}${nat} (${worst.year})`;
-    const parts = [
-      `In ${worst.year}, ${regionName} had ${fmt(worst.value)}${unit} for ${ind.nameEn}${nat}.`,
-    ];
-    if (worst.rank !== null) parts.push(`It ranks ${worst.rank} of ${worst.rankOf} counties with data.`);
-    if (worst.bestQuartile !== null)
-      parts.push(`The best-performing quarter of counties is at ${fmt(worst.bestQuartile)}${unit}.`);
-    parts.push(`This sits in the ${stage} stage of the cancer pathway.`);
-    finding = parts.join(" ");
-  }
   const biggest = impactFacts(facts)
     .filter((r) => r.toTarget !== null && r.toTarget > 0)
     .sort((a, b) => (b.toTarget as number) - (a.toTarget as number))[0];
-  if (biggest) {
-    const bi = indicators.find((i) => i.id === biggest.indicatorId);
-    const t = facts.find((f) => f.indicatorId === biggest.indicatorId)?.target;
-    if (bi) finding += ` The largest screening gap is ${bi.nameEn}: about ${biggest.toTarget} more of every 1,000 invited people would need to attend to reach the ${t}% target.`;
+  const bi = biggest ? indicators.find((i) => i.id === biggest.indicatorId) : undefined;
+  const target = biggest ? facts.find((f) => f.indicatorId === biggest.indicatorId)?.target : undefined;
+  const hasWorst = !!(worst && ind && worst.value !== null);
+
+  // Per-language wording.
+  const num = (n: number) => (fi ? fmt(n).replace(".", ",") : fmt(n));
+  const unitOf = (i: Indicator) => (i.unit === "%" ? (fi ? " %" : "%") : ` ${i.unit}`);
+  let headline: string;
+  let finding: string;
+  if (!hasWorst || !worst || !ind || worst.value === null) {
+    headline = fi
+      ? `${regionName}: ${PATTERN_PHRASE_FI[pattern]}; saatavilla olevissa mittareissa ei selvää eroa`
+      : `${regionName}: ${PATTERN_PHRASE[pattern]}; no clear gap found in the available indicators`;
+    finding = fi
+      ? "Saatavilla olevat julkiset mittarit eivät osoita selvää eroa valtakunnalliseen tasoon."
+      : "The available public indicators do not show a clear gap to the national level for this county.";
+  } else {
+    const unit = unitOf(ind);
+    const name = fi ? ind.nameFi : ind.nameEn;
+    const nat = worst.national !== null ? (fi ? `, valtakunnallisesti ${num(worst.national)}${unit}` : ` vs ${num(worst.national)}${unit} nationally`) : "";
+    const parts: string[] = [];
+    if (fi) {
+      headline = `${regionName}: ${PATTERN_PHRASE_FI[pattern]}. ${name}: ${num(worst.value)}${unit}${nat} (${worst.year})`;
+      parts.push(`Vuonna ${worst.year} alueen ${name} oli ${num(worst.value)}${unit}${nat}.`);
+      if (worst.rank !== null) parts.push(`Alue on sijalla ${worst.rank} (${worst.rankOf} alueesta, joilla on tietoa).`);
+      if (worst.bestQuartile !== null) parts.push(`Parhaan neljänneksen alueet yltävät tasolle ${num(worst.bestQuartile)}${unit}.`);
+      parts.push(`Tämä kuuluu syöpäpolun ${STAGE_FI[stage]}vaiheeseen.`);
+    } else {
+      headline = `${regionName}: ${PATTERN_PHRASE[pattern]}. ${name} is ${num(worst.value)}${unit}${nat} (${worst.year})`;
+      parts.push(`In ${worst.year}, ${regionName} had ${num(worst.value)}${unit} for ${name}${nat}.`);
+      if (worst.rank !== null) parts.push(`It ranks ${worst.rank} of ${worst.rankOf} counties with data.`);
+      if (worst.bestQuartile !== null) parts.push(`The best-performing quarter of counties is at ${num(worst.bestQuartile)}${unit}.`);
+      parts.push(`This sits in the ${stage} stage of the cancer pathway.`);
+    }
+    finding = parts.join(" ");
   }
-  const inside = laggingFor(input.equity, worst?.indicatorId);
+  if (biggest && bi) {
+    finding += fi
+      ? ` Suurin seulontaero on ${bi.nameFi}: tavoitteeseen (${target} %) pääsemiseksi 1 000 kutsutusta noin ${biggest.toTarget} lisää osallistujaa tarvittaisiin.`
+      : ` The largest screening gap is ${bi.nameEn}: about ${biggest.toTarget} more of every 1,000 invited people would need to attend to reach the ${target}% target.`;
+  }
+  const inside = fi ? undefined : laggingFor(input.equity, worst?.indicatorId); // municipality sentence is English-only
   if (inside) {
-    const unit = inside.indicator.unit === "%" ? "%" : ` ${inside.indicator.unit}`;
-    const names = inside.rows.slice(0, 3).map((r) => `${r.region.name} (${fmt(r.value)}${unit})`);
+    const unit = unitOf(inside.indicator);
+    const names = inside.rows.slice(0, 3).map((r) => `${r.region.name} (${num(r.value)}${unit})`);
     finding += ` Inside the county, ${measurePhrase(inside.indicator)} is lowest in ${names.join(", ")} (${inside.year}).`;
   }
 
@@ -340,8 +330,8 @@ export function fallbackBrief(input: AnalystInput): Brief {
     headline,
     finding,
     pathwayStage: stage,
-    recommendations: templates(stage, sotk, goal3),
-    limitations: [...LIMITATIONS],
+    recommendations: fi ? templatesFi(stage, sotk, goal3) : templates(stage, sotk, goal3),
+    limitations: [...(fi ? LIMITATIONS_FI : LIMITATIONS)],
     generatedBy: "fallback",
   };
 }

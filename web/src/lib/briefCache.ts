@@ -16,9 +16,11 @@ export function createBriefCache(
     const promise = generate(input);
     const entry = { at: now(), promise };
     entries.set(key, entry);
-    promise.catch(() => {
+    // Don't pin failures: a rejection, or a template fallback after a transient Gemini failure, is dropped once settled.
+    const drop = () => {
       if (entries.get(key) === entry) entries.delete(key);
-    });
+    };
+    promise.then((b) => { if (b.generatedBy === "fallback") drop(); }, drop);
     return promise;
   };
 }

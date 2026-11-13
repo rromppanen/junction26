@@ -50,4 +50,13 @@ describe("validateBrief", () => {
     expect(validateBrief(b, facts, known).join()).toMatch(/57/);
     expect(validateBrief(b, facts, known, [57])).toEqual([]);
   });
+  it("exempts Finnish '1 000' only as a whole", () => {
+    const b = valid();
+    b.finding = "Noin 1 000 kutsutusta";
+    expect(validateBrief(b, facts, known)).toEqual([]);
+    b.finding = "Noin 11 000 kutsutusta";
+    expect(validateBrief(b, facts, known).length).toBeGreaterThan(0);
+    b.finding = "Noin 1 000 kutsutusta ja 987 muuta";
+    expect(validateBrief(b, facts, known).join()).toMatch(/987/);
+  });
 });

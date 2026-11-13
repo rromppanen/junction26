@@ -3,7 +3,7 @@ import { createBriefCache } from "./briefCache";
 import type { AnalystInput } from "./analyst";
 import type { Brief } from "./types";
 
-const brief = (h: string): Brief => ({ headline: h, finding: "", pathwayStage: "detection", recommendations: [], limitations: [], generatedBy: "fallback" });
+const brief = (h: string): Brief => ({ headline: h, finding: "", pathwayStage: "detection", recommendations: [], limitations: [], generatedBy: "gemini" });
 const input = (language?: "en" | "fi"): AnalystInput => ({ regionName: "Helsinki", facts: [], indicators: [], language });
 
 describe("createBriefCache", () => {
@@ -39,6 +39,15 @@ describe("createBriefCache", () => {
     const get = createBriefCache(gen, () => 0);
     await expect(get(input("fi"))).rejects.toThrow();
     expect((await get(input("fi"))).headline).toBe("ok");
+    expect(gen).toHaveBeenCalledTimes(2);
+  });
+  it("does not keep a fallback brief for later calls", async () => {
+    const gen = vi.fn().mockResolvedValueOnce({ ...brief("fb"), generatedBy: "fallback" }).mockResolvedValueOnce(brief("ai"));
+    const get = createBriefCache(gen, () => 0);
+    expect((await get(input("fi"))).headline).toBe("fb");
+    await Promise.resolve();
+    expect((await get(input("fi"))).headline).toBe("ai");
+    await get(input("fi"));
     expect(gen).toHaveBeenCalledTimes(2);
   });
 });

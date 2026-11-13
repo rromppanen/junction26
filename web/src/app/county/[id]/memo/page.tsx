@@ -5,6 +5,7 @@ import { EVIDENCE } from "@/data/evidence";
 import { loadCountyBrief } from "@/lib/countyBrief";
 import { diagnosePathway } from "@/lib/fingerprint";
 import { describeFingerprintFi, fmtFi, whatItTakesFi } from "@/lib/memoFi";
+import { PrintButton } from "@/components/PrintButton";
 import type { LiveSnippet } from "@/lib/context";
 
 export const dynamic = "force-dynamic";
@@ -12,17 +13,17 @@ export const dynamic = "force-dynamic";
 function sourceLabel(id: string, live: LiveSnippet[]): string {
   if (id.startsWith("live:") || id.startsWith("peer:")) {
     const s = live.find((l) => l.id === id);
-    return s ? `${s.title} (${s.url})` : id;
+    return s ? s.title : id;
   }
   if (id.startsWith("sotkanet:")) {
     const n = Number(id.slice(9));
     const ind = indicatorById(n) ?? CONTEXT_INDICATORS.find((c) => c.id === n);
-    return ind ? `Sotkanet: ${ind.nameFi} (${ind.sourceUrl})` : id;
+    return ind ? `Sotkanet: ${ind.nameFi}` : id;
   }
   const ev = EVIDENCE.find((e) => e.id === id);
   if (!ev) return id;
-  const doc = ev.doc === "strategy" ? "Kansallinen syöpästrategia" : ev.doc === "roadmap" ? "Syöpästrategian tiekartta" : "Haastekuvaus";
-  return `${doc}${ev.page ? `, s. ${ev.page}` : ""}: ${ev.titleEn}`;
+  const doc = ev.doc === "strategy" ? "Kansallinen syöpästrategia" : ev.doc === "roadmap" ? "Toimeenpanon tiekartta" : "Haastekuvaus";
+  return `${doc}${ev.page ? `, s. ${ev.page}` : ""}`;
 }
 
 export default async function MemoPage({ params }: { params: Promise<{ id: string }> }) {
@@ -57,7 +58,7 @@ export default async function MemoPage({ params }: { params: Promise<{ id: strin
       `}</style>
       <nav className="no-print mb-6 flex gap-x-6 text-sm">
         <Link href={`/county/${regionId}`} className="link">Takaisin aluesivulle</Link>
-        <button className="link" type="button" data-print>Tulosta</button>
+        <PrintButton>Tulosta</PrintButton>
       </nav>
 
       <header className="mb-4 border-b border-ink pb-3">
