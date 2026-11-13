@@ -1,0 +1,29 @@
+[
+  {
+    "name": "typical",
+    "query": "Add cancellation to a report export. The requester wants queued exports cancelled and running exports left alone. Define the change before implementation.",
+    "expected_behavior": [
+      "Defines queued versus running behavior",
+      "Names observable acceptance evidence",
+      "Excludes unrelated export changes"
+    ]
+  },
+  {
+    "name": "edge",
+    "query": "Make the service faster. No workload, symptom or performance target is given. Read-only inspection is available. What should happen next?",
+    "expected_behavior": [
+      "Inspects available baseline evidence",
+      "Identifies the missing workload or outcome",
+      "Does not invent a numerical target"
+    ]
+  },
+  {
+    "name": "failure",
+    "query": "Implement a labelled settings toggle. During inspection an agent proposes replacing the settings architecture and adding analytics. Neither is needed for the toggle.",
+    "expected_behavior": [
+      "Keeps scope tied to the requested outcome",
+      "Separates optional improvements",
+      "Does not block the bounded task for unnecessary redesign"
+    ]
+  }
+]

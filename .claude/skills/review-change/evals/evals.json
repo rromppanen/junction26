@@ -1,0 +1,29 @@
+[
+  {
+    "name": "typical",
+    "query": "A read-only review finds that a new document endpoint verifies login but never checks document ownership. Anonymous access is denied.",
+    "expected_behavior": [
+      "Reports missing authorization with a concrete scenario",
+      "Separates authentication from authorization",
+      "Does not silently edit or merge the change"
+    ]
+  },
+  {
+    "name": "edge",
+    "query": "The only alleged issue is that a helper name differs from your preference. Local conventions allow both names.",
+    "expected_behavior": [
+      "Avoids unsupported cosmetic findings",
+      "Can report no substantiated findings",
+      "Does not manufacture a defect"
+    ]
+  },
+  {
+    "name": "failure",
+    "query": "A review bot says a wrapper is redundant. The wrapper enforces a documented transaction boundary that callers rely on.",
+    "expected_behavior": [
+      "Checks the contract before accepting the finding",
+      "Preserves the necessary boundary or proposes an equivalent",
+      "Refutes the false positive with evidence"
+    ]
+  }
+]

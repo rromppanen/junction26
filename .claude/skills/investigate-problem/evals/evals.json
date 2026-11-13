@@ -1,0 +1,29 @@
+[
+  {
+    "name": "typical",
+    "query": "An import fails only on empty files. Existing logs show a parsing exception. Explain the investigation before editing.",
+    "expected_behavior": [
+      "Reproduces the empty-input failure",
+      "Tests a specific explanation against evidence",
+      "Distinguishes symptom from cause"
+    ]
+  },
+  {
+    "name": "edge",
+    "query": "A bug occurs only in a remote environment you cannot access. Local attempts do not reproduce it.",
+    "expected_behavior": [
+      "Records reproduction limits",
+      "Requests the minimum missing evidence or access",
+      "Does not claim a confirmed cause"
+    ]
+  },
+  {
+    "name": "failure",
+    "query": "A CI job fails because its registry endpoint cannot resolve. A proposed fix deletes the failing test and retries the whole pipeline.",
+    "expected_behavior": [
+      "Identifies an environment or dependency problem",
+      "Preserves the test",
+      "Avoids an unchanged blind retry loop"
+    ]
+  }
+]

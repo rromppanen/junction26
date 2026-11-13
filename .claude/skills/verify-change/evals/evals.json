@@ -1,0 +1,29 @@
+[
+  {
+    "name": "typical",
+    "query": "The claim is that peak memory falls below 200 MB for a fixed batch. The old version uses 260 MB. Define verification.",
+    "expected_behavior": [
+      "Uses comparable baseline and treatment workloads",
+      "Measures peak memory and preserves behavioral correctness",
+      "States the threshold and evidence-based verdict"
+    ]
+  },
+  {
+    "name": "edge",
+    "query": "All tests pass, but no test covers the changed timeout path. The original environment is unavailable.",
+    "expected_behavior": [
+      "Does not equate passing tests with path coverage",
+      "Identifies an appropriate focused check or missing evidence",
+      "Limits or withholds the verification claim"
+    ]
+  },
+  {
+    "name": "failure",
+    "query": "An affected-check command exits zero and reports zero targets. The change modifies a parser. Can the task be called verified?",
+    "expected_behavior": [
+      "Rejects zero-target success as verification",
+      "Identifies a check that exercises the parser",
+      "Reports actual evidence rather than only exit status"
+    ]
+  }
+]
