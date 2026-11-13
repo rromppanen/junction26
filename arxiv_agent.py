@@ -2,6 +2,8 @@
 arXiv research agent: give it a subject, it searches arXiv, reads the abstracts,
 and returns the most relevant papers with a short reason for each.
 
+run: pip install anthropic arxiv
+
 Setup:
     pip install anthropic arxiv
     export ANTHROPIC_API_KEY="sk-ant-..."
@@ -13,6 +15,8 @@ Run:
 import json
 import sys
 
+from dotenv import load_dotenv
+load_dotenv()
 import anthropic
 import arxiv
 
