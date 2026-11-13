@@ -104,6 +104,12 @@ export function getLiveContext(regionName: string): Promise<LiveContext> {
 }
 
 /** Public pages from a better-performing peer county about how it runs the programme. Ids are "peer:<n>". */
-export function getPeerPractices(twinName: string, ind: Pick<Indicator, "id" | "nameFi">): Promise<LiveContext> {
-  return cached(`peer:${twinName}:${ind.id}`, `"${twinName}" ${ind.nameFi} kutsu muistutus`, "peer");
+export function peerQuery(twinName: string, ind: Pick<Indicator, "nameFi" | "stage">): string {
+  // Screening (detection) is about invitations and reminders; survival (outcome) is about the care pathway.
+  const suffix = ind.stage === "outcome" ? "syöpä hoitoketju hoitoon pääsy" : "seulonta kutsu muistutus";
+  return `"${twinName}" ${ind.nameFi} ${suffix}`;
+}
+
+export function getPeerPractices(twinName: string, ind: Pick<Indicator, "id" | "nameFi" | "stage">): Promise<LiveContext> {
+  return cached(`peer:${twinName}:${ind.id}`, peerQuery(twinName, ind), "peer");
 }

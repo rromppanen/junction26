@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getLiveContext, getPeerPractices, toSnippets } from "./context";
+import { getLiveContext, getPeerPractices, peerQuery, toSnippets } from "./context";
 
 const result = (over: object = {}) => ({
   url: "https://example.fi/syopa",
@@ -73,7 +73,7 @@ describe("getPeerPractices", () => {
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
   });
-  const ind = { id: 3621, nameFi: "Rintasyövän seulontoihin osallistuminen (mammografia)" } as never;
+  const ind = { id: 3621, nameFi: "Rintasyövän seulontoihin osallistuminen (mammografia)", stage: "detection" } as never;
 
   it("reports not-configured without a key and makes no request", async () => {
     vi.stubEnv("CONTEXT_DEV_API_KEY", "");
@@ -89,10 +89,20 @@ describe("getPeerPractices", () => {
     vi.stubGlobal("fetch", f);
     const a = await getPeerPractices("TwinA", ind);
     expect(a.snippets[0].id).toBe("peer:1");
-    expect(JSON.parse(f.mock.calls[0][1].body).query).toContain("kutsu muistutus");
+    expect(JSON.parse(f.mock.calls[0][1].body).query).toContain("seulonta kutsu muistutus");
     expect(await getPeerPractices("TwinA", ind)).toBe(a);
     expect(f).toHaveBeenCalledTimes(1);
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("boom")));
     expect(await getPeerPractices("TwinB", ind)).toMatchObject({ status: "error", snippets: [] });
+  });
+});
+
+describe("peerQuery", () => {
+  it("differs by indicator stage", () => {
+    const det = peerQuery("T", { nameFi: "X", stage: "detection" });
+    const out = peerQuery("T", { nameFi: "X", stage: "outcome" });
+    expect(det).toContain("kutsu muistutus");
+    expect(out).toContain("hoitoketju");
+    expect(out).not.toContain("kutsu muistutus");
   });
 });
