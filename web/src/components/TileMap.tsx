@@ -87,13 +87,19 @@ export function TileMap({
           ))}
         </div>
       )}
+      <MapLegend />
+    </div>
+  );
+}
+
+export function MapLegend() {
+  return (
       <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
         <Legend cls="bg-behind" label="Behind the whole country" />
-        <Legend cls="bg-par-soft border border-rule" label="About level" />
+        <Legend cls="bg-rule" label="About level" />
         <Legend cls="bg-ahead" label="Ahead" />
         <Legend cls="border border-dashed border-par" label="No figure" />
       </div>
-    </div>
   );
 }
 

@@ -56,6 +56,12 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
   const sources = sourceIds.map((s) => resolveSource(s, live));
   const sourceIndex = new Map(sources.map((s, i) => [s.id, i + 1]));
 
+  // Best-quartile boundary for every year the indicator has county figures (independent of the county).
+  const bestSeries = (ind: (typeof INDICATORS)[number]) =>
+    [...new Set(ds.values.filter((v) => v.indicatorId === ind.id).map((v) => v.year))]
+      .map((y) => ({ year: y, value: computeGap(ds, ind, regionId, y).bestQuartile }))
+      .filter((p): p is { year: number; value: number } => p.value !== null);
+
   const series = (indId: number, rId: number | undefined) =>
     ds.values.filter((v) => v.indicatorId === indId && v.regionId === rId).map((v) => ({ year: v.year, value: v.value }));
 
@@ -117,7 +123,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
 
       <section className="mb-14" aria-labelledby="ind-h">
         <h2 id="ind-h" className="mb-2 text-2xl font-semibold tracking-tight">{name} against the whole country</h2>
-        <p className="mb-6 text-sm text-muted">Latest year for each measure. The solid line is {name}, the dashed one is Finland.</p>
+        <p className="mb-6 text-sm text-muted">Latest year for each measure. The dark line is {name}, the dashed one is Finland, and the thin blue one is the level the best quarter of counties reach.</p>
         <div className="border-t border-ink">
           {INDICATORS.map((ind, i) => {
             const f = facts[i];
@@ -152,7 +158,12 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
                   )}
                   <p className="mt-2 text-xs text-muted">{ind.strategyGoal}</p>
                 </div>
-                <TrendChart county={series(ind.id, regionId)} national={series(ind.id, nationalRegion?.id)} unit={ind.unit} />
+                <TrendChart
+                  county={series(ind.id, regionId)}
+                  national={series(ind.id, nationalRegion?.id)}
+                  best={bestSeries(ind)}
+                  unit={ind.unit}
+                />
               </article>
             );
           })}

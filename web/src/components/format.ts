@@ -1,7 +1,35 @@
 import type { GapStatus, PathwayStage } from "@/lib/types";
 
+// Sotkanet names counties in the genitive ("Länsi-Uudenmaan hyvinvointialue"); in English text we want the
+// region's own name ("Länsi-Uusimaa").
+const NOMINATIVE: Record<string, string> = {
+  "Itä-Uudenmaan": "Itä-Uusimaa",
+  "Keski-Uudenmaan": "Keski-Uusimaa",
+  "Länsi-Uudenmaan": "Länsi-Uusimaa",
+  "Vantaan ja Keravan": "Vantaa and Kerava",
+  "Varsinais-Suomen": "Varsinais-Suomi",
+  Satakunnan: "Satakunta",
+  "Kanta-Hämeen": "Kanta-Häme",
+  Pirkanmaan: "Pirkanmaa",
+  "Päijät-Hämeen": "Päijät-Häme",
+  Kymenlaakson: "Kymenlaakso",
+  "Etelä-Karjalan": "Etelä-Karjala",
+  "Etelä-Savon": "Etelä-Savo",
+  "Pohjois-Savon": "Pohjois-Savo",
+  "Pohjois-Karjalan": "Pohjois-Karjala",
+  "Keski-Suomen": "Keski-Suomi",
+  "Etelä-Pohjanmaan": "Etelä-Pohjanmaa",
+  Pohjanmaan: "Pohjanmaa",
+  "Keski-Pohjanmaan": "Keski-Pohjanmaa",
+  "Pohjois-Pohjanmaan": "Pohjois-Pohjanmaa",
+  Kainuun: "Kainuu",
+  Lapin: "Lappi",
+  "Helsingin kaupunki": "Helsinki",
+};
+
 export function shortName(name: string): string {
-  return name.replace(/\s+hyvinvointialue$/i, "").replace(/^Helsingin kaupunki$/i, "Helsinki");
+  const stem = name.replace(/\s+hyvinvointialue$/i, "");
+  return NOMINATIVE[stem] ?? stem;
 }
 
 export function fmt(v: number | null | undefined, unit = ""): string {

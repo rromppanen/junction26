@@ -3,7 +3,7 @@ import { getDataset } from "@/lib/data";
 import { INDICATORS, indicatorBySlug } from "@/data/indicators";
 import { latestYear, rankCounties } from "@/lib/gap";
 import type { GapFacts } from "@/lib/types";
-import { TileMap } from "@/components/TileMap";
+import { CountyMap } from "@/components/CountyMap";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
 import { STATUS_LABEL, STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, shortName } from "@/components/format";
@@ -117,11 +117,11 @@ export default async function RadarPage({
 
       <div className="grid gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
         <section aria-labelledby="map-h">
-          <h2 id="map-h" className="text-xl font-semibold tracking-tight">Finland, roughly to shape</h2>
+          <h2 id="map-h" className="text-xl font-semibold tracking-tight">Where the gaps are</h2>
           <p className="mb-4 mt-1 text-sm text-muted">
-            {ind.nameEn}, {year}. Each square is one wellbeing services county.
+            {ind.nameEn}, {year}. Pick a county to open its brief.
           </p>
-          <TileMap regions={ds.regions} facts={factsById} unit={ind.unit} />
+          <CountyMap regions={ds.regions} facts={factsById} unit={ind.unit} />
         </section>
 
         <section aria-labelledby="rank-h">
