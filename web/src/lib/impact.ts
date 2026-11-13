@@ -9,7 +9,7 @@ export function peoplePer1000ToReach(value: number | null, goal: number | null):
   const gap = goal - value;
   if (gap <= 0) return 0;
   // Round to 1 decimal first so float noise (e.g. 5.7000000000000002 * 10) cannot tip ceil over.
-  return Math.ceil(Math.round(gap * 10) / 10 * 10 - 1e-9);
+  return Math.max(0, Math.ceil((Math.round(gap * 10) / 10) * 10 - 1e-9)) + 0;
 }
 
 export type ImpactRow = { indicatorId: number; toTarget: number | null; toNational: number | null };

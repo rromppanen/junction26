@@ -5,8 +5,7 @@ import { peoplePer1000ToReach } from "@/lib/impact";
 export function WhatItTakes({ facts, indicators }: { facts: GapFacts[]; indicators: Indicator[] }) {
   const rows = indicators
     .filter((i) => i.target)
-    .map((ind) => ({ ind, f: facts.find((x) => x.indicatorId === ind.id) }))
-    .filter((r): r is { ind: Indicator; f: GapFacts } => !!r.f && r.f.value !== null && r.f.target !== null);
+    .map((ind) => ({ ind, f: facts.find((x) => x.indicatorId === ind.id) }));
   if (rows.length === 0) return null;
   return (
     <section className="mb-14 print-break" aria-labelledby="wit-h">
@@ -14,13 +13,16 @@ export function WhatItTakes({ facts, indicators }: { facts: GapFacts[]; indicato
       <p className="mb-6 text-sm text-muted">The screening gap in people: how many more of every 1,000 invited need to attend.</p>
       <div className="border-t border-ink">
         {rows.map(({ ind, f }) => {
-          const target = f.target as number;
-          const full = peoplePer1000ToReach(f.value, target);
-          const half = peoplePer1000ToReach(f.value, (f.value as number) + (target - (f.value as number)) / 2);
+          const target = ind.target?.value ?? f?.target ?? null;
+          const value = f?.value ?? null;
+          const full = peoplePer1000ToReach(value, target);
+          const half = value === null || target === null ? null : peoplePer1000ToReach(value, value + (target - value) / 2);
           return (
             <article key={ind.id} className="print-break border-b border-rule py-5">
               <h3 className="font-semibold leading-snug">{ind.nameEn}</h3>
-              {full === 0 ? (
+              {full === null || half === null ? (
+                <p className="mt-2 text-sm text-muted">No data for this year.</p>
+              ) : full === 0 ? (
                 <p className="mt-2 text-ahead">Already at or above the {target}% target.</p>
               ) : (
                 <ul className="mt-2 space-y-1 font-serif text-lg leading-snug">

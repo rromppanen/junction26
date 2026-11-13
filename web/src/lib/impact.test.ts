@@ -14,6 +14,11 @@ describe("peoplePer1000ToReach", () => {
   it("is 0 when already reached", () => {
     expect(peoplePer1000ToReach(85, 80)).toBe(0);
   });
+  it("never returns -0 for tiny or zero gaps", () => {
+    expect(Object.is(peoplePer1000ToReach(80, 80), 0)).toBe(true);
+    expect(Object.is(peoplePer1000ToReach(80.04, 80), 0)).toBe(true);
+    expect(Object.is(peoplePer1000ToReach(79.96, 80), 0)).toBe(true);
+  });
   it("is null on missing input", () => {
     expect(peoplePer1000ToReach(null, 80)).toBeNull();
     expect(peoplePer1000ToReach(70, null)).toBeNull();

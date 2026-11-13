@@ -44,4 +44,10 @@ describe("validateBrief", () => {
     const b = valid(); b.recommendations.pop();
     expect(validateBrief(b, facts, known).join()).toMatch(/exactly 3/);
   });
+  it("accepts impact numbers only when passed as extra", () => {
+    const b = valid();
+    b.finding = "About 57 more of every 1,000 invited need to attend.";
+    expect(validateBrief(b, facts, known).join()).toMatch(/57/);
+    expect(validateBrief(b, facts, known, [57])).toEqual([]);
+  });
 });

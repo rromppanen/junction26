@@ -20,6 +20,7 @@ function isExempt(raw: string, n: number): boolean {
   if (isInt && n >= 2019 && n <= 2035) return true;
   if (isInt && n >= 1 && n <= 5) return true;
   if (/^3[.,][1-5]$/.test(raw)) return true;
+  if (raw === "1,000" || raw === "1000" || raw === "1 000") return true; // "per 1,000 invited"
   return false;
 }
 

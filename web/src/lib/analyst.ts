@@ -150,6 +150,14 @@ export function fallbackBrief(input: AnalystInput): Brief {
     parts.push(`This sits in the ${stage} stage of the cancer pathway.`);
     finding = parts.join(" ");
   }
+  const biggest = impactFacts(facts)
+    .filter((r) => r.toTarget !== null && r.toTarget > 0)
+    .sort((a, b) => (b.toTarget as number) - (a.toTarget as number))[0];
+  if (biggest) {
+    const bi = indicators.find((i) => i.id === biggest.indicatorId);
+    const t = facts.find((f) => f.indicatorId === biggest.indicatorId)?.target;
+    if (bi) finding += ` The largest screening gap is ${bi.nameEn}: about ${biggest.toTarget} more of every 1,000 invited people would need to attend to reach the ${t}% target.`;
+  }
 
   return {
     headline,
