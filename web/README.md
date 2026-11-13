@@ -1,10 +1,10 @@
 # Care Equity Lab
 
-A working research prototype for the [adaptive cancer equity analyst](../docs/idea.md). The app demonstrates a connected workflow: inspect a dataset, compare population groups, locate measured pathway transitions, review evidence, save an improvement action, and compare subsequent reporting periods.
+A four-step prototype: **Upload → Prepare → Analyse → Recommend**. Each step has a separate component and an input/output contract so teammates can improve it independently. See [workflow ownership](src/components/workflow/README.md).
 
-## Run locally
+## Run
 
-Use Node 24 and npm:
+Use Node 24:
 
 ```bash
 cd web
@@ -12,34 +12,34 @@ npm ci
 npm run dev
 ```
 
-Open the printed localhost URL. If port 3000 is occupied, use `npm run dev -- --port 3001`. Stop with Ctrl+C.
+Open the printed localhost URL. If port 3000 is occupied, use `npm run dev -- --port 3001`. Stop with Ctrl+C. For a production build, run `npm run build` then `npm start`.
 
-No credentials are needed for the public-data walkthrough. For a production build, use `npm run build` followed by `npm start`.
+## Walkthrough
 
-## Walk through the demo
+1. **Upload:** choose a public aggregate cervical-screening CSV, or use the bundled public demo. Download an example CSV from this screen.
+2. **Prepare:** check the column mapping and confirm population/count definitions. Invalid counts or duplicate groups block progression.
+3. **Analyse:** select a population dimension, year, cohort and measure. Run the analysis, then select a group for recommendations. Changed settings require a new run.
+4. **Recommend:** read the finding, measured pathway interpretation, proposed actions and supporting sources. Download the result as JSON or go back to rerun a comparison.
 
-1. Open **Your data** and choose **Analyse public dataset**.
-2. Compare language, education, birthplace, age or region. Change the reporting period and switch between participation and follow-up.
-3. Open **Locate the gap**. Read the measured transition and the competing, unmeasured explanations.
-4. Open **Review evidence**. Each source links to the original report or guideline and states its limits.
-5. Open **Plan an action**, generate a brief, and save a proposal to the action register.
-6. Open **Monitor change**, compare years, and record an owner, status and implementation notes. Reload to verify local action persistence.
-7. Export the report as JSON, including calculations, provenance, sources, brief mode, and saved actions.
+There is no dashboard, action register or monitoring screen. Refreshing clears the in-memory analysis; download results to retain them. Uploaded files stay in the current browser tab. There is no account or shared storage.
 
-The interface and counts work offline after loading, except optional AI, external source links and optional web fonts. Actions are saved in this browser's local storage; there is no shared backend or account. Uploaded datasets remain in memory in the current tab and must be reimported after a reload. Export to retain or share the current analysis.
+## Supported data
 
-## First public source
+This MVP accepts public aggregate cervical-screening counts, not arbitrary clinical studies or confidential patient records. CSV imports support UTF-8, comma or semicolon delimiters, quoted values, up to 1 MB, 5,000 rows and 30 columns.
 
-The bundled snapshot contains **240 factual rows across 25 dimension/year slices**, extracted from the [Finnish Cancer Registry's cervical-screening annual statistics](https://stats.cancerregistry.fi/joukkistilastot/kohtu.html), published 20 May 2026. It covers 2020–2024.
+Required fields are `year`, `group`, `invited` and `attended`. Optional fields are `dimension`, `cohort`, and paired `referred` / `completed` counts. The preparation screen suggests aliases and lets the user change the mapping; these are deterministic header suggestions, not model-based semantic inference.
+
+Counts must be non-negative integers and satisfy `completed ≤ referred ≤ attended ≤ invited` when supplied. Empty paired counts mean follow-up is unavailable, not zero. Duplicate keys are rejected. A supplied `All groups` row must reconcile with a complete disjoint partition. Missing dimension/cohort fields use the defaults stated on the preparation screen.
+
+The bundled snapshot contains 240 rows across five dimensions and five years, extracted from the [Finnish Cancer Registry cervical-screening report](https://stats.cancerregistry.fi/joukkistilastot/kohtu.html), published 20 May 2026:
 
 - Language, education and birthplace tables pool routine and risk-group screening.
 - Age and region tables contain routine age-based screening only.
-- Tables are separate marginal views: they cannot be joined into individual or intersectional records.
-- Unknown categories are retained. Language is not nationality, and birthplace is not ethnicity.
-- Counts are invitation/selection, attendance, referral and **recorded** examination; they are not survival or waiting-time data.
-- The original report's follow-up cutoff and incomplete reporting matter, especially for newer periods.
+- Tables are separate marginal views; they cannot be joined into individual records.
+- Unknown categories remain unchanged. Language is not nationality; birthplace is not ethnicity.
+- Recorded examination completion does not measure individual waiting times. Incomplete reports or ongoing follow-up can resemble missing care.
 
-The snapshot and downloadable CSV are generated by `scripts/ingest.py`. They must not be manually edited. The manifest records publisher, URL, retrieval time, original HTML checksum and adapter version. To refresh intentionally:
+The generated snapshot and downloadable CSV are owned by `scripts/ingest.py`, not manually edited. The source manifest records the URL, retrieval time, HTML checksum and adapter version. To regenerate deliberately:
 
 ```bash
 curl -fL https://stats.cancerregistry.fi/joukkistilastot/kohtu.html -o /tmp/kohtu.html
@@ -47,57 +47,34 @@ npm run ingest -- /tmp/kohtu.html
 npm test
 ```
 
-Review source definitions and terms before redistributing refreshed extracts. The adapter fails when expected tables, count constraints, coverage or published totals no longer reconcile. It does not silently invent missing values. Only factual count extracts are included, with attribution; original report HTML and PDFs are not copied into the repository.
+Review the publisher's definitions and reuse terms before redistributing refreshed extracts. Original HTML and PDFs are not included in the repository.
 
-## What the analysis establishes
+## Analysis and evidence limits
 
-The engine compares a group with the remaining disjoint groups in the same dimension, cohort and period, weighted by the relevant denominators. It excludes overall totals from this calculation. A **review signal** is a descriptive difference of at least five percentage points below the remainder, with at least 30 observations in both denominators. These are explicit prototype triage settings, not clinical standards or statistical significance tests.
+The engine compares each group against the remaining disjoint groups in the same dimension/cohort/year, weighted by actual denominators. A review signal means at least five percentage points below the remainder, with at least 30 observations in both denominators. This is descriptive triage, not a clinical standard, significance test or causal estimate.
 
-The app shows rates, differences and illustrative 95% Wilson binomial intervals. It does not perform hypothesis testing, adjust for confounding or claim causation. A low recorded follow-up rate could reflect reporting gaps, ongoing follow-up or access problems. Recommendations start with that distinction and never promise a survival benefit.
+Source locators and illustrative Wilson binomial intervals are available under result details. Missing or insufficient comparisons do not establish a pathway gap. The app does not adjust for confounding or perform a systematic literature review. Actions come from reviewed guideline summaries in `src/data/evidence.ts`; recommendations require human assessment of applicability. Proposed planning windows are not clinical targets.
 
-The evidence library in `src/data/evidence.ts` contains source summaries from the official screening report, cervical-screening quality handbook and national strategy. It is a limited guideline library, not a systematic review, autonomous literature search or independent GRADE assessment. Proposed planning windows are clearly separated from clinical targets.
+Screening participation primarily relates to Goal 2. Full challenge coverage still needs a validated direct Goal 3 measure such as survival, mortality or timely treatment.
 
-**Challenge limitation:** screening participation is primarily a Goal 2 measure. This MVP supports pathway investigation but does not directly measure Goal 3 survival, mortality or treatment-start timeliness. Full competition coverage still needs a validated Goal 3 indicator.
+## Optional AI interpretation
 
-## CSV imports and subsequent periods
+The recommendation step automatically requests an interpretation for the official demo dataset. Without credentials it returns a clearly labelled source-based template. To enable live drafting, set `GEMINI_API_KEY` in ignored `web/.env.local` and restart. `GEMINI_MODEL` optionally overrides the default `gemini-2.5-flash`. Never commit keys.
 
-Download `/data/screening.csv` from the data screen as a template. Imports support UTF-8 CSV, comma or semicolon delimiters, quoted values, up to 1 MB, 5,000 rows and 30 columns. This MVP accepts **public aggregate cervical-screening counts**, not arbitrary clinical studies or confidential patient records.
+Only official public facts and source summaries are sent to the provider. Uploaded data use local templates and are never submitted. The server recomputes official findings, validates output and returns a template on timeout, service failure or invalid output. AI and cached AI drafts are labelled. Numerical findings and proposed actions remain deterministic; source-ID/schema checks do not prove medical correctness or source entailment.
 
-Required fields: `year`, `group`, `invited`, `attended`. Optional: `dimension`, `cohort`, and the paired fields `referred`, `completed`. Empty paired counts mean follow-up is unavailable, not zero. Counts must be non-negative integers and satisfy `completed ≤ referred ≤ attended ≤ invited` when present. A supplied `All groups` row must reconcile with a complete disjoint partition. Duplicate group/period keys are rejected.
-
-Header aliases provide provisional mapping suggestions; the uploader confirms semantic definitions and comparability before analysis. These suggestions are deterministic, not model-based schema inference. If dimension or cohort is absent, the UI explains the defaults. Published source locators are preserved for official rows; uploaded rows carry their file name, checksum prefix and row number. Registry links provide definitions and guidance for uploads, not verification of uploaded counts.
-
-To add a subsequent period, choose **Add new reporting periods to the current analysis** while confirming a new CSV. It must use existing dimension/cohort definitions and new periods; overwrites are rejected. This preserves prior observations and the project's action register. Leaving the option unchecked starts a separate analysis. No scheduled fetching is implemented.
-
-## Optional AI brief
-
-To enable live model drafting, set `GEMINI_API_KEY` in an ignored `web/.env.local` file and restart the server. `GEMINI_MODEL` optionally selects a supported model; the default is `gemini-2.5-flash`. Never commit keys. Select **Use connected AI** before generating the brief.
-
-The server recomputes the selected finding from its official snapshot; it never accepts arbitrary uploaded facts for model submission. Only public facts and reviewed summaries are sent to the provider. Uploaded data remain in the browser and use a deterministic template.
-
-Without a key, on timeout/provider failure, or if response validation fails, the app returns a labelled template. Valid AI drafts are labelled as needing human review; subsequent cached responses are labelled and timestamped. Numerical UI values always come from the calculation engine. Response validation checks schema, source IDs and certain unsupported claims; it does **not** prove source entailment or medical correctness. Recommendation actions themselves come from the reviewed templates.
-
-Live model generation needs credentials and provider access. Automated tests exercise the integration with mocked responses, including failure, fabricated numbers and cache behavior; they do not establish live provider quality. The local route has bounded input and concurrency, but is not a production multi-user service. Add authentication, rate limiting and deployment controls before broader hosting.
+Live provider quality has not been verified with credentials. Integration tests use mocked provider responses. This is a local prototype, not a production multi-user service.
 
 ## Verification
 
 ```bash
-npm test                  # Source reconciliation, calculations, CSV and model boundary
-npm run check             # TypeScript
-npm run build             # Production build, including framework type checks
+npm test
+npm run check
 npx playwright install chromium
-npm run test:e2e          # Browser workflow, imports, monitoring, mobile, endpoint
+npm run test:e2e
+npm run build
 ```
 
-Browser tests launch a local server on port 3100. The tests use separately labelled synthetic data only for boundary/import cases; the public-data walkthrough uses the real snapshot. Browser artifacts and build output are ignored.
+Browser tests start a server on port 3100. They cover the public-data flow, CSV mapping, invalid input, stale-result prevention, insufficient follow-up, optional model failure, export and mobile layout. Synthetic boundary-test data are separate from the real demo snapshot. Generated artifacts and browser output are ignored.
 
-## Code ownership
-
-- `src/lib/analysis.ts`: validation, calculations, interpretation templates and recommendation selection.
-- `src/lib/csv.ts`: CSV parsing and confirmed mapping.
-- `src/data/evidence.ts`: reviewed source summaries.
-- `scripts/ingest.py`: authoritative owner of `src/data/screening.json` and `public/data/screening.csv`.
-- `src/app/api/brief/route.ts`: optional server-side model integration.
-- `src/app/page.tsx`: workflow, local action register and report export.
-
-The proposed broader architecture remains in the design documents. This implementation uses Next.js/TypeScript to keep the first deployable app in one existing JavaScript toolchain.
+If a dev server already owns this checkout, reuse it without stopping it: `PLAYWRIGHT_BASE_URL=http://127.0.0.1:3001 npm run test:e2e` (use its actual URL).

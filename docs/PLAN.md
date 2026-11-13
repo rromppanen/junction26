@@ -43,19 +43,26 @@ Mark the ones we actually go to and who goes.
 
 | Person | Area | Current task | Status |
 | --- | --- | --- | --- |
-| _TBD_ | | | |
+| Unassigned | Upload | Improve parsing, supported formats and provenance in `UploadStep.tsx` | Step implemented; ready for owner |
+| Unassigned | Prepare | Improve semantic mapping and validation in `PrepareStep.tsx` | Step implemented; ready for owner |
+| Unassigned | Analyse | Improve methods and uncertainty in `AnalyseStep.tsx` and the calculation engine | Step implemented; ready for owner |
+| Unassigned | Recommend | Improve evidence appraisal and applicability in `RecommendStep.tsx` and the evidence/brief pipeline | Step implemented; ready for owner |
+| Unassigned | Integration | Own shared contracts, shell and integrated checks | Coordinate shared-file edits |
+
+See [workflow ownership](../web/src/components/workflow/README.md) for file boundaries, contracts and acceptance concerns. Assign names here before concurrent changes to shared libraries.
 
 ## MVP scope
 
 - Active implementation: a local Next.js/TypeScript prototype in `web/`, using the existing available JavaScript toolchain. This replaces the proposed Python UI for this increment; the product workflow in `idea.md` remains the authority for behavior.
-- First source: Finnish Cancer Registry cervical-screening report. Extract public aggregate screening-chain counts for 2020–2024 with distinct cohort/dimension metadata. Demonstrate import/mapping, descriptive disparities, measured transitions, reviewed evidence, an action register and subsequent-year comparisons.
-- Acceptance: source-backed demo data, recalculation on dimension/year/group changes, validated CSV import, explicit unresolved causes, traceable recommendation evidence, optional server-side model drafting with a labelled deterministic fallback, local action persistence and JSON export. Verify numerical/CSV boundaries with tests and build/type checks; exercise the UI if browser tooling is available.
+- First source: Finnish Cancer Registry cervical-screening report. Public aggregate screening-chain counts for 2020–2024 with distinct cohort/dimension metadata.
+- Current flow: Upload → Prepare → Analyse → Recommend. No dashboard, sidebar, action register or monitoring screen. Separate components let one teammate own each step; the shell passes typed outputs between them.
+- Acceptance: source-backed demo data, confirmed CSV mapping, explicit analysis execution, invalidation when comparison settings change, no invented causes, sourced recommendations and JSON download. The optional model interpretation returns a labelled template when unavailable; uploaded records stay in the browser.
 - Scope limit: screening/process measures are not survival outcomes or measured treatment-start times. Goal 3 context must be distinguished from a directly measured Goal 3 outcome. No confidential records, causal guarantees, or general-purpose dataset support.
-- Must have for the demo: import/mapping → population comparisons → measured transition → evidence → action plan → repeat-period monitoring. Implemented in `web/`.
-- The "wow" moment: switch the population dimension and follow a real disparity through to a sourced action, then append a reporting period without losing the action register.
+- Must have for the demo: complete all four steps with either the public demo or a valid mapped CSV. Reject invalid input before analysis and abstain when a comparison is unsupported.
+- Demo focus: follow one real population disparity from confirmed data through calculated findings to a sourced proposed action.
 - Riskiest part: overclaiming from incomplete follow-up or AI prose. The app labels descriptive results and unresolved causes; optional model failure returns a labelled deterministic template. Recommendation actions use reviewed guideline summaries.
-- Out of scope: confidential/patient-level data, arbitrary study formats, autonomous causal identification, live systematic reviews, shared cloud persistence and deployment. Live provider generation requires credentials and remains separate from mocked integration verification.
-- Verified on 13 November: 19 unit/integration tests, 5 browser tests, TypeScript and production build passed. Browser coverage includes the official-data workflow, renamed CSV headers, missing follow-up, invalid counts, local action persistence, report download, mobile layout, endpoint validation and appending a new reporting period. Desktop/mobile screenshots were inspected locally. Dependency installation reported no known vulnerabilities. Live model-provider generation was not verified with credentials.
+- Out of scope for this simplified prototype: monitoring, action persistence, confidential/patient-level data, arbitrary study formats, autonomous causal identification, live systematic reviews, shared cloud storage and deployment. Live provider generation needs credentials and remains separate from mocked integration verification.
+- Simplified-flow verification: 19 unit/integration tests and 6 browser tests pass, including manual mapping retention, stale-result prevention, insufficient-data abstention, provider failure and mobile layout. TypeScript and production build pass; desktop/mobile screens were inspected. Browser checks reuse the existing local dev server without replacing it. Live provider responses remain unverified with credentials.
 
 ## Submission checklist
 

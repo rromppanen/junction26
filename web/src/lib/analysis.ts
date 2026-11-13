@@ -80,6 +80,16 @@ export function recommend(finding: Finding): Action[] {
 
 export type Draft = { headline: string; interpretation: string; nextQuestion: string; evidenceIds: string[] };
 export function fallbackDraft(finding: Finding): Draft {
+  if (finding.status === "insufficient") return {
+    headline: "More comparable data are needed",
+    interpretation: "This selection has insufficient comparable counts. No pathway gap or cause can be established from this comparison.",
+    nextQuestion: "Can complete paired counts and adequate group denominators be supplied?", evidenceIds: ["report", "quality"],
+  };
+  if (finding.status === "within") return {
+    headline: "No difference crosses the review threshold",
+    interpretation: "This group does not fall below the remaining groups by the descriptive review threshold. This does not establish equivalence or rule out other disparities.",
+    nextQuestion: "Are group definitions and reporting completeness comparable in the next period?", evidenceIds: ["report", "quality"],
+  };
   return { headline: finding.status === "review" ? "A measured pathway difference warrants review" : "Keep the conclusion proportionate to the evidence",
     interpretation: finding.metric === "participation" ? "The counts locate an observed difference between invitation and screening. They do not establish why participation differs or measure cancer survival." : "The counts locate a difference between referral and recorded examination. Incomplete reporting or follow-up can resemble an access problem; waiting times are not measured.",
     nextQuestion: finding.metric === "participation" ? "Do invitation delivery, booking access or source completeness differ between the groups?" : "Have examinations occurred but not been reported, or are referrals still unresolved?", evidenceIds: ["report", "quality"] };

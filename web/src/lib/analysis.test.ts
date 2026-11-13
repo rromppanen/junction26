@@ -42,12 +42,14 @@ describe("analysis limits", () => {
     const result = analyse([sample("A", { referred: null, completed: null }), sample("B")], 2024, "Test", "Synthetic test cohort", "followup");
     expect(result.every(f => f.status === "insufficient")).toBe(true);
     expect(result.find(f => f.row.group === "A")?.gap).toBeNull();
+    expect(fallbackDraft(result.find(f => f.row.group === "A")!).interpretation).toContain("No pathway gap or cause can be established");
   });
   it("does not recommend a service change when there is no disparity", () => {
     const finding = analyse([sample("A"), sample("B")], 2024, "Test", "Synthetic test cohort", "participation")[0];
     expect(finding.gap).toBe(0);
     expect(finding.status).toBe("within");
     expect(recommend(finding)[0].id).toBe("monitor");
+    expect(fallbackDraft(finding).interpretation).toContain("does not fall below");
   });
   it("does not flag a small extreme group or a single group", () => {
     const small = analyse([sample("A", { invited: 10, attended: 1, referred: 0, completed: 0 }), sample("B")], 2024, "Test", "Synthetic test cohort", "participation");
