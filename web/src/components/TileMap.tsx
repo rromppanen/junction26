@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { GapFacts, Region } from "@/lib/types";
+import { ON_PAR_THRESHOLD } from "@/lib/gap";
 import { STATUS_CLASSES, fmt, shortName } from "./format";
 
 // Rough geographic grid (col, row) for Finland's wellbeing services counties, matched by name prefix.
@@ -87,19 +88,21 @@ export function TileMap({
           ))}
         </div>
       )}
-      <MapLegend />
+      <MapLegend unit={unit === "%" ? "points" : unit} />
     </div>
   );
 }
 
-export function MapLegend() {
+/** Colour key, worded with the same threshold the ranking uses (ON_PAR_THRESHOLD). */
+export function MapLegend({ unit = "points" }: { unit?: string }) {
+  const t = `${ON_PAR_THRESHOLD} ${unit}`;
   return (
-      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-        <Legend cls="bg-behind" label="Behind the whole country" />
-        <Legend cls="bg-rule" label="About level" />
-        <Legend cls="bg-ahead" label="Ahead" />
-        <Legend cls="border border-dashed border-par" label="No figure" />
-      </div>
+    <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+      <Legend cls="bg-behind" label={`More than ${t} behind Finland`} />
+      <Legend cls="bg-rule" label={`Within ${t}`} />
+      <Legend cls="bg-ahead" label={`More than ${t} ahead`} />
+      <Legend cls="border border-dashed border-par" label="No figure" />
+    </div>
   );
 }
 
