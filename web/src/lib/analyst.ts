@@ -3,6 +3,10 @@ import { EVIDENCE } from "@/data/evidence";
 import type { Brief, GapFacts, Indicator, PathwayStage, Recommendation } from "./types";
 import { validateBrief } from "./validate";
 
+// Light model for development; set GEMINI_MODEL (e.g. gemini-3.8-flash) for the real demo.
+// gemini-2.5-flash is no longer offered to new API keys.
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
+
 export type AnalystInput = { regionName: string; facts: GapFacts[]; indicators: Indicator[] };
 
 export function knownSourceIds(indicators: Indicator[]): string[] {
@@ -234,7 +238,7 @@ export async function generateBrief(input: AnalystInput): Promise<Brief> {
     const ask = async (errors?: string[]): Promise<Brief> => {
       const res = await withTimeout(
         ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: GEMINI_MODEL,
           contents: buildPrompt(input, allowed, errors),
           config: { responseMimeType: "application/json", responseSchema: RESPONSE_SCHEMA },
         }),
@@ -246,12 +250,17 @@ export async function generateBrief(input: AnalystInput): Promise<Brief> {
     let brief = await ask();
     let errors = validateBrief(brief, input.facts, allowed);
     if (errors.length) {
+      console.warn("[analyst] brief rejected, retrying:", errors);
       brief = await ask(errors);
       errors = validateBrief(brief, input.facts, allowed);
-      if (errors.length) return fallbackBrief(input);
+      if (errors.length) {
+        console.warn("[analyst] retry rejected, using fallback:", errors);
+        return fallbackBrief(input);
+      }
     }
     return brief;
-  } catch {
+  } catch (err) {
+    console.warn("[analyst] Gemini call failed, using fallback:", err instanceof Error ? err.message : err);
     return fallbackBrief(input);
   }
 }
