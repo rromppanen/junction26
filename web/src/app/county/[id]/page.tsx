@@ -8,7 +8,8 @@ import { PeerTwin } from "@/components/PeerTwin";
 import { TrendChart } from "@/components/TrendChart";
 import { diagnosePathway } from "@/lib/fingerprint";
 import { PathwayFingerprint } from "@/components/PathwayFingerprint";
-import { WhatItTakes } from "@/components/WhatItTakes";
+import { ScenarioTool, type ScenarioProgramme } from "@/components/ScenarioTool";
+import { SCENARIO_DEFAULTS } from "@/data/scenarioDefaults";
 import { LeftBehind } from "@/components/LeftBehind";
 import { MEASURES } from "@/data/measureKit";
 import { MeasureKit } from "@/components/MeasureKit";
@@ -21,7 +22,7 @@ import { STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, host } from "@/components/format
 import type { GapFacts, PathwayStage } from "@/lib/types";
 import {
   ArrowLeft, BookOpen, CalendarClock, FileText, Globe, Handshake, LineChart, Link2, ListChecks, Route, Ruler,
-  Sparkles, Target, TriangleAlert, UserRound, Users, type LucideIcon,
+  SlidersHorizontal, Sparkles, Target, TriangleAlert, UserRound, Users, type LucideIcon,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -87,8 +88,25 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
   const screening = facts.filter((f) => f.target !== null && f.value !== null);
   const meets = screening.filter((f) => (f.gapToTarget ?? -1) >= 0).length;
 
+  const scenarioProgrammes: ScenarioProgramme[] = INDICATORS.flatMap((ind) => {
+    const f = facts.find((x) => x.indicatorId === ind.id);
+    if (!ind.target || !f || f.value === null) return [];
+    const d = SCENARIO_DEFAULTS[ind.id];
+    return [{
+      indicatorId: ind.id,
+      name: ind.nameEn.match(/^(\w+) cancer screening/i)?.[1] ?? ind.nameEn,
+      today: f.value,
+      national: f.national,
+      target: ind.target.value,
+      bestQuartile: f.bestQuartile,
+      costPerScreen: d?.costPerScreen ?? null,
+      cancersPer1000Screened: d?.cancersPer1000Screened ?? null,
+    }];
+  });
+
   const parts: { id: string; icon: LucideIcon; label: string }[] = [
     { id: "path", icon: Route, label: "Pathway" },
+    { id: "what-if", icon: SlidersHorizontal, label: "What if" },
     { id: "rec", icon: ListChecks, label: "Next steps" },
     { id: "lb", icon: Users, label: "Left behind" },
     ...(peer && practices ? [{ id: "peer", icon: Handshake, label: "Learn from" }] : []),
@@ -147,9 +165,10 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         <More label="What the pathway shows" className="mt-3">
           {stageNote} Referral and diagnosis have no public county figures, so nobody can see a gap there yet.
         </More>
-        <div className="mt-8">
-          <WhatItTakes facts={facts} indicators={INDICATORS} />
-        </div>
+      </Part>
+
+      <Part id="what-if" icon={SlidersHorizontal} title={`What if ${name} raised screening?`}>
+        <ScenarioTool programmes={scenarioProgrammes} />
       </Part>
 
       <Part {...part("rec")} title={`What ${name} could do next`}>
