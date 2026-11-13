@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getLiveContext, toSnippets } from "./context";
+import { getLiveContext, getPeerPractices, peerQuery, toSnippets } from "./context";
 
 const result = (over: object = {}) => ({
   url: "https://example.fi/syopa",
@@ -65,5 +65,44 @@ describe("getLiveContext", () => {
     expect(b).toBe(a);
     expect(f).toHaveBeenCalledTimes(1);
     expect(f.mock.calls[0][1].headers.Authorization).toBe("Bearer k");
+  });
+});
+
+describe("getPeerPractices", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+  const ind = { id: 3621, nameFi: "Rintasyövän seulontoihin osallistuminen (mammografia)", stage: "detection" } as never;
+
+  it("reports not-configured without a key and makes no request", async () => {
+    vi.stubEnv("CONTEXT_DEV_API_KEY", "");
+    const f = vi.fn();
+    vi.stubGlobal("fetch", f);
+    expect((await getPeerPractices("Pohjois-Savon hyvinvointialue", ind)).status).toBe("not-configured");
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it("returns peer: ids, caches, and never throws", async () => {
+    vi.stubEnv("CONTEXT_DEV_API_KEY", "k");
+    const f = vi.fn().mockResolvedValue(new Response(JSON.stringify({ results: [result()] })));
+    vi.stubGlobal("fetch", f);
+    const a = await getPeerPractices("TwinA", ind);
+    expect(a.snippets[0].id).toBe("peer:1");
+    expect(JSON.parse(f.mock.calls[0][1].body).query).toContain("seulonta kutsu muistutus");
+    expect(await getPeerPractices("TwinA", ind)).toBe(a);
+    expect(f).toHaveBeenCalledTimes(1);
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("boom")));
+    expect(await getPeerPractices("TwinB", ind)).toMatchObject({ status: "error", snippets: [] });
+  });
+});
+
+describe("peerQuery", () => {
+  it("differs by indicator stage", () => {
+    const det = peerQuery("T", { nameFi: "X", stage: "detection" });
+    const out = peerQuery("T", { nameFi: "X", stage: "outcome" });
+    expect(det).toContain("kutsu muistutus");
+    expect(out).toContain("hoitoketju");
+    expect(out).not.toContain("kutsu muistutus");
   });
 });

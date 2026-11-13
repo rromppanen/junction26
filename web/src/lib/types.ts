@@ -22,7 +22,11 @@ export type Region = {
   id: number; // Sotkanet region id
   name: string; // Finnish name, e.g. "Pohjois-Karjalan hyvinvointialue"
   isNational: boolean; // true for "Koko maa"
+  kind: RegionKind; // Sotkanet category: MAA → national, HYVINVOINTIALUE → county, KUNTA → municipality
+  parentId: number | null; // for municipalities: the county (HYVINVOINTIALUE) id from Sotkanet memberOf; else null
 };
+
+export type RegionKind = "national" | "county" | "municipality";
 
 export type IndicatorValue = {
   indicatorId: number;

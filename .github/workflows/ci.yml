@@ -36,6 +36,11 @@ jobs:
       - name: Install
         run: npm ci
 
+      # The data snapshot is generated, not committed: fetch it from the
+      # Sotkanet API once here (retries built in), then lint/test/build use it.
+      - name: Fetch data (Sotkanet)
+        run: npm run data
+
       - name: Lint
         run: npm run lint
 
@@ -43,7 +48,7 @@ jobs:
         run: npm test
 
       # Also type-checks. No API keys here: the app must build on the
-      # snapshot data and the rule-based fallback alone.
+      # fetched snapshot data and the rule-based fallback alone.
       - name: Build
         run: npm run build
 

@@ -48,7 +48,11 @@ export default async function RadarPage({
   const sp = await searchParams;
   const ds = await getDataset();
   const ind = (sp.ind && indicatorBySlug(sp.ind)) || indicatorBySlug("breast-screening") || INDICATORS[0];
-  const years = [...new Set(ds.values.filter((v) => v.indicatorId === ind.id).map((v) => v.year))].sort((a, b) => a - b);
+  // Years come from county and national rows only; municipality rows never change the radar.
+  const nonMunicipal = new Set(ds.regions.filter((r) => r.kind !== "municipality").map((r) => r.id));
+  const years = [
+    ...new Set(ds.values.filter((v) => v.indicatorId === ind.id && nonMunicipal.has(v.regionId)).map((v) => v.year)),
+  ].sort((a, b) => a - b);
   const latest = latestYear(ds, ind);
   const reqYear = sp.year ? Number(sp.year) : NaN;
   const year = years.includes(reqYear) ? reqYear : latest;

@@ -5,8 +5,9 @@ export const ON_PAR_THRESHOLD = 2;
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-function nationalIds(ds: Dataset): Set<number> {
-  return new Set(ds.regions.filter((r) => r.isNational).map((r) => r.id));
+/** Wellbeing services counties only: the dataset also holds the national row and municipalities. */
+function countyIds(ds: Dataset): Set<number> {
+  return new Set(ds.regions.filter((r) => r.kind === "county").map((r) => r.id));
 }
 
 function valueOf(ds: Dataset, indicatorId: number, regionId: number, year: number): number | null {
@@ -14,12 +15,12 @@ function valueOf(ds: Dataset, indicatorId: number, regionId: number, year: numbe
   return v ? v.value : null;
 }
 
-/** Latest year with at least one county (non-national) value for the indicator. */
+/** Latest year with at least one county value for the indicator (national and municipality rows ignored). */
 export function latestYear(ds: Dataset, ind: Indicator): number {
-  const nat = nationalIds(ds);
+  const counties = countyIds(ds);
   let max = -Infinity;
   for (const v of ds.values) {
-    if (v.indicatorId === ind.id && !nat.has(v.regionId) && v.year > max) max = v.year;
+    if (v.indicatorId === ind.id && counties.has(v.regionId) && v.year > max) max = v.year;
   }
   return Number.isFinite(max) ? max : NaN;
 }
@@ -34,9 +35,9 @@ function percentile(xs: number[], p: number): number {
 }
 
 function countyValues(ds: Dataset, ind: Indicator, year: number): { regionId: number; value: number }[] {
-  const nat = nationalIds(ds);
+  const ids = countyIds(ds);
   return ds.values
-    .filter((v) => v.indicatorId === ind.id && v.year === year && !nat.has(v.regionId))
+    .filter((v) => v.indicatorId === ind.id && v.year === year && ids.has(v.regionId))
     .map((v) => ({ regionId: v.regionId, value: v.value }));
 }
 
@@ -84,10 +85,10 @@ export function computeGap(ds: Dataset, ind: Indicator, regionId: number, year: 
   };
 }
 
-/** GapFacts for every non-national region, best first, no-data last. */
+/** GapFacts for every county (no national row, no municipalities), best first, no-data last. */
 export function rankCounties(ds: Dataset, ind: Indicator, year: number): GapFacts[] {
   return ds.regions
-    .filter((r) => !r.isNational)
+    .filter((r) => r.kind === "county")
     .map((r) => computeGap(ds, ind, r.id, year))
     .sort((a, b) => (a.rank ?? Infinity) - (b.rank ?? Infinity));
 }

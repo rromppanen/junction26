@@ -14,6 +14,8 @@ export type LiveContext = {
   fetchedAt: string | null; // ISO timestamp of the Context.dev call
 };
 
+import type { Indicator } from "./types";
+
 const ENDPOINT = "https://api.context.dev/v1/web/search";
 const TTL_MS = 24 * 60 * 60 * 1000;
 const TIMEOUT_MS = 8_000;
@@ -44,7 +46,7 @@ function clean(s: string): string {
 }
 
 /** Turns a Context.dev /web/search response into citable snippets. Pure; exported for tests. */
-export function toSnippets(body: unknown): LiveSnippet[] {
+export function toSnippets(body: unknown, idPrefix = "live"): LiveSnippet[] {
   const results = (body as { results?: SearchResult[] } | null)?.results;
   if (!Array.isArray(results)) return [];
   const out: LiveSnippet[] = [];
@@ -54,18 +56,18 @@ export function toSnippets(body: unknown): LiveSnippet[] {
     const hl = h?.code === "SUCCESS" ? (Array.isArray(h.highlights) ? h.highlights.join(" … ") : h.highlights) : null;
     const text = clean(hl || r.description || "");
     if (!text) continue;
-    out.push({ id: `live:${out.length + 1}`, title: clean(r.title || r.url), url: r.url, text });
+    out.push({ id: `${idPrefix}:${out.length + 1}`, title: clean(r.title || r.url), url: r.url, text });
     if (out.length >= MAX_RESULTS) break;
   }
   return out;
 }
 
-async function fetchLive(regionName: string, apiKey: string): Promise<LiveContext> {
+async function fetchLive(query: string, apiKey: string, idPrefix: string): Promise<LiveContext> {
   const res = await fetch(ENDPOINT, {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      query: buildQuery(regionName),
+      query,
       numResults: MAX_RESULTS + 2,
       country: "fi",
       languages: ["fi", "sv"],
@@ -77,21 +79,37 @@ async function fetchLive(regionName: string, apiKey: string): Promise<LiveContex
     signal: AbortSignal.timeout(TIMEOUT_MS + 2_000),
   });
   if (!res.ok) throw new Error(`Context.dev ${res.status}`);
-  const snippets = toSnippets(await res.json());
+  const snippets = toSnippets(await res.json(), idPrefix);
   return { status: snippets.length ? "ok" : "empty", snippets, fetchedAt: new Date().toISOString() };
 }
 
-/** Never throws: on any failure the brief still renders without live context. */
-export async function getLiveContext(regionName: string): Promise<LiveContext> {
+/** Shared cached, never-throwing lookup. Failures are not cached for 24 h. */
+function cached(key: string, query: string, idPrefix: string): Promise<LiveContext> {
   const apiKey = process.env.CONTEXT_DEV_API_KEY;
-  if (!apiKey) return { status: "not-configured", snippets: [], fetchedAt: null };
-  const hit = cache.get(regionName);
+  if (!apiKey) return Promise.resolve({ status: "not-configured", snippets: [], fetchedAt: null });
+  const hit = cache.get(key);
   if (hit && Date.now() - hit.at < TTL_MS) return hit.value;
-  const value = fetchLive(regionName, apiKey).catch((e) => {
+  const value = fetchLive(query, apiKey, idPrefix).catch((e) => {
     console.warn("[context] live search failed:", e instanceof Error ? e.message : e);
-    cache.delete(regionName); // don't cache failures for 24 h
+    cache.delete(key);
     return { status: "error", snippets: [], fetchedAt: null } satisfies LiveContext;
   });
-  cache.set(regionName, { at: Date.now(), value });
+  cache.set(key, { at: Date.now(), value });
   return value;
+}
+
+/** Never throws: on any failure the brief still renders without live context. */
+export function getLiveContext(regionName: string): Promise<LiveContext> {
+  return cached(regionName, buildQuery(regionName), "live");
+}
+
+/** Public pages from a better-performing peer county about how it runs the programme. Ids are "peer:<n>". */
+export function peerQuery(twinName: string, ind: Pick<Indicator, "nameFi" | "stage">): string {
+  // Screening (detection) is about invitations and reminders; survival (outcome) is about the care pathway.
+  const suffix = ind.stage === "outcome" ? "syöpä hoitoketju hoitoon pääsy" : "seulonta kutsu muistutus";
+  return `"${twinName}" ${ind.nameFi} ${suffix}`;
+}
+
+export function getPeerPractices(twinName: string, ind: Pick<Indicator, "id" | "nameFi" | "stage">): Promise<LiveContext> {
+  return cached(`peer:${twinName}:${ind.id}`, peerQuery(twinName, ind), "peer");
 }

@@ -1,19 +1,23 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDataset } from "@/lib/data";
-import { INDICATORS, indicatorById } from "@/data/indicators";
+import { CONTEXT_INDICATORS, INDICATORS, indicatorById } from "@/data/indicators";
 import { EVIDENCE } from "@/data/evidence";
-import { computeGap, latestYear } from "@/lib/gap";
-import { generateBrief } from "@/lib/analyst";
-import { getLiveContext, type LiveSnippet } from "@/lib/context";
+import { computeGap } from "@/lib/gap";
+import { loadCountyBrief } from "@/lib/countyBrief";
+import type { LiveSnippet } from "@/lib/context";
+import { PeerTwin } from "@/components/PeerTwin";
 import { TrendChart } from "@/components/TrendChart";
+import { diagnosePathway } from "@/lib/fingerprint";
 import { PathwayFingerprint } from "@/components/PathwayFingerprint";
 import { WhatItTakes } from "@/components/WhatItTakes";
+import { LeftBehind } from "@/components/LeftBehind";
+import { MEASURES } from "@/data/measureKit";
+import { MeasureKit } from "@/components/MeasureKit";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
 import { Wordmark } from "@/components/Wordmark";
 import { Colophon } from "@/components/Colophon";
-import { STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, shortName } from "@/components/format";
+import { STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, host } from "@/components/format";
 import type { GapFacts, PathwayStage } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -21,14 +25,15 @@ export const dynamic = "force-dynamic";
 type Source = { id: string; label: string; url: string; detail?: string };
 
 function resolveSource(id: string, live: LiveSnippet[] = []): Source {
-  if (id.startsWith("live:")) {
+  if (id.startsWith("live:") || id.startsWith("peer:")) {
     const s = live.find((l) => l.id === id);
     return s
-      ? { id, label: `Web page: ${s.title}`, url: s.url, detail: s.text }
+      ? { id, label: `${id.startsWith("peer:") ? "Peer county web page" : "Web page"}: ${s.title}`, url: s.url, detail: s.text }
       : { id, label: id, url: "#" };
   }
   if (id.startsWith("sotkanet:")) {
-    const ind = indicatorById(Number(id.slice(9)));
+    const n = Number(id.slice(9));
+    const ind = indicatorById(n) ?? CONTEXT_INDICATORS.find((c) => c.id === n);
     return ind
       ? { id, label: `Sotkanet: ${ind.nameEn}`, url: ind.sourceUrl, detail: ind.nameFi }
       : { id, label: id, url: "https://sotkanet.fi" };
@@ -47,18 +52,13 @@ function resolveSource(id: string, live: LiveSnippet[] = []): Source {
 export default async function CountyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const regionId = Number(id);
-  const ds = await getDataset();
-  const region = ds.regions.find((r) => r.id === regionId && !r.isNational);
-  if (!region) notFound();
-  const nationalRegion = ds.regions.find((r) => r.isNational);
-  const name = shortName(region.name);
+  const loaded = await loadCountyBrief(regionId, "en");
+  if (!loaded) notFound(); // municipalities 404
+  const { ds, region, nationalRegion, name, facts, live, practices, peer, equity, brief } = loaded;
 
-  const facts = INDICATORS.map((ind) => computeGap(ds, ind, regionId, latestYear(ds, ind)));
-  const live = await getLiveContext(region.name);
-  const brief = await generateBrief({ regionName: name, facts, indicators: INDICATORS, live: live.snippets });
-
-  const sourceIds = [...new Set(brief.recommendations.flatMap((r) => r.sources))];
-  const sources = sourceIds.map((s) => resolveSource(s, live.snippets));
+  const citable = [...live.snippets, ...(peer?.snippets ?? [])];
+  const sourceIds = [...new Set([...brief.recommendations.flatMap((r) => r.sources), MEASURES[0].evidenceId])];
+  const sources = sourceIds.map((s) => resolveSource(s, citable));
   const sourceIndex = new Map(sources.map((s, i) => [s.id, i + 1]));
 
   // Best-quartile boundary for every year the indicator has county figures (independent of the county).
@@ -73,12 +73,20 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
 
   const byGemini = brief.generatedBy === "gemini";
   const author = byGemini ? "Gemini" : "the fixed template";
+  const stageLabel = STAGE_LABEL[brief.pathwayStage].toLowerCase();
+  const stageNote =
+    diagnosePathway(facts, INDICATORS).pattern === "none"
+      ? `No stage is behind Finland; the weakest relative stage is ${stageLabel}.`
+      : `The filled stop is ${stageLabel}, where ${author} puts the main break.`;
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
       <nav className="no-print mb-10 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 text-sm">
         <Wordmark />
-        <Link href="/" className="link">Back to the map</Link>
+        <span className="flex gap-x-6">
+          <Link href="/" className="link">Back to the map</Link>
+          <Link href={`/county/${regionId}/memo`} className="link">Hallitusmuistio (FI)</Link>
+        </span>
       </nav>
 
       <header className="mb-10">
@@ -102,7 +110,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         <div className="mt-6 max-w-2xl">
           <PathwayStrip
             active={brief.pathwayStage}
-            note={`The filled stop is ${STAGE_LABEL[brief.pathwayStage].toLowerCase()}, where ${author} puts the main break. Referral and diagnosis have no public county figures, so nobody can see a gap there yet.`}
+            note={`${stageNote} Referral and diagnosis have no public county figures, so nobody can see a gap there yet.`}
           />
         </div>
         <div className="mt-8">
@@ -126,9 +134,9 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
                       <dt className="text-muted">Rests on</dt>
                       <dd className="flex flex-wrap gap-x-3 gap-y-1">
                         {r.sources.map((s) => (
-                          <a key={s} href={`#src-${sourceIndex.get(s)}`} className="link" title={resolveSource(s, live.snippets).label}>
+                          <a key={s} href={`#src-${sourceIndex.get(s)}`} className="link" title={resolveSource(s, citable).label}>
                             [{sourceIndex.get(s)}]{" "}
-                            {s.startsWith("sotkanet:") ? "Sotkanet" : resolveSource(s, live.snippets).label.split(":")[0]}
+                            {s.startsWith("sotkanet:") ? "Sotkanet" : resolveSource(s, citable).label.split(":")[0]}
                           </a>
                         ))}
                       </dd>
@@ -139,6 +147,27 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
             </li>
           ))}
         </ol>
+      </Part>
+
+      <Part id="lb" title={`Who is left behind inside ${name}`}>
+        <LeftBehind equity={equity} name={name} />
+      </Part>
+
+      {peer && practices && (
+        <Part id="peer" title="A county to learn from">
+          <PeerTwin
+            name={name}
+            twinName={peer.twinName}
+            indicator={peer.indicator}
+            countyValue={peer.countyValue}
+            twinValue={peer.twinValue}
+            practices={practices}
+          />
+        </Part>
+      )}
+
+      <Part id="mk" title="Start measuring">
+        <MeasureKit regionId={regionId} sourceNo={sourceIndex.get(MEASURES[0].evidenceId)} />
       </Part>
 
       <Part id="ind" title="The five measures behind this">
@@ -219,7 +248,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
             {live.snippets.map((l) => (
               <li key={l.id} className="print-break">
                 <a href={l.url} target="_blank" rel="noreferrer" className="link font-medium">{l.title}</a>
-                <span className="mt-0.5 block truncate text-xs text-muted">{new URL(l.url).hostname}</span>
+                <span className="mt-0.5 block truncate text-xs text-muted">{host(l.url)}</span>
                 <span className="mt-1.5 block leading-relaxed">{l.text}</span>
               </li>
             ))}
