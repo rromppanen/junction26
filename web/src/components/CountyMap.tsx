@@ -1,7 +1,21 @@
+import type { CSSProperties } from "react";
 import shapes from "@/data/county-shapes.json";
 import type { GapFacts, GapStatus, Region } from "@/lib/types";
 import { MapLegend, TileMap } from "./TileMap";
 import { STATUS_LABEL, fmt, shortName } from "./format";
+
+// Local to this file for now; could move to format.ts. "points" for percentages, the unit otherwise.
+function gapUnit(unit: string): string {
+  return unit === "%" ? "points" : unit;
+}
+
+// The two direct annotations sit in the Gulf of Bothnia, west of Ostrobothnia and south of Lapland's
+// Swedish border, where no county is drawn. Coordinates are in the shape file's units.
+const VIEW = { x: -104, y: -4 };
+const NOTE_RIGHT = 150; // right edge of the note column; Lapland and Pohjois-Pohjanmaa start east of ~200
+const NOTE_TOP = [395, 555]; // upper and lower note; the lower one must end above Pohjanmaa (y ~685)
+
+type Note = { key: string; heading: string; lines: string[]; status: GapStatus; target: number[]; inInset: boolean };
 
 type Shape = { name: string; d: string; label: number[]; bbox: number[] };
 
@@ -48,6 +62,8 @@ export function CountyMap({
     const status: GapStatus = f?.status ?? "no-data";
     return { r, s: BY_NAME.get(r.name)!, status, value: fmt(f?.value, unit) };
   });
+
+  const notes = mapNotes(items.map((it) => ({ ...it, f: facts.get(it.r.id) })), unit);
 
   const area = (it: (typeof items)[number], { showName }: { showName: boolean }) => {
     const callout = showName ? INSET_CALLOUT[it.r.name] : undefined;
@@ -121,27 +137,81 @@ export function CountyMap({
   const pad = 4;
   const capital = items.filter((it) => CAPITAL.has(it.r.name));
 
+  const vw = shapes.width + 4 - VIEW.x;
+  const vh = shapes.height + 8;
+  const pct = (n: number, of: number) => `${(n / of) * 100}%`;
+
   return (
     <div>
-      <svg
-        viewBox={`-4 -4 ${shapes.width + 8} ${shapes.height + 8}`}
-        className="mx-auto block h-auto w-full max-w-[460px]"
-        role="group"
-        aria-label="Map of Finland's wellbeing services counties, coloured by gap to the whole country"
-      >
-        {items.map((it) => area(it, { showName: false }))}
-        <rect
-          x={cx0 - pad}
-          y={cy0 - pad}
-          width={cx1 - cx0 + pad * 2}
-          height={cy1 - cy0 + pad * 2}
-          fill="none"
-          stroke="var(--muted)"
-          strokeWidth={1.5}
-          strokeDasharray="5 4"
-          pointerEvents="none"
-        />
-      </svg>
+      <div className="relative mx-auto max-w-[520px]">
+        <svg
+          viewBox={`${VIEW.x} ${VIEW.y} ${vw} ${vh}`}
+          className="block h-auto w-full"
+          role="group"
+          aria-label="Map of Finland's wellbeing services counties, coloured by gap to the whole country"
+        >
+          {items.map((it) => area(it, { showName: false }))}
+          <rect
+            x={cx0 - pad}
+            y={cy0 - pad}
+            width={cx1 - cx0 + pad * 2}
+            height={cy1 - cy0 + pad * 2}
+            fill="none"
+            stroke="var(--muted)"
+            strokeWidth={1.5}
+            strokeDasharray="5 4"
+            pointerEvents="none"
+          />
+          {notes.map((n, i) => (
+            <g key={n.key} pointerEvents="none" aria-hidden>
+              {/* leaders only where the notes sit on the map (sm and up); on phones the notes go below it */}
+              {/* leader from the end of the note's top rule to a ring round the county's figure */}
+              <polyline
+                className="hidden sm:inline"
+                points={`${NOTE_RIGHT},${NOTE_TOP[i]} ${NOTE_RIGHT + 14},${NOTE_TOP[i]} ${n.target[0]},${n.target[1]}`}
+                fill="none"
+                stroke="var(--surface)"
+                strokeWidth={4}
+              />
+              <polyline
+                className="hidden sm:inline"
+                points={`${NOTE_RIGHT},${NOTE_TOP[i]} ${NOTE_RIGHT + 14},${NOTE_TOP[i]} ${n.target[0]},${n.target[1]}`}
+                fill="none"
+                stroke="var(--ink)"
+                strokeWidth={1.2}
+              />
+              <circle
+                cx={n.target[0]}
+                cy={n.target[1]}
+                r={n.inInset ? 14 : 30}
+                fill="none"
+                stroke="var(--ink)"
+                strokeWidth={2}
+              />
+            </g>
+          ))}
+        </svg>
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:contents">
+        {notes.map((n, i) => (
+          <p
+            key={n.key}
+            className={`border-t-2 pt-1 text-xs leading-[1.25] sm:absolute sm:left-0 sm:top-[var(--note-top)] sm:w-[var(--note-w)] ${
+              n.status === "behind" ? "border-behind" : n.status === "ahead" ? "border-ahead" : "border-ink"
+            }`}
+            style={
+              { "--note-top": pct(NOTE_TOP[i] - VIEW.y, vh), "--note-w": pct(NOTE_RIGHT - VIEW.x, vw) } as CSSProperties
+            }
+          >
+            <span className="block text-muted">{n.heading}</span>
+            {n.lines.map((l, j) => (
+              <span key={j} className={`block ${j === 0 ? "font-narrow text-sm font-semibold sm:text-base" : ""}`}>
+                {l}
+              </span>
+            ))}
+          </p>
+        ))}
+        </div>
+      </div>
 
       <p className="mb-1 mt-5 text-xs text-muted">Helsinki and the rest of Uusimaa, enlarged</p>
       <svg
@@ -153,8 +223,46 @@ export function CountyMap({
         {capital.map((it) => area(it, { showName: true }))}
       </svg>
 
-      <MapLegend />
+      <MapLegend unit={gapUnit(unit)} />
       <p className="mt-2 text-[11px] text-muted">Boundaries: Statistics Finland, 2026 (CC BY 4.0).</p>
     </div>
   );
+}
+
+/**
+ * The best and the weakest county, written out so the map can be read without the legend.
+ * Skipped when fewer than two counties have a figure.
+ */
+function mapNotes(
+  items: { r: Region; s: Shape; status: GapStatus; value: string; f: GapFacts | undefined }[],
+  unit: string,
+): Note[] {
+  const ranked = items.filter((it) => it.f?.rank != null).sort((a, b) => a.f!.rank! - b.f!.rank!);
+  if (ranked.length < 2) return [];
+  const best = ranked[0];
+  const worst = ranked[ranked.length - 1];
+  const note = (it: (typeof ranked)[number], end: "best" | "worst"): Note => {
+    const g = it.f!.gapToNational;
+    const inInset = CAPITAL.has(it.r.name);
+    const heading =
+      end === "worst"
+        ? it.status === "behind" ? "Furthest behind" : "Weakest figure"
+        : it.status === "ahead" ? "Furthest ahead" : "Best figure";
+    const gapLine =
+      g === null
+        ? ""
+        : g === 0
+          ? "Level with Finland"
+          : `${Math.abs(g).toFixed(1)} ${gapUnit(unit)} ${g < 0 ? "behind" : "ahead of"} Finland`;
+    return {
+      key: end,
+      heading,
+      lines: [`${shortName(it.r.name)} ${it.value}`, gapLine, inInset ? "Shown enlarged below" : ""].filter(Boolean),
+      status: it.status,
+      target: it.s.label,
+      inInset,
+    };
+  };
+  // the upper note points at the county further north so the two leaders do not cross
+  return [note(best, "best"), note(worst, "worst")].sort((a, b) => a.target[1] - b.target[1]);
 }

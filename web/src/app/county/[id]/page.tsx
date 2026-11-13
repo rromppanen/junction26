@@ -7,9 +7,14 @@ import { computeGap, latestYear } from "@/lib/gap";
 import { generateBrief } from "@/lib/analyst";
 import { getLiveContext, type LiveSnippet } from "@/lib/context";
 import { TrendChart } from "@/components/TrendChart";
+import { PathwayFingerprint } from "@/components/PathwayFingerprint";
+import { WhatItTakes } from "@/components/WhatItTakes";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
-import { STATUS_LABEL, STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, shortName } from "@/components/format";
+import { Wordmark } from "@/components/Wordmark";
+import { Colophon } from "@/components/Colophon";
+import { STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, shortName } from "@/components/format";
+import type { GapFacts, PathwayStage } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -65,149 +70,152 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
   const series = (indId: number, rId: number | undefined) =>
     ds.values.filter((v) => v.indicatorId === indId && v.regionId === rId).map((v) => ({ year: v.year, value: v.value }));
 
+
   const byGemini = brief.generatedBy === "gemini";
+  const author = byGemini ? "Gemini" : "the fixed template";
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
       <nav className="no-print mb-10 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 text-sm">
+        <Wordmark />
         <Link href="/" className="link">Back to the map</Link>
-        <span className="text-xs text-muted">
-          {byGemini
-            ? "Written by Gemini from the figures on this page"
-            : "Written from a fixed template; the AI analyst didn\u2019t answer"}
-        </span>
       </nav>
 
-      <header className="mb-12">
-        <p className="text-sm text-muted">Cancer care brief for</p>
-        <h1 className="font-narrow mt-1 text-5xl font-bold leading-[0.95] tracking-[-0.01em] break-words sm:text-7xl">{name}</h1>
-        <p className="mt-6 max-w-3xl font-serif text-2xl leading-snug sm:text-[1.75rem]">{brief.headline}</p>
-        <p className="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-ink/80">{brief.finding}</p>
+      <header className="mb-10">
+        <p className="text-sm text-muted">Cancer care brief</p>
+        <h1 className="font-narrow mt-1 text-5xl font-bold leading-[0.92] tracking-[-0.01em] break-words sm:text-[5.5rem]">{name}</h1>
+        <div className="mt-7 max-w-3xl">
+          <p className="font-serif text-[1.35rem] leading-snug sm:text-[1.7rem]">{brief.headline}</p>
+          <p className="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-ink/85">{brief.finding}</p>
+        </div>
+        <p className="mt-6 max-w-2xl border-l-2 border-ink pl-3 text-sm leading-snug text-muted">
+          {byGemini ? (
+            <>Gemini wrote the passages set in <span className="font-serif text-ink">this serif type</span>, working only from the figures and strategy pages cited here. Everything in plain type is calculated straight from Sotkanet.</>
+          ) : (
+            <>The AI analyst didn&rsquo;t respond, so the passages in <span className="font-serif text-ink">this serif type</span> come from a fixed template filled in with {name}&rsquo;s figures. Everything in plain type is calculated straight from Sotkanet.</>
+          )}
+        </p>
       </header>
 
-      <section className="mb-14 print-break" aria-labelledby="stage-h">
-        <h2 id="stage-h" className="mb-3 text-sm text-muted">
-          The pathway breaks at <span className="font-semibold text-ink">{STAGE_LABEL[brief.pathwayStage].toLowerCase()}</span>
-        </h2>
-        <PathwayStrip active={brief.pathwayStage} />
-      </section>
+      <Part id="path" title="Where along the pathway">
+        <PathwayFingerprint facts={facts} indicators={INDICATORS} />
+        <div className="mt-6 max-w-2xl">
+          <PathwayStrip
+            active={brief.pathwayStage}
+            note={`The filled stop is ${STAGE_LABEL[brief.pathwayStage].toLowerCase()}, where ${author} puts the main break. Referral and diagnosis have no public county figures, so nobody can see a gap there yet.`}
+          />
+        </div>
+        <div className="mt-8">
+          <WhatItTakes facts={facts} indicators={INDICATORS} />
+        </div>
+      </Part>
 
-      <section className="mb-14" aria-labelledby="rec-h">
-        <h2 id="rec-h" className="mb-2 text-2xl font-semibold tracking-tight">What {name} could do next</h2>
-        <p className="mb-6 text-sm text-muted">Each one says who would do it, by when, and which sources it rests on.</p>
-        <ol className="border-t border-ink">
+      <Part id="rec" title={`What ${name} could do next`}>
+        <ol>
           {brief.recommendations.map((r, i) => (
-            <li key={i} className="print-break grid gap-x-6 border-b border-rule py-5 sm:grid-cols-[3rem_minmax(0,1fr)_16rem]">
-              <span className="font-narrow text-4xl font-bold leading-none text-ink tabular-nums" aria-hidden>{i + 1}</span>
+            <li key={i} className={`print-break grid gap-x-4 py-5 sm:grid-cols-[1.75rem_minmax(0,1fr)] ${i ? "border-t border-rule" : "pt-0"}`}>
+              <span className="font-narrow text-xl font-bold leading-snug tabular-nums text-muted" aria-hidden>{i + 1}</span>
               <div>
-                <p className="font-serif text-lg leading-snug">{r.action}</p>
-                <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted">
-                  <span>Based on</span>
-                  {r.sources.map((s) => (
-                    <a key={s} href={`#src-${sourceIndex.get(s)}`} className="link" title={resolveSource(s, live.snippets).label}>
-                      [{sourceIndex.get(s)}]{" "}
-                      {s.startsWith("sotkanet:") ? "Sotkanet" : resolveSource(s, live.snippets).label.split(":")[0]}
-                    </a>
-                  ))}
-                </p>
+                <p className="max-w-2xl font-serif text-lg leading-snug">{r.action}</p>
+                <dl className="mt-3 grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3 gap-y-1 text-sm">
+                  <dt className="text-muted">Who</dt><dd>{r.owner}</dd>
+                  <dt className="text-muted">By when</dt><dd>{r.timeframe}</dd>
+                  <dt className="text-muted">Counts towards</dt><dd>{r.goal3Indicator}</dd>
+                  {r.sources.length > 0 && (
+                    <>
+                      <dt className="text-muted">Rests on</dt>
+                      <dd className="flex flex-wrap gap-x-3 gap-y-1">
+                        {r.sources.map((s) => (
+                          <a key={s} href={`#src-${sourceIndex.get(s)}`} className="link" title={resolveSource(s, live.snippets).label}>
+                            [{sourceIndex.get(s)}]{" "}
+                            {s.startsWith("sotkanet:") ? "Sotkanet" : resolveSource(s, live.snippets).label.split(":")[0]}
+                          </a>
+                        ))}
+                      </dd>
+                    </>
+                  )}
+                </dl>
               </div>
-              <dl className="mt-3 grid grid-cols-[6.5rem_1fr] gap-x-3 gap-y-1 text-sm sm:mt-0">
-                <dt className="text-muted">Who</dt><dd>{r.owner}</dd>
-                <dt className="text-muted">By when</dt><dd>{r.timeframe}</dd>
-                <dt className="text-muted">Strategy goal</dt><dd>{r.goal3Indicator}</dd>
-              </dl>
             </li>
           ))}
         </ol>
-      </section>
+      </Part>
 
-      <section className="mb-14" aria-labelledby="ind-h">
-        <h2 id="ind-h" className="mb-2 text-2xl font-semibold tracking-tight">{name} against the whole country</h2>
-        <p className="mb-6 text-sm text-muted">Latest year for each measure. The dark line is {name}, the dashed one is Finland, and the thin blue one is the level the best quarter of counties reach.</p>
-        <div className="border-t border-ink">
-          {INDICATORS.map((ind, i) => {
-            const f = facts[i];
-            return (
-              <article key={ind.id} className="print-break grid gap-x-8 gap-y-3 border-b border-rule py-5 md:grid-cols-[minmax(0,1fr)_20rem]">
-                <div>
-                  <h3 className="font-semibold leading-snug">{ind.nameEn}</h3>
-                  <p className="mt-0.5 text-xs text-muted">
-                    {STAGE_LABEL[ind.stage]}, {f.year}. {ind.higherIsBetter ? "Higher is better." : "Lower is better."}
+      <Part id="ind" title="The five measures behind this">
+        <p className="mb-2 max-w-2xl text-sm text-muted">
+          Latest year Sotkanet publishes for each. For all five, a higher share is better.
+        </p>
+        {INDICATORS.map((ind, i) => {
+          const f = facts[i];
+          return (
+            <article key={ind.id} className="print-break grid gap-x-8 gap-y-4 border-b border-rule py-6 last:border-b-0 md:grid-cols-[minmax(0,1fr)_21rem]">
+              <div>
+                <h3 className="font-semibold leading-snug">{ind.nameEn}</h3>
+                <p className="mt-0.5 text-sm text-muted">{STAGE_WORD[ind.stage]}, {f.year}</p>
+                <p className="mt-3 flex flex-wrap items-baseline gap-x-3">
+                  <strong className="font-narrow text-3xl font-bold tabular-nums">{fmt(f.value, ind.unit)}</strong>
+                  <span className={`text-sm font-semibold ${STATUS_TEXT[f.status]}`}>{compareToFinland(f, ind.unit)}</span>
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  Finland {fmt(f.national, ind.unit)}
+                  {f.rank !== null && <>. {ordinal(f.rank)} of {f.rankOf} counties</>}.
+                </p>
+                {f.target !== null && f.gapToTarget !== null && (
+                  <p className={`mt-1 text-sm ${f.gapToTarget >= 0 ? "text-ahead" : "text-behind"}`}>
+                    {f.gapToTarget >= 0
+                      ? `Meets the ${f.target}% target.`
+                      : `${Math.abs(f.gapToTarget).toFixed(1)} points short of the ${f.target}% target.`}
                   </p>
-                  <p className="mt-3 flex flex-wrap items-baseline gap-x-3">
-                    <strong className="font-narrow text-4xl font-bold tabular-nums">{fmt(f.value, ind.unit)}</strong>
-                    <span className={`font-semibold tabular-nums ${STATUS_TEXT[f.status]}`}>
-                      {fmtGap(f.gapToNational)}{" "}
-                      {f.status === "no-data" ? "" : f.status === "on-par" ? "(about level)" : STATUS_LABEL[f.status].toLowerCase()}
-                    </span>
-                  </p>
-                  <p className="mt-1 text-sm text-muted">
-                    Finland: {fmt(f.national, ind.unit)}
-                    {f.rank !== null && <>. Ranked {f.rank} of {f.rankOf} counties.</>}
-                  </p>
-                  {f.target !== null && f.gapToTarget !== null && (
-                    <p className="mt-1 text-sm">
-                      {f.gapToTarget >= 0 ? (
-                        <span className="text-ahead">Meets the {f.target}% national target</span>
-                      ) : (
-                        <span className="text-behind">
-                          {fmtGap(f.gapToTarget).slice(1)} points short of the {f.target}% national target
-                        </span>
-                      )}
-                    </p>
-                  )}
-                  <p className="mt-2 text-xs text-muted">{ind.strategyGoal}</p>
-                </div>
-                <TrendChart
-                  county={series(ind.id, regionId)}
-                  national={series(ind.id, nationalRegion?.id)}
-                  best={bestSeries(ind)}
-                  unit={ind.unit}
-                />
-              </article>
-            );
-          })}
-        </div>
-      </section>
+                )}
+                <p className="mt-3 text-xs text-muted">{ind.strategyGoal}</p>
+              </div>
+              <TrendChart
+                county={series(ind.id, regionId)}
+                national={series(ind.id, nationalRegion?.id)}
+                best={bestSeries(ind)}
+                unit={ind.unit}
+                target={ind.target?.value ?? null}
+                countyName={name}
+              />
+            </article>
+          );
+        })}
+      </Part>
 
-      <div className="grid gap-10 md:grid-cols-2">
-        <section aria-labelledby="src-h" className="print-break">
-          <h2 id="src-h" className="mb-3 text-lg font-semibold tracking-tight">Where this comes from</h2>
-          {sources.length === 0 ? (
-            <p className="text-sm text-muted">This brief cites no sources beyond the figures above.</p>
-          ) : (
-            <ol className="space-y-3 text-sm">
-              {sources.map((s, i) => (
-                <li key={s.id} id={`src-${i + 1}`} className="grid grid-cols-[2rem_1fr] scroll-mt-6 target:bg-behind-soft">
-                  <span className="tabular-nums text-muted">[{i + 1}]</span>
-                  <span>
-                    <a href={s.url} target="_blank" rel="noreferrer" className="link">{s.label}</a>
-                    {s.detail && <span className="mt-0.5 block text-xs text-muted">{s.detail}</span>}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
-        <section aria-labelledby="lim-h" className="print-break">
-          <h2 id="lim-h" className="mb-3 text-lg font-semibold tracking-tight">What this can&rsquo;t tell you</h2>
-          <ul className="list-[square] space-y-2 pl-5 text-sm text-muted marker:text-par">
-            {brief.limitations.map((l, i) => <li key={i}>{l}</li>)}
-          </ul>
-        </section>
-      </div>
+      <Part id="src" title="Sources">
+        {sources.length === 0 ? (
+          <p className="text-sm text-muted">The actions cite nothing beyond the Sotkanet figures above.</p>
+        ) : (
+          <ol className="max-w-2xl space-y-3 text-sm">
+            {sources.map((s, i) => (
+              <li key={s.id} id={`src-${i + 1}`} className="grid scroll-mt-6 grid-cols-[2rem_minmax(0,1fr)] target:bg-behind-soft">
+                <span className="tabular-nums text-muted">[{i + 1}]</span>
+                <span>
+                  <a href={s.url} target="_blank" rel="noreferrer" className="link">{s.label}</a>
+                  {s.detail && <span className="mt-0.5 block text-xs leading-relaxed text-muted">{s.detail}</span>}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </Part>
 
-      <section aria-labelledby="live-h" className="print-break mt-14 border-t border-rule pt-6">
-        <h2 id="live-h" className="text-lg font-semibold tracking-tight">What the web says now</h2>
-        <p className="mb-4 mt-1 max-w-2xl text-sm text-muted">
+      <Part id="lim" title={"What this can\u2019t tell you"}>
+        <ul className="max-w-2xl list-[square] space-y-2 pl-5 font-serif leading-relaxed marker:text-par">
+          {brief.limitations.map((l, i) => <li key={i}>{l}</li>)}
+        </ul>
+      </Part>
+
+      <Part id="live" title="What the web says now">
+        <p className="mb-5 max-w-2xl text-sm text-muted">
           Public pages about {name}&rsquo;s cancer care and waiting times, found through Context.dev
           {live.fetchedAt
             ? ` on ${new Date(live.fetchedAt).toLocaleString("en-GB", { timeZone: "Europe/Helsinki", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}`
             : ""}
-          . The analyst may cite them for context, never for figures.
+          . {byGemini ? "Gemini" : "The analyst"} may cite them for context, never for figures.
         </p>
         {live.snippets.length > 0 ? (
-          <ul className="grid gap-x-10 gap-y-5 text-sm md:grid-cols-2">
+          <ul className="grid gap-x-10 gap-y-6 text-sm md:grid-cols-2">
             {live.snippets.map((l) => (
               <li key={l.id} className="print-break">
                 <a href={l.url} target="_blank" rel="noreferrer" className="link font-medium">{l.title}</a>
@@ -217,20 +225,47 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-muted">
+          <p className="max-w-2xl text-sm">
             {live.status === "not-configured"
               ? "The web search is switched off here, because no Context.dev key is set."
               : live.status === "empty"
-                ? "The search found no public pages about this county\u2019s cancer care."
-                : "The web search didn\u2019t answer just now, so this brief rests on the figures and strategy documents only."}
+                ? "The search found no public pages about this county’s cancer care."
+                : "The web search didn’t answer just now, so this brief rests on the figures and strategy documents only."}
           </p>
         )}
-      </section>
+      </Part>
 
-      <footer className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4 text-xs text-muted">
+      <footer className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-ink pt-4 text-xs text-muted">
         <DataBadge ds={ds} />
         <span>{region.name}</span>
+        <Colophon className="basis-full" />
       </footer>
     </main>
+  );
+}
+
+const STAGE_WORD: Record<PathwayStage, string> = { ...STAGE_LABEL, detection: "Screening", outcome: "Survival" };
+
+function ordinal(n: number): string {
+  const t = n % 100;
+  const s = t >= 11 && t <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[n % 10] ?? "th";
+  return `${n}${s}`;
+}
+
+/** "2.3 points behind Finland", in the sign-corrected sense of gapToNational. */
+function compareToFinland(f: GapFacts, unit: string): string {
+  if (f.status === "no-data" || f.gapToNational === null) return "no national figure to compare";
+  const size = `${Math.abs(f.gapToNational).toFixed(1)} ${unit === "%" ? "points" : unit}`;
+  if (f.status === "on-par") return `about level with Finland (${fmtGap(f.gapToNational)})`;
+  return f.status === "behind" ? `${size} behind Finland` : `${size} ahead of Finland`;
+}
+
+/** A section of the brief: its name in the left margin, its content to the right. */
+function Part({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+  return (
+    <section aria-labelledby={`${id}-h`} className="print-break grid gap-x-10 gap-y-4 border-t border-ink py-8 md:grid-cols-[10.5rem_minmax(0,1fr)]">
+      <h2 id={`${id}-h`} className="text-lg font-semibold leading-tight tracking-tight md:text-base">{title}</h2>
+      <div className="min-w-0">{children}</div>
+    </section>
   );
 }

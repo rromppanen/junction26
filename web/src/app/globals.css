@@ -5,6 +5,7 @@
   Paper is a cool lichen grey, not cream. Status colours are a rust/lake-blue pair
   so "behind" and "ahead" stay distinguishable for red-green colour-blind readers.
   Links use ink, so the two status colours only ever mean status.
+  Contrast on paper: ink 15:1, muted 5.4:1, behind 5.0:1, ahead 6.3:1, par 3.3:1 (outlines only, not text).
 */
 :root {
   --paper: #eef0ec;
@@ -17,8 +18,31 @@
   --behind-soft: #f3ddd5;
   --ahead: #2a5c7d;
   --ahead-soft: #dce7ee;
-  --par: #8a969b;
+  --par: #7a868b; /* darkened from #8a969b so dashed "no figure" outlines reach 3:1 */
   --par-soft: #e1e5e3;
+  /* Text selection and the focus ring: neutral, so they never read as a status. */
+  --highlight: #d9dfcf;
+
+  /*
+    Type scale: a major third (1.25) on a 16px body, rounded to whole pixels.
+    Archivo carries every step; Source Serif only sets the brief's prose.
+      caption 12   small 13   body 16   lede 20   title 25   heading 31   display 39   hero 49
+  */
+  --step--2: 0.75rem;
+  --step--1: 0.8125rem;
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: 1.5625rem;
+  --step-3: 1.9375rem;
+  --step-4: 2.4375rem;
+  --step-5: 3.0625rem;
+
+  /* Spacing rhythm in quarter-lines of body text (24px leading): 6, 12, 24, 48, 96. */
+  --space-1: 0.375rem;
+  --space-2: 0.75rem;
+  --space-3: 1.5rem;
+  --space-4: 3rem;
+  --space-5: 6rem;
 }
 
 @theme inline {
@@ -34,15 +58,90 @@
   --color-ahead-soft: var(--ahead-soft);
   --color-par: var(--par);
   --color-par-soft: var(--par-soft);
+  --color-highlight: var(--highlight);
   --font-sans: var(--font-archivo);
   --font-serif: var(--font-source-serif);
+
+  /* The scale as Tailwind sizes: text-caption, text-small, text-lede, text-title, text-heading, text-display, text-hero. */
+  --text-caption: var(--step--2);
+  --text-caption--line-height: 1.4;
+  --text-small: var(--step--1);
+  --text-small--line-height: 1.45;
+  --text-lede: var(--step-1);
+  --text-lede--line-height: 1.4;
+  --text-title: var(--step-2);
+  --text-title--line-height: 1.2;
+  --text-heading: var(--step-3);
+  --text-heading--line-height: 1.12;
+  --text-display: var(--step-4);
+  --text-display--line-height: 1.05;
+  --text-hero: var(--step-5);
+  --text-hero--line-height: 1;
 }
 
-body {
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-archivo), system-ui, sans-serif;
-  font-feature-settings: "tnum" 0;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-archivo), system-ui, sans-serif;
+    font-size: var(--step-0);
+    line-height: 1.5;
+    font-feature-settings: "tnum" 0;
+  }
+
+  /* Headings break into even lines; paragraphs avoid a single word on the last line. */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
+  }
+
+  /* Serif prose: optical sizes from the font, a little more leading than the sans would need. */
+  .font-serif {
+    font-optical-sizing: auto;
+    hanging-punctuation: first;
+  }
+
+  /* Figures in tables line up by digit. */
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  abbr[title] {
+    text-decoration: underline dotted var(--par);
+    text-underline-offset: 3px;
+    cursor: help;
+  }
+
+  hr {
+    border-color: var(--rule);
+  }
+
+  /*
+    Keyboard focus: a solid ink ring with a pale halo, so it shows on paper, on surface rows
+    and on the ink "selected year" chip alike. Mouse clicks don't trigger it. In the base layer
+    so a component can still restyle its own ring.
+  */
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--highlight);
+  }
+
+  ::selection {
+    background: var(--highlight);
+    color: var(--ink);
+  }
 }
 
 /* Long Finnish compound names ("Pohjois-Pohjanmaa") set in Archivo's condensed width. */
@@ -55,19 +154,21 @@ body {
   text-decoration-color: var(--rule);
   text-decoration-thickness: 1.5px;
   text-underline-offset: 3px;
+  text-decoration-skip-ink: auto;
+  transition: text-decoration-color 120ms ease-out;
 }
 .link:hover {
   text-decoration-color: currentColor;
 }
 
-a:focus-visible,
-button:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
+.wordmark {
+  text-decoration: none;
+  border-radius: 2px;
 }
-
-::selection {
-  background: var(--behind-soft);
+.wordmark:hover span {
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -76,17 +177,60 @@ button:focus-visible {
   *::after {
     animation: none !important;
     transition: none !important;
+    scroll-behavior: auto !important;
   }
 }
 
+/*
+  Printing a county brief for a meeting: plain white page, ink kept black,
+  status colours kept (they carry meaning), web addresses written out after outside links.
+*/
 @media print {
+  @page {
+    margin: 16mm 14mm 18mm;
+  }
+  :root {
+    --paper: #fff;
+    --surface: #fff;
+  }
+  html {
+    font-size: 11pt;
+  }
   body {
     background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
-  .no-print {
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  .no-print,
+  nav {
     display: none !important;
   }
-  .print-break {
+  .print-break,
+  figure,
+  table,
+  svg {
     break-inside: avoid;
+  }
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  a[href^="http"]:not(.no-print-url)::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: var(--muted);
+    word-break: break-all;
+  }
+  .link {
+    text-decoration: none;
   }
 }
