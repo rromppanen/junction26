@@ -17,11 +17,13 @@ export async function loadCountyBrief(regionId: number, language: Language = "en
   const name = shortName(region.name);
 
   const facts = INDICATORS.map((ind) => computeGap(ds, ind, regionId, latestYear(ds, ind)));
-  const live = await getLiveContext(region.name);
   const worst = worstIndicator(facts);
   const worstInd = worst ? INDICATORS.find((i) => i.id === worst.indicatorId) : undefined;
   const twin = worst && worstInd && worst.value !== null ? findPeerTwin(ds, worstInd, regionId, worst.year) : null;
-  const practices: LiveContext | null = twin && worstInd ? await getPeerPractices(twin.twin.name, worstInd) : null;
+  const [live, practices]: [LiveContext, LiveContext | null] = await Promise.all([
+    getLiveContext(region.name),
+    twin && worstInd ? getPeerPractices(twin.twin.name, worstInd) : Promise.resolve(null),
+  ]);
   const peer =
     twin && worstInd && worst && worst.value !== null && practices
       ? { twinName: shortName(twin.twin.name), indicator: worstInd, countyValue: worst.value, twinValue: twin.twinValue, snippets: practices.snippets }

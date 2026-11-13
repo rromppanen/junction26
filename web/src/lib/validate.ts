@@ -36,7 +36,7 @@ export function factNumbers(facts: GapFacts[], extra: number[] = []): number[] {
 
 /**
  * Checks an AI-generated brief against the computed facts. Returns error messages; empty = valid.
- * Numbers are checked in headline, finding and each recommendation's action.
+ * Numbers are checked in headline, finding, limitations and each recommendation's action, owner, timeframe and goal.
  */
 export function validateBrief(brief: Brief, facts: GapFacts[], knownSourceIds: string[], extra: number[] = []): string[] {
   const errors: string[] = [];
@@ -56,7 +56,13 @@ export function validateBrief(brief: Brief, facts: GapFacts[], knownSourceIds: s
   const texts: [string, string][] = [
     ["headline", brief.headline],
     ["finding", brief.finding],
-    ...brief.recommendations.map((r, i): [string, string] => [`recommendation ${i + 1}`, r.action]),
+    ...brief.limitations.map((l, i): [string, string] => [`limitation ${i + 1}`, l]),
+    ...brief.recommendations.flatMap((r, i): [string, string][] => [
+      [`recommendation ${i + 1}`, r.action],
+      [`recommendation ${i + 1} owner`, r.owner],
+      [`recommendation ${i + 1} timeframe`, r.timeframe],
+      [`recommendation ${i + 1} goal3Indicator`, r.goal3Indicator],
+    ]),
   ];
   for (const [field, text] of texts) {
     for (const raw of text.replace(REFERENCE_RE, " ").match(NUMBER_RE) ?? []) {

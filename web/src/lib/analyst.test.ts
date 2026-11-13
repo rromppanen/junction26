@@ -90,3 +90,35 @@ describe("fallbackBrief in Finnish", () => {
     expect(validateBrief(b, [f], knownSourceIds([ind]), [57])).not.toEqual([]);
   });
 });
+
+describe("fallbackBrief when no stage is behind", () => {
+  const ahead: GapFacts = { ...f, value: 78, gapToNational: 2, gapToBestQuartile: -2, status: "ahead", gapToTarget: -2 };
+  it("does not describe a gap (English)", () => {
+    const b = fallbackBrief({ regionName: "Helsinki", facts: [ahead], indicators: [ind] });
+    expect(b.headline).toMatch(/no gap against the national level/);
+    expect(b.headline).toMatch(/Weakest relative measure/);
+    expect(b.headline).not.toMatch(/the gap starts|no clear gap/);
+    expect(b.finding).toMatch(/No measure is below the national level/);
+    expect(b.finding).not.toMatch(/best-performing/);
+  });
+  it("does not describe a gap (Finnish)", () => {
+    const b = fallbackBrief({ regionName: "Helsinki", facts: [ahead], indicators: [ind], language: "fi" });
+    expect(b.headline).toMatch(/ei eroa valtakunnalliseen tasoon/);
+    expect(b.finding).toMatch(/Mikään mittari ei ole valtakunnallista tasoa heikompi/);
+  });
+});
+
+describe("equityPrompt", () => {
+  it("sends only municipalities behind the county to Gemini", async () => {
+    const { equityPrompt } = await import("./analyst");
+    const e: EquityFacts = {
+      ...equity,
+      lagging: [{ indicator: ind, year: 2023, countyValue: 74.3, rows: [
+        { region: muni(5, "Siuntio"), value: 66.8, gapToCounty: -7.5 },
+        { region: muni(7, "Kirkkonummi"), value: 80, gapToCounty: 5.7 },
+      ] }],
+    };
+    const p = equityPrompt(e) as { lagging: { worstMunicipalities: { name: string }[] }[] };
+    expect(p.lagging[0].worstMunicipalities.map((m) => m.name)).toEqual(["Siuntio"]);
+  });
+});

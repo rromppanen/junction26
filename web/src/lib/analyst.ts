@@ -299,7 +299,20 @@ export function fallbackBrief(input: AnalystInput): Brief {
     const name = fi ? ind.nameFi : ind.nameEn;
     const nat = worst.national !== null ? (fi ? `, valtakunnallisesti ${num(worst.national)}${unit}` : ` vs ${num(worst.national)}${unit} nationally`) : "";
     const parts: string[] = [];
-    if (fi) {
+    if (pattern === "none") {
+      // Nothing is behind the national level: describe the weakest relative measure without implying a gap.
+      if (fi) {
+        headline = `${regionName}: ${PATTERN_PHRASE_FI[pattern]}. Suhteellisesti heikoin mittari: ${name} ${num(worst.value)}${unit}${nat} (${worst.year})`;
+        parts.push(`Mikään mittari ei ole valtakunnallista tasoa heikompi. Suhteellisesti heikoin on ${name}: vuonna ${worst.year} ${num(worst.value)}${unit}${nat}.`);
+        if (worst.rank !== null) parts.push(`Alue on sijalla ${worst.rank} (${worst.rankOf} alueesta, joilla on tietoa).`);
+        parts.push(`Suhteellisesti heikoin vaihe on ${STAGE_FI[stage]}vaihe.`);
+      } else {
+        headline = `${regionName}: ${PATTERN_PHRASE[pattern]}. Weakest relative measure: ${name} at ${num(worst.value)}${unit}${nat} (${worst.year})`;
+        parts.push(`No measure is below the national level. The weakest relative measure is ${name}: in ${worst.year}, ${regionName} had ${num(worst.value)}${unit}${nat}.`);
+        if (worst.rank !== null) parts.push(`It ranks ${worst.rank} of ${worst.rankOf} counties with data.`);
+        parts.push(`The weakest relative stage is ${stage}.`);
+      }
+    } else if (fi) {
       headline = `${regionName}: ${PATTERN_PHRASE_FI[pattern]}. ${name}: ${num(worst.value)}${unit}${nat} (${worst.year})`;
       parts.push(`Vuonna ${worst.year} alueen ${name} oli ${num(worst.value)}${unit}${nat}.`);
       if (worst.rank !== null) parts.push(`Alue on sijalla ${worst.rank} (${worst.rankOf} alueesta, joilla on tietoa).`);
@@ -389,7 +402,7 @@ function laggingFor(e: EquityFacts | undefined, indicatorId: number | undefined)
 }
 
 /** Compact equity block for the prompt. rho is already rounded to 2 decimals; the same values go to the validator. */
-function equityPrompt(e: EquityFacts): unknown {
+export function equityPrompt(e: EquityFacts): unknown {
   if (!e.applicable) return { applicable: false, municipalities: e.municipalityCount };
   return {
     applicable: true,
@@ -399,7 +412,7 @@ function equityPrompt(e: EquityFacts): unknown {
       measure: measurePhrase(l.indicator),
       year: l.year,
       countyValue: l.countyValue,
-      worstMunicipalities: l.rows.map((r) => ({ name: r.region.name, value: r.value, gapToCounty: r.gapToCounty })),
+      worstMunicipalities: l.rows.filter((r) => r.gapToCounty < 0).map((r) => ({ name: r.region.name, value: r.value, gapToCounty: r.gapToCounty })),
     })),
     associations: e.associations.map((a) => ({
       measure: measurePhrase(a.indicator),

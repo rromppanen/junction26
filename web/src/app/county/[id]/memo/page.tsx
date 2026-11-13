@@ -115,7 +115,6 @@ export default async function MemoPage({ params }: { params: Promise<{ id: strin
           </ul>
         </section>
       </div>
-      <script dangerouslySetInnerHTML={{ __html: "document.querySelector('[data-print]')?.addEventListener('click',()=>window.print())" }} />
     </main>
   );
 }

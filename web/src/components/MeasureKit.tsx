@@ -5,8 +5,7 @@ import { EVIDENCE } from "@/data/evidence";
 export function MeasureKit({ regionId, sourceNo }: { regionId: number; sourceNo?: number }) {
   const ev = EVIDENCE.find((e) => e.id === MEASURES[0].evidenceId);
   return (
-    <section className="mb-14 print-break" aria-labelledby="mk-h">
-      <h2 id="mk-h" className="mb-2 text-2xl font-semibold tracking-tight">Start measuring</h2>
+    <>
       <p className="mb-6 max-w-2xl text-sm text-muted">
         No county in Finland publishes referral or diagnosis delay data, so these stages can&rsquo;t be compared yet. Start recording these three numbers monthly.
       </p>
@@ -33,6 +32,6 @@ export function MeasureKit({ regionId, sourceNo }: { regionId: number; sourceNo?
       <a href={`/county/${regionId}/measure`} download className="no-print link mt-4 inline-block text-sm font-semibold">
         Download the CSV template
       </a>
-    </section>
+    </>
   );
 }

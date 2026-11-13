@@ -15,8 +15,7 @@ export function PeerTwin({
   practices: LiveContext;
 }) {
   return (
-    <section className="mb-14 print-break" aria-labelledby="peer-h">
-      <h2 id="peer-h" className="mb-2 text-2xl font-semibold tracking-tight">A county to learn from</h2>
+    <>
       <p className="mb-4 max-w-2xl text-sm text-muted">
         The county most like {name} in size and education level that does better on {name}&rsquo;s weakest
         measure, at least {MIN_BETTER} points ahead.
@@ -49,6 +48,6 @@ export function PeerTwin({
               : "The web search didn’t answer just now."}
         </p>
       )}
-    </section>
+    </>
   );
 }

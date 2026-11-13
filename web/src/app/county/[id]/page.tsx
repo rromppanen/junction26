@@ -7,6 +7,7 @@ import { loadCountyBrief } from "@/lib/countyBrief";
 import type { LiveSnippet } from "@/lib/context";
 import { PeerTwin } from "@/components/PeerTwin";
 import { TrendChart } from "@/components/TrendChart";
+import { diagnosePathway } from "@/lib/fingerprint";
 import { PathwayFingerprint } from "@/components/PathwayFingerprint";
 import { WhatItTakes } from "@/components/WhatItTakes";
 import { LeftBehind } from "@/components/LeftBehind";
@@ -72,6 +73,11 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
 
   const byGemini = brief.generatedBy === "gemini";
   const author = byGemini ? "Gemini" : "the fixed template";
+  const stageLabel = STAGE_LABEL[brief.pathwayStage].toLowerCase();
+  const stageNote =
+    diagnosePathway(facts, INDICATORS).pattern === "none"
+      ? `No stage is behind Finland; the weakest relative stage is ${stageLabel}.`
+      : `The filled stop is ${stageLabel}, where ${author} puts the main break.`;
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
@@ -104,28 +110,13 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         <div className="mt-6 max-w-2xl">
           <PathwayStrip
             active={brief.pathwayStage}
-            note={`The filled stop is ${STAGE_LABEL[brief.pathwayStage].toLowerCase()}, where ${author} puts the main break. Referral and diagnosis have no public county figures, so nobody can see a gap there yet.`}
+            note={`${stageNote} Referral and diagnosis have no public county figures, so nobody can see a gap there yet.`}
           />
         </div>
         <div className="mt-8">
           <WhatItTakes facts={facts} indicators={INDICATORS} />
         </div>
       </Part>
-
-      <MeasureKit regionId={regionId} sourceNo={sourceIndex.get(MEASURES[0].evidenceId)} />
-
-      <LeftBehind equity={equity} name={name} />
-
-      {peer && practices && (
-        <PeerTwin
-          name={name}
-          twinName={peer.twinName}
-          indicator={peer.indicator}
-          countyValue={peer.countyValue}
-          twinValue={peer.twinValue}
-          practices={practices}
-        />
-      )}
 
       <Part id="rec" title={`What ${name} could do next`}>
         <ol>
@@ -156,6 +147,27 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
             </li>
           ))}
         </ol>
+      </Part>
+
+      <Part id="lb" title={`Who is left behind inside ${name}`}>
+        <LeftBehind equity={equity} name={name} />
+      </Part>
+
+      {peer && practices && (
+        <Part id="peer" title="A county to learn from">
+          <PeerTwin
+            name={name}
+            twinName={peer.twinName}
+            indicator={peer.indicator}
+            countyValue={peer.countyValue}
+            twinValue={peer.twinValue}
+            practices={practices}
+          />
+        </Part>
+      )}
+
+      <Part id="mk" title="Start measuring">
+        <MeasureKit regionId={regionId} sourceNo={sourceIndex.get(MEASURES[0].evidenceId)} />
       </Part>
 
       <Part id="ind" title="The five measures behind this">

@@ -6,8 +6,7 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 /** Equity lens: the municipalities furthest behind their own county, and area-level patterns behind them. */
 export function LeftBehind({ equity, name }: { equity: EquityFacts; name: string }) {
   return (
-    <section className="mb-14 print-break" aria-labelledby="lb-h">
-      <h2 id="lb-h" className="mb-2 text-2xl font-semibold tracking-tight">Who is left behind inside {name}</h2>
+    <>
       {!equity.applicable ? (
         <p className="max-w-2xl text-sm text-muted">
           Not applicable here.{" "}
@@ -72,6 +71,6 @@ export function LeftBehind({ equity, name }: { equity: EquityFacts; name: string
         </>
       )}
       <p className="mt-4 max-w-2xl border-l-2 border-par pl-3 text-sm">{AREA_LEVEL_CAVEAT}</p>
-    </section>
+    </>
   );
 }

@@ -7,7 +7,7 @@ const facts: GapFacts[] = [{
   gapToNational: -9.6, gapToBestQuartile: -15.1, rank: 18, rankOf: 21, trend3y: -2.3, target: null, gapToTarget: null, status: "behind",
 }];
 const known = ["strategy-p33-3.1", "sotkanet:1"];
-const rec = (action: string, sources = ["sotkanet:1"]) => ({ action, owner: "o", timeframe: "6 months", goal3Indicator: "3.2", sources });
+const rec = (action: string, sources = ["sotkanet:1"]) => ({ action, owner: "o", timeframe: "Q2 2027", goal3Indicator: "3.2", sources });
 
 const valid = (): Brief => ({
   headline: "Screening at 60,4% vs 70% nationally in 2023",
@@ -58,5 +58,20 @@ describe("validateBrief", () => {
     expect(validateBrief(b, facts, known).length).toBeGreaterThan(0);
     b.finding = "Noin 1 000 kutsutusta ja 987 muuta";
     expect(validateBrief(b, facts, known).join()).toMatch(/987/);
+  });
+});
+
+describe("validateBrief covers every text field", () => {
+  it("rejects an invented number in a limitation, owner or goal", () => {
+    let b = valid(); b.limitations = ["Only 42.7 cases a year"];
+    expect(validateBrief(b, facts, known).join()).toMatch(/42.7 in limitation 1/);
+    b = valid(); b.recommendations[0].owner = "Unit of 137 nurses";
+    expect(validateBrief(b, facts, known).join()).toMatch(/137 in recommendation 1 owner/);
+    b = valid(); b.recommendations[2].goal3Indicator = "Goal 88.8";
+    expect(validateBrief(b, facts, known).join()).toMatch(/88.8 in recommendation 3 goal3Indicator/);
+  });
+  it("accepts a timeframe like Q1–Q2 2027", () => {
+    const b = valid(); b.recommendations[0].timeframe = "Q1–Q2 2027";
+    expect(validateBrief(b, facts, known)).toEqual([]);
   });
 });
