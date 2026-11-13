@@ -37,17 +37,25 @@ export function diagnosePathway(facts: GapFacts[], indicators: Indicator[]): Fin
 
 /** One-line plain-English diagnosis, rendered by the UI (not by Gemini). */
 export function describeFingerprint(fp: Fingerprint): string {
+  const noScreening = fp.detectionTotal === 0;
+  const noSurvival = fp.outcomeTotal === 0;
   const screening = `${fp.detectionBehind} of ${fp.detectionTotal} screening programmes below the national level`;
   const survival = `${fp.outcomeBehind} of ${fp.outcomeTotal} survival measures below the national level`;
   switch (fp.pattern) {
     case "detection":
-      return `Detection is the weak point: ${screening}; survival is on par.`;
+      return noSurvival
+        ? `Detection is the weak point: ${screening}; there is no survival data to compare.`
+        : `Detection is the weak point: ${screening}; survival is at or above the national level.`;
     case "after-detection":
-      return `The gap appears after detection: ${survival}, while screening is on par.`;
+      return noScreening
+        ? `The gap is in outcomes: ${survival}; there is no screening data to compare.`
+        : `The gap appears after detection: ${survival}, while screening is at or above the national level.`;
     case "both":
       return `The gap runs through the whole pathway: ${screening} and ${survival}.`;
     case "none":
-      return "No gap found: screening and survival are both on par with or ahead of the national level.";
+      if (noScreening) return "No gap found in survival, which is at or above the national level; there is no screening data.";
+      if (noSurvival) return "No gap found in screening, which is at or above the national level; there is no survival data.";
+      return "No gap found: screening and survival are both at or above the national level.";
     default:
       return "Not enough data to say where the gap starts.";
   }

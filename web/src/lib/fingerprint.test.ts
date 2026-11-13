@@ -34,3 +34,38 @@ describe("diagnosePathway", () => {
     expect(r).toMatchObject({ pattern: "detection", detectionTotal: 1, outcomeTotal: 1 });
   });
 });
+
+import { describeFingerprint } from "./fingerprint";
+import { fallbackBrief } from "./analyst";
+
+describe("describeFingerprint", () => {
+  it("does not claim survival is on par when there is no survival data", () => {
+    const fp = diagnosePathway([fact(1, "behind"), fact(2, "behind"), fact(3, "no-data"), fact(4, "no-data")], inds);
+    expect(fp.pattern).toBe("detection");
+    const t = describeFingerprint(fp);
+    expect(t).toMatch(/no survival data/);
+    expect(t).not.toMatch(/on par/);
+  });
+  it("does not claim screening is on par when there is no screening data", () => {
+    const t = describeFingerprint(diagnosePathway([fact(1, "no-data"), fact(2, "no-data"), fact(3, "behind"), fact(4, "ahead")], inds));
+    expect(t).toMatch(/no screening data/);
+  });
+  it("one-sided none names the missing side; ahead is not called on par", () => {
+    const t = describeFingerprint(diagnosePathway([fact(1, "ahead"), fact(2, "ahead"), fact(3, "no-data"), fact(4, "no-data")], inds));
+    expect(t).toMatch(/no survival data/);
+    expect(t).not.toMatch(/on par/);
+    expect(describeFingerprint(diagnosePathway([fact(1, "ahead"), fact(2, "on-par"), fact(3, "ahead"), fact(4, "on-par")], inds)))
+      .toMatch(/both at or above/);
+  });
+});
+
+describe("fallbackBrief names the pattern", () => {
+  it("with a gap", () => {
+    const b = fallbackBrief({ regionName: "X", indicators: inds, facts: [{ ...fact(1, "behind"), gapToNational: -5 }, fact(3, "on-par")] });
+    expect(b.headline).toMatch(/gap starts at detection/);
+  });
+  it("without a usable worst fact", () => {
+    const b = fallbackBrief({ regionName: "X", indicators: inds, facts: [fact(1, "no-data")] });
+    expect(b.headline).toMatch(/too little data to place the gap/);
+  });
+});

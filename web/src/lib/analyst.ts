@@ -133,7 +133,7 @@ export function fallbackBrief(input: AnalystInput): Brief {
   const goal3 = ind?.strategyGoal ?? "3.2 Quality register and systematic review of results";
 
   const pattern = diagnosePathway(facts, indicators).pattern;
-  let headline = `${regionName}: no clear gap found in the available indicators`;
+  let headline = `${regionName}: ${PATTERN_PHRASE[pattern]}; no clear gap found in the available indicators`;
   let finding =
     "The available public indicators do not show a clear gap to the national level for this county.";
   if (worst && ind && worst.value !== null) {
