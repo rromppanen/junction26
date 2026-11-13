@@ -11,6 +11,10 @@ import { PathwayFingerprint } from "@/components/PathwayFingerprint";
 import { ScenarioTool, type ScenarioProgramme } from "@/components/ScenarioTool";
 import { SCENARIO_DEFAULTS } from "@/data/scenarioDefaults";
 import { LeftBehind } from "@/components/LeftBehind";
+import { ReachThem } from "@/components/ReachThem";
+import { reachPlan } from "@/lib/reach";
+import { getReachDrafts } from "@/lib/reachDrafts";
+import { peoplePer1000ToReach } from "@/lib/impact";
 import { MEASURES } from "@/data/measureKit";
 import { MeasureKit } from "@/components/MeasureKit";
 import { PathwayStrip } from "@/components/PathwayStrip";
@@ -21,7 +25,7 @@ import { OpenOnHash } from "@/components/OpenOnHash";
 import { STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, host } from "@/components/format";
 import type { GapFacts, PathwayStage } from "@/lib/types";
 import {
-  ArrowLeft, BookOpen, CalendarClock, FileText, Globe, Handshake, LineChart, Link2, ListChecks, Route, Ruler,
+  ArrowLeft, BookOpen, Megaphone, CalendarClock, FileText, Globe, Handshake, LineChart, Link2, ListChecks, Route, Ruler,
   SlidersHorizontal, Sparkles, Target, TriangleAlert, UserRound, Users, type LucideIcon,
 } from "lucide-react";
 
@@ -104,11 +108,20 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
     }];
   });
 
+  // The screening furthest below its target is where the reach kit starts.
+  const reachFact = screening
+    .filter((f) => (f.gapToTarget ?? 0) < 0)
+    .sort((a, b) => (a.gapToTarget as number) - (b.gapToTarget as number))[0];
+  const reachInd = reachFact ? INDICATORS.find((i) => i.id === reachFact.indicatorId) : undefined;
+  const reach = reachInd ? reachPlan(ds, regionId, reachInd, equity) : null;
+  const reachDrafts = reach && reachInd ? await getReachDrafts(reach, reachInd) : null;
+
   const parts: { id: string; icon: LucideIcon; label: string }[] = [
     { id: "path", icon: Route, label: "Pathway" },
     { id: "what-if", icon: SlidersHorizontal, label: "What if" },
     { id: "rec", icon: ListChecks, label: "Next steps" },
     { id: "lb", icon: Users, label: "Left behind" },
+    { id: "reach", icon: Megaphone, label: "Reach them" },
     ...(peer && practices ? [{ id: "peer", icon: Handshake, label: "Learn from" }] : []),
     { id: "mk", icon: Ruler, label: "Measure" },
     { id: "ind", icon: LineChart, label: "Figures" },
@@ -203,6 +216,21 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
 
       <Part {...part("lb")} title={`Who is left behind inside ${name}`}>
         <LeftBehind equity={equity} name={name} />
+      </Part>
+
+      <Part {...part("reach")} title={`Reach them: ${name}`}>
+        {reachInd && reachFact ? (
+          <ReachThem
+            plan={reach}
+            drafts={reachDrafts}
+            programme={reachInd.nameEn.match(/^(\w+) cancer screening/i)?.[1] ?? reachInd.nameEn}
+            target={reachFact.target}
+            toTarget={peoplePer1000ToReach(reachFact.value, reachFact.target)}
+            name={name}
+          />
+        ) : (
+          <p className="max-w-2xl text-sm text-muted">Every screening with a published figure is at its target, so there is no group to reach first.</p>
+        )}
       </Part>
 
       {peer && practices && (

@@ -35,10 +35,19 @@ export type IndicatorValue = {
   value: number;
 };
 
+export type MunicipalityLanguages = {
+  regionId: number; // Sotkanet municipality id
+  year: number;
+  total: number; // total population
+  top: { language: string; count: number }[]; // top 10 foreign languages, largest first
+};
+
 export type Dataset = {
   regions: Region[];
   values: IndicatorValue[];
   fetchedAt: string; // ISO timestamp
+  /** Statistics Finland table 11rm: top foreign languages per municipality (residents, not invitees). Optional. */
+  languages?: MunicipalityLanguages[];
   source: "database" | "snapshot";
 };
 
