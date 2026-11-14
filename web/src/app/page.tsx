@@ -1,26 +1,38 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/Wordmark";
-import { FollowUpBoard } from "@/components/followup/FollowUpBoard";
+import { ImpactStrip } from "@/components/ImpactStrip";
 
-/**
- * The start page: the follow-up workspace for positive bowel screening tests.
- * The earlier gap explorer (map, county pages, analysis) stays reachable as supporting evidence.
- */
+const LINKS = [
+  { href: "/demo", title: "Open the demo", text: "Phone and nurse board side by side, live.", primary: true },
+  { href: "/kit", title: "Phone app", text: "Take the test at home and book the robot pickup." },
+  { href: "/staff", title: "Nurse board", text: "Every sample on one board, stuck ones flagged." },
+];
+
 export default function StartPage() {
   return (
     <main id="main-content" tabIndex={-1} className="min-h-dvh px-4 pb-12 sm:px-6">
-      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2 pt-5">
+      <div className="mx-auto w-full max-w-4xl pt-5">
         <Wordmark />
-        <Link href="/map" className="inline-flex min-h-11 items-center rounded-md border border-rule px-3 py-2 text-sm font-medium hover:bg-surface">County data explorer</Link>
-      </div>
-      <div className="mx-auto w-full max-w-6xl pt-6">
-        <h1 className="text-[length:var(--step-3)] font-semibold leading-tight">Screening follow-up workspace</h1>
-        <p className="mt-1 max-w-3xl text-muted">
-          For the screening nurse: every positive bowel screening test gets an owner, a next action and a history until the colonoscopy is done. Demo with invented patients; messages and bookings are simulated.
+        <h1 className="mt-8 text-[length:var(--step-3)] font-semibold leading-tight">
+          Every bowel screening sample, from your home to the lab and on to care
+        </h1>
+        <p className="mt-3 max-w-2xl text-muted">
+          A person takes the home test and books a pickup. A robot collects it, the lab reports, and a screening nurse follows every sample, so no positive result is left waiting for a colonoscopy.
         </p>
-        <div className="mt-6">
-          <FollowUpBoard />
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          {LINKS.map((l) => (
+            <Link key={l.href} href={l.href}
+              className={`flex min-h-28 flex-col justify-between rounded-xl border p-4 ${l.primary ? "border-brand bg-brand text-white hover:bg-brand-strong" : "border-rule bg-white hover:bg-surface"}`}>
+              <span className="text-lg font-semibold">{l.title}</span>
+              <span className={`text-sm ${l.primary ? "text-white/90" : "text-muted"}`}>{l.text}</span>
+            </Link>
+          ))}
         </div>
+        <div className="mt-8"><ImpactStrip /></div>
+        <p className="mt-6 text-sm">
+          <Link href="/map" className="text-muted underline">County data explorer</Link>
+        </p>
+        <p className="mt-4 text-xs text-muted">Demo: invented people; the robot, lab and bookings are simulated.</p>
       </div>
     </main>
   );
