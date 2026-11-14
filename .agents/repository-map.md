@@ -6,7 +6,7 @@ Only facts that are already confirmed go here. Mark everything else _TBD_, and n
 
 - Product or artifact: farmagusta, our Junction 2026 project for the AstraZeneca challenge "Equal Care Across Finland". Users: the person invited to bowel cancer screening and the screening nurse. See [`docs/idea.md`](../docs/idea.md) and [`docs/PLAN.md`](../docs/PLAN.md).
 - Main components: a Next.js app in `web/`. `/kit` is the phone flow for the home bowel-screening test and robot pickup; `/staff` redirects to the nurse board. Sample logic and the robot simulation are in `web/src/lib/sample/`. Demo state lives in the browser (`localStorage`) and is shared across devices through the event log at `/api/samples` (Upstash Redis on Vercel, in memory without keys). The nurse board is its own Next.js app in `nurse/`, served under `/nurse`. `web/` forwards `/nurse/*` to it (`NURSE_URL`, default http://localhost:3100) so both share one origin and the live sync works. Its board and sample code are copies of the `web/` ones; see [`nurse/README.md`](../nurse/README.md).
-- Generated artifacts: none from source. The pitch deck is `docs/pitch/farmagusta-screening-attendance.pptx`, edited by hand. `docs/pitch/make_deck.py` builds the old Läpi deck.
+- Generated artifacts: none from source. The pitch deck is `docs/pitch/farmagusta-screening-attendance.pptx`, edited by hand.
 - Existing instructions: [`AGENTS.md`](../AGENTS.md) (agent working agreement), `.agents/instructions/` (principles, workflow, writing), `.claude/skills/` (change procedures).
 
 ## Environment and checks
