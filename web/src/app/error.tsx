@@ -5,14 +5,14 @@ import { Wordmark } from "@/components/Wordmark";
 
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
-    <main className="mx-auto max-w-5xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
+    <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
       <p className="mb-16 sm:mb-24">
         <Wordmark />
       </p>
       <h1 className="text-heading font-semibold tracking-[-0.015em] sm:text-display">This page didn&rsquo;t load</h1>
       <p className="mt-4 max-w-xl text-muted">
-        Gap Radar couldn&rsquo;t reach the figures or the written brief. Load the page again. If it fails a second time,
-        the database or the AI analyst is probably down; the map still works from the saved copy of the figures.
+        We couldn&rsquo;t finish loading this page. Try again, or return to the national view to choose another county.
+        If the problem continues, share the reference below with the team.
       </p>
       <p className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
         <button
@@ -20,10 +20,10 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
           onClick={reset}
           className="rounded-[3px] bg-ink px-4 py-2 font-semibold text-paper hover:bg-ink/85"
         >
-          Load the page again
+          Try again
         </button>
         <Link href="/map" className="link">
-          Open the map
+          Return to national view
         </Link>
       </p>
       {error.digest && (

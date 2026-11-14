@@ -36,6 +36,23 @@ export function countySummary(input: {
   const { name, facts, indicators, pathway, reach, firstAction, costs, mortality } = input;
   const lines: SummaryLine[] = [];
 
+  if (pathway) {
+    const p = pathway.pathway;
+    const opt = serviceOption(p, p.bestQuarter.examined, costs);
+    if (opt.extraColonoscopies > 0 && opt.cost !== null) {
+      return [
+        { key: "gap", label: "Measured gap · bowel", href: "#funnel",
+          text: `${n1(p.rates.examined)}% of positive bowel tests received a colonoscopy in the programme in ${p.year}; Finland was ${n1(p.national.examined)}%.` },
+        { key: "where", label: "Comparison target", href: "#funnel",
+          text: `Matching the best quarter of counties (${n1(p.bestQuarter.examined)}%) would mean ${n0(opt.extraColonoscopies)} additional colonoscopies a year. This is a scenario, not an observed outcome.` },
+        { key: "option", label: "Modelled option", href: "#decide",
+          text: `A nurse follows up positive tests without a booked colonoscopy. At the pre-filled unit prices, the scenario costs about ${eur(opt.cost)} a year. Check local costs and endoscopy capacity before choosing it.` },
+        { key: "first", label: "First action to consider", href: "#decide",
+          text: `Ask the bowel screening coordinator and endoscopy unit to review unbooked positive tests, confirm available capacity and compare the targets below. Other programmes and strategy actions follow in the supporting sections.` },
+      ];
+    }
+  }
+
   // 1. The gap: the screening programme furthest below its national target.
   const short = facts
     .filter((f) => f.target !== null && f.value !== null && f.gapToTarget !== null)

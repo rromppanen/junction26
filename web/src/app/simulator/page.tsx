@@ -16,7 +16,7 @@ import WOMEN from "@/data/women5069.json";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Screening simulator" };
+export const metadata: Metadata = { title: "Breast screening simulator" };
 
 function slope(points: { year: number; value: number }[]): number | null {
   if (points.length < 2) return null;
@@ -69,7 +69,7 @@ export default async function SimulatorPage({ searchParams }: { searchParams: Pr
   const initialFocus = counties.some((c) => c.id === reqFocus) ? reqFocus : null;
 
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-10 pt-5 sm:px-6">
+    <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-4 pb-10 pt-5 sm:px-6">
       <AppHeader>
         <HeaderLink href={initialFocus !== null ? `/county/${initialFocus}` : "/"} icon={ArrowLeft} label={initialFocus !== null ? "County brief" : "Map"} />
         <DataBadge ds={ds} />
@@ -129,8 +129,8 @@ export default async function SimulatorPage({ searchParams }: { searchParams: Pr
         <IconHeading icon={Info} id="limits-h" className="text-xl">What this model leaves out</IconHeading>
         <ul className="mt-3 grid max-w-3xl list-disc gap-2 pl-5 text-sm">
           <li>
-            <strong>Placeholders.</strong> The stage-mix, survival, cost and incidence figures are illustrative until
-            replaced with Finnish Cancer Registry, NORDCAN, Statistics Finland or Lehtinen et al. values.
+            <strong>Illustrative outcomes.</strong> Stage mix, survival, cost and incidence inputs include placeholders.
+            Clinical and cost results stay hidden until requested; opening them does not verify those inputs.
           </li>
           <li>
             <strong>Self-selection.</strong> Women who skip screening may differ in other ways too, so making them attend

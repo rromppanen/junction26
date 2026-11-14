@@ -47,13 +47,13 @@ describe("programmeName", () => {
 describe("countySummary", () => {
   const view = loadPathway(960);
 
-  it("builds all five lines from real registry figures, in order", () => {
+  it("keeps supporting summary lines when no bowel pathway is available", () => {
     expect(view).not.toBeNull();
     const lines = countySummary({
       name: "Helsinki",
       facts: [fact(breast.id, 74.3, 80), fact(cervical.id, 70.1, 80)],
       indicators: INDICATORS,
-      pathway: view,
+      pathway: null,
       reach: {
         plan: { indicatorId: breast.id, areas: [{ regionId: 1, name: "Itäinen" }], languages: [{ language: "Russian", count: 10, sharePct: 1 }, { language: "Somali", count: 9, sharePct: 1 }], year: 2025, actions: [] },
         indicator: breast,
@@ -61,11 +61,21 @@ describe("countySummary", () => {
       firstAction: rec,
       costs,
     });
-    expect(lines.map((l) => l.key)).toEqual(["gap", "where", "who", "option", "first"]);
+    expect(lines.map((l) => l.key)).toEqual(["gap", "who", "first"]);
     // The worst gap is cervical (9.9 points), not breast (5.7).
     expect(lines[0].text).toBe("Cervical screening: 70.1% took part in 2024, 9.9 points short of the 80% target (Finland 81.6%).");
-    expect(lines[2].text).toBe("Breast screening attendance is lowest in Itäinen. The largest foreign languages spoken there are Russian and Somali.");
-    expect(lines[4].text).toBe("Send breast screening invitations in Somali and Arabic. Who: Screening unit. By when: Within 6 months.");
+    expect(lines[1].text).toBe("Breast screening attendance is lowest in Itäinen. The largest foreign languages spoken there are Russian and Somali.");
+    expect(lines[2].text).toBe("Send breast screening invitations in Somali and Arabic. Who: Screening unit. By when: Within 6 months.");
+  });
+
+  it("keeps the opening on one bowel decision and distinguishes scenarios from observations", () => {
+    const lines = countySummary({ name: "Päijät-Häme", facts: [fact(cervical.id, 68.9, 80)], indicators: INDICATORS,
+      pathway: loadPathway(975), reach: null, firstAction: rec, costs });
+    expect(lines.map((line) => line.key)).toEqual(["gap", "where", "option", "first"]);
+    expect(lines[0].text).toContain("positive bowel tests");
+    expect(lines[1].text).toContain("not an observed outcome");
+    expect(lines[2].text).toContain("local costs and endoscopy capacity");
+    expect(lines[3].text).not.toContain(rec.action);
   });
 
   it("states the costed option with the same figures as the decision board", () => {

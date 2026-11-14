@@ -3,6 +3,7 @@ import type { PathwayView } from "@/lib/pathwayData";
 import { COLORECTAL_SOURCE } from "@/lib/pathwayData";
 import { WAIT_SOURCE } from "@/data/registryWaits";
 import { OPTION_EVIDENCE } from "@/data/pathwayCosts";
+import { EvidenceTag } from "@/components/simulator/EvidenceTag";
 import { More } from "@/components/ui";
 import { colorectalScreeningOperator, HUS_SCREENING_SOURCE } from "@/lib/screeningOperator";
 import { EVIDENCE } from "@/data/evidence";
@@ -32,18 +33,17 @@ export function PathwayFunnel({ view, name }: { view: PathwayView; name: string 
 
   return (
     <div>
-      <p className="max-w-3xl font-serif text-[1.25rem] leading-snug">
-        {hasBreak ? (
-          <>
-            {name} loses the most at the <strong>{BREAK_TEXT[top.kind].step}</strong> step: {n(top.people)}{" "}
-            {top.kind === "access" ? "fewer people returned the test" : "fewer positives had a colonoscopy"} than at the rate of the best quarter of
-            counties. At Finland&rsquo;s yield, that is about <strong>{top.cancers.toLocaleString("en-GB")} cancers</strong> and{" "}
-            <strong>{n(top.advanced)} advanced precursors</strong> a year not found in the programme.
-          </>
-        ) : (
-          <>{name} is at or above the best quarter of counties at both steps of colorectal screening.</>
-        )}
+      <p className="mb-2"><EvidenceTag kind="observed" /></p>
+      <p className="max-w-3xl text-lg leading-snug">
+        {n(p.examinedPeople)} of {n(p.findings.positive)} positive bowel tests received a colonoscopy in the programme ({p.rates.examined.toFixed(1)}%, {p.year}).
+        No programme colonoscopy is recorded for {n(p.findings.positive - p.examinedPeople)} people; this does not establish whether they were examined elsewhere.
       </p>
+      <p className="mt-2 text-sm text-muted"><a href={COLORECTAL_SOURCE.url} className="link" target="_blank" rel="noreferrer">Finnish Cancer Registry · bowel screening annual statistics</a></p>
+      {hasBreak && <div className="mt-4 rounded-lg border border-rule bg-surface p-4">
+        <EvidenceTag kind="simulated" />
+        <p className="mt-2 text-sm">Matching the best quarter of counties at the {BREAK_TEXT[top.kind].step} step would add {n(top.people)} {top.kind === "access" ? "participants" : "colonoscopies"} a year.
+        Applying Finland’s yield gives about {top.cancers.toLocaleString("en-GB")} additional cancers and {n(top.advanced)} advanced precursors found. These are calculated outcomes, not measured missed diagnoses.</p>
+      </div>}
       {operator && (
         <p className="mt-2 max-w-3xl text-sm text-muted">
           Who acts: {operator} organises colorectal screening for {name}, so a fix at either step needs {operator}&rsquo;s
@@ -53,7 +53,7 @@ export function PathwayFunnel({ view, name }: { view: PathwayView; name: string 
       )}
 
       <div className="mt-6 overflow-x-auto">
-        <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
+        <table className="responsive-options w-full min-w-[36rem] border-collapse text-left text-sm">
           <caption className="mb-2 text-left text-xs text-muted">Colorectal screening in {name}, {p.year}: the latest year with complete follow-up.</caption>
           <thead>
             <tr className="border-b border-ink align-bottom">
@@ -70,12 +70,12 @@ export function PathwayFunnel({ view, name }: { view: PathwayView; name: string 
               return (
                 <tr key={s.label} className="border-b border-rule align-top">
                   <th scope="row" className="py-2 pr-3 font-medium">{s.label}</th>
-                  <td className="py-2 pr-3 text-right tabular-nums">{n(s.count)}</td>
-                  <td className={`py-2 pr-3 tabular-nums ${behind ? "font-semibold text-behind" : ""}`}>
+                  <td data-label="People" className="py-2 pr-3 text-right tabular-nums">{n(s.count)}</td>
+                  <td data-label={name} className={`py-2 pr-3 tabular-nums ${behind ? "font-semibold text-behind" : ""}`}>
                     {s.rate ? <>{s.rate.county.toFixed(1)}% <span className="font-normal text-muted">{s.rate.of}</span></> : ""}
                   </td>
-                  <td className="py-2 pr-3 tabular-nums">{s.rate ? `${s.rate.national.toFixed(1)}%` : ""}</td>
-                  <td className="py-2 tabular-nums">{s.rate ? `${s.rate.best.toFixed(1)}%` : ""}</td>
+                  <td data-label="Finland" className="py-2 pr-3 tabular-nums">{s.rate ? `${s.rate.national.toFixed(1)}%` : ""}</td>
+                  <td data-label="Best quarter" className="py-2 tabular-nums">{s.rate ? `${s.rate.best.toFixed(1)}%` : ""}</td>
                 </tr>
               );
             })}
@@ -91,7 +91,7 @@ export function PathwayFunnel({ view, name }: { view: PathwayView; name: string 
             </h3>
             {b.people > 0 ? (
               <p className="mt-1 text-sm">
-                {n(b.people)} {b.kind === "access" ? "more participants" : "more colonoscopies"} a year to match the best quarter: about{" "}
+                <EvidenceTag kind="simulated" /> {n(b.people)} {b.kind === "access" ? "more participants" : "more colonoscopies"} a year to match the best quarter: about{" "}
                 {b.cancers.toLocaleString("en-GB")} cancers and {n(b.advanced)} advanced precursors found.
               </p>
             ) : (

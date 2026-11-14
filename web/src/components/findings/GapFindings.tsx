@@ -76,7 +76,7 @@ export function GapFindings() {
   if (loaded === null) return null;
   if (loaded === "missing" || !report) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-24 sm:px-6">
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-2xl px-4 py-24 sm:px-6">
         <FadeIn className="space-y-4">
           <h1 className="text-heading font-semibold">No data to look at yet</h1>
           <p className="text-lede text-muted">Your file stays in this browser tab only. Start an analysis to see the gaps in it.</p>
@@ -94,7 +94,7 @@ export function GapFindings() {
   const breakdowns = report.dimensions.filter((d) => d.byMetric[metric]);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 pb-16 pt-5 sm:px-6">
+    <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-4 pb-16 pt-5 sm:px-6">
       <AppHeader>
         <HeaderLink href="/" icon={RotateCcw} label="New analysis" />
         {county !== null && <HeaderLink href={`/county/${county}`} icon={ArrowLeft} label="Public data brief" title="This county's brief from public registers" />}

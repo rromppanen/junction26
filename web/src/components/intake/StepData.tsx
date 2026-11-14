@@ -143,6 +143,9 @@ export function StepData({ datasets, table, fileName, onDatasets, onFile, onCont
         </FadeIn>
       )}
 
+      {table && <button type="button" onClick={() => { requestRef.current++; setProblem(null); onFile(null, ""); }}
+        className="rounded-md border border-rule px-3 py-2 text-sm">Remove file</button>}
+
       {!table && (
         <FadeIn delay={460} className="-mt-6">
           <button type="button" onClick={() => void loadExample()} className="text-small text-muted underline underline-offset-4 hover:text-ink">

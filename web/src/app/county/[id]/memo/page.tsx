@@ -36,7 +36,7 @@ export default async function MemoPage({
   params, searchParams,
 }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { id } = await params;
-  const proposal = parseProposal(await searchParams);
+  const requestedProposal = parseProposal(await searchParams);
   const regionId = Number(id);
   const loaded = await loadCountyBrief(regionId, "fi");
   if (!loaded) notFound();
@@ -45,6 +45,7 @@ export default async function MemoPage({
 
   const fp = describeFingerprintFi(diagnosePathway(facts, INDICATORS));
   const pathwayView = loadPathway(regionId);
+  const proposal = pathwayView ? requestedProposal : null;
   const operator = colorectalScreeningOperator(region.name);
   const citable = [...live.snippets, ...(peer?.snippets ?? [])];
   const sourceIds = [...new Set(brief.recommendations.flatMap((r) => r.sources))];
@@ -58,7 +59,7 @@ export default async function MemoPage({
     .filter((r) => r.t !== null && r.t.full > 0);
 
   return (
-    <main className="memo mx-auto max-w-3xl px-6 py-6">
+    <main id="main-content" tabIndex={-1} lang="fi" className="memo mx-auto max-w-3xl px-6 py-6">
       <style>{`
         @page { size: A4; margin: 14mm; }
         @media print {
@@ -73,19 +74,20 @@ export default async function MemoPage({
         <PrintButton>Tulosta</PrintButton>
       </nav>
 
+      {proposal && <p className="no-print mb-4 rounded-md border border-rule bg-surface p-3 text-sm">Valittu skenaario · Tarkista oletukset ja paikalliset kustannukset ennen päätöstä. <Link href={`/county/${regionId}#decide`} className="link">Muokkaa vaihtoehtoa</Link></p>}
       <header className="mb-4 border-b border-ink pb-3">
         <p className="text-xs uppercase tracking-wide text-muted">Hallitusmuistio · Syöpähoidon yhdenvertaisuus · {new Date().toLocaleDateString("fi-FI", { timeZone: "Europe/Helsinki" })}</p>
         <h1 className="font-narrow mt-1 text-4xl font-bold leading-none">{name}</h1>
-        <p className="mt-3 font-serif text-lg leading-snug">{brief.headline}</p>
+        {!proposal && <><p className="mt-3 font-serif text-lg leading-snug">{brief.headline}</p>
         <p className="mt-2 text-sm leading-snug">{brief.finding}</p>
-        <p className="mt-2 text-sm font-semibold">{fp}</p>
+        <p className="mt-2 text-sm font-semibold">{fp}</p></>}
       </header>
 
       {proposal && pathwayView && <MemoProposal view={pathwayView} params={proposal} operator={operator} />}
       <MemoExtras mortality={mortality} pathway={pathwayView?.pathway ?? null} showOption={!proposal} />
 
       <section aria-labelledby="m-act">
-        <h2 id="m-act" className="mb-1 text-base font-semibold">Ehdotetut toimenpiteet</h2>
+        <h2 id="m-act" className="mb-1 text-base font-semibold">{proposal ? "Muut harkittavat toimenpiteet · eri ohjelmat" : "Ehdotetut toimenpiteet"}</h2>
         <ol className="border-t border-ink">
           {brief.recommendations.map((r, i) => (
             <li key={i} className="border-b border-rule py-2 text-sm">

@@ -14,11 +14,11 @@ export function describeFingerprintFi(fp: Fingerprint): string {
   const survival = `${fp.outcomeBehind}/${fp.outcomeTotal} elossaolomittaria alle valtakunnallisen tason`;
   switch (fp.pattern) {
     case "detection":
-      return `Havaitseminen on heikko kohta: ${screening}; ${fp.outcomeTotal === 0 ? "elossaolotietoja ei ole vertailuun" : "elossaolo on valtakunnallisella tasolla tai sen yli"}.`;
+      return `Seulontaosallistumisessa on ero vertailutasoon: ${screening}; ${fp.outcomeTotal === 0 ? "elossaolotietoja ei ole vertailuun" : "elossaolo on valtakunnallisella tasolla tai sen yli"}.`;
     case "after-detection":
-      return `Ero ilmenee havaitsemisen jälkeen: ${survival}${fp.detectionTotal === 0 ? "; seulontatietoja ei ole vertailuun" : ", kun seulonta on valtakunnallisella tasolla tai sen yli"}.`;
+      return `Elossaolossa on ero vertailutasoon: ${survival}${fp.detectionTotal === 0 ? "; seulontatietoja ei ole vertailuun" : ", kun seulonta on valtakunnallisella tasolla tai sen yli"}.`;
     case "both":
-      return `Ero ulottuu koko hoitopolulle: ${screening} ja ${survival}.`;
+      return `Erilliset erot seulonnassa ja elossaolossa: ${screening} ja ${survival}.`;
     case "none":
       return "Eroa ei löydy: seulonta ja elossaolo ovat valtakunnallisella tasolla tai sen yli.";
     default:

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { QuestionInput } from "@/lib/intake/clarify";
 import type { Table } from "@/lib/intake/csv";
@@ -48,6 +48,14 @@ function settle(u: Understanding, resolved: Resolved[]): Settled {
 export function IntakeFlow() {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("data");
+  const phaseRef = useRef<HTMLDivElement>(null);
+  const previousPhase = useRef(phase);
+  useEffect(() => {
+    if (previousPhase.current !== phase) {
+      phaseRef.current?.focus();
+      previousPhase.current = phase;
+    }
+  }, [phase]);
   const [datasets, setDatasets] = useState<PublicDataset[]>(DEFAULT_DATASETS);
   const [table, setTable] = useState<Table | null>(null);
   const [fileName, setFileName] = useState("");
@@ -63,7 +71,15 @@ export function IntakeFlow() {
 
   return (
     <div className={leaving ? "fade-out" : ""}>
-      <div key={phase}>
+      <nav aria-label="Analysis setup progress" className="mb-8">
+        <ol className="flex flex-wrap gap-2 text-sm">
+          {([['data', 'Choose data'], ['reading', 'Review data'], ['ask', 'Clarify scope'], ['done', 'Ready']] as const).map(([step, label], i) => (
+            <li key={step} aria-current={phase === step ? "step" : undefined}
+              className={`rounded-md border px-3 py-2 ${phase === step ? "border-ink bg-ink text-paper" : "border-rule text-muted"}`}>{i + 1}. {label}</li>
+          ))}
+        </ol>
+      </nav>
+      <div key={phase} ref={phaseRef} tabIndex={-1}>
         {phase === "data" && (
           <StepData
             datasets={datasets}
