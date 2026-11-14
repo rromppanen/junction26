@@ -7,6 +7,7 @@ import { Wordmark } from "@/components/Wordmark";
 import { ROBOT_TRAVEL_MS, robotProgress, stageOf, type Lang, type Stage } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
 import { BagIllustration, CheckIllustration, LeafletIllustration, TubeIllustration } from "./Illustrations";
+import { AskBox } from "./AskBox";
 import { RobotMap } from "./RobotMap";
 import { LOCALES, STRINGS, type KitStrings } from "./strings";
 
@@ -215,6 +216,8 @@ export function KitApp() {
               <Primary onClick={() => act({ type: "sampleTaken" })}>{t.taken}</Primary>
             </>
           )}
+
+          {stage === "invited" && <AskBox t={t.ask} lang={lang} />}
 
           {stage === "sampleTaken" && (
             <>
