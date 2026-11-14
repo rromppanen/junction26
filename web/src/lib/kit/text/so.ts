@@ -73,7 +73,7 @@ export const so: KitText = {
       { title: "Taariikhda ku qor calaamadda muunadda oo ku dheji tuubbada.", body: "Calaamaddu waxay ku dhegan tahay warqadda casuumaadda. Ku qor taariikhda aad muunadda qaadatay, ka fur calaamadda baarkoodhka leh warqadda, oo si toos ah ugu dheji dhinaca siman ee tuubbada." },
       { title: "Tuubbada geli bacda celinta oo si fiican u xir.", body: "Bacda celintu waxay la timid casuumaadda, gudaheedana waxaa ku jira maro nuugta." },
       { title: "Buuxi macluumaadka hore.", body: "Online seula.hus.fi ama koodhka QR ee warqadda. Magaca isticmaalaha: lambarka ka bilaabma H ee calaamadda muunadda. Furaha sirta: lixda lambar ee ugu horreeya aqoonsigaaga shakhsiga ah. Haddii aadan isticmaali karin foomka online-ka, buuxi foomka warqadda ah ee la socday warqadda." },
-      { title: "Bacda geli baqshadda celinta ee kartoonka ah.", body: "Haddii aad buuxisay foomka warqadda ah, isna baqshadda geli. Muunadda ku hay heerkulka qolka. Waa in la celiyaa ugu dambeyn maalinta shaqo ee ku xigta qaadashada, markaa hadda ballanso robot-ka." },
+      { title: "Bacda celinta ee xiran geli baqshadda celinta ee kartoonka ah.", body: "Haddii aad buuxisay foomka warqadda ah, isna baqshadda geli. Muunadda ku hay heerkulka qolka. Waa in la celiyaa ugu dambeyn maalinta shaqo ee ku xigta qaadashada, markaa hadda ballanso robot-ka." },
     ],
     resultWait: "Natiijada waxaad heli doontaa qiyaastii hal bil gudahood, haddii ay suurtagal tahay warqad elektaroonig ah.",
     negative: { title: "Muunadda dhiig lagama helin", body: "Mar kale waxaa laguu casuumi doonaa laba sano kadib. Haddii aad calaamado yeelato ka hor, la xiriir xarunta caafimaadka." },

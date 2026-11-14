@@ -73,7 +73,7 @@ export const et: KitText = {
       { title: "Kirjuta proovikleebisele kuupäev ja kleebi see tuubile.", body: "Kleebis on kutsekirja küljes. Kirjuta sellele proovivõtmise kuupäev, eemalda vöötkoodiga kleebis paberilt ja kleebi see püstiselt tuubi lamedale küljele." },
       { title: "Pane tuub tagastuskotti ja sulge kott hoolikalt.", body: "Tagastuskott tuli koos kutsega ja selle sees on imav lapp." },
       { title: "Täida sõeluuringu eelinfo.", body: "Elektrooniliselt aadressil seula.hus.fi või kirjas oleva QR-koodiga. Kasutajatunnus: proovikleebisel olev H-tähega algav number. Parool: sinu Soome isikukoodi kuus esimest numbrit. Kui elektrooniline vorm ei õnnestu, täida kirjaga kaasas olnud paberankeet." },
-      { title: "Pane kott papist tagastusümbrikusse.", body: "Kui täitsid paberankeedi, pane ka see ümbrikusse. Hoia proovi toatemperatuuril. Proov tuleb tagastada hiljemalt proovivõtmisele järgneval tööpäeval, nii et telli robot kohe." },
+      { title: "Pane suletud tagastuskott papist tagastusümbrikusse.", body: "Kui täitsid paberankeedi, pane ka see ümbrikusse. Hoia proovi toatemperatuuril. Proov tuleb tagastada hiljemalt proovivõtmisele järgneval tööpäeval, nii et telli robot kohe." },
     ],
     resultWait: "Tulemuse saad umbes kuu aja jooksul, eelistatult elektroonilise kirjana.",
     negative: { title: "Proovis verd ei olnud", body: "Järgmine kutse tuleb kahe aasta pärast. Kui sul tekib enne seda sümptomeid, võta ühendust tervisekeskusega." },

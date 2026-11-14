@@ -73,7 +73,7 @@ export const sv: KitText = {
       { title: "Skriv datumet på provetiketten och fäst den på röret.", body: "Etiketten sitter på kallelsebrevet. Skriv provtagningsdatumet på den, lossa etiketten med streckkoden från papperet och fäst den lodrätt på rörets platta sida." },
       { title: "Lägg röret i returpåsen och stäng påsen ordentligt.", body: "Returpåsen kom med kallelsen och har en absorberande duk inuti." },
       { title: "Fyll i förhandsuppgifterna.", body: "Elektroniskt på seula.hus.fi eller via QR-koden i brevet. Användarnamn: numret som börjar med H på provetiketten. Lösenord: de sex första siffrorna i din personbeteckning. Kan du inte använda den elektroniska blanketten, fyll i pappersblanketten som kom med brevet." },
-      { title: "Lägg påsen i returkuvertet av kartong.", body: "Har du fyllt i pappersblanketten, lägg den också i kuvertet. Förvara provet i rumstemperatur. Det ska lämnas in senast nästa vardag efter provtagningen, så boka robotens hämtning härnäst." },
+      { title: "Lägg den stängda returpåsen i returkuvertet av kartong.", body: "Har du fyllt i pappersblanketten, lägg den också i kuvertet. Förvara provet i rumstemperatur. Det ska lämnas in senast nästa vardag efter provtagningen, så boka robotens hämtning härnäst." },
     ],
     resultWait: "Du får svaret inom ungefär en månad, i första hand som elektroniskt brev.",
     negative: { title: "Provet innehöll inget blod", body: "Du kallas nästa gång om två år. Om du får symtom innan dess, kontakta hälsostationen." },
