@@ -36,7 +36,7 @@ export const so: KitText = {
     arrivesIn: (s) => `Wuxuu imanayaa qiyaastii ${s} ilbiriqsi kadib`,
     almostThere: "Wuu soo dhowyahay",
     from: "Wuxuu ka soo baxay xarunta muunadaha ee ugu dhow",
-    spedUp: "Tijaabadan robotka waa la dedejiyay, sidaas darteed wuxuu imanayaa dhowr ilbiriqsi gudahood.",
+    spedUp: (x) => `${x}× xawaare`,
     mapError: "Khariidadda lama soo rari karin. Robotku weli waa soo socdaa.",
     arrived: "Robotku wuu yimid",
     arrivedBody: "Wuxuu ku sugayaa albaabkaaga hortiisa.",

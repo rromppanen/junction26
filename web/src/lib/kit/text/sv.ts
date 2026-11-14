@@ -36,7 +36,7 @@ export const sv: KitText = {
     arrivesIn: (s) => `Framme om cirka ${s} s`,
     almostThere: "Nästan framme",
     from: "Åkte från närmaste provstation",
-    spedUp: "I demon går roboten snabbare än i verkligheten, så den är framme på några sekunder.",
+    spedUp: (x) => `Uppsnabbad ${x}×`,
     mapError: "Kartan kunde inte laddas. Roboten är ändå på väg.",
     arrived: "Roboten är framme",
     arrivedBody: "Den väntar utanför din dörr.",

@@ -133,3 +133,11 @@ describe("seedSamples", () => {
     expect(seed.length).toBeGreaterThanOrEqual(9);
   });
 });
+
+describe("demo robot speed", () => {
+  it("is shown as the ratio of a real trip to the demo trip", async () => {
+    const { REAL_TRIP_MS, ROBOT_SPEEDUP } = await import("./model");
+    expect(ROBOT_SPEEDUP).toBe(Math.round(REAL_TRIP_MS / ROBOT_TRAVEL_MS));
+    expect(ROBOT_SPEEDUP).toBe(40);
+  });
+});
