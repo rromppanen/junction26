@@ -8,6 +8,8 @@ export const EVENT_LABEL: Record<EventType, string> = {
   kitOpened: "Kit opened",
   sampleTaken: "Sample taken",
   pickupBooked: "Robot pickup booked",
+  robotDispatched: "Robot left the hub",
+  robotArrived: "Robot at the door",
   pickedUp: "Picked up by robot",
   atLab: "Arrived at the lab",
   resultNegative: "Result: no blood found",
@@ -19,7 +21,7 @@ export const EVENT_LABEL: Record<EventType, string> = {
 };
 
 const MILESTONES: Partial<Record<EventType, true>> = {
-  invited: true, kitOpened: true, sampleTaken: true, pickupBooked: true, pickedUp: true, atLab: true,
+  invited: true, kitOpened: true, sampleTaken: true, pickupBooked: true, robotDispatched: true, robotArrived: true, pickedUp: true, atLab: true,
   resultNegative: true, resultPositive: true, colonoscopyBooked: true, colonoscopyDone: true,
 };
 

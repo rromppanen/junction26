@@ -1,0 +1,130 @@
+/*
+  Step animations for the home-sample app. Each scene loops one movement over its own
+  length, set as --d on the svg. Scenes that do not end where they start sit in an
+  .a-fade group: it fades out at the end of the loop and in at the start, so the moving
+  parts reset while hidden and nothing jumps.
+  The base transform of every moving part is its end pose, so with reduced motion
+  (animations off globally) the picture still shows the finished step.
+*/
+/* Only the moving parts use their own box as the origin; static transform attributes keep SVG's default. */
+.kit-anim .a, .kit-anim .a-lid-open { transform-box: fill-box; }
+.kit-anim .a { animation-duration: var(--d, 3.6s); animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
+
+.a-fade { animation-name: k-fade; animation-timing-function: linear !important; }
+@keyframes k-fade { 0% { opacity: 0; } 7%, 90% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Tube out of / into the bag */
+.a-unbag { transform: translateY(-8px); animation-name: k-unbag; }
+@keyframes k-unbag { 0%, 12% { transform: translateY(44px); } 55%, 100% { transform: translateY(-8px); } }
+.a-rebag { transform: translateY(44px); animation-name: k-rebag; }
+@keyframes k-rebag { 0%, 12% { transform: translateY(-8px); } 55%, 100% { transform: translateY(44px); } }
+.a-seal { stroke: var(--brand); animation-name: k-seal; }
+@keyframes k-seal { 0%, 58% { stroke: var(--rule); } 68%, 100% { stroke: var(--brand); } }
+
+/* Paper laid over the toilet */
+.a-base { transform-origin: center; animation-name: k-base; }
+@keyframes k-base { 0%, 8% { transform: translateY(-50px) scale(1.15); opacity: 0; } 50%, 100% { transform: none; opacity: 1; } }
+
+/* Cap twisted off: the ridges roll one way (the cap turning), then cap and stick lift out. */
+.a-ridges { transform: translateX(12px); animation-name: k-ridges; animation-timing-function: linear !important; }
+@keyframes k-ridges { 0%, 6% { transform: none; } 42%, 100% { transform: translateX(12px); } }
+.a-lift { transform: translateY(-40px); animation-name: k-lift; }
+@keyframes k-lift { 0%, 46% { transform: none; } 76%, 100% { transform: translateY(-40px); } }
+.a-turn-arrow { opacity: 0; animation-name: k-turn-arrow; }
+@keyframes k-turn-arrow { 0%, 4% { opacity: 0; } 12%, 36% { opacity: 1; } 46%, 100% { opacity: 0; } }
+
+/* Stick stroked back and forth over the stool */
+.a-scrape { animation-name: k-scrape; }
+@keyframes k-scrape { 0%, 100% { transform: translateX(-15px); } 50% { transform: translateX(15px); } }
+
+/* Cap pressed on, with a click */
+.a-press { animation-name: k-press; }
+@keyframes k-press { 0%, 10% { transform: translateY(-30px); } 45% { transform: translateY(2px); } 52%, 100% { transform: none; } }
+.a-burst { opacity: 0; animation-name: k-burst; }
+@keyframes k-burst { 0%, 46% { opacity: 0; } 52%, 70% { opacity: 1; } 80%, 100% { opacity: 0; } }
+
+/* Shaken hard */
+.a-shake { transform-origin: center; animation-name: k-shake; }
+@keyframes k-shake {
+  0%, 60%, 100% { transform: none; }
+  7.5%, 22.5%, 37.5%, 52.5% { transform: rotate(-22deg); }
+  15%, 30%, 45% { transform: rotate(22deg); }
+}
+
+/* Sticker peeled off the form and put on the tube */
+.a-sticker { transform: translate(88px, -22px); animation-name: k-sticker; }
+@keyframes k-sticker {
+  0%, 14% { transform: none; }
+  24% { transform: translate(-2px, -8px) rotate(-8deg) scale(1.06); }
+  62%, 100% { transform: translate(88px, -22px); }
+}
+
+/* Ticks drawn on a form, one after another; all are gone before the loop starts again. */
+.a-tick { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.a-tick.t1 { animation-name: k-tick1; }
+.a-tick.t2 { animation-name: k-tick2; }
+.a-tick.t3 { animation-name: k-tick3; }
+@keyframes k-tick1 { 0%, 10% { stroke-dashoffset: 1; } 20%, 80% { stroke-dashoffset: 0; } 88%, 100% { stroke-dashoffset: 1; } }
+@keyframes k-tick2 { 0%, 26% { stroke-dashoffset: 1; } 36%, 80% { stroke-dashoffset: 0; } 88%, 100% { stroke-dashoffset: 1; } }
+@keyframes k-tick3 { 0%, 42% { stroke-dashoffset: 1; } 52%, 80% { stroke-dashoffset: 0; } 88%, 100% { stroke-dashoffset: 1; } }
+
+/* Into the envelope's pocket (the flap's fold is animated in the SVG itself). */
+.a-intoenv { transform: translateY(64px); animation-name: k-intoenv; }
+@keyframes k-intoenv { 0%, 10% { transform: none; } 50%, 100% { transform: translateY(64px); } }
+
+/* Robot */
+.a-arrive { animation-name: k-arrive; }
+@keyframes k-arrive { 0% { transform: translateX(-150px); } 50%, 100% { transform: none; } }
+.a-blink { animation-name: k-blink; animation-duration: 1s !important; }
+@keyframes k-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+.a-tap { transform-origin: center; opacity: 0; animation-name: k-tap; }
+@keyframes k-tap { 0%, 20% { transform: scale(0.4); opacity: 0; } 30% { opacity: 0.6; } 50%, 100% { transform: scale(1.6); opacity: 0; } }
+.a-shackle { transform: translateY(-7px); animation-name: k-shackle; }
+@keyframes k-shackle { 0%, 35% { transform: none; } 50%, 100% { transform: translateY(-7px); } }
+.a-button { animation-name: k-button; }
+@keyframes k-button { 0%, 25% { fill: var(--brand); } 32% { fill: var(--brand-strong); } 40%, 100% { fill: var(--brand); } }
+.a-lid-open { transform-origin: 0% 100%; transform: rotate(-38deg); }
+.a-lid-close { transform-origin: 0% 100%; animation-name: k-lidclose; }
+@keyframes k-lidclose { 0%, 15% { transform: rotate(-38deg); } 50%, 100% { transform: none; } }
+.a-lock { animation-name: k-lock; }
+@keyframes k-lock { 0%, 50% { opacity: 0; transform: scale(0.6); } 60%, 100% { opacity: 1; transform: none; } }
+.a-dropin { transform: translateY(58px); animation-name: k-dropin; }
+@keyframes k-dropin { 0%, 10% { transform: none; opacity: 0; } 20% { opacity: 1; } 60%, 100% { transform: translateY(58px); opacity: 1; } }
+/* The robot leaves once (it starts at x 20, so 210 clears the 200-wide picture), then a check stays in its place. */
+.kit-anim .a-leave { transform: translateX(210px); opacity: 0; animation: k-leave 2.2s ease-in 0.3s 1 both; }
+@keyframes k-leave { 0% { transform: none; opacity: 1; } 95% { transform: translateX(210px); opacity: 1; } 100% { transform: translateX(210px); opacity: 0; } }
+.kit-anim .a-done { transform-box: fill-box; transform-origin: center; animation: k-done 0.45s cubic-bezier(0.2, 0.8, 0.2, 1.2) 2.4s 1 both; }
+@keyframes k-done { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+.kit-anim .a-done-tick { stroke-dasharray: 1; stroke-dashoffset: 0; animation: k-done-tick 0.4s ease-out 2.75s 1 both; }
+@keyframes k-done-tick { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+/*
+  Screens: the content fades and drifts up a few pixels, one block shortly after another, on a long
+  ease-out, so a screen settles in rather than arriving. The actions at the bottom stay put.
+*/
+.kit-enter > * { animation: kit-rise 1.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.kit-enter > *:nth-child(2) { animation-delay: 0.1s; }
+.kit-enter > *:nth-child(3) { animation-delay: 0.2s; }
+.kit-enter > *:nth-child(4) { animation-delay: 0.3s; }
+.kit-enter > *:nth-child(5) { animation-delay: 0.4s; }
+.kit-enter > *:nth-child(n + 6) { animation-delay: 0.5s; }
+@keyframes kit-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* A window over the screen: the page dims and the card grows into place on a sheet-like curve; closing reverses it. */
+.kit-backdrop { animation: kit-dim 0.55s ease-out both; }
+.kit-window { transform-origin: 50% 60%; animation: kit-open 0.6s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.kit-window-out .kit-backdrop { animation: kit-dim 0.38s ease-in reverse both; }
+.kit-window-out .kit-window { animation: kit-close 0.38s cubic-bezier(0.4, 0, 1, 1) both; }
+@keyframes kit-dim { from { opacity: 0; } to { opacity: 1; } }
+@keyframes kit-open { from { opacity: 0; transform: translateY(18px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes kit-close { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(12px) scale(0.98); } }
+
+/* The robot is here: the map blurs softly, the card settles in and the check draws; then it all fades away. */
+.kit-arrived-veil { animation: kit-veil 0.6s ease-out both; }
+.kit-arrived-card { animation: kit-settle 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both; }
+.kit-arrived-tick { stroke-dasharray: 1; stroke-dashoffset: 0; animation: k-done-tick 0.5s ease-out 0.45s both; }
+/* The map and check fade away over the hand-over steps, which rise in underneath at the same time. */
+.kit-crossfade-out { animation: kit-fade-out 0.9s cubic-bezier(0.4, 0, 0.2, 1) both; pointer-events: none; }
+@keyframes kit-veil { from { opacity: 0; } to { opacity: 1; } }
+@keyframes kit-settle { from { opacity: 0; transform: translateY(10px) scale(0.94); } to { opacity: 1; transform: none; } }
+@keyframes kit-fade-out { from { opacity: 1; } to { opacity: 0; } }

@@ -13,7 +13,7 @@ import { seedSamples } from "./seed";
 
 const DAY = 86_400_000;
 const T0 = 1_000_000_000_000;
-const person = { id: "p", name: "Test T.", age: 60, municipality: "Lahti", lang: "fi" as const };
+const person = { id: "p", name: "Test T.", age: 60, municipality: "Helsinki", lang: "fi" as const };
 const mk = (...events: [EventType, number, string?][]): Sample => ({
   id: "p",
   person,
@@ -36,27 +36,37 @@ describe("stageOf", () => {
   it("ignores reminders and nurse calls", () => {
     expect(stageOf(mk(["invited", T0], ["reminderSent", T0 + 1], ["nurseCalled", T0 + 2]), T0 + 5)).toBe("invited");
   });
-  it("is time-based after pickup is booked", () => {
+  it("waits at pickupBooked until the robot is dispatched", () => {
     const s = mk(["sampleTaken", T0], ["pickupBooked", T0 + 10, "Today 15:00"]);
+    expect(stageOf(s, T0 + DAY)).toBe("pickupBooked");
+  });
+  it("is time-based once the robot is dispatched", () => {
+    const s = mk(["pickupBooked", T0], ["robotDispatched", T0 + 10]);
     expect(stageOf(s, T0 + 10 + 5_000)).toBe("robotEnRoute");
-    expect(stageOf(s, T0 + 10 + 21_000)).toBe("robotAtDoor");
-    expect(ROBOT_TRAVEL_MS).toBe(20_000);
+    expect(stageOf(s, T0 + 10 + ROBOT_TRAVEL_MS)).toBe("robotAtDoor");
+  });
+  it("is at the door straight away when the wait is skipped", () => {
+    const s = mk(["robotDispatched", T0], ["robotArrived", T0 + 5_000]);
+    expect(stageOf(s, T0 + 6_000)).toBe("robotAtDoor");
   });
   it("is pickedUp once collected, even after the robot arrived", () => {
-    const s = mk(["pickupBooked", T0], ["pickedUp", T0 + 30_000]);
+    const s = mk(["robotDispatched", T0], ["robotArrived", T0 + 1], ["pickedUp", T0 + 30_000]);
     expect(stageOf(s, T0 + 40_000)).toBe("pickedUp");
   });
 });
 
 describe("robotProgress", () => {
-  const s = mk(["pickupBooked", T0]);
-  it("is about 0.25 at 5 s and 1 at the door", () => {
-    expect(robotProgress(s, T0 + 5_000)).toBeCloseTo(0.25, 5);
-    expect(robotProgress(s, T0 + 21_000)).toBe(1);
+  const s = mk(["pickupBooked", T0], ["robotDispatched", T0]);
+  it("is a quarter of the way at a quarter of the travel time and 1 at the door", () => {
+    expect(robotProgress(s, T0 + ROBOT_TRAVEL_MS / 4)).toBeCloseTo(0.25, 5);
+    expect(robotProgress(s, T0 + ROBOT_TRAVEL_MS + 1_000)).toBe(1);
   });
-  it("is null with no booking or after pickup", () => {
-    expect(robotProgress(mk(["sampleTaken", T0]), T0 + 5_000)).toBeNull();
-    expect(robotProgress(mk(["pickupBooked", T0], ["pickedUp", T0 + 25_000]), T0 + 30_000)).toBeNull();
+  it("is 1 when the wait is skipped", () => {
+    expect(robotProgress(mk(["robotDispatched", T0], ["robotArrived", T0 + 1]), T0 + 2)).toBe(1);
+  });
+  it("is null before the robot leaves or after pickup", () => {
+    expect(robotProgress(mk(["pickupBooked", T0]), T0 + 5_000)).toBeNull();
+    expect(robotProgress(mk(["robotDispatched", T0], ["pickedUp", T0 + 25_000]), T0 + 30_000)).toBeNull();
   });
 });
 
@@ -79,7 +89,7 @@ describe("flagsOf", () => {
     expect(flagsOf(b, T0 + 9 * DAY).map((f) => f.kind)).not.toContain("positiveNoBooking");
   });
   it("flags robotWaiting after 61 s at the door", () => {
-    const s = mk(["pickupBooked", T0]);
+    const s = mk(["robotDispatched", T0]);
     const door = T0 + ROBOT_TRAVEL_MS;
     expect(flagsOf(s, door + 30_000).map((f) => f.kind)).not.toContain("robotWaiting");
     expect(flagsOf(s, door + 61_000).map((f) => f.kind)).toContain("robotWaiting");
@@ -121,5 +131,13 @@ describe("seedSamples", () => {
     expect(seed.some((s) => stageOf(s, now) === "done")).toBe(true);
     expect(seed.some((s) => s.person.interpreter === "Arabic")).toBe(true);
     expect(seed.length).toBeGreaterThanOrEqual(9);
+  });
+});
+
+describe("demo robot speed", () => {
+  it("is shown as the ratio of a real trip to the demo trip", async () => {
+    const { REAL_TRIP_MS, ROBOT_SPEEDUP } = await import("./model");
+    expect(ROBOT_SPEEDUP).toBe(Math.round(REAL_TRIP_MS / ROBOT_TRAVEL_MS));
+    expect(ROBOT_SPEEDUP).toBe(40);
   });
 });

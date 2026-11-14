@@ -1,0 +1,173 @@
+"use client";
+
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import { Fragment } from "react";
+import { CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap } from "react-leaflet";
+import type { Sample } from "@/lib/sample/model";
+import { AREAS, HUBS, curvedRoute, homeOf, pickupCode, positionOf, routeKey, splitLine, type LatLng, type RobotView } from "@/lib/robots/fleet";
+
+// The HUS palette of the user app (web/): brand blue for a robot on its way, like the kit's tracking map.
+const COLOUR = {
+  outbound: "#004b87",
+  atDoor: "#004b87",
+  flagged: "#a34a08",
+  returning: "#004b87",
+  idle: "#ffffff",
+  ink: "#1d252c",
+  hub: "#003c6c",
+  behind: "#9aa9b6",
+};
+
+const HOUSE = '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z" fill="#fff"/></svg>';
+const homeIcon = L.divIcon({ className: "home-pin", iconSize: [22, 22], iconAnchor: [11, 11], html: `<span>${HOUSE}</span>` });
+const homeFlaggedIcon = L.divIcon({ className: "home-pin is-flagged", iconSize: [26, 26], iconAnchor: [13, 13], html: `<span>${HOUSE}</span>` });
+
+function colourOf(v: RobotView): string {
+  const s = v.status;
+  if (s.kind === "atDoor") return s.flagged ? COLOUR.flagged : COLOUR.atDoor;
+  return COLOUR[s.kind];
+}
+
+function robotIcon(v: RobotView, selected: boolean): L.DivIcon {
+  const idle = v.status.kind === "idle";
+  const size = idle ? 18 : 26;
+  return L.divIcon({
+    className: "robot-pin",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    html: `<span class="robot-dot${idle ? " is-idle" : ""}${selected ? " is-selected" : ""}" style="background:${colourOf(v)}">${v.robot.id.slice(1)}</span>`,
+  });
+}
+
+const hubIcon = L.divIcon({ className: "hub-pin", iconSize: [18, 18], iconAnchor: [9, 9], html: "<span></span>" });
+const hubIntakeIcon = L.divIcon({ className: "hub-pin has-intake", iconSize: [22, 22], iconAnchor: [11, 11], html: "<span></span>" });
+
+// Fit the whole capital region: every hub and neighbourhood.
+const BOUNDS = L.latLngBounds([...Object.values(HUBS).map((h) => h.at), ...Object.values(AREAS).map((a) => a.at)]).pad(0.06);
+
+const statusText: Record<RobotView["status"]["kind"], string> = {
+  idle: "parked", outbound: "on the way", atDoor: "at the door", returning: "returning",
+};
+
+function langLine(p: Sample["person"]): string {
+  return [p.homeLanguage, p.interpreter ? "needs interpreter" : ""].filter(Boolean).join(", ");
+}
+
+/** A button that zooms back out to the whole capital region. */
+function FitButton() {
+  const map = useMap();
+  return (
+    <div className="leaflet-top leaflet-right">
+      <div className="leaflet-control">
+        <button type="button" onClick={() => map.fitBounds(BOUNDS)}
+          className="min-h-9 rounded-md border border-rule bg-white px-3 text-sm font-medium shadow-sm hover:bg-brand-soft">
+          Whole region
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The capital region on an OpenStreetMap base map: hubs, homes waiting for a pickup,
+ * robots and the street routes they follow. Rendered only in the browser.
+ */
+export default function LiveMap({ fleet, ready, intake, routes, selected, onSelect }: {
+  fleet: RobotView[];
+  ready: Sample[];
+  /** Samples waiting for a nurse, per hub id. */
+  intake: Record<string, number>;
+  routes: Map<string, LatLng[]>;
+  selected: string | null;
+  onSelect: (robotId: string) => void;
+}) {
+  const lineOf = (v: RobotView): LatLng[] | undefined => {
+    if (v.status.kind === "idle") return undefined;
+    const t = v.status.trip;
+    return routes.get(routeKey(t)) ?? curvedRoute(HUBS[t.hub].at, t.home, routeKey(t));
+  };
+
+  return (
+    <MapContainer bounds={BOUNDS} zoomSnap={0.25} zoomDelta={0.5} wheelPxPerZoomLevel={90} minZoom={9} maxZoom={16} scrollWheelZoom className="h-[min(72vh,680px)] min-h-[420px] w-full rounded-xl" attributionControl>
+      <FitButton />
+      {/* Esri's light grey canvas: quiet streets so the routes and robots stand out. No API key. */}
+      <TileLayer
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+        maxZoom={16}
+        attribution='Base map &copy; Esri, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors; routes: <a href="https://routing.openstreetmap.de/about.html">FOSSGIS OSRM</a>, OpenStreetMap'
+      />
+      <TileLayer
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+        maxZoom={16}
+      />
+
+      {fleet.map((v) => {
+        const line = lineOf(v);
+        if (!line) return null;
+        const on = selected === v.robot.id;
+        const dim = selected && !on ? 0.3 : 1;
+        // As on the kit's tracking map: the road still to drive is solid with a white outline, the rest is grey dots.
+        const s = v.status;
+        const ahead = s.kind === "outbound" ? splitLine(line, s.progress).ahead
+          : s.kind === "returning" ? splitLine(line, 1 - s.progress).done : [];
+        return (
+          <Fragment key={`route-${v.robot.id}`}>
+            <Polyline positions={line} pathOptions={{ color: COLOUR.behind, weight: 4, opacity: dim, dashArray: "1 9", lineCap: "round" }} />
+            {ahead.length > 1 && (
+              <>
+                <Polyline positions={ahead} pathOptions={{ color: "#ffffff", weight: on ? 10 : 8, opacity: dim, lineCap: "round" }} />
+                <Polyline positions={ahead} pathOptions={{ color: colourOf(v), weight: on ? 6 : 4, opacity: dim, lineCap: "round" }} />
+              </>
+            )}
+          </Fragment>
+        );
+      })}
+
+      {ready.map((s) => (
+        <CircleMarker key={`ready-${s.id}`} center={homeOf(s.person)} radius={6}
+          pathOptions={{ color: COLOUR.ink, weight: 2, fillColor: "#ffffff", fillOpacity: 1 }}>
+          <Tooltip>{pickupCode(s.id)}, {s.person.area} · sample ready, no pickup booked{langLine(s.person) ? ` · ${langLine(s.person)}` : ""}</Tooltip>
+        </CircleMarker>
+      ))}
+
+      {fleet.map((v) => {
+        if (v.status.kind === "idle") return null;
+        const t = v.status.trip;
+        const flagged = v.status.kind === "atDoor" && v.status.flagged;
+        return (
+          <Marker key={`home-${v.robot.id}`} position={t.home} icon={flagged ? homeFlaggedIcon : homeIcon} keyboard={false}>
+            <Tooltip permanent direction="right" offset={[10, 0]} className="home-label">{pickupCode(t.sampleId)}</Tooltip>
+          </Marker>
+        );
+      })}
+
+      {/* Parked robots are counted on their hub's label rather than stacked on top of it. */}
+      {Object.values(HUBS).map((h) => {
+        const parked = fleet.filter((v) => v.robot.hub === h.id && v.status.kind === "idle").length;
+        return (
+          <Marker key={h.id} position={h.at} icon={intake[h.id] ? hubIntakeIcon : hubIcon} zIndexOffset={-100}>
+            <Tooltip key={intake[h.id] ? "intake" : "ready"} permanent direction="bottom" offset={[0, 8]} className={`hub-label${intake[h.id] ? " has-intake" : ""}`}>
+              {h.name} · {intake[h.id] ? `${intake[h.id]} to collect` : `${parked} ready`}
+            </Tooltip>
+          </Marker>
+        );
+      })}
+
+      {fleet.map((v) => {
+        if (v.status.kind === "idle") return null;
+        const on = selected === v.robot.id;
+        return (
+          <Marker key={v.robot.id} position={positionOf(v, lineOf(v), 0)} icon={robotIcon(v, on)}
+            zIndexOffset={1000}
+            eventHandlers={{ click: () => onSelect(v.robot.id) }}
+            keyboard={false}>
+            <Tooltip direction="top" offset={[0, -12]}>
+              {v.robot.name}, {statusText[v.status.kind]}: {pickupCode(v.status.trip.sampleId)}
+            </Tooltip>
+          </Marker>
+        );
+      })}
+    </MapContainer>
+  );
+}

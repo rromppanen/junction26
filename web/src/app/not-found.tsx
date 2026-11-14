@@ -12,7 +12,7 @@ export default function NotFound() {
       </p>
       <h1 className="text-heading font-semibold tracking-[-0.015em] sm:text-display">There&rsquo;s no page at this address</h1>
       <p className="mt-4 max-w-xl text-muted">
-        This address doesn&rsquo;t match a page in Läpi. Check the address or go back to the start page.
+        This address doesn&rsquo;t match a page in farmagusta. Check the address or go back to the start page.
       </p>
       <p className="mt-6 text-sm">
         <Link href="/" className="link font-semibold">

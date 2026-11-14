@@ -47,6 +47,34 @@ jobs:
       - name: Build
         run: npm run build
 
+  nurse:
+    name: Nurse (lint, test, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: nurse
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: nurse/.nvmrc
+          cache: npm
+          cache-dependency-path: nurse/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
   secrets:
     name: Secret scan
     runs-on: ubuntu-latest
