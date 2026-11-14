@@ -13,7 +13,7 @@ Only facts that are already confirmed go here. Mark everything else _TBD_, and n
 
 | Operation | Verified command or owning document | Expected evidence |
 | --- | --- | --- |
-| Prepare local environment | `cd web && npm ci`, then API keys in `web/.env.local` (`GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_CRITIC_MODEL` for the recommendation reviewer, `CONTEXT_DEV_API_KEY`, `DATABASE_URL`; all optional) | Install finishes |
+| Prepare local environment | `cd web && npm ci`, then API keys in `web/.env.local` (`GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_CRITIC_MODEL` for both recommendation reviewers, `CONTEXT_DEV_API_KEY`, `DATABASE_URL`; all optional) | Install finishes |
 | Run affected tests | `npm test` in `web/` (Vitest) | All tests pass |
 | Check static constraints | `npm run check` in `web/`: lint, tests and production build, the same as CI | Exit 0 |
 | Build or render | `npm run build` in `web/` (also type-checks); `npm run dev` serves http://localhost:3000 | Build lists the `/` and `/county/[id]` routes |

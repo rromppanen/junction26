@@ -128,14 +128,14 @@ export function Recommendations({ brief, cacheKey }: { brief: GapBrief; cacheKey
             {result.recommendations.map((r, i) => (
               <li key={r.title}>
                 <FadeIn delay={i * 180} className="h-full">
-                  <RecCard rec={r} rank={i + 1} sources={result.sources} />
+                  <RecCard rec={r} rank={i + 1} sources={result.sources} practice={result.practice ?? []} />
                 </FadeIn>
               </li>
             ))}
           </ol>
           <div className="mt-6 flex flex-wrap items-center gap-4">
             <More label={`Sources the agent kept (${result.sources.filter((s) => s.strength !== "policy").length} from search)`} icon={BookOpenCheck}>
-              <SourceList sources={result.sources} searched={result.searched} />
+              <SourceList sources={result.sources} searched={result.searched} practice={result.practice ?? []} />
             </More>
             <button type="button" disabled={busy} onClick={() => void start()} className="inline-flex items-center gap-1.5 text-small text-muted hover:text-ink disabled:opacity-40">
               <RefreshCw aria-hidden size={14} /> Run again
@@ -159,7 +159,7 @@ function StrengthBadge({ strength }: { strength: Strength }) {
   );
 }
 
-function RecCard({ rec, rank, sources }: { rec: RecommendResult["recommendations"][number]; rank: number; sources: Source[] }) {
+function RecCard({ rec, rank, sources, practice }: { rec: RecommendResult["recommendations"][number]; rank: number; sources: Source[]; practice: RecommendResult["practice"] }) {
   const field = (label: string, text: string) => (
     <div>
       <dt className="text-caption font-semibold uppercase tracking-wide text-muted">{label}</dt>
@@ -176,6 +176,7 @@ function RecCard({ rec, rank, sources }: { rec: RecommendResult["recommendations
       <p className="mt-2">{rec.action}</p>
       <dl className="mt-4 space-y-3">
         {field("Why here", rec.why)}
+        {rec.adds && field("What it adds to current practice", rec.adds.replace(/\bnow:(\d+)\b/g, (id) => practice.find((p) => p.id === id)?.publisher ?? id))}
         {field("First step this month", rec.firstStep)}
         {field("Who", rec.owner)}
         {field("How you'll see it work", rec.measure)}
@@ -203,9 +204,22 @@ function RecCard({ rec, rank, sources }: { rec: RecommendResult["recommendations
   );
 }
 
-function SourceList({ sources, searched }: { sources: Source[]; searched: RecommendResult["searched"] }) {
+function SourceList({ sources, searched, practice }: { sources: Source[]; searched: RecommendResult["searched"]; practice: RecommendResult["practice"] }) {
   return (
     <div className="space-y-4 text-ink">
+      {practice.length > 0 && (
+        <div>
+          <p className="text-caption font-semibold uppercase tracking-wide text-muted">Current practice the reviewer checked against</p>
+          <ol className="mt-1.5 space-y-2">
+            {practice.map((p) => (
+              <li key={p.id} className="text-small">
+                <a href={p.url} target="_blank" rel="noreferrer" className="font-medium hover:underline">{p.title}</a>
+                <span className="text-muted"> · {p.publisher} · {p.id}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
       <ol className="space-y-2">
         {sources.map((s) => (
           <li key={s.id} className="text-small">

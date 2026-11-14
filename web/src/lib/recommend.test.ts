@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { EVIDENCE } from "@/data/evidence";
-import { checkDraft, grade, policySources, programmeOf, queriesFor, readReview, runAgent, type AgentEvent, type GapBrief, type Reviewer, type Source } from "./recommend";
+import { checkDraft, findPractice, grade, practiceQueries, unescapeMarkdown, policySources, programmeOf, queriesFor, readReview, runAgent, type AgentEvent, type GapBrief, type Reviewer, type Source } from "./recommend";
 import { parseGapBrief } from "./recommendInput";
 
 const brief: GapBrief = {
@@ -15,6 +15,7 @@ const src = (id: string, strength: Source["strength"], excerpt = "Reminders incr
 const good = (sources: string[], action = "Send translated invitations and a reminder.") => ({
   title: "Translate the invitation", action, why: "43.1% took part against 70.2%.", firstStep: "Pick the three most common languages.",
   owner: "Screening programme lead", measure: "Participation among speakers of other languages each quarter.",
+  adds: "Current practice is not described for this group, so the first step checks what the letter says today.",
   sources: sources.map((id) => ({ id, says: "What the source shows.", quote: EVIDENCE.find((e) => e.id === id)?.summaryEn.slice(0, 60) ?? (id === "src:2" ? "Participation rose from 40% to 52%." : "Reminders increased participation.") })),
 });
 
@@ -37,7 +38,41 @@ describe("grading sources", () => {
   });
 });
 
+describe("current practice", () => {
+  it("asks Finnish agencies how the programme runs today, for the gap's step", () => {
+    expect(practiceQueries(brief)[0]).toMatch(/suolistosyövän seulonta kutsu muistutus/);
+    expect(practiceQueries({ ...brief, metric: "followUp" })[0]).toMatch(/jatkotutkimus/);
+  });
+  it("finds nothing without a search key", async () => {
+    expect(await findPractice(brief, undefined)).toEqual([]);
+  });
+});
+
+describe("search excerpts", () => {
+  it("drops Markdown escapes so a faithful quote matches", () => {
+    expect(unescapeMarkdown("rates \\[e.g., letters\\] \\(13\\) 2\\.7")).toBe("rates [e.g., letters] (13) 2.7");
+  });
+});
+
 describe("checking a draft", () => {
+  it("rejects wording that promises an outcome", () => {
+    const sources = [src("src:1", "strong"), ...policySources()];
+    const r = checkDraft({ recommendations: [1, 2, 3].map(() => ({ ...good(["src:1"]), why: "A proven way that will close the gap." })) }, brief, sources);
+    expect("errors" in r && r.errors.join()).toMatch(/"proven" in why claims more certainty/);
+  });
+
+  it("requires 'adds' and only lets it cite current practice that was found", () => {
+    const sources = [src("src:1", "strong"), ...policySources()];
+    const noAdds = checkDraft({ recommendations: [1, 2, 3].map(() => ({ ...good(["src:1"]), adds: "" })) }, brief, sources);
+    expect("errors" in noAdds && noAdds.errors.join()).toMatch(/has no adds/);
+    const badId = checkDraft({ recommendations: [1, 2, 3].map(() => ({ ...good(["src:1"]), adds: "Reminders exist (now:4); this adds an SMS." })) }, brief, sources, ["now:1"]);
+    expect("errors" in badId && badId.errors.join()).toMatch(/"now:4", which is not in PRACTICE/);
+    const uncited = checkDraft({ recommendations: [1, 2, 3].map(() => ({ ...good(["src:1"]), adds: "Today only letters are sent." })) }, brief, sources, ["now:1"]);
+    expect("errors" in uncited && uncited.errors.join()).toMatch(/must cite the PRACTICE page/);
+    const cited = checkDraft({ recommendations: [1, 2, 3].map(() => ({ ...good(["src:1"]), adds: "A reminder is already required (now:1); this adds a phone call." })) }, brief, sources, ["now:1"]);
+    expect("ok" in cited).toBe(true);
+  });
+
   const sources = [src("src:1", "strong"), src("src:2", "moderate", "Participation rose from 40% to 52%."), ...policySources()];
   it("accepts a draft that cites known sources and uses only the gap's numbers", () => {
     const r = checkDraft({ recommendations: [good(["src:1"]), good(["src:2"]), good(["src:1", "roadmap-p10-socioeconomic"])] }, brief, sources);
@@ -62,8 +97,14 @@ describe("checking a draft", () => {
   });
 });
 
+/** A verdict that passes every rule; override fields to break one. */
+const ok = (index: number, over: Record<string, unknown> = {}) => ({
+  index, verdict: "approve", issues: [], alreadyDone: "unknown", practiceIds: [], addsValue: true, valueReason: "",
+  claims: [{ claim: "43.1% took part against 70.2%", checkedAgainst: "THE GAP", holds: true }], ...over,
+});
+
 describe("the agent", () => {
-  const approve: Reviewer = async () => ({ verdicts: [1, 2, 3].map((index) => ({ index, verdict: "approve", issues: [] })) });
+  const approve: Reviewer = async () => ({ verdicts: [1, 2, 3].map((index) => ok(index)) });
   const run = async (draft: Parameters<typeof runAgent>[2], review: Reviewer = approve) => {
     const events: AgentEvent[] = [];
     await runAgent(brief, (e) => events.push(e), draft, undefined, review);
@@ -110,10 +151,38 @@ describe("request body", () => {
 
 describe("the reviewer", () => {
   it("approves only when every recommendation is approved, and turns rejections into feedback", () => {
-    expect(readReview({ verdicts: [1, 2, 3].map((index) => ({ index, verdict: "approve", issues: [] })) }, 3).approved).toBe(true);
-    const r = readReview({ verdicts: [{ index: 1, verdict: "approve", issues: [] }, { index: 2, verdict: "reject", issues: ["Too vague."] }] }, 3);
+    expect(readReview({ verdicts: [1, 2, 3].map((index) => ok(index)) }, 3).approved).toBe(true);
+    const r = readReview({ verdicts: [ok(1), ok(2, { verdict: "reject", issues: ["Too vague."] })] }, 3);
     expect(r.approved).toBe(false);
     expect(r.feedback).toEqual(["Recommendation 2: Too vague.", "Recommendation 3: the reviewer gave no verdict."]);
+  });
+
+  it("rejects what is already done, what adds no value, and claims that do not hold, even when marked approve", () => {
+    const r = readReview({ verdicts: [
+      ok(1, { alreadyDone: "yes", practiceIds: ["now:1"] }),
+      ok(2, { addsValue: false, valueReason: "Reminders are already sent and the effect is small." }),
+      ok(3, { claims: [{ claim: "Reminders double participation", checkedAgainst: "src:1", holds: false }] }),
+    ] }, 3, ["now:1"]);
+    expect(r.approved).toBe(false);
+    expect(r.feedback).toEqual([
+      "Recommendation 1: this is already done (now:1). Replace it, or propose a specific change to what is done.",
+      "Recommendation 2: it does not add enough value for this gap. Reminders are already sent and the effect is small.",
+      'Recommendation 3: the claim "Reminders double participation" does not hold against src:1.',
+    ]);
+  });
+
+  it("needs current practice cited for 'partly', a stated alreadyDone, and at least one checked claim", () => {
+    const r = readReview({ verdicts: [
+      ok(1, { alreadyDone: "partly", practiceIds: ["now:9"] }),
+      ok(2, { alreadyDone: undefined }),
+      ok(3, { claims: [] }),
+    ] }, 3, ["now:1"]);
+    expect(r.feedback).toEqual([
+      "Recommendation 1: the reviewer said it is partly done without citing current practice.",
+      "Recommendation 2: the reviewer did not say whether it is already done.",
+      "Recommendation 3: the reviewer approved it without checking any claim.",
+    ]);
+    expect(readReview({ verdicts: [ok(1, { alreadyDone: "partly", practiceIds: ["now:1"] })] }, 1, ["now:1"]).approved).toBe(true);
   });
 
   it("sends a rejected draft back with the reviewer's objections, and fails closed if never approved", async () => {
@@ -123,7 +192,7 @@ describe("the reviewer", () => {
       prompts.push(prompt);
       return { recommendations: [good(["strategy-goal2-screening-80"]), good(["roadmap-p10-socioeconomic"]), good(["strategy-p35-3.2"])] };
     };
-    const reject: Reviewer = async () => ({ verdicts: [{ index: 1, verdict: "reject", issues: ["Raise awareness is not an action."] }] });
+    const reject: Reviewer = async () => ({ verdicts: [ok(1, { verdict: "reject", issues: ["Raise awareness is not an action."] })] });
     const events: AgentEvent[] = [];
     await runAgent(brief, (e) => events.push(e), draft, undefined, reject);
     expect(prompts).toHaveLength(3);
