@@ -74,6 +74,18 @@ export const INDICATORS: Indicator[] = [
     gender: "total",
     sourceUrl: src(3627),
   },
+  {
+    id: 3626,
+    slug: "cervical-survival",
+    nameEn: "5-year relative survival of cervical cancer patients",
+    nameFi: "Kohdunkaulan syövän sairastaneiden viiden vuoden suhteellinen elossaololuku",
+    unit: "%",
+    higherIsBetter: true,
+    stage: "outcome",
+    strategyGoal: GOAL_3_SURVIVAL,
+    gender: "total",
+    sourceUrl: src(3626),
+  },
 ];
 
 // Context indicators for the equity lens (municipality level). Never shown on the radar.
