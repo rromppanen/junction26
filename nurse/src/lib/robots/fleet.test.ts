@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ROBOT_TRAVEL_MS, type Sample } from "@/lib/sample/model";
 import { seedSamples } from "@/lib/sample/seed";
 import {
-  AREAS, DISPATCH_GAP_MS, FLEET, HUBS, NO_ANSWER_ID, finishedTrips, fleetAt, homeOf, hubOf, pointAlong, positionOf,
+  AREAS, DISPATCH_GAP_MS, awaitingIntake, FLEET, HUBS, NO_ANSWER_ID, finishedTrips, fleetAt, homeOf, hubOf, pointAlong, positionOf,
   readyForPickup, simStep, tripsOf,
 } from "./fleet";
 
@@ -138,5 +138,26 @@ describe("simulated households", () => {
     const busy = FLEET.filter((r) => r.hub === "malmi").map((r, i) => sample(`busy${i}`, "Malmi", [["pickupBooked", T0 + i]]));
     const waiting = sample("w", "Pihlajamäki", [["sampleTaken", T0 - 1000]]);
     expect(simStep([...busy, waiting], T0 + DISPATCH_GAP_MS + 10, "me", slot).filter((a) => a.event.type === "pickupBooked")).toEqual([]);
+  });
+});
+
+describe("samples waiting for a nurse", () => {
+  it("flags a sample once the robot is back, until a nurse registers it at the lab", () => {
+    const s = sample("a", "Kontula", [["pickupBooked", T0], ["pickedUp", T0 + 30_000]]);
+    expect(awaitingIntake([s], T0 + 30_000 + ROBOT_TRAVEL_MS - 1)).toEqual([]);
+    expect(awaitingIntake([s], T0 + 30_000 + ROBOT_TRAVEL_MS)).toEqual([{ hub: "itakeskus", samples: [s] }]);
+    const registered = { ...s, events: [...s.events, { type: "atLab" as const, at: T0 + 90_000 }] };
+    expect(awaitingIntake([registered], T0 + 100_000)).toEqual([]);
+  });
+
+  it("groups by hub, longest waiting first, and includes the seeded sample", () => {
+    const a = sample("a", "Kontula", [["pickedUp", T0 + 5_000]]);
+    const b = sample("b", "Vuosaari", [["pickedUp", T0]]);
+    const c = sample("c", "Malmi", [["pickedUp", T0]]);
+    const groups = awaitingIntake([a, b, c], T0 + 60_000);
+    expect(groups.map((g) => [g.hub, g.samples.map((s) => s.id)])).toEqual([["itakeskus", ["b", "a"]], ["malmi", ["c"]]]);
+
+    const now = Date.now();
+    expect(awaitingIntake(seedSamples(now), now).flatMap((g) => g.samples.map((s) => s.id))).toEqual(["p6"]);
   });
 });

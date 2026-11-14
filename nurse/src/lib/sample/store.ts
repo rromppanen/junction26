@@ -120,11 +120,9 @@ export function useSamples(): {
 
   const add = useCallback((id: string, e: Omit<SampleEvent, "at">) => {
     const at = Date.now();
-    let next = addEvent(getSnapshot(), id, { ...e, at });
-    if (e.type === "pickedUp") {
-      next = addEvent(next, id, { type: "atLab", at: at + 1 });
-    }
-    persist(next);
+    // Unlike web/, a pickup does not register the sample at the lab by itself:
+    // the nurse does that once the robot is back (the "awaitingIntake" flag).
+    persist(addEvent(getSnapshot(), id, { ...e, at }));
   }, []);
 
   const reset = useCallback(() => {

@@ -125,7 +125,7 @@ export function robotProgress(s: Sample, now: number): number | null {
 }
 
 export type Flag = {
-  kind: "noSample" | "positiveNoBooking" | "robotWaiting";
+  kind: "noSample" | "positiveNoBooking" | "robotWaiting" | "awaitingIntake";
   label: string;
   days?: number;
 };
@@ -155,6 +155,11 @@ export function flagsOf(s: Sample, now: number): Flag[] {
     if (waited > ROBOT_WAIT_FLAG_MS) {
       flags.push({ kind: "robotWaiting", label: `Robot has waited ${Math.floor(waited / 1000)} s at the door` });
     }
+  }
+
+  // The robot is back with the sample: a nurse has to take it out and register it at the lab.
+  if (m && m.type === "pickedUp" && now >= m.at + ROBOT_TRAVEL_MS) {
+    flags.push({ kind: "awaitingIntake", label: "Sample has arrived: collect it from the robot and register it at the lab" });
   }
 
   return flags;

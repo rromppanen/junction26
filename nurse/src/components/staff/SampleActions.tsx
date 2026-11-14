@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarCheck, CheckCircle2, FlaskConical, Phone, Send } from "lucide-react";
+import { CalendarCheck, CheckCircle2, FlaskConical, PackageCheck, Phone, Send } from "lucide-react";
 import { BTN, colonoscopySlots, type ActFn, type Row } from "./boardShared";
 
 export function SampleActions({ row, now, busy, act }: { row: Row; now: number; busy: boolean; act: ActFn }) {
@@ -20,6 +20,11 @@ export function SampleActions({ row, now, busy, act }: { row: Row; now: number; 
         {open && !calling && (
           <button type="button" className={BTN} disabled={busy} onClick={() => setCalling(true)}>
             <Phone size={16} aria-hidden /> Call
+          </button>
+        )}
+        {row.flags.some((f) => f.kind === "awaitingIntake") && (
+          <button type="button" className={`${BTN} border-brand`} disabled={busy} onClick={() => act(row, "atLab")}>
+            <PackageCheck size={16} aria-hidden /> Collected and registered at the lab
           </button>
         )}
         {row.stage === "atLab" && (

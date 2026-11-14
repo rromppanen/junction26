@@ -217,3 +217,5 @@ button:disabled { cursor: not-allowed; }
 .leaflet-tooltip.hub-label { background: transparent; border: 0; box-shadow: none; color: var(--brand-strong); font-weight: 700; font-size: 12px; padding: 0; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
 .leaflet-tooltip.hub-label::before { display: none; }
 .leaflet-tooltip.home-label { font-size: 11px; font-weight: 600; padding: 1px 6px; color: var(--ink); }
+.hub-pin.has-intake span { height: 22px; width: 22px; background: var(--behind); }
+.leaflet-tooltip.hub-label.has-intake { color: var(--behind); }

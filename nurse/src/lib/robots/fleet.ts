@@ -1,4 +1,4 @@
-import { ROBOT_TRAVEL_MS, ROBOT_WAIT_FLAG_MS, stageOf, type Person, type Sample } from "@/lib/sample/model";
+import { ROBOT_TRAVEL_MS, ROBOT_WAIT_FLAG_MS, flagsOf, stageOf, type Person, type Sample } from "@/lib/sample/model";
 
 /**
  * The robot fleet, derived from the sample events.
@@ -248,6 +248,20 @@ export function finishedTrips(trips: Trip[], now: number): Trip[] {
 export function readyForPickup(samples: Sample[], now: number): Sample[] {
   const takenAt = (s: Sample) => s.events.find((e) => e.type === "sampleTaken")?.at ?? now;
   return samples.filter((s) => stageOf(s, now) === "sampleTaken").sort((a, b) => takenAt(a) - takenAt(b));
+}
+
+/**
+ * Samples a robot has brought back that no nurse has registered at the lab yet,
+ * grouped by the hub they wait at; longest waiting first within a hub.
+ */
+export function awaitingIntake(samples: Sample[], now: number): { hub: HubId; samples: Sample[] }[] {
+  const arrivedAt = (s: Sample) => s.events.findLast((e) => e.type === "pickedUp")?.at ?? now;
+  const waiting = samples
+    .filter((s) => flagsOf(s, now).some((f) => f.kind === "awaitingIntake"))
+    .sort((a, b) => arrivedAt(a) - arrivedAt(b));
+  return (Object.keys(HUBS) as HubId[])
+    .map((hub) => ({ hub, samples: waiting.filter((s) => hubOf(s.person) === hub) }))
+    .filter((g) => g.samples.length > 0);
 }
 
 // ---- Simulated other households -------------------------------------------------------------

@@ -2,13 +2,13 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, RotateCcw } from "lucide-react";
+import { AlertTriangle, PackageCheck, RotateCcw } from "lucide-react";
 import { NurseNav } from "@/components/NurseNav";
 import { Wordmark } from "@/components/Wordmark";
 import { BTN, DEMO_NOTE, ME } from "@/components/staff/boardShared";
 import type { Person } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
-import { FLEET, HUBS, finishedTrips, fleetAt, readyForPickup, simStep, tripsOf, type RobotView } from "@/lib/robots/fleet";
+import { FLEET, HUBS, awaitingIntake, finishedTrips, fleetAt, readyForPickup, simStep, tripsOf, type RobotView } from "@/lib/robots/fleet";
 import { useRoutes } from "@/lib/robots/routes";
 
 // Leaflet needs the browser's window, so the map renders on the client only.
@@ -94,7 +94,9 @@ export function RobotsView() {
   const flagged = fleet.filter((v) => v.status.kind === "atDoor" && v.status.flagged).length;
   const robotName = (id: string) => FLEET.find((r) => r.id === id)?.name ?? id;
   const sampleTakenAt = (id: string) => samples.find((s) => s.id === id)?.events.find((e) => e.type === "sampleTaken")?.at ?? now;
-  const toggle = (id: string) => setSelected((cur) => (cur === id ? null : id));
+  const intake = awaitingIntake(samples, now);
+  const intakeCount = intake.reduce((n, g) => n + g.samples.length, 0);
+  const toggle =(id: string) => setSelected((cur) => (cur === id ? null : id));
 
   return (
     <main id="main-content" tabIndex={-1} className="min-h-dvh px-4 pb-12 sm:px-6">
@@ -123,8 +125,9 @@ export function RobotsView() {
           <p className="mt-6 text-muted">Loading the robots…</p>
         ) : (
           <>
-            <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+            <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
               {([
+                ["Arrived, waiting for a nurse", intakeCount, intakeCount > 0],
                 ["On the way", count("outbound"), false],
                 ["At the door", count("atDoor"), flagged > 0],
                 ["Returning", count("returning"), false],
@@ -132,7 +135,7 @@ export function RobotsView() {
               ] as const).map(([label, n, warn]) => (
                 <div key={label} className={`rounded-xl border bg-white p-3 ${warn ? "border-behind" : "border-rule"}`}>
                   <dd className={`text-2xl font-semibold ${warn ? "text-behind" : ""}`}>{n}</dd>
-                  <dt className="text-xs text-muted sm:text-sm">{label}{warn ? `, ${flagged} waiting too long` : ""}</dt>
+                  <dt className="text-xs text-muted sm:text-sm">{label}{warn && label === "At the door" ? `, ${flagged} waiting too long` : ""}</dt>
                 </div>
               ))}
             </dl>
@@ -140,17 +143,18 @@ export function RobotsView() {
             <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_24rem]">
               <section aria-label="Map of robots, routes and homes" className="min-w-0">
                 <div className="overflow-hidden rounded-xl border border-rule">
-                  <LiveMap fleet={fleet} ready={ready} routes={routes} selected={selected} onSelect={toggle} />
+                  <LiveMap fleet={fleet} ready={ready} intake={Object.fromEntries(intake.map((g) => [g.hub, g.samples.length]))} routes={routes} selected={selected} onSelect={toggle} />
                 </div>
                 <ul aria-label="Map legend" className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
                   <li className="flex items-center gap-1.5"><span className="size-3 rounded-sm bg-brand-strong" aria-hidden /> Hub</li>
+                  <li className="flex items-center gap-1.5"><span className="size-3 rounded-sm bg-behind" aria-hidden /> Hub with samples to collect</li>
                   <li className="flex items-center gap-1.5"><span className="size-3 rounded-full bg-brand" aria-hidden /> On the way</li>
                   <li className="flex items-center gap-1.5"><span className="size-3 rounded-full bg-ahead" aria-hidden /> At the door</li>
                   <li className="flex items-center gap-1.5"><span className="size-3 rounded-full bg-behind" aria-hidden /> Waiting too long</li>
                   <li className="flex items-center gap-1.5"><span className="size-3 rounded-full bg-par" aria-hidden /> Returning</li>
                   <li className="flex items-center gap-1.5"><span className="size-3 rounded-full border-2 border-ink bg-white" aria-hidden /> Sample ready, no pickup booked</li>
                 </ul>
-                <p className="mt-1 text-xs text-muted">Routes follow walking paths from OpenStreetMap. Without a connection the map draws a curve instead.</p>
+                <p className="mt-1 text-xs text-muted">Zoom with the scroll wheel, a pinch or the + and − buttons; drag to move. Routes follow walking paths from OpenStreetMap. Without a connection the map draws a curve instead.</p>
               </section>
 
               <div className="flex min-w-0 flex-col gap-4">
@@ -191,6 +195,36 @@ export function RobotsView() {
                         .map((g) => `${g.h.name} ${g.rs.map((v) => v.robot.id.slice(1)).join(", ")}`)
                         .join(" · ")}
                     </p>
+                  )}
+                </section>
+
+                <section aria-labelledby="intake-h" className="order-first">
+                  <h2 id="intake-h" className="flex items-center gap-2 text-base font-semibold">
+                    {intakeCount > 0 && <AlertTriangle size={16} className="text-behind" aria-hidden />}
+                    Arrived, waiting for a nurse ({intakeCount})
+                  </h2>
+                  {intake.length === 0 ? (
+                    <p className="mt-1 text-sm text-muted">No samples waiting in the robots.</p>
+                  ) : (
+                    <ul className="mt-2 space-y-2 text-sm">
+                      {intake.map((g) => (
+                        <li key={g.hub} className="rounded-xl border border-behind bg-white px-3 py-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="font-semibold">
+                              {HUBS[g.hub].name}: {g.samples.length} {g.samples.length === 1 ? "sample" : "samples"} to collect
+                            </span>
+                            <button type="button" className={BTN} onClick={() => g.samples.forEach((s) => add(s.id, { type: "atLab" }))}>
+                              <PackageCheck size={16} aria-hidden /> Collected and registered
+                            </button>
+                          </div>
+                          <p className="mt-1 text-muted">
+                            {g.samples.slice(0, 6).map((s) => s.person.name).join(", ")}
+                            {g.samples.length > 6 ? ` and ${g.samples.length - 6} more` : ""}
+                            {" · "}longest wait {ago(now - (g.samples[0].events.findLast((e) => e.type === "pickedUp")?.at ?? now))}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </section>
 

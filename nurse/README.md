@@ -47,3 +47,11 @@ The map loads from the internet when the page opens. Only map tile coordinates a
 - Street routes: the FOSSGIS OSRM walking router at routing.openstreetmap.de, using OpenStreetMap data. Routes are cached in `localStorage`. If the router is unreachable, the map draws a curve instead.
 
 Both services are fine for a demo, but not for production volume. Before a real deployment, pick a provider with terms that fit.
+
+## Samples waiting for a nurse
+
+When a robot is back at its hub with a sample, the sample gets the flag "Sample has arrived: collect it from the robot and register it at the lab". The board shows the flag and a **Collected and registered at the lab** button. The robots page lists the waiting samples per hub, with one button per hub, and turns the hub orange on the map.
+
+This is where `nurse/` differs from `web/` on purpose: in `web/`, putting the sample in the robot registers it at the lab at once (`store.ts`). So the phone user's own sample skips this step, and the flag exists only in the nurse app's copy of `model.ts`.
+
+The map zooms with the scroll wheel, a pinch or the + and − buttons. **Whole region** zooms back out.
