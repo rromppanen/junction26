@@ -39,7 +39,7 @@ const TEXT: Record<BreakKind, { title: string; what: string; owner: string; meas
 };
 
 /** The board memo's proposal block: one option, baseline → target, what it takes and how it is followed up. */
-export function MemoProposal({ view, params }: { view: PathwayView; params: ProposalParams }) {
+export function MemoProposal({ view, params, operator = null }: { view: PathwayView; params: ProposalParams; operator?: string | null }) {
   const p = view.pathway;
   const t = TEXT[params.option];
   const r = params.option === "service" ? serviceOption(p, params.target, params.costs) : accessOption(p, params.target, params.costs);
@@ -58,7 +58,7 @@ export function MemoProposal({ view, params }: { view: PathwayView; params: Prop
           <Row k="Lisää kolonoskopioita">noin {r.extraColonoscopies.toLocaleString("fi-FI")} vuodessa</Row>
           <Row k="Löydöksiä">noin {fmtFi(r.cancers)} syöpää ja {r.advanced.toLocaleString("fi-FI")} edennyttä esiastetta vuodessa (koko maan löydösosuudella)</Row>
           <Row k="Kustannus">{r.cost === null ? "täydennetään hyvinvointialueen omilla yksikkökustannuksilla" : `noin ${eur(r.cost)} vuodessa${r.costPerFinding === null ? "" : `, ${eur(r.costPerFinding)} löydöstä kohden`}`}</Row>
-          <Row k="Vastuutaho">{t.owner}</Row>
+          <Row k="Vastuutaho">{t.owner}{operator ? ` yhdessä seulonnan järjestäjän (${operator}) kanssa` : ""}</Row>
           <Row k="Seuranta">Kuukausittain alueen omasta aineistosta (mittauspaketti); Syöpärekisterin vuositilasto vahvistaa luvun noin puolentoista vuoden viiveellä.</Row>
         </tbody>
       </table>
