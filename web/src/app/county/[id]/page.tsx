@@ -29,7 +29,7 @@ import { OpenOnHash } from "@/components/OpenOnHash";
 import { STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, host } from "@/components/format";
 import type { GapFacts, PathwayStage } from "@/lib/types";
 import {
-  ArrowLeft, BookOpen, Filter, Megaphone, Scale, CalendarClock, FileText, Globe, Handshake, LineChart, Link2, ListChecks, Route, Ruler,
+  ArrowLeft, BookOpen, Filter, Megaphone, Scale, CalendarClock, FileText, Gauge, Globe, Handshake, LineChart, Link2, ListChecks, Route, Ruler,
   SlidersHorizontal, Sparkles, Target, TriangleAlert, UserRound, Users, type LucideIcon,
 } from "lucide-react";
 
@@ -142,6 +142,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
       <AppHeader>
         <HeaderLink href="/" icon={ArrowLeft} label="Map" />
         <HeaderLink href={`/county/${regionId}/memo`} icon={FileText} label="Memo (FI)" title="One-page board memo in Finnish" />
+        <HeaderLink href={`/simulator?county=${regionId}`} icon={Gauge} label="Simulate" title="What raising breast screening attendance here would be worth" />
       </AppHeader>
 
       <header className="mb-8">
@@ -206,6 +207,15 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
 
       <Part id="what-if" icon={SlidersHorizontal} title={`What if ${name} raised screening?`}>
         <ScenarioTool programmes={scenarioProgrammes} />
+        <p className="mt-5 flex max-w-2xl items-start gap-2 text-sm">
+          <Gauge aria-hidden size={16} className="mt-0.5 shrink-0 text-muted" />
+          <span>
+            For breast screening, the{" "}
+            <a href={`/simulator?county=${regionId}`} className="link font-medium">screening simulator</a> goes one step
+            further: life-years gained, deaths averted and the cost per life-year of closing {name}&rsquo;s gap, with every
+            assumption adjustable.
+          </span>
+        </p>
       </Part>
 
       <Part {...part("rec")} title={`What ${name} could do next`}>
