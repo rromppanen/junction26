@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const APPS = [
-  { href: "/kit", title: "Customer app", text: "Book a robot to pick up your sample from home." },
+  { href: "/kit?test=fit&start=1", title: "Customer app", text: "Book a robot to pick up your sample from home." },
   { href: "/staff", title: "Fleet monitoring", text: "Follow the robots and every sample they carry." },
 ];
 

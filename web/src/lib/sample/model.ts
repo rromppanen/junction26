@@ -5,6 +5,8 @@ export type EventType =
   | "kitOpened"
   | "sampleTaken"
   | "pickupBooked"
+  | "robotDispatched"
+  | "robotArrived"
   | "pickedUp"
   | "atLab"
   | "resultNegative"
@@ -21,6 +23,8 @@ export type SampleEvent = {
   note?: string;
   /** for pickupBooked and colonoscopyBooked */
   slot?: string;
+  /** for pickupBooked: when the pickup window starts (epoch ms) */
+  slotAt?: number;
 };
 
 export type Person = {
@@ -47,7 +51,8 @@ export type Stage =
   | "colonoscopyBooked"
   | "done";
 
-export const ROBOT_TRAVEL_MS = 20_000;
+/** How long the robot drives from the hub to the door: the demo route (about 1.2 km) at walking pace. */
+export const ROBOT_TRAVEL_MS = 12 * 60_000;
 const DAY_MS = 86_400_000;
 const ROBOT_WAIT_FLAG_MS = 60_000;
 
@@ -57,12 +62,14 @@ const MILESTONE_RANK: Partial<Record<EventType, number>> = {
   kitOpened: 0,
   sampleTaken: 1,
   pickupBooked: 2,
-  pickedUp: 3,
-  atLab: 4,
-  resultNegative: 5,
-  resultPositive: 5,
-  colonoscopyBooked: 6,
-  colonoscopyDone: 7,
+  robotDispatched: 3,
+  robotArrived: 4,
+  pickedUp: 5,
+  atLab: 6,
+  resultNegative: 7,
+  resultPositive: 7,
+  colonoscopyBooked: 8,
+  colonoscopyDone: 9,
 };
 
 function latestMilestone(s: Sample): SampleEvent | undefined {
@@ -94,7 +101,11 @@ export function stageOf(s: Sample, now: number): Stage {
     case "sampleTaken":
       return "sampleTaken";
     case "pickupBooked":
+      return "pickupBooked";
+    case "robotDispatched":
       return now < m.at + ROBOT_TRAVEL_MS ? "robotEnRoute" : "robotAtDoor";
+    case "robotArrived":
+      return "robotAtDoor";
     case "pickedUp":
       return "pickedUp";
     case "atLab":
@@ -112,12 +123,23 @@ export function stageOf(s: Sample, now: number): Stage {
   }
 }
 
-/** 0..1 while the robot is en route, 1 at the door, null with no pickup booked or after pickup. */
+/** 0..1 while the robot is en route, 1 at the door, null before it leaves or after pickup. */
 export function robotProgress(s: Sample, now: number): number | null {
   const m = latestMilestone(s);
-  if (!m || m.type !== "pickupBooked") return null;
+  if (!m) return null;
+  if (m.type === "robotArrived") return 1;
+  if (m.type !== "robotDispatched") return null;
   const p = (now - m.at) / ROBOT_TRAVEL_MS;
   return Math.min(1, Math.max(0, p));
+}
+
+/** When the robot reached the door, or null if it is not there. */
+export function robotArrivedAt(s: Sample): number | null {
+  const m = latestMilestone(s);
+  if (!m) return null;
+  if (m.type === "robotArrived") return m.at;
+  if (m.type === "robotDispatched") return m.at + ROBOT_TRAVEL_MS;
+  return null;
 }
 
 export type Flag = {
@@ -145,9 +167,9 @@ export function flagsOf(s: Sample, now: number): Flag[] {
     }
   }
 
-  const m = latestMilestone(s);
-  if (m && m.type === "pickupBooked") {
-    const waited = now - (m.at + ROBOT_TRAVEL_MS);
+  const arrived = robotArrivedAt(s);
+  if (arrived !== null) {
+    const waited = now - arrived;
     if (waited > ROBOT_WAIT_FLAG_MS) {
       flags.push({ kind: "robotWaiting", label: `Robot has waited ${Math.floor(waited / 1000)} s at the door` });
     }
