@@ -262,9 +262,10 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
       </details>
 
       <Part {...part("rec")} title="Other actions to consider across programmes">
-        <ol>
+        <p className="mb-5 max-w-2xl text-sm text-muted">Proposals to review with the responsible team. Check the cited evidence, confirm the owner and agree a local delivery date.</p>
+        <ol className="grid gap-4">
           {brief.recommendations.map((r, i) => (
-            <li key={i} className={`print-break grid gap-x-4 py-5 sm:grid-cols-[1.75rem_minmax(0,1fr)] ${i ? "border-t border-rule" : "pt-0"}`}>
+            <li key={i} className="print-break grid gap-x-4 rounded-lg border border-rule bg-surface p-5 sm:grid-cols-[1.75rem_minmax(0,1fr)]">
               <span className="font-narrow text-xl font-bold leading-snug tabular-nums text-muted" aria-hidden>{i + 1}</span>
               <div>
                 <p className="max-w-2xl font-serif text-lg leading-snug">{r.action}</p>
@@ -481,7 +482,7 @@ function Meta({ icon: Icon, label, children }: { icon: LucideIcon; label: string
     <li className="inline-flex items-start gap-1.5" title={label}>
       <Icon aria-hidden size={15} strokeWidth={2} className="mt-0.5 shrink-0" />
       <span>
-        <span className="sr-only">{label}: </span>
+        <span className="font-medium text-muted">{label}: </span>
         <span className="text-ink">{children}</span>
       </span>
     </li>
