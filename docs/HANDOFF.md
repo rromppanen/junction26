@@ -19,7 +19,7 @@ Checkpoint written Sat 14.11.2026, about 13:00. It replaces the 00:30 version. R
   Every claim must be sourced, the work must cover a Goal 3 indicator, and the demo must work.
 - **Bounties:**
   - Gemini API: in use.
-  - Context.dev: the key in `web/.env.local` is invalid (401). A fresh key is needed.
+  - Context.dev: a fresh key was added to `web/.env.local` on Sat 14.11 and works (the live search returns results). The Gemini key was replaced the same day and also works.
   - Aiven: not done. It earns nothing for AstraZeneca and is only worth it for its own prize.
 
 ## Current state of the repo (`~/code/junction26`, GitHub `rromppanen/junction26`)
@@ -126,7 +126,7 @@ The judge's ranked next work:
 ## For the user only
 
 - Vercel deploy.
-- A fresh Context.dev key.
+- Put the new `GEMINI_API_KEY` and `CONTEXT_DEV_API_KEY` into Vercel's environment variables when deploying.
 - Aiven, optionally.
 - Call mentor Laura for cost and detection figures.
 - Record the 2:00 video and build the deck PDF (`docs/pitch/`).
