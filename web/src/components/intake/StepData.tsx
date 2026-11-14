@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Database, Upload } from "lucide-react";
 import { parseCSV, type Table } from "@/lib/intake/csv";
 import { personalDataHeaders } from "@/lib/intake/privacy";
@@ -23,11 +23,13 @@ type Props = {
 export function StepData({ datasets, table, fileName, error, onDatasets, onFile, onError, onContinue }: Props) {
   const fileId = useId();
   const [flagged, setFlagged] = useState<string[]>([]);
+  const requestRef = useRef(0);
 
   const toggle = (id: PublicDataset) =>
     onDatasets(datasets.includes(id) ? datasets.filter((d) => d !== id) : [...datasets, id]);
 
   async function handleFile(file: File | undefined) {
+    const request = ++requestRef.current;
     setFlagged([]);
     if (!file) {
       onFile(null, "");
@@ -38,7 +40,9 @@ export function StepData({ datasets, table, fileName, error, onDatasets, onFile,
       return;
     }
     try {
-      const parsed = parseCSV(await file.text());
+      const text = await file.text();
+      if (request !== requestRef.current) return;
+      const parsed = parseCSV(text);
       const bad = personalDataHeaders(parsed.headers);
       if (bad.length > 0) {
         setFlagged(bad);
@@ -47,6 +51,7 @@ export function StepData({ datasets, table, fileName, error, onDatasets, onFile,
       }
       onFile(parsed, file.name);
     } catch (e) {
+      if (request !== requestRef.current) return;
       onError(e instanceof Error ? e.message : "Could not read this file.");
     }
   }
@@ -56,7 +61,7 @@ export function StepData({ datasets, table, fileName, error, onDatasets, onFile,
   return (
     <div className="space-y-8">
       <section aria-labelledby="public-h">
-        <IconHeading icon={Database} id="public-h" className="text-lg">Public datasets</IconHeading>
+        <IconHeading icon={Database} as="h3" id="public-h" className="text-lg">Public datasets</IconHeading>
         <ul className="mt-3 grid gap-2 sm:grid-cols-2">
           {PUBLIC_DATASETS.map((d) => (
             <li key={d.id} className="rounded-[3px] border border-rule p-3">
@@ -79,7 +84,7 @@ export function StepData({ datasets, table, fileName, error, onDatasets, onFile,
       </section>
 
       <section aria-labelledby="upload-h">
-        <IconHeading icon={Upload} id="upload-h" className="text-lg">Your own data (optional)</IconHeading>
+        <IconHeading icon={Upload} as="h3" id="upload-h" className="text-lg">Your own data (optional)</IconHeading>
         <p className="mt-2 max-w-2xl text-sm text-muted">
           Aggregate data only, no personal data. The file is read in your browser; only column names and up to 5
           sample rows are sent on.
@@ -89,7 +94,11 @@ export function StepData({ datasets, table, fileName, error, onDatasets, onFile,
           id={fileId}
           type="file"
           accept=".csv,text/csv"
-          onChange={(e) => void handleFile(e.target.files?.[0])}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            void handleFile(file);
+          }}
           className="mt-1 block w-full max-w-md text-sm"
         />
 
