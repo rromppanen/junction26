@@ -353,3 +353,171 @@ Tasks 6 and 7 touch disjoint files and may run in parallel with each other and w
   - It uses `dir="auto"` so Arabic and other right-to-left text displays correctly.
 - [ ] **Step 4:** tsc, eslint and vitest are clean. Curl `/api/kit/ask` with a Finnish question and an Arabic question; both return 200. Report the answers.
 - [ ] **Step 5:** Commit `feat: ask about the kit in your own language, answered only from the screening facts`.
+
+## Letter-to-robot flow (agreed Sat 14.11 evening)
+
+The flow covers two screenings, chosen by the letter:
+- **Bowel (FIT):** taken at home and collected by a robot pickup.
+- **Cervical (HPV):** the sample is taken in person at a clinic.
+
+One booking per test type, with rebook and cancel. The letter is on screen only.
+
+**Cervical facts:** the only cervical fact we may state is "offered every five years to women aged 30–60 (Government Decree 339/2011, as amended)", with the link `https://www.finlex.fi/fi/laki/ajantasa/2011/20110339`. No other cervical medical claims.
+
+**Branch:** `feat/letter-flow`, from `feat/sample-app`.
+
+### Task 8: Model for two screenings, bookings and robot timing
+
+**Files:**
+- Modify `web/src/lib/sample/model.ts`, `model.test.ts`, `seed.ts` and `store.ts`.
+
+**Interfaces (Produces):** these replace the earlier ones.
+
+- `type Programme = "bowel" | "cervical"`
+- `Sample = { id; person; programme: Programme; events }`
+- `EventType` gains:
+  - `"letterOpened"` (replaces `kitOpened`; drop `kitOpened`);
+  - `"clinicBooked"`;
+  - `"bookingCancelled"`;
+  - `"clinicVisited"`.
+- `SampleEvent` gains `startsAt?: number` (epoch ms) for `pickupBooked` and `clinicBooked`. `slot` stays the human label.
+- **Active booking:** `activeBooking(s): SampleEvent | null` returns the latest `pickupBooked` or `clinicBooked` event, unless a later `bookingCancelled` exists. Booking again is rebooking: the latest booking wins.
+- `bookingCount(s): number` is the number of `pickupBooked` and `clinicBooked` events.
+- `Stage = "invited" | "booked" | "robotEnRoute" | "robotAtDoor" | "pickedUp" | "atLab" | "negative" | "positive" | "colonoscopyBooked" | "done"`
+- `stageOf(s, now)`:
+  - **Results and later:** results and later milestones win as before. `clinicVisited` and `pickedUp` give "pickedUp", and `atLab` gives "atLab". `colonoscopyBooked` and `colonoscopyDone` are reused for the cervical follow-up visit; the UI labels them by programme.
+  - **Bowel with an active `pickupBooked`:**
+    - "booked" while `now < startsAt`;
+    - "robotEnRoute" while `startsAt ≤ now < startsAt + ROBOT_TRAVEL_MS`;
+    - "robotAtDoor" after that, until `pickedUp`.
+  - **Cervical with an active `clinicBooked`:** "booked" until `clinicVisited`.
+  - **No active booking:** "invited".
+  - `sampleTaken` (taking the home sample) doesn't change the stage, but the UI uses it.
+- `robotProgress(s, now)` measures from the active pickup's `startsAt`. It returns null when the stage isn't en route or at the door.
+- `robotEta(s, now): number | null` is the milliseconds until arrival: before departure, until `startsAt + TRAVEL`; while en route, the remaining time.
+- **Flags:**
+  - `noBooking`: invited ≥ 14 days ago and no booking event ever. The label is "No booking 14 days after invitation" with the real day count. This replaces `noSample`.
+  - `positiveNoBooking`: unchanged; the label says "no colonoscopy" for bowel and "no follow-up visit" for cervical.
+  - `robotWaiting`: unchanged.
+  - `rebooked`: `bookingCount ≥ 3` or any `bookingCancelled`. The label is "Rebooked N times" or "Booking cancelled".
+- **`STAGES_FOR_BOARD`**, in this order:
+  1. Invited: `invited`
+  2. Booked: `booked`
+  3. Sample: `robotEnRoute`, `robotAtDoor`, `pickedUp`
+  4. At lab: `atLab`
+  5. Result: `positive`
+  6. Follow-up: `colonoscopyBooked`
+  7. Done: `negative`, `done`
+- `programmeLabel(p)` returns "Bowel screening (home test)" or "Cervical screening (clinic visit)".
+- **Store:**
+  - after `pickedUp` or `clinicVisited`, also record `atLab` 1 ms later;
+  - the localStorage key moves to `"lapi.demo.v2"`, so the old state is ignored.
+- **Seed:** about 12 people with a programme each.
+  - **Live samples:**
+    - `"me"` is Aino K., 62, Lahti, fi, bowel, at invited today;
+    - `"me-cx"` is Sanna L., 34, Lahti, fi, cervical, at invited today.
+  - **Other cases** (at least one each, with startsAt relative to now):
+    - `noBooking` at 20 days;
+    - `positiveNoBooking`, bowel, at 9 days;
+    - a cervical at "booked", 2 days ahead;
+    - a bowel at "booked" for later today;
+    - `rebooked`, with a cancellation;
+    - done and negative.
+
+- [ ] **Step 1: Update the tests first.**
+  - **Booking and stages:**
+    - rebooking: the latest booking wins;
+    - a cancellation returns the stage to invited;
+    - bowel booked in the future gives "booked";
+    - at `startsAt + 5s`, "robotEnRoute" with progress about 0.25;
+    - at `startsAt + 21s`, "robotAtDoor";
+    - cervical `clinicBooked` gives "booked", then `clinicVisited` gives "pickedUp";
+    - store-level: `atLab` follows after `clinicVisited`.
+  - **Flags:** `noBooking` at 14 days but not at 13; `rebooked` at 3 bookings and after a cancellation.
+  - **Robot ETA:** `robotEta` before departure and en route.
+  - **Seed:** contains `me` and `me-cx` at invited.
+- [ ] **Step 2:** Implement.
+- [ ] **Step 3:** vitest, tsc and eslint pass on `src/lib/sample`. tsc may fail in kit, staff or demo files that use the old names: list those failures in the report, but don't fix them (Tasks 9–10 do).
+- [ ] **Step 4:** Commit `feat: two screenings, bookings with rebooking, robot timed to the booked window`.
+
+### Task 9: Phone flow from the letter
+
+**Files:**
+- Modify `web/src/components/kit/KitApp.tsx`, `strings.ts`, `Illustrations.tsx` and `RobotMap.tsx`.
+- Create `web/src/components/kit/Letter.tsx`.
+- Modify `web/src/app/kit/page.tsx`.
+
+**Interfaces (Consumes):** Task 8's model and store. The phone acts on `?who=me` (default) or `?who=me-cx`.
+
+- [ ] **Step 0: Letter.**
+  - An on-screen letter image: an envelope-style card with the sender "Screening unit (demo)", the person's full first name and initial, the programme, the date, two short lines ("You are invited to … screening. Scan the code to book."), and a large QR-looking SVG.
+  - The QR is decorative: a fixed pseudo-random module grid drawn in SVG, labelled "Demo code".
+  - Tapping the QR, or the "Open" link under it, records `letterOpened`.
+  - In standalone `/kit` (not embed mode), a small toggle above the letter switches between the demo letters "Aino · bowel" and "Sanna · cervical". It updates `?who=` with `router.replace`.
+- [ ] **Step 1: What this is and next steps.**
+  - **Bowel:** the HUS facts as now.
+  - **Cervical:** the decree fact only.
+  - **A next-steps checklist:**
+    - bowel: Book a pickup time → Take the sample at home → The robot collects it → Result in about a month;
+    - cervical: Book a clinic time → Visit the clinic → Result.
+  - A "Book a time" button goes to booking.
+  - AskBox stays on this screen, for bowel only.
+- [ ] **Step 2: Booking.**
+  - **Bowel:** pickup windows "Now (demo)" (`startsAt` = now), plus two later windows today (or tomorrow) with real `startsAt`.
+  - **Cervical:** three clinic times on weekdays at "Lahti health centre (demo)", 2–6 days ahead, 9:00, 10:30 or 13:00, with real `startsAt`.
+  - Choosing one records `pickupBooked` or `clinicBooked` with the `slot` and `startsAt`.
+- [ ] **Step 3: Live view and next steps.**
+  - **Bowel, "booked":**
+    - "Your pickup: <slot>";
+    - the three take-sample steps with pictures and "I've taken the sample" (`sampleTaken`), shown until done;
+    - Rebook (back to booking) and Cancel (`bookingCancelled`);
+    - a "Send the robot now (demo)" button, which rebooks with `startsAt` = now and slot "Now (demo)", visible only for later windows.
+  - **Bowel, en route or at the door:**
+    - the map with the robot marker and the ETA countdown (`robotEta`);
+    - at the door, the box code and "I put the sample in" (`pickedUp`). If the sample isn't marked taken yet, a gentle reminder sits above that button.
+  - **Cervical, "booked":**
+    - an appointment card with the clinic name, time, and "Bring this phone; the nurse takes the sample";
+    - Rebook and Cancel;
+    - "The clinic records your visit (demo)".
+  - **At lab and results:**
+    - as now for bowel;
+    - cervical negative: "No changes found. Next invitation in five years.";
+    - cervical positive: "The sample needs a follow-up visit." with three follow-up times (`colonoscopyBooked` event, labelled "Follow-up visit"), and the interpreter option as for bowel;
+    - follow-up booked or done screens are labelled by programme.
+  - **Progress bar:** Letter, Booking, Sample, Lab, Result.
+- [ ] **Step 4:** tsc and eslint pass. `/kit`, `/kit?who=me-cx` and `/kit?embed=1` return 200. No sideways scroll at 375px.
+- [ ] **Step 5:** Commit `feat: phone flow from the letter: explanation, booking and rebooking, live robot or clinic visit`.
+
+### Task 10: Board and autopilot for the new flow
+
+**Files:**
+- Modify `web/src/components/staff/*`.
+- Modify `web/src/components/demo/Autopilot.tsx` and `web/src/app/demo/page.tsx`.
+
+**Interfaces (Consumes):** Task 8's model.
+
+- [ ] **Step 1: Board.**
+  - **Rows:** each row gets a programme badge ("Bowel · home" or "Cervical · clinic") and its booking slot when booked.
+  - **Live samples:** both live samples (`me` and `me-cx`) are pinned in the live strip as two compact cards. Each shows its stage, slot, and the robot's live progress bar with ETA while en route or booked within 10 minutes.
+  - **Drawer:** it shows the active booking, the booking history (booked, rebooked, cancelled) and the robot ETA.
+  - **Actions:**
+    - "Record clinic visit" (`clinicVisited`) at cervical "booked";
+    - lab results at atLab;
+    - "Book colonoscopy" (bowel) or "Book follow-up visit" (cervical) at positive;
+    - mark done;
+    - reminder and call as before.
+  - **Steps and flags:** the overview bar uses the new `STAGES_FOR_BOARD`; flagged dots include `rebooked`.
+- [ ] **Step 2: Demo page.**
+  - The `/demo` header gets a "Phone shows: Aino (bowel) / Sanna (cervical)" toggle that sets the phone iframe's `src` (`/kit?embed=1&who=…`).
+  - The autopilot uses `me`:
+    1. Reset.
+    2. `letterOpened` (caption "Aino scans the QR code on her letter").
+    3. Book "Now (demo)" (`pickupBooked`, `startsAt` = now; caption "Aino books a robot pickup").
+    4. `sampleTaken` 2 s later.
+    5. Wait for robotAtDoor, then `pickedUp`.
+    6. `resultPositive`, then `colonoscopyBooked` with the interpreter note (Finnish slot format).
+    7. Finally, switch the phone to Sanna and add `letterOpened` and `clinicBooked` for `me-cx` (caption "Sanna books her cervical screening at the clinic").
+    8. Done.
+  - Space still starts it.
+- [ ] **Step 3:** tsc, eslint and vitest pass. `/staff`, `/staff?embed=1` and `/demo` return 200.
+- [ ] **Step 4:** Commit `feat: board and autopilot for letters, bookings and both screenings`.
