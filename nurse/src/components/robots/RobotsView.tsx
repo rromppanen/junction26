@@ -70,8 +70,31 @@ export function RobotsView() {
       <AppHeader />
 
       <div className="mx-auto w-full max-w-[96rem] pt-6">
-        <h1 className="text-[length:var(--step-2)] font-semibold leading-tight text-brand-strong">Robots</h1>
-        <p className="mt-1 text-muted">Helsinki, Espoo and Vantaa</p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="text-[length:var(--step-2)] font-semibold leading-tight text-brand-strong">Robots</h1>
+            <p className="mt-1 text-muted">Helsinki, Espoo and Vantaa</p>
+          </div>
+          {/* Demo controls, next to the map so they are easy to find. */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+            <label className="inline-flex min-h-11 items-center gap-2 font-medium">
+              Speed
+              <select value={speed} onChange={(e) => setSpeed(Number(e.target.value) as SimSpeed)} className="min-h-11 rounded-lg border border-rule bg-white px-2 font-normal">
+                <option value={1}>Real (6 km/h)</option>
+                <option value={20}>20× faster</option>
+                <option value={60}>60× faster</option>
+              </select>
+            </label>
+            <label className="inline-flex min-h-11 items-center gap-2">
+              <input type="checkbox" checked={simulate} onChange={(e) => setSimulate(e.target.checked)} className="size-5 accent-[var(--brand)]" />
+              Robots running
+            </label>
+            <button type="button" onClick={() => { reset(); setSelected(null); }}
+              className="min-h-11 rounded-lg border border-rule bg-white px-3 font-semibold text-brand hover:bg-brand-soft">
+              Start again
+            </button>
+          </div>
+        </div>
 
         {!mounted ? (
           <p className="mt-6 text-muted">Loading…</p>
@@ -93,7 +116,16 @@ export function RobotsView() {
 
             <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_23rem]">
               <section aria-label="Map" className="min-w-0">
-                <div className={`${card} overflow-hidden border-rule`}>
+                <div className={`${card} relative overflow-hidden border-rule`}>
+                  {active.length === 0 && ready.length === 0 && (
+                    <div className="absolute inset-x-3 top-3 z-[1000] flex flex-wrap items-center justify-between gap-3 rounded-lg bg-white/95 p-3 shadow">
+                      <p className="text-sm">Every sample has been collected, so no robot is moving.</p>
+                      <button type="button" onClick={() => { reset(); setSelected(null); }}
+                        className="min-h-11 rounded-lg bg-brand px-3 text-sm font-semibold text-white hover:bg-brand-strong">
+                        Start the robots again
+                      </button>
+                    </div>
+                  )}
                   <LiveMap fleet={fleet} ready={ready} intake={Object.fromEntries(intake.map((g) => [g.hub, g.samples.length]))} routes={routes} selected={selected} onSelect={toggle} />
                 </div>
                 <ul aria-label="Map key" className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
@@ -183,20 +215,7 @@ export function RobotsView() {
         )}
       </div>
 
-      <DemoBar onReset={() => { reset(); setSelected(null); }}>
-        <label className="inline-flex min-h-11 items-center gap-2">
-          <input type="checkbox" checked={simulate} onChange={(e) => setSimulate(e.target.checked)} className="size-5 accent-[var(--brand)]" />
-          Other households
-        </label>
-        <label className="inline-flex min-h-11 items-center gap-2">
-          Speed
-          <select value={speed} onChange={(e) => setSpeed(Number(e.target.value) as SimSpeed)} className="min-h-11 rounded-lg border border-rule bg-white px-2">
-            <option value={1}>Real (6 km/h)</option>
-            <option value={20}>20×</option>
-            <option value={60}>60×</option>
-          </select>
-        </label>
-      </DemoBar>
+      <DemoBar onReset={() => { reset(); setSelected(null); }} />
     </main>
   );
 }
