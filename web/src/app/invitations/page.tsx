@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowLeft, FlaskConical } from "lucide-react";
+import { ArrowLeft, FlaskConical, MonitorSmartphone } from "lucide-react";
 import { getDataset } from "@/lib/data";
 import { CONTEXT_INDICATORS, indicatorBySlug } from "@/data/indicators";
 import { latestYear } from "@/lib/gap";
@@ -46,6 +46,7 @@ export default async function InvitationsPage({ searchParams }: { searchParams: 
       <AppHeader>
         <HeaderLink href="/" icon={ArrowLeft} label="Home" />
         <HeaderLink href={`/simulator?county=${initialCounty}`} icon={FlaskConical} label="Screening simulator" />
+        <HeaderLink href="/invitations/live" icon={MonitorSmartphone} label="See it in use" title="The woman's phone and the screening unit's board, side by side" />
         <DataBadge ds={ds} />
       </AppHeader>
       <InvitationDesigner
