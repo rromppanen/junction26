@@ -24,11 +24,11 @@ npm run smoke -- http://localhost:3000   # loads /nurse through the main app
 
 ## Relation to web/
 
-The board components (`src/components/staff/`) and the sample model and store (`src/lib/sample/`) are copies from `web/`. The old `/staff` page there still works, so for now a fix to the shared logic goes into both places. Keep the storage key `lapi.demo.v3`, the channel name `lapi-demo` and `seed.ts` identical in both apps, or the live sync stops. Both apps seed the same storage, so whichever loads first would otherwise decide the demo data.
+The board components (`src/components/staff/`) and the sample model and store (`src/lib/sample/`) are copies from `web/`. The old `/staff` page there still works, so for now a fix to the shared logic goes into both places. Keep the storage key `lapi.demo.v4`, the channel name `lapi-demo` and `seed.ts` identical in both apps, or the live sync stops. Both apps seed the same storage, so whichever loads first would otherwise decide the demo data.
 
 ## Demo data
 
-97 invented people in Helsinki, Espoo and Vantaa (`src/lib/sample/seed.ts`). Most have a mother tongue other than Finnish or Swedish, for example Somali, Arabic, Russian, Estonian, Ukrainian, Kurdish, Persian, Dari, Albanian or Vietnamese, because screening reaches minority-language speakers least. The optional fields `area` (neighbourhood) and `homeLanguage` place each person on the map and show their language on the board.
+97 invented people in Helsinki, Espoo and Vantaa (`src/lib/sample/seed.ts`). About half speak Finnish or Swedish; the other half have a minority mother tongue, for example Somali, Arabic, Russian, Estonian, Ukrainian, Kurdish, Persian, Dari, Albanian or Vietnamese, because screening reaches minority-language speakers least. The optional fields `area` (neighbourhood) and `homeLanguage` place each person on the map and show their language on the board.
 
 ## Pages
 
