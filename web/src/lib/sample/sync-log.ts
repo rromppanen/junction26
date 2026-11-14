@@ -98,20 +98,24 @@ export async function appendLog(seedAt: number, entries: LogEntry[]): Promise<"o
   return out.result === 1 ? "ok" : out.result === -1 ? "stale" : "full";
 }
 
-/** Starts a new, empty log seeded at the current time. */
+// The new seed is always later than the old one, even for two resets in the same millisecond;
+// otherwise a write made before the second reset would still match and be accepted.
+const RESET = `
+local old = tonumber(redis.call('GET', KEYS[1]) or '0') or 0
+local seed = math.max(tonumber(ARGV[1]), old + 1)
+redis.call('SET', KEYS[1], string.format('%.0f', seed))
+redis.call('DEL', KEYS[2])
+return string.format('%.0f', seed)`;
+
+/** Starts a new, empty log seeded at the current time (or just after the previous seed). */
 export async function resetLog(): Promise<number> {
-  const seedAt = Date.now();
   const r = redis();
   if (!r) {
-    mem.seedAt = seedAt;
+    mem.seedAt = Math.max(Date.now(), mem.seedAt + 1);
     mem.log = [];
-    return seedAt;
+    return mem.seedAt;
   }
-  results(
-    await call<Reply[]>(r, "/multi-exec", [
-      ["SET", SEED_KEY, String(seedAt)],
-      ["DEL", LOG_KEY],
-    ]),
-  );
-  return seedAt;
+  const out = await call<Reply>(r, "", ["EVAL", RESET, "2", SEED_KEY, LOG_KEY, String(Date.now())]);
+  if (out.error) throw new Error(`Redis error: ${out.error}`);
+  return Number(out.result);
 }
