@@ -1,17 +1,26 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/Wordmark";
-import { IntakeFlow } from "@/components/intake/IntakeFlow";
+import { FollowUpBoard } from "@/components/followup/FollowUpBoard";
 
-/** The start page. Deliberately bare: the wordmark, a way to the map, and the current step, so the user is never overloaded. */
+/**
+ * The start page: the follow-up workspace for positive bowel screening tests.
+ * The earlier gap explorer (map, county pages, analysis) stays reachable as supporting evidence.
+ */
 export default function StartPage() {
   return (
-    <main id="main-content" tabIndex={-1} className="flex min-h-dvh flex-col px-4 sm:px-6">
-      <div className="mx-auto flex w-full max-w-2xl items-center justify-between pt-5">
+    <main id="main-content" tabIndex={-1} className="min-h-dvh px-4 pb-12 sm:px-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2 pt-5">
         <Wordmark className="opacity-70 transition-opacity hover:opacity-100" />
-        <Link href="/map" className="inline-flex min-h-11 items-center rounded-md border border-rule px-3 py-2 text-sm font-medium hover:bg-surface">Browse the map</Link>
+        <Link href="/map" className="inline-flex min-h-11 items-center rounded-md border border-rule px-3 py-2 text-sm font-medium hover:bg-surface">County data explorer</Link>
       </div>
-      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center pb-[12vh] pt-10">
-        <IntakeFlow />
+      <div className="mx-auto w-full max-w-6xl pt-6">
+        <h1 className="text-[length:var(--step-3)] font-semibold leading-tight">Screening follow-up workspace</h1>
+        <p className="mt-1 max-w-3xl text-muted">
+          For the screening nurse: every positive bowel screening test gets an owner, a next action and a history until the colonoscopy is done. Demo with invented patients; messages and bookings are simulated.
+        </p>
+        <div className="mt-6">
+          <FollowUpBoard />
+        </div>
       </div>
     </main>
   );
