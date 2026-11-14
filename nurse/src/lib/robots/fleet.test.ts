@@ -3,7 +3,7 @@ import { ROBOT_TRAVEL_MS, stageOf, type Sample } from "@/lib/sample/model";
 import { seedSamples } from "@/lib/sample/seed";
 import {
   AREAS, DISPATCH_GAP_MS, awaitingIntake, FLEET, HUBS, NO_ANSWER_ID, finishedTrips, fleetAt, homeOf, hubOf, pointAlong, positionOf,
-  readyForPickup, simStep, travelMsFor, tripsOf,
+  pickupCode, readyForPickup, simStep, travelMsFor, tripsOf,
 } from "./fleet";
 
 const T0 = 1_800_000_000_000;
@@ -188,5 +188,14 @@ describe("simulated households", () => {
     expect(viewOf([slow], T0 + 300_000, firstAt("itakeskus")).status).toMatchObject({ kind: "outbound" });
     expect(stageOf(slow, T0 + 300_000)).toBe("robotEnRoute");
     expect(stageOf(slow, T0 + 600_000)).toBe("robotAtDoor");
+  });
+});
+
+describe("anonymous destinations", () => {
+  it("gives every sample its own pickup code with no name in it", () => {
+    const seed = seedSamples(Date.now());
+    const codes = seed.map((s) => pickupCode(s.id));
+    expect(new Set(codes).size).toBe(seed.length);
+    for (const c of codes) expect(c).toMatch(/^Pickup \d{4}$/);
   });
 });

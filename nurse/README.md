@@ -63,3 +63,9 @@ Simulated robots drive at about 6 km/h, a typical speed for sidewalk delivery ro
 When the page opens on a quiet map, up to three robots per hub are booked as if they had left earlier, so the fleet is already part-way to its homes. After that, one new booking is made every 3 minutes in real time (every 3 seconds at 60×).
 
 The phone user's own robot still takes the fixed 20 seconds from `web/`, so the phone demo stays short. The earlier figures in this file (a robot every 3 seconds, about three minutes of samples) describe the 60× speed.
+
+## Anonymous destinations and demo speed
+
+The robots page and map never show a person's name. Each pickup has a code such as "Pickup 4821" (`pickupCode` in `fleet.ts`), and the page shows the code, the neighbourhood and the language. The board shows the same code next to the person for samples in the pickup steps, so a nurse can match them.
+
+The **Speed** selector now offers Real time, Demo speed (20× faster, the default) and 60×. At demo speed a trip takes under two minutes each way and a new booking is made every 9 seconds.

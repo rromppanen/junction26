@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap } from "react-leaflet";
 import type { Sample } from "@/lib/sample/model";
-import { AREAS, HUBS, curvedRoute, homeOf, positionOf, routeKey, type LatLng, type RobotView } from "@/lib/robots/fleet";
+import { AREAS, HUBS, curvedRoute, homeOf, pickupCode, positionOf, routeKey, type LatLng, type RobotView } from "@/lib/robots/fleet";
 
 const COLOUR = {
   outbound: "#0f6e56",
@@ -112,7 +112,7 @@ export default function LiveMap({ fleet, ready, intake, routes, selected, onSele
       {ready.map((s) => (
         <CircleMarker key={`ready-${s.id}`} center={homeOf(s.person)} radius={6}
           pathOptions={{ color: COLOUR.ink, weight: 2, fillColor: "#ffffff", fillOpacity: 1 }}>
-          <Tooltip>{s.person.name}, {s.person.area} · sample ready, no pickup booked{langLine(s.person) ? ` · ${langLine(s.person)}` : ""}</Tooltip>
+          <Tooltip>{pickupCode(s.id)}, {s.person.area} · sample ready, no pickup booked{langLine(s.person) ? ` · ${langLine(s.person)}` : ""}</Tooltip>
         </CircleMarker>
       ))}
 
@@ -123,7 +123,7 @@ export default function LiveMap({ fleet, ready, intake, routes, selected, onSele
         return (
           <CircleMarker key={`home-${v.robot.id}`} center={t.home} radius={flagged ? 11 : 7}
             pathOptions={{ color: flagged ? COLOUR.flagged : COLOUR.ink, weight: 2, fillColor: flagged ? COLOUR.flagged : COLOUR.ink, fillOpacity: flagged ? 0.35 : 1 }}>
-            <Tooltip permanent direction="right" offset={[10, 0]} className="home-label">{t.person.name}</Tooltip>
+            <Tooltip permanent direction="right" offset={[10, 0]} className="home-label">{pickupCode(t.sampleId)}</Tooltip>
           </CircleMarker>
         );
       })}
@@ -149,7 +149,7 @@ export default function LiveMap({ fleet, ready, intake, routes, selected, onSele
             eventHandlers={{ click: () => onSelect(v.robot.id) }}
             keyboard={false}>
             <Tooltip direction="top" offset={[0, -12]}>
-              {v.robot.name}, {statusText[v.status.kind]}: {v.status.trip.person.name}
+              {v.robot.name}, {statusText[v.status.kind]}: {pickupCode(v.status.trip.sampleId)}
             </Tooltip>
           </Marker>
         );

@@ -105,6 +105,14 @@ export function hash(s: string): number {
   return h >>> 0;
 }
 
+/**
+ * An anonymous code for a pickup, e.g. "Pickup 4821". The robots page and map show this
+ * instead of the person's name: a destination should not say who lives there.
+ */
+export function pickupCode(sampleId: string): string {
+  return `Pickup ${1000 + (Math.imul(hash(sampleId), 2654435761) >>> 0) % 9000}`;
+}
+
 /** The hub that serves this person; people with an unknown area go to the central lab. */
 export function hubOf(person: Person): HubId {
   return (person.area && AREAS[person.area]?.hub) || "meilahti";
@@ -275,7 +283,7 @@ export const ROBOT_SPEED_KMH = 6;
 /** Streets are longer than the straight line; a typical detour factor for walking routes. */
 const DETOUR = 1.35;
 /** How much faster than real time the simulated robots run. 1 is real time. */
-export type SimSpeed = 1 | 10 | 60;
+export type SimSpeed = 1 | 20 | 60;
 
 /** One-way driving time from the hub to the home at ROBOT_SPEED_KMH, sped up by `speed`. */
 export function travelMsFor(person: Person, speed: SimSpeed): number {

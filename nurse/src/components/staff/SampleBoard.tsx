@@ -4,8 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 import { NurseNav } from "@/components/NurseNav";
 import { Wordmark } from "@/components/Wordmark";
-import { flagsOf, stageOf, STAGES_FOR_BOARD, type EventType } from "@/lib/sample/model";
+import { flagsOf, stageOf, STAGES_FOR_BOARD, type EventType, type Stage } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
+import { pickupCode } from "@/lib/robots/fleet";
 import { MiniTimeline } from "./MiniTimeline";
 import { SampleActions } from "./SampleActions";
 import { SampleDrawer } from "./SampleDrawer";
@@ -14,6 +15,9 @@ import {
 } from "./boardShared";
 
 export { DEMO_NOTE };
+
+/** Stages where the robots page refers to the sample by its anonymous pickup code. */
+const IN_PICKUP: Stage[] = ["sampleTaken", "robotEnRoute", "robotAtDoor", "pickedUp"];
 
 export function SampleBoard({ embed = false }: { embed?: boolean }) {
   const { samples, now, add, reset } = useSamples();
@@ -181,6 +185,7 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
                         </span>
                         <span className="block text-muted">
                           {p.area ? `${p.area}, ` : ""}{p.municipality} · {p.homeLanguage ? `${p.homeLanguage} · app ` : ""}{p.lang.toUpperCase()}{p.interpreter ? ` · interpreter: ${p.interpreter}` : ""}
+                          {IN_PICKUP.includes(r.stage) ? ` · ${pickupCode(s.id)}` : ""}
                         </span>
                       </span>
                       <span className="flex flex-col items-start gap-1 sm:items-end">

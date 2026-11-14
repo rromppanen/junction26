@@ -8,7 +8,7 @@ import { Wordmark } from "@/components/Wordmark";
 import { BTN, DEMO_NOTE, ME } from "@/components/staff/boardShared";
 import type { Person } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
-import { FLEET, HUBS, ROBOT_SPEED_KMH, awaitingIntake, finishedTrips, fleetAt, readyForPickup, simStep, tripsOf, type RobotView, type SimSpeed } from "@/lib/robots/fleet";
+import { FLEET, HUBS, ROBOT_SPEED_KMH, awaitingIntake, finishedTrips, fleetAt, pickupCode, readyForPickup, simStep, tripsOf, type RobotView, type SimSpeed } from "@/lib/robots/fleet";
 import { useRoutes } from "@/lib/robots/routes";
 
 // Leaflet needs the browser's window, so the map renders on the client only.
@@ -44,15 +44,15 @@ function detail(v: RobotView): string {
   const s = v.status;
   switch (s.kind) {
     case "outbound":
-      return `To ${s.trip.person.name}, ${s.trip.person.area}. Arrives in ${ago(s.etaMs)}.`;
+      return `To ${pickupCode(s.trip.sampleId)}, ${s.trip.person.area}. Arrives in ${ago(s.etaMs)}.`;
     case "atDoor":
       return s.flagged
-        ? `Has waited ${ago(s.waitedMs)} at ${s.trip.person.name}'s door. Consider calling${s.trip.person.interpreter ? ` with a ${s.trip.person.interpreter} interpreter` : ""}.`
-        : `At ${s.trip.person.name}'s door, ${s.trip.person.area}, for ${ago(s.waitedMs)}.`;
+        ? `Has waited ${ago(s.waitedMs)} at the door of ${pickupCode(s.trip.sampleId)}, ${s.trip.person.area}. Consider calling${s.trip.person.interpreter ? ` with a ${s.trip.person.interpreter} interpreter` : ""}.`
+        : `At the door of ${pickupCode(s.trip.sampleId)}, ${s.trip.person.area}, for ${ago(s.waitedMs)}.`;
     case "returning":
       return s.trip.handedOver
-        ? `Bringing ${s.trip.person.name}'s sample to ${HUBS[s.trip.hub].name}, ${ago(s.etaMs)} left.`
-        : `Coming back to ${HUBS[s.trip.hub].name} without ${s.trip.person.name}'s sample, ${ago(s.etaMs)} left.`;
+        ? `Bringing the sample of ${pickupCode(s.trip.sampleId)} to ${HUBS[s.trip.hub].name}, ${ago(s.etaMs)} left.`
+        : `Coming back to ${HUBS[s.trip.hub].name} without the sample of ${pickupCode(s.trip.sampleId)}, ${ago(s.etaMs)} left.`;
     default:
       return `At ${HUBS[v.robot.hub].name}, ready.`;
   }
@@ -71,7 +71,7 @@ export function RobotsView() {
   const [mounted, setMounted] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [simulate, setSimulate] = useState(true);
-  const [speed, setSpeed] = useState<SimSpeed>(1);
+  const [speed, setSpeed] = useState<SimSpeed>(20);
   const lastTick = useRef(0);
   useEffect(() => setMounted(true), []);
 
@@ -126,14 +126,14 @@ export function RobotsView() {
               <select value={speed} onChange={(e) => setSpeed(Number(e.target.value) as SimSpeed)}
                 className="min-h-9 rounded-lg border border-rule bg-white px-2 text-sm">
                 <option value={1}>Real time ({ROBOT_SPEED_KMH} km/h)</option>
-                <option value={10}>10× faster</option>
+                <option value={20}>Demo speed (20× faster)</option>
                 <option value={60}>60× faster</option>
               </select>
             </label>
           </div>
         </div>
         <p className="text-xs text-muted">
-          Robots drive at about {ROBOT_SPEED_KMH} km/h, so a trip takes 5 to 40 minutes each way. A faster speed applies to robots sent after you change it.
+          Destinations are shown by pickup code, not by name; the board shows who it is. Real robots drive at about {ROBOT_SPEED_KMH} km/h, 5 to 40 minutes each way. Demo speed shortens that to under two minutes. A speed change applies to robots sent after it.
         </p>
 
         {!mounted ? (
@@ -233,7 +233,7 @@ export function RobotsView() {
                             </button>
                           </div>
                           <p className="mt-1 text-muted">
-                            {g.samples.slice(0, 6).map((s) => s.person.name).join(", ")}
+                            {g.samples.slice(0, 6).map((s) => pickupCode(s.id)).join(", ")}
                             {g.samples.length > 6 ? ` and ${g.samples.length - 6} more` : ""}
                             {" · "}longest wait {ago(now - (g.samples[0].events.findLast((e) => e.type === "pickedUp")?.at ?? now))}
                           </p>
@@ -251,7 +251,7 @@ export function RobotsView() {
                     <ul className="mt-2 space-y-1 text-sm">
                       {ready.map((s) => (
                         <li key={s.id} className="rounded-lg border border-rule bg-white px-3 py-2">
-                          <span className="font-medium">{s.person.name}</span>
+                          <span className="font-medium">{pickupCode(s.id)}</span>
                           <span className="text-muted">, {s.person.area}, {s.person.municipality} · taken {ago(now - sampleTakenAt(s.id))} ago</span>
                           {language(s.person) && <span className="block text-xs text-muted">Language: {language(s.person)}</span>}
                         </li>
@@ -270,7 +270,7 @@ export function RobotsView() {
                         <li key={`${t.sampleId}-${t.bookedAt}`} className="rounded-lg border border-rule bg-white px-3 py-2">
                           <span className="font-medium">{robotName(t.robotId)}</span>
                           <span className="text-muted">
-                            {" · "}{t.person.name}, {t.person.area} · {t.handedOver ? "sample collected" : "came back empty"} {ago(now - (t.leftAt ?? now))} ago
+                            {" · "}{pickupCode(t.sampleId)}, {t.person.area} · {t.handedOver ? "sample collected" : "came back empty"} {ago(now - (t.leftAt ?? now))} ago
                           </span>
                         </li>
                       ))}
