@@ -12,6 +12,7 @@ import { shortName } from "@/components/format";
 import { EvidenceTag } from "@/components/simulator/EvidenceTag";
 import { ScreeningSimulator } from "@/components/simulator/ScreeningSimulator";
 import type { SimCounty } from "@/components/simulator/types";
+import WOMEN from "@/data/women5069.json";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +57,8 @@ export default async function SimulatorPage({ searchParams }: { searchParams: Pr
       .filter((p): p is { year: number; value: number } => p.value !== null);
     const compared = series.filter((p) => nationalByYear.get(p.year) != null);
     const persistent = compared.length > 0 && compared.every((p) => p.value < (nationalByYear.get(p.year) as number));
-    counties.push({ id: r.id, name: shortName(r.name), attendance, population, persistent, trend: slope(series) });
+    const women = (WOMEN.counties as Record<string, number>)[String(r.id)];
+    counties.push({ id: r.id, name: shortName(r.name), attendance, population, women, persistent, trend: slope(series) });
     const fb = latestUpTo(fbInd.id, r.id);
     if (fb !== null) fbPairs.push([attendance, fb]);
   }

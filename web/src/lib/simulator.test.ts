@@ -46,6 +46,13 @@ describe("simulate", () => {
     expect(r.net).toBeCloseTo(278574.03, 0);
   });
 
+  it("uses a county's own count of women aged 50–69 when given", () => {
+    const own = simulate(P, 74.3, 684018, 75640);
+    const share = simulate({ ...P, women_50_69_share: 75640 / 684018 }, 74.3, 684018);
+    expect(own.ly).toBeCloseTo(share.ly, 9);
+    expect(own.screens).toBeLessThan(simulate(P, 74.3, 684018).screens);
+  });
+
   it("gives nothing to a county already at or above the target", () => {
     const r = simulate(P, 85.6, 418331);
     expect(r.screens).toBe(0);

@@ -199,7 +199,7 @@ export function ScreeningSimulator({
   const saves = `${num((draws.net.filter((v) => v < 0).length / draws.n) * 100)}%`;
 
   const tableRows = counties
-    .map((c) => ({ c, r: simulate(P, c.attendance, c.population), gap: Math.max(target - c.attendance, 0) }))
+    .map((c) => ({ c, r: simulate(P, c.attendance, c.population, c.women), gap: Math.max(target - c.attendance, 0) }))
     .sort((a, b) => b.r.ly - a.r.ly || a.c.attendance - b.c.attendance);
   const maxLy = Math.max(...tableRows.map((x) => x.r.ly), 1e-9);
 

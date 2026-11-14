@@ -47,8 +47,8 @@ export type Assumption = {
   note: string;
 };
 
-/** One county's observed inputs: attendance in %, population in people. */
-export type CountyInput = { attendance: number; population: number };
+/** One county's observed inputs: attendance in %, population in people, and (when known) women aged 50–69. */
+export type CountyInput = { attendance: number; population: number; women?: number };
 
 export type SimResult = {
   /** Extra screens per year needed to reach the target. */
@@ -85,10 +85,13 @@ export function stageMix(P: Params, who: "att" | "non"): [number, number, number
   return [1 - reg - dist, reg, dist];
 }
 
-/** Annual, steady-state effect of raising one county's attendance (in %) to the target. */
-export function simulate(P: Params, attendance: number, population: number): SimResult {
+/**
+ * Annual, steady-state effect of raising one county's attendance (in %) to the target. `women` is the county's
+ * own count of women aged 50–69; without it, population × women_50_69_share is used.
+ */
+export function simulate(P: Params, attendance: number, population: number, womenCount?: number): SimResult {
   const dp = Math.max(P.target_attendance - attendance, 0) / 100;
-  const women = population * P.women_50_69_share;
+  const women = womenCount ?? population * P.women_50_69_share;
   const shifted = women * P.incidence_50_69 * dp;
   const att = stageMix(P, "att");
   const non = stageMix(P, "non");
@@ -107,7 +110,7 @@ export function simulate(P: Params, attendance: number, population: number): Sim
 export function totals(P: Params, counties: readonly CountyInput[]): Totals {
   const t: SimResult = { ...ZERO };
   for (const c of counties) {
-    const r = simulate(P, c.attendance, c.population);
+    const r = simulate(P, c.attendance, c.population, c.women);
     for (const k of Object.keys(t) as (keyof SimResult)[]) t[k] += r[k];
   }
   return { ...t, icer: t.ly > 0 ? t.net / t.ly : NaN };
