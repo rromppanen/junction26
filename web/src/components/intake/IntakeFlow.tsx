@@ -1,0 +1,205 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { QuestionInput } from "@/lib/intake/clarify";
+import type { Table } from "@/lib/intake/csv";
+import { validateMapping, type Field, type Mapping } from "@/lib/intake/fields";
+import { PUBLIC_DATASETS, type AnalysisSetup, type Level, type PublicDataset } from "@/lib/intake/setup";
+import type { Understanding } from "@/lib/intake/understand";
+import { FadeIn, useLeave } from "./fade";
+import { StepConversation, type Resolved } from "./StepConversation";
+import { DEFAULT_DATASETS, StepData } from "./StepData";
+import { StepReading } from "./StepReading";
+
+/** Same value as NATIONAL in lib/intake/understand (a server module, so not imported here). */
+const NATIONAL = "national";
+export const SETUP_KEY = "gapRadar.analysisSetup";
+
+type Phase = "data" | "reading" | "ask" | "done";
+
+type Settled = { mapping: Mapping | null; countyId: number | null; level: Level };
+
+/** Applies the conversation's answers on top of what the AI understood on its own. */
+function settle(u: Understanding, resolved: Resolved[]): Settled {
+  const mapping: Mapping | null = u.mapping ? { ...u.mapping } : null;
+  let countyId = u.place.countyId;
+  let level = u.place.level;
+  for (const { question, value } of resolved) {
+    const chosen = value ?? question.guess?.value ?? null;
+    if (question.kind === "column" && question.column && mapping) {
+      if (chosen) mapping[question.column] = chosen as Field;
+    } else if (question.kind === "county" && chosen) {
+      if (chosen === NATIONAL) {
+        countyId = null;
+        level = "national";
+      } else {
+        countyId = Number(chosen);
+        if (level === "national") level = "county";
+      }
+    }
+  }
+  return { mapping, countyId, level };
+}
+
+/**
+ * The start page (/) as a conversation: choose data, the AI reads it, asks only what it is unsure about
+ * (one question at a time), then hands over to the findings. Every screen fades in and out.
+ */
+export function IntakeFlow() {
+  const router = useRouter();
+  const [phase, setPhase] = useState<Phase>("data");
+  const [datasets, setDatasets] = useState<PublicDataset[]>(DEFAULT_DATASETS);
+  const [table, setTable] = useState<Table | null>(null);
+  const [fileName, setFileName] = useState("");
+  const [understanding, setUnderstanding] = useState<Understanding | null>(null);
+  const [settled, setSettled] = useState<Settled | null>(null);
+  const { leaving, leave } = useLeave();
+
+  const input: QuestionInput = useMemo(
+    () => ({ datasets, headers: table ? table.headers : null, sample: table ? table.rows.slice(0, 5) : null }),
+    [datasets, table],
+  );
+  const go = (next: Phase, before?: () => void) => leave(() => { before?.(); setPhase(next); });
+
+  return (
+    <div className={leaving ? "fade-out" : ""}>
+      <div key={phase}>
+        {phase === "data" && (
+          <StepData
+            datasets={datasets}
+            table={table}
+            fileName={fileName}
+            onDatasets={setDatasets}
+            onFile={(t, name) => { setTable(t); setFileName(name); }}
+            onContinue={() => go("reading")}
+          />
+        )}
+        {phase === "reading" && (
+          <StepReading
+            input={input}
+            fileName={fileName}
+            onBack={() => go("data")}
+            onUnderstood={(u) => {
+              if (u.questions.length) go("ask", () => setUnderstanding(u));
+              else go("done", () => { setUnderstanding(u); setSettled(settle(u, [])); });
+            }}
+          />
+        )}
+        {phase === "ask" && understanding && (
+          <StepConversation
+            input={input}
+            questions={understanding.questions}
+            onDone={(resolved) => go("done", () => setSettled(settle(understanding, resolved)))}
+          />
+        )}
+        {phase === "done" && understanding && settled && (
+          <StepDone
+            datasets={datasets}
+            table={table}
+            fileName={fileName}
+            understanding={understanding}
+            settled={settled}
+            onFindings={(setup) => {
+              try {
+                sessionStorage.setItem(SETUP_KEY, JSON.stringify(setup));
+              } catch {
+                // storage unavailable: the findings still open
+              }
+              leave(() => router.push(setup.countyId !== null ? `/county/${setup.countyId}` : "/map"));
+            }}
+            onStartOver={() =>
+              go("data", () => {
+                setUnderstanding(null);
+                setSettled(null);
+                setTable(null);
+                setFileName("");
+                setDatasets(DEFAULT_DATASETS);
+              })
+            }
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+const listText = (xs: string[]) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`);
+
+function StepDone({
+  datasets,
+  table,
+  fileName,
+  understanding,
+  settled,
+  onFindings,
+  onStartOver,
+}: {
+  datasets: PublicDataset[];
+  table: Table | null;
+  fileName: string;
+  understanding: Understanding;
+  settled: Settled;
+  onFindings: (setup: AnalysisSetup) => void;
+  onStartOver: () => void;
+}) {
+  const errors = table && settled.mapping ? validateMapping(table, settled.mapping) : [];
+  const fileOk = table !== null && errors.length === 0;
+  const place =
+    settled.level === "national" || settled.countyId === null
+      ? "the whole country"
+      : (understanding.places.find((p) => p.value === String(settled.countyId))?.label ?? "your county");
+  const names = datasets.map((id) => PUBLIC_DATASETS.find((d) => d.id === id)?.nameEn.toLowerCase() ?? id);
+  const sources = [...names, ...(fileOk ? [fileName] : [])];
+  const asked = understanding.questions.length > 0;
+
+  const setup = (withFile: boolean): AnalysisSetup => ({
+    datasets,
+    upload: withFile && table && settled.mapping
+      ? { fileName, headers: table.headers, rowCount: table.rows.length, mapping: settled.mapping }
+      : null,
+    audience: settled.level === "national" ? "national" : "county-board",
+    level: settled.level,
+    countyId: settled.level === "national" ? null : settled.countyId,
+  });
+  const canOpen = datasets.length > 0 || fileOk;
+
+  return (
+    <div className="space-y-8">
+      <div className="space-y-3">
+        <FadeIn>
+          <h2 className="text-heading font-semibold tracking-[-0.01em]">
+            {asked ? "Thanks, that's everything I needed." : "I've got everything I need."}
+          </h2>
+        </FadeIn>
+        <FadeIn delay={300}>
+          <p className="text-lede text-muted">
+            I&apos;ll look at {place}
+            {sources.length ? `, using ${listText(sources)}` : ""}.
+          </p>
+        </FadeIn>
+        {table && !fileOk && (
+          <FadeIn delay={600}>
+            <p className="text-lede text-behind">
+              I can&apos;t use {fileName} yet: {errors.slice(0, 2).join(" ")}
+            </p>
+          </FadeIn>
+        )}
+      </div>
+      <FadeIn delay={900} className="flex flex-wrap items-center gap-3">
+        {canOpen && (
+          <button
+            type="button"
+            onClick={() => onFindings(setup(fileOk))}
+            className="rounded-[6px] bg-ink px-6 py-3 font-medium text-white"
+          >
+            {table && !fileOk ? "See findings without my file" : "See the findings"}
+          </button>
+        )}
+        <button type="button" onClick={onStartOver} className="px-2 py-3 text-small text-muted hover:text-ink">
+          Start over
+        </button>
+      </FadeIn>
+    </div>
+  );
+}
