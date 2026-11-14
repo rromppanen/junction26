@@ -40,8 +40,8 @@ export const so: KitText = {
     mapError: "Khariidadda lama soo rari karin. Robotku weli waa soo socdaa.",
     arrived: "Robotku wuu yimid",
     arrivedBody: "Wuxuu ku sugayaa albaabkaaga hortiisa.",
-    openLid: "Fur daboolka",
-    lidClosed: "Daboolku waa xiran yahay",
+    openLid: "Fur qolkayga",
+    lidClosed: "Qolka waa la xiray",
     thanksTitle: "Mahadsanid. Muunaddaadu waxay u socotaa shaybaarka",
     readMore: "Akhri wax dheeraad ah",
     restartDemo: "Dib u bilow tijaabada",
@@ -84,8 +84,8 @@ export const so: KitText = {
   },
   robot: [
     { title: "U bax robotka.", body: "Wuxuu ku sugayaa albaabkaaga hortiisa. Qaado baqshadda celinta." },
-    { title: "Daboolka ka fur barnaamijka.", body: "Daboolka waxaa furi kara oo keliya telefoonkaaga, oo keliya marka aad robotka ag joogto." },
+    { title: "Qolkaaga ka fur app-ka.", body: "Robot-ku wuxuu leeyahay dhowr qol. Kaliya qolkaaga ayaa furma, kaliya taleefankaaga marka aad robot-ka ag joogto." },
     { title: "Baqshadda geli gudaha.", body: "Si siman ugu dhig qaybta." },
-    { title: "Xir daboolka.", body: "Riix ilaa uu xirmo. Kadib robotku wuxuu u ambabaxayaa shaybaarka." },
+    { title: "Xir qolka.", body: "Daboolka hoos u riix ilaa uu xirmo. Kadib robot-ku wuxuu ka soo ururinayaa muunadaha deriskaaga dhow, wuxuuna ku laabanayaa shaybaarka." },
   ],
 };

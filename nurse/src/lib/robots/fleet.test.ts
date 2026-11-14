@@ -3,7 +3,7 @@ import { ROBOT_TRAVEL_MS, stageOf, type Sample } from "@/lib/sample/model";
 import { seedSamples } from "@/lib/sample/seed";
 import {
   AREAS, DISPATCH_GAP_MS, awaitingIntake, FLEET, HUBS, NO_ANSWER_ID, finishedTrips, fleetAt, homeOf, hubOf, pointAlong, positionOf,
-  pickupCode, readyForPickup, sharedRoute, simStep, travelMsFor, tripsOf,
+  pickupCode, readyForPickup, sharedRoute, simStep, travelMsFor, tripsOf, COMPARTMENTS, awaitingIntake as intakeOf,
 } from "./fleet";
 
 const T0 = 1_800_000_000_000;
@@ -143,9 +143,13 @@ describe("simulated households", () => {
     }
   });
 
-  it("sends at most three robots per hub at the start", () => {
+  it("sends at most three robots per hub at the start, each with up to four compartments", () => {
     const many = ["Kontula", "Vuosaari", "Myllypuro", "Puotila", "Itäkeskus"].map((area, i) => sample(`s${i}`, area, [["sampleTaken", T0 - (i + 1) * 60_000]]));
-    expect(simStep(many, T0, "me", slot)).toHaveLength(3);
+    const booked = simStep(many, T0, "me", slot).flatMap((a) => (a.event.type === "pickupBooked" ? [a.event] : []));
+    const robots = new Set(booked.map((e) => e.run));
+    expect(robots.size).toBeLessThanOrEqual(3);
+    expect(booked.filter((e) => e.compartment === 1)).toHaveLength(robots.size);
+    expect(booked.every((e) => (e.compartment ?? 1) <= COMPARTMENTS)).toBe(true);
   });
 
   it("drives at about 6 km/h in real time and faster when sped up", () => {
@@ -252,5 +256,81 @@ describe("a pickup booked for a later window", () => {
     const [trip] = tripsOf([s]);
     expect(trip.bookedAt).toBe(T0 + 120_000);
     expect(stageOf(s, T0 + 125_000)).toBe("robotEnRoute");
+  });
+});
+
+describe("runs: one robot, several compartments", () => {
+  const leg = 20_000;
+  const stopA: Sample = { ...sample("a1", "Kallio", [["sampleTaken", T0 - 5000]]) };
+  stopA.events.push({ type: "pickupBooked", at: T0, travelMs: leg, run: "run1", compartment: 1 });
+  const stopB: Sample = { ...sample("b1", "Kallio", [["sampleTaken", T0 - 4000]]) };
+  stopB.events.push({ type: "pickupBooked", at: T0, travelMs: 8_000, run: "run1", compartment: 2, after: "a1" });
+
+  it("visits the stops in order, each leg starting when the robot leaves the previous door", () => {
+    const [a, b] = tripsOf([stopA, stopB]);
+    expect([a.compartment, b.compartment]).toEqual([1, 2]);
+    expect(a.robotId).toBe(b.robotId);
+    expect(b.bookedAt).toBe(Infinity);
+    expect(stageOf(stopB, T0 + 30_000)).toBe("pickupBooked");
+
+    const handedA = { ...stopA, events: [...stopA.events, { type: "pickedUp" as const, at: T0 + 30_000 }] };
+    const [a2, b2] = tripsOf([handedA, stopB]);
+    expect(a2.leftAt).toBe(T0 + 30_000);
+    expect(b2.bookedAt).toBe(T0 + 30_000);
+    expect(b2.from).toEqual(a2.home);
+    const v = viewOf([handedA, stopB], T0 + 34_000, a2.robotId);
+    expect(v.status.kind).toBe("outbound");
+    expect(v.status.kind !== "idle" && v.status.trip.sampleId).toBe("b1");
+    expect(v.run.map((t) => t.sampleId)).toEqual(["a1", "b1"]);
+  });
+
+  it("drives back once, after the last stop, and only then are the samples at the hub", () => {
+    const handedA = { ...stopA, events: [...stopA.events, { type: "pickedUp" as const, at: T0 + 30_000 }] };
+    const sentB = { ...stopB, events: [...stopB.events, { type: "robotDispatched" as const, at: T0 + 30_000 }, { type: "pickedUp" as const, at: T0 + 50_000 }] };
+    const trips = tripsOf([handedA, sentB]);
+    const last = trips.find((t) => t.sampleId === "b1")!;
+    expect(last.last).toBe(true);
+    expect(last.backAt).toBe(T0 + 50_000 + last.returnMs);
+    expect(viewOf([handedA, sentB], T0 + 51_000, last.robotId).status.kind).toBe("returning");
+    expect(intakeOf([handedA, sentB], T0 + 51_000)).toEqual([]);
+    expect(intakeOf([handedA, sentB], last.backAt! + 1).flatMap((g) => g.samples.map((s) => s.id)).sort()).toEqual(["a1", "b1"]);
+  });
+});
+
+describe("simulation fills compartments with nearby homes", () => {
+  const waiting = (id: string, area: string, at: number) => sample(id, area, [["sampleTaken", at]]);
+
+  it("books one run for up to COMPARTMENTS waiting homes close to each other", () => {
+    const near = ["k1", "k2", "k3", "k4", "k5"].map((id, i) => waiting(id, "Kallio", T0 - 100_000 + i));
+    const busy = FLEET.map((r, i) => sample(`busy${i}`, "Kallio", [["pickupBooked", T0 - 1000]])).slice(0, 0);
+    const acts = simStep([...near, ...busy], T0, "me", "Now", 60);
+    const booked = acts.filter((a) => a.event.type === "pickupBooked");
+    const runs = new Set(booked.map((a) => a.event.type === "pickupBooked" && a.event.run));
+    expect(booked.length).toBeGreaterThanOrEqual(COMPARTMENTS);
+    const first = booked.filter((a) => a.event.type === "pickupBooked" && a.event.run === [...runs][0]);
+    expect(first.map((a) => a.event.type === "pickupBooked" && a.event.compartment)).toEqual([1, 2, 3, 4]);
+    expect(first.slice(1).map((a) => a.event.type === "pickupBooked" && a.event.after)).toEqual(first.slice(0, 3).map((a) => a.sampleId));
+  });
+
+  it("adds nearby homes to the phone's run, after the phone", () => {
+    const phone: Sample = {
+      id: "me",
+      person: { id: "me", name: "Aino K.", age: 62, municipality: "Helsinki", area: "Kallio", lang: "fi" },
+      events: [{ type: "sampleTaken", at: T0 - 9000 }, { type: "pickupBooked", at: T0 - 1000, travelMs: 15_000 }],
+    };
+    const neighbours = ["n1", "n2"].map((id, i) => waiting(id, "Kallio", T0 - 50_000 + i));
+    const acts = simStep([phone, ...neighbours], T0, "me", "Now", 60);
+    const joined = acts.filter((a) => a.event.type === "pickupBooked" && a.event.run === `me@${T0 - 1000}`);
+    expect(joined.map((a) => a.sampleId).sort()).toEqual(["n1", "n2"]);
+    expect(joined.find((a) => a.event.type === "pickupBooked" && a.event.compartment === 2)?.event).toMatchObject({ after: "me" });
+  });
+
+  it("sends the next stop once the robot leaves the previous door", () => {
+    const a: Sample = sample("a1", "Kallio", [["sampleTaken", T0 - 5000]]);
+    a.events.push({ type: "pickupBooked", at: T0, travelMs: 10_000, run: "r", compartment: 1 }, { type: "pickedUp", at: T0 + 20_000 });
+    const b: Sample = sample("b1", "Kallio", [["sampleTaken", T0 - 4000]]);
+    b.events.push({ type: "pickupBooked", at: T0, travelMs: 5_000, run: "r", compartment: 2, after: "a1" });
+    const acts = simStep([a, b], T0 + 21_000, "me", "Now", 60);
+    expect(acts).toContainEqual({ sampleId: "b1", event: { type: "robotDispatched", at: T0 + 20_000 } });
   });
 });

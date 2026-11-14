@@ -40,8 +40,8 @@ export const en: KitText = {
     mapError: "The map could not load. The robot is still on its way.",
     arrived: "The robot has arrived",
     arrivedBody: "It is waiting outside your door.",
-    openLid: "Open the lid",
-    lidClosed: "The lid is closed",
+    openLid: "Open my compartment",
+    lidClosed: "The compartment is closed",
     thanksTitle: "Thank you. Your sample is on its way to the lab",
     readMore: "Read more",
     restartDemo: "Restart the demo",
@@ -84,8 +84,8 @@ export const en: KitText = {
   },
   robot: [
     { title: "Go out to the robot.", body: "It is waiting outside your door. Bring the return envelope." },
-    { title: "Open the lid from the app.", body: "Only your phone can open it, and only when you are next to the robot." },
+    { title: "Open your compartment from the app.", body: "The robot has several compartments. Only yours opens, and only from your phone when you are next to the robot." },
     { title: "Put the envelope inside.", body: "Lay it flat in the compartment." },
-    { title: "Close the lid.", body: "Push it down until it locks. The robot then sets off for the lab." },
+    { title: "Close the compartment.", body: "Push the lid down until it locks. The robot then collects from its other stops nearby and returns to the lab." },
   ],
 };

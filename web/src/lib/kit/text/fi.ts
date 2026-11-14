@@ -40,8 +40,8 @@ export const fi: KitText = {
     mapError: "Karttaa ei voitu ladata. Robotti on silti matkalla.",
     arrived: "Robotti on perillä",
     arrivedBody: "Se odottaa ovesi edessä.",
-    openLid: "Avaa kansi",
-    lidClosed: "Kansi on kiinni",
+    openLid: "Avaa lokeroni",
+    lidClosed: "Lokero on suljettu",
     thanksTitle: "Kiitos. Näyte on matkalla laboratorioon",
     readMore: "Lue lisää",
     restartDemo: "Aloita demo alusta",
@@ -84,8 +84,8 @@ export const fi: KitText = {
   },
   robot: [
     { title: "Mene robotin luo.", body: "Se odottaa ovesi edessä. Ota palautuskuori mukaan." },
-    { title: "Avaa kansi sovelluksesta.", body: "Kansi aukeaa vain sinun puhelimellasi, kun olet robotin vieressä." },
+    { title: "Avaa oma lokerosi sovelluksesta.", body: "Robotissa on useita lokeroita. Vain sinun lokerosi aukeaa, ja vain puhelimellasi robotin vieressä." },
     { title: "Laita kuori robotin sisään.", body: "Aseta se lappeelleen lokeroon." },
-    { title: "Sulje kansi.", body: "Paina kantta, kunnes se lukittuu. Robotti lähtee sitten laboratorioon." },
+    { title: "Sulje lokero.", body: "Paina kansi kiinni, kunnes se lukittuu. Robotti hakee sitten muut lähellä olevat näytteet ja palaa laboratorioon." },
   ],
 };

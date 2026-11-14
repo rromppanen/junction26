@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addEvent } from "./model";
+import { addEvent, type SampleEvent } from "./model";
 import { seedSamples } from "./seed";
 import { buildSamples, MAX_ENTRIES_PER_POST, parseEntries, RESTART, type LogEntry } from "./sync-core";
 
@@ -12,11 +12,10 @@ describe("buildSamples", () => {
 
   it("applies entries in order, the same on every device", () => {
     const id = seedSamples(seedAt)[0].id;
-    const log: LogEntry[] = [
-      { uid: "a", id, event: { type: "sampleTaken", at: seedAt + 1 } },
-      { uid: "b", id, event: { type: "pickupBooked", at: seedAt + 2 } },
-    ];
-    const expected = addEvent(addEvent(seedSamples(seedAt), id, log[0].event), id, log[1].event);
+    const taken: SampleEvent = { type: "sampleTaken", at: seedAt + 1 };
+    const booked: SampleEvent = { type: "pickupBooked", at: seedAt + 2 };
+    const log: LogEntry[] = [{ uid: "a", id, event: taken }, { uid: "b", id, event: booked }];
+    const expected = addEvent(addEvent(seedSamples(seedAt), id, taken), id, booked);
     expect(buildSamples(seedAt, log)).toEqual(expected);
   });
 

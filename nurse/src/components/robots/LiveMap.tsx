@@ -160,10 +160,13 @@ export default function LiveMap({
   const lineOf = (v: RobotView): LatLng[] | undefined => {
     if (v.status.kind === "idle") return undefined;
     const t = v.status.trip;
+    if (v.status.kind === "returning" && t.stops > 1)
+      return curvedRoute(t.backTo, t.home, `${routeKey(t)}:back`);
+    if (t.compartment > 1) return curvedRoute(t.from, t.home, routeKey(t));
     return (
       t.route ??
       routes.get(routeKey(t)) ??
-      curvedRoute(HUBS[t.hub].at, t.home, routeKey(t))
+      curvedRoute(t.from, t.home, routeKey(t))
     );
   };
 
@@ -207,6 +210,30 @@ export default function LiveMap({
                 : [];
           return (
             <Fragment key={`route-${v.robot.id}`}>
+              {on &&
+                s.kind !== "idle" &&
+                v.run
+                  .filter(
+                    (stop) =>
+                      stop.compartment > s.trip.compartment &&
+                      stop.leftAt === undefined,
+                  )
+                  .map((stop) => (
+                    <Polyline
+                      key={`next-${stop.sampleId}`}
+                      positions={curvedRoute(
+                        stop.from,
+                        stop.home,
+                        routeKey(stop),
+                      )}
+                      pathOptions={{
+                        color: COLOUR.outbound,
+                        weight: 3,
+                        opacity: 0.65,
+                        dashArray: "5 7",
+                      }}
+                    />
+                  ))}
               <Polyline
                 positions={line}
                 pathOptions={{
@@ -288,22 +315,49 @@ export default function LiveMap({
         const t = v.status.trip;
         const flagged = v.status.kind === "atDoor" && v.status.flagged;
         return (
-          <Marker
-            key={`home-${v.robot.id}`}
-            position={t.home}
-            icon={flagged ? homeFlaggedIcon : homeIcon}
-            title={pickupCode(t.sampleId)}
-            eventHandlers={{ click: () => onSample(t.sampleId) }}
-          >
-            <Tooltip
-              permanent={selected === v.robot.id}
-              direction="right"
-              offset={[10, 0]}
-              className="home-label"
+          <Fragment key={`homes-${v.robot.id}`}>
+            <Marker
+              key={`home-${v.robot.id}`}
+              position={t.home}
+              icon={flagged ? homeFlaggedIcon : homeIcon}
+              title={pickupCode(t.sampleId)}
+              eventHandlers={{ click: () => onSample(t.sampleId) }}
             >
-              {pickupCode(t.sampleId)}
-            </Tooltip>
-          </Marker>
+              <Tooltip
+                permanent={selected === v.robot.id}
+                direction="right"
+                offset={[10, 0]}
+                className="home-label"
+              >
+                {pickupCode(t.sampleId)}
+                {t.stops > 1 ? ` · stop ${t.compartment}/${t.stops}` : ""}
+              </Tooltip>
+            </Marker>
+            {v.run
+              .filter(
+                (stop) =>
+                  stop.compartment > t.compartment && stop.leftAt === undefined,
+              )
+              .map((stop) => (
+                <Marker
+                  key={stop.sampleId}
+                  position={stop.home}
+                  title={`${pickupCode(stop.sampleId)} · compartment ${stop.compartment} of ${stop.stops}`}
+                  icon={L.divIcon({
+                    className: "stop-pin",
+                    iconSize: [22, 22],
+                    iconAnchor: [11, 11],
+                    html: `<span>${stop.compartment}</span>`,
+                  })}
+                  eventHandlers={{ click: () => onSample(stop.sampleId) }}
+                >
+                  <Tooltip>
+                    {v.robot.name} · stop {stop.compartment} of {stop.stops} ·{" "}
+                    {pickupCode(stop.sampleId)}
+                  </Tooltip>
+                </Marker>
+              ))}
+          </Fragment>
         );
       })}
 

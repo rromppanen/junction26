@@ -40,8 +40,8 @@ export const et: KitText = {
     mapError: "Kaarti ei õnnestunud laadida. Robot on siiski teel.",
     arrived: "Robot on kohal",
     arrivedBody: "See ootab su ukse taga.",
-    openLid: "Ava kaas",
-    lidClosed: "Kaas on suletud",
+    openLid: "Ava minu lahter",
+    lidClosed: "Lahter on suletud",
     thanksTitle: "Aitäh. Sinu proov on teel laborisse",
     readMore: "Loe lisaks",
     restartDemo: "Alusta demot uuesti",
@@ -84,8 +84,8 @@ export const et: KitText = {
   },
   robot: [
     { title: "Mine roboti juurde.", body: "See ootab su ukse taga. Võta tagastusümbrik kaasa." },
-    { title: "Ava kaas rakendusest.", body: "Kaas avaneb ainult sinu telefoniga ja ainult siis, kui oled roboti kõrval." },
+    { title: "Ava oma lahter rakendusest.", body: "Robotil on mitu lahtrit. Avaneb ainult sinu oma ja ainult sinu telefonist, kui oled roboti kõrval." },
     { title: "Pane ümbrik roboti sisse.", body: "Aseta see lapiti lahtrisse." },
-    { title: "Sulge kaas.", body: "Vajuta kaant, kuni see lukustub. Seejärel sõidab robot laborisse." },
+    { title: "Sulge lahter.", body: "Vajuta kaas alla, kuni see lukustub. Seejärel kogub robot proovid lähedalt teistelt ja naaseb laborisse." },
   ],
 };

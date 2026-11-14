@@ -2,7 +2,22 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
+import {
+  SlidersHorizontal,
+  X,
+  Users,
+  Stethoscope,
+  Bot,
+  Route,
+  Building2,
+  Package,
+  Layers,
+  ListFilter,
+  MapPin,
+  RotateCcw,
+  Check,
+  ChevronRight,
+} from "lucide-react";
 import { AppHeader } from "@/components/NurseNav";
 import {
   BTN,
@@ -11,16 +26,14 @@ import {
   matches,
   type Row,
 } from "@/components/staff/boardShared";
+import { patientRows } from "@/components/staff/patientRows";
+import { NursePatients } from "@/components/staff/NursePatients";
 import { SampleDrawer } from "@/components/staff/SampleDrawer";
-import {
-  flagsOf,
-  stageOf,
-  STAGES_FOR_BOARD,
-  type EventType,
-} from "@/lib/sample/model";
+import { STAGES_FOR_BOARD, type EventType } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
 import {
   HUBS,
+  COMPARTMENTS,
   awaitingIntake,
   fleetAt,
   hubOf,
@@ -60,10 +73,19 @@ const LAYER_LABELS = {
   ready: "Waiting for a robot",
 };
 
+const LAYER_ICONS = {
+  participants: Users,
+  robots: Bot,
+  routes: Route,
+  hubs: Building2,
+  ready: Package,
+};
+
 export function RobotsView({ embed = false }: { embed?: boolean }) {
   const { samples, now, add, reset } = useSamples();
   const [mounted, setMounted] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [patientsOpen, setPatientsOpen] = useState(false);
   const [layers, setLayers] = useState(INITIAL_LAYERS);
   const [stages, setStages] = useState(() => STAGES_FOR_BOARD.map(() => true));
   const [locations, setLocations] = useState<HubId[]>(() =>
@@ -81,23 +103,18 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTick = useRef(0);
   const filtersButton = useRef<HTMLButtonElement>(null);
+  const patientsButton = useRef<HTMLButtonElement>(null);
   const mapRegion = useRef<HTMLElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   useEffect(() => {
     setMounted(true);
-    setMenuOpen(window.matchMedia("(min-width: 768px)").matches);
+    setPatientsOpen(window.matchMedia("(min-width: 768px)").matches);
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
   }, []);
 
-  const rows = useMemo(
-    () =>
-      samples.map(
-        (s): Row => ({ s, stage: stageOf(s, now), flags: flagsOf(s, now) }),
-      ),
-    [samples, now],
-  );
+  const rows = useMemo(() => patientRows(samples, now), [samples, now]);
   const search = query.trim().toLocaleLowerCase();
   const visible = rows.filter((r) => {
     const p = r.s.person;
@@ -137,7 +154,8 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
     ? fleet.filter(
         (v) =>
           locations.includes(v.robot.hub) &&
-          (v.status.kind === "idle" || visibleIds.has(v.status.trip.sampleId)),
+          (v.status.kind === "idle" ||
+            v.run.some((stop) => visibleIds.has(stop.sampleId))),
       )
     : [];
   const ready = readyForPickup(samples, now).filter((s) =>
@@ -236,27 +254,69 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
     >
       <h1 className="sr-only">Hospital map</h1>
       <AppHeader>
-        <button
-          ref={filtersButton}
-          type="button"
-          className={BTN}
-          aria-expanded={menuOpen}
-          aria-controls="map-filters"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <SlidersHorizontal size={16} aria-hidden /> Filters
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            ref={patientsButton}
+            type="button"
+            className={`${BTN} ${patientsOpen ? "border-brand bg-brand-soft text-brand" : ""}`}
+            aria-expanded={patientsOpen}
+            aria-controls="nurse-patients"
+            onClick={() => {
+              setPatientsOpen(!patientsOpen);
+              setMenuOpen(false);
+            }}
+          >
+            <Stethoscope size={17} aria-hidden /> Patients
+            <span className="rounded-full bg-brand-soft px-1.5 text-xs text-brand">
+              {
+                rows.filter(
+                  (row) =>
+                    row.flags.length > 0 &&
+                    locations.includes(hubOf(row.s.person)),
+                ).length
+              }
+              <span className="sr-only"> need attention</span>
+            </span>
+          </button>
+          <button
+            ref={filtersButton}
+            type="button"
+            className={BTN}
+            aria-expanded={menuOpen}
+            aria-controls="map-filters"
+            onClick={() => {
+              setMenuOpen(!menuOpen);
+              setPatientsOpen(false);
+            }}
+          >
+            <SlidersHorizontal size={16} aria-hidden /> Filters
+          </button>
+        </div>
       </AppHeader>
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="relative z-0 flex min-h-0 flex-1">
+          {patientsOpen && (
+            <NursePatients
+              rows={rows.filter((row) =>
+                locations.includes(hubOf(row.s.person)),
+              )}
+              onSelect={openSample}
+              onClose={() => {
+                setPatientsOpen(false);
+                patientsButton.current?.focus();
+              }}
+            />
+          )}
           {menuOpen && (
             <aside
               id="map-filters"
               aria-label="Map filters"
-              className="absolute inset-y-0 left-0 z-[1100] w-[min(19rem,85vw)] overflow-y-auto border-r border-rule bg-white p-4 shadow-lg md:static md:shrink-0 md:shadow-none"
+              className="workspace-panel"
             >
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="font-semibold">Map filters</h2>
+                <h2 className="flex items-center gap-2 font-semibold">
+                  <SlidersHorizontal size={17} aria-hidden /> Map filters
+                </h2>
                 <button
                   type="button"
                   aria-label="Close filters"
@@ -273,7 +333,10 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
                 {visible.length} of {rows.length} participants match
               </p>
               <details className="filter-group">
-                <summary>Participants</summary>
+                <summary>
+                  <Users size={17} aria-hidden />
+                  Participants
+                </summary>
                 <div className="pb-3">
                   <label className="block text-sm font-medium">
                     Find a person
@@ -297,6 +360,7 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
               </details>
               <details className="filter-group">
                 <summary>
+                  <MapPin size={17} aria-hidden />
                   Labs & locations{" "}
                   <span className="text-xs font-normal text-muted">
                     {locations.length} / {Object.keys(HUBS).length}
@@ -305,10 +369,7 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
                 <fieldset className="pb-3">
                   <legend className="sr-only">Labs & locations</legend>
                   {Object.values(HUBS).map((hub) => (
-                    <label
-                      key={hub.id}
-                      className="flex min-h-11 items-center gap-3 text-sm"
-                    >
+                    <label key={hub.id} className="filter-option">
                       <input
                         type="checkbox"
                         checked={locations.includes(hub.id)}
@@ -320,43 +381,59 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
                           )
                         }
                       />
+                      <Building2 size={16} aria-hidden className="text-muted" />
                       {hub.name}
                     </label>
                   ))}
                 </fieldset>
               </details>
               <details className="filter-group">
-                <summary>Map layers</summary>
+                <summary>
+                  <Layers size={17} aria-hidden />
+                  Map layers{" "}
+                  <span className="filter-count">
+                    {Object.values(layers).filter(Boolean).length} on
+                  </span>
+                </summary>
                 <fieldset className="pb-3">
                   <legend className="sr-only">Map layers</legend>
                   {(Object.keys(layers) as (keyof typeof layers)[]).map(
-                    (key) => (
-                      <label
-                        key={key}
-                        className="flex min-h-11 items-center gap-3 text-sm"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={layers[key]}
-                          onChange={(e) =>
-                            setLayers({ ...layers, [key]: e.target.checked })
-                          }
-                        />
-                        {LAYER_LABELS[key]}
-                      </label>
-                    ),
+                    (key) => {
+                      const Icon = LAYER_ICONS[key];
+                      return (
+                        <label
+                          key={key}
+                          className={`filter-option layer-option ${layers[key] ? "is-on" : ""}`}
+                        >
+                          <span className="layer-icon">
+                            <Icon size={18} aria-hidden />
+                          </span>
+                          <span className="flex-1">{LAYER_LABELS[key]}</span>
+                          <input
+                            type="checkbox"
+                            checked={layers[key]}
+                            onChange={(e) =>
+                              setLayers({ ...layers, [key]: e.target.checked })
+                            }
+                          />
+                        </label>
+                      );
+                    },
                   )}
                 </fieldset>
               </details>
               <details className="filter-group">
-                <summary>Screening stages</summary>
+                <summary>
+                  <ListFilter size={17} aria-hidden />
+                  Screening stages{" "}
+                  <span className="filter-count">
+                    {stages.filter(Boolean).length}/{stages.length}
+                  </span>
+                </summary>
                 <fieldset className="pb-3">
                   <legend className="sr-only">Screening stages</legend>
                   {STAGES_FOR_BOARD.map((stage, i) => (
-                    <label
-                      key={stage.label}
-                      className="flex min-h-11 items-center gap-3 text-sm"
-                    >
+                    <label key={stage.label} className="filter-option">
                       <input
                         type="checkbox"
                         checked={stages[i]}
@@ -378,6 +455,7 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
                 className={`${BTN} mt-4 w-full`}
                 onClick={clearFilters}
               >
+                <RotateCcw size={15} aria-hidden />
                 Reset filters
               </button>
               {!embed && (
@@ -516,6 +594,79 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
                     >
                       Open participant & actions
                     </button>
+                    <div className="mt-4 border-t border-rule pt-3">
+                      <p className="flex items-center gap-2 text-xs font-semibold">
+                        <Package size={15} aria-hidden />
+                        {
+                          robot.run.filter((stop) => stop.handedOver).length
+                        }{" "}
+                        collected · {robot.run.length} stops · {COMPARTMENTS}{" "}
+                        compartments
+                      </p>
+                      <div
+                        className="mt-2 grid grid-cols-4 gap-2"
+                        aria-label="Robot compartments"
+                      >
+                        {Array.from({ length: COMPARTMENTS }, (_, i) => {
+                          const stop = robot.run.find(
+                            (stop) => stop.compartment === i + 1,
+                          );
+                          return (
+                            <div
+                              key={i}
+                              className={`rounded-md border p-2 text-center text-xs ${stop?.handedOver ? "border-brand bg-brand-soft text-brand" : "border-rule text-muted"}`}
+                            >
+                              <span className="block font-semibold">
+                                {i + 1}
+                              </span>
+                              {stop?.handedOver
+                                ? "Collected"
+                                : stop
+                                  ? "Assigned"
+                                  : "Empty"}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <ol
+                        className="mt-2 divide-y divide-rule"
+                        aria-label="Run stops"
+                      >
+                        {robot.run.map((stop) => (
+                          <li key={stop.sampleId}>
+                            <button
+                              type="button"
+                              className="flex min-h-11 w-full items-center gap-2 text-left text-xs hover:text-brand"
+                              onClick={() => openSample(stop.sampleId)}
+                            >
+                              <span className="flex size-6 items-center justify-center rounded-full bg-brand-soft text-brand">
+                                {stop.handedOver ? (
+                                  <Check size={13} aria-hidden />
+                                ) : (
+                                  stop.compartment
+                                )}
+                              </span>
+                              <span className="flex-1">
+                                {pickupCode(stop.sampleId)}
+                                <span className="block text-muted">
+                                  {stop.handedOver
+                                    ? "Collected"
+                                    : stop.compartment ===
+                                        (robot.status.kind !== "idle"
+                                          ? robot.status.trip.compartment
+                                          : 0)
+                                      ? "Current stop"
+                                      : stop.leftAt !== undefined
+                                        ? "Left without sample"
+                                        : "Upcoming"}
+                                </span>
+                              </span>
+                              <ChevronRight size={14} aria-hidden />
+                            </button>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
                   </>
                 )}
                 {hub && (
@@ -538,10 +689,23 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
                 )}
               </section>
             )}
-            <div className="pointer-events-none absolute bottom-6 left-3 z-[1000] rounded-md bg-white/95 px-3 py-2 text-xs text-muted shadow">
-              ○ Participant ·{" "}
-              <span className="text-behind">● Needs attention</span> · ● Robot ·
-              ■ Hub
+            <div className="map-key pointer-events-none absolute bottom-6 left-3 z-[1000] flex flex-wrap gap-x-3 gap-y-1 rounded-lg bg-white/95 px-3 py-2 text-xs text-muted shadow">
+              <span>
+                <Users size={13} aria-hidden />
+                Patient
+              </span>
+              <span className="text-behind">
+                <Package size={13} aria-hidden />
+                Attention
+              </span>
+              <span>
+                <Bot size={13} aria-hidden />
+                Robot
+              </span>
+              <span>
+                <Building2 size={13} aria-hidden />
+                Hub
+              </span>
             </div>
           </section>
         </div>
