@@ -1,15 +1,12 @@
 /**
  * The home-sample app's structure: which tests exist, which animation each step shows, the sources,
  * and the languages. The words themselves live in ./text/<lang>.ts, one file per language, so a
- * translator can own and review one file. The QR code on the envelope opens /kit?test=<kind>.
+ * translator can own and review one file. The QR code on the envelope opens /kit.
  *
  * Sources:
  * - Stool test steps: Fimlab, "Ulostenäytteen otto-ohje, suolistosyövän seulonta" (2026),
  *   https://fimlab.fi/suolistoseulonta. The robot replaces the post; the 24-hour rule is Fimlab's.
- * - HPV self-sample steps: the usual vaginal swab procedure (Hologic Aptima Multitest swab patient
- *   instructions), with timing from Fimlab's 2026 self-sampling leaflet. The app tells people to follow
- *   their own kit's leaflet where it differs.
- * - "Why this matters": the sources listed per test below.
+ * - "Why this matters": the sources listed below.
  */
 import { ar } from "./text/ar";
 import { en } from "./text/en";
@@ -21,38 +18,30 @@ import { so } from "./text/so";
 import { sv } from "./text/sv";
 import { uk } from "./text/uk";
 
-export type TestKind = "fit" | "hpv";
-export const TEST_KINDS: TestKind[] = ["fit", "hpv"];
-
 export type Anim =
   | "unbag" | "base" | "twist" | "scrape" | "click" | "shake" | "label" | "rebag" | "form" | "envelope"
-  | "wash" | "unwrap" | "insert" | "rotate" | "intube"
   | "robotArrive" | "robotUnlock" | "robotPlace" | "robotClose" | "robotLeave";
 
-/** One animation per step, in order. Every language's step texts follow this order. */
-export const STEP_ANIMS: Record<TestKind, Anim[]> = {
-  fit: ["unbag", "base", "twist", "scrape", "click", "shake", "label", "rebag", "form", "envelope"],
-  hpv: ["wash", "unwrap", "insert", "rotate", "intube", "label", "envelope"],
-};
+/** One animation per sampling step, in order. Every language's step texts follow this order. */
+export const STEP_ANIMS: Anim[] = ["unbag", "base", "twist", "scrape", "click", "shake", "label", "rebag", "form", "envelope"];
 
 /** The robot hand-over, after the S-kaupat delivery robots (Starship): notified, walk out, unlock in the app, use the compartment, close the lid. */
 export const ROBOT_ANIMS: Anim[] = ["robotArrive", "robotUnlock", "robotPlace", "robotClose"];
 
 export type Source = { label: string; url: string };
 
-export const SOURCES: Record<TestKind, Source[]> = {
-  fit: [
-    { label: "Cochrane review of stool-test screening trials (Hewitson et al., 2007)", url: "https://doi.org/10.1002/14651858.CD001216.pub2" },
-    { label: "American Cancer Society: colorectal cancer survival by stage", url: "https://www.cancer.org/cancer/types/colon-rectal-cancer/detection-diagnosis-staging/survival-rates.html" },
-    { label: "HUS: colorectal cancer screening", url: "https://www.hus.fi/en/newsroom/first-invitations-colorectal-cancer-screening-2026-will-be-mailed-february" },
-    { label: "Fimlab: sampling instructions", url: "https://fimlab.fi/suolistoseulonta" },
-  ],
-  hpv: [
-    { label: "Ronco et al., Lancet 2014: HPV vs cytology screening, four randomised trials", url: "https://doi.org/10.1016/S0140-6736(13)62218-7" },
-    { label: "Arbyn et al., BMJ 2018: HPV testing on self-samples, meta-analysis", url: "https://doi.org/10.1136/bmj.k4823" },
-    { label: "WHO: cervical cancer fact sheet", url: "https://www.who.int/news-room/fact-sheets/detail/cervical-cancer" },
-    { label: "Fimlab: HPV self-sampling", url: "https://fimlab.fi/wp-content/uploads/2026/01/HPV-omanaytteenotto_2026_EN.pdf" },
-  ],
+export const SOURCES: Source[] = [
+  { label: "Cochrane review of stool-test screening trials (Hewitson et al., 2007)", url: "https://doi.org/10.1002/14651858.CD001216.pub2" },
+  { label: "American Cancer Society: colorectal cancer survival by stage", url: "https://www.cancer.org/cancer/types/colon-rectal-cancer/detection-diagnosis-staging/survival-rates.html" },
+  { label: "HUS: colorectal cancer screening", url: "https://www.hus.fi/en/newsroom/first-invitations-colorectal-cancer-screening-2026-will-be-mailed-february" },
+  { label: "Fimlab: sampling instructions", url: "https://fimlab.fi/suolistoseulonta" },
+];
+
+/** HUS's own page on bowel cancer screening and what happens after the sample, in the languages HUS publishes it in. */
+export const READ_MORE: Partial<Record<KitLang, string>> & { en: string } = {
+  fi: "https://www.hus.fi/potilaalle/hoidot-ja-tutkimukset/suolistosyovan-seulonta",
+  sv: "https://www.hus.fi/sv/patienten/behandlingar-och-undersokningar/screening-tarmcancer",
+  en: "https://www.hus.fi/en/patient/treatments-and-examinations/colorectal-cancer-screening",
 };
 
 export type StepText = { title: string; body?: string };
@@ -60,8 +49,6 @@ export type StepText = { title: string; body?: string };
 export type TestText = {
   /** The service, e.g. "Bowel cancer screening". */
   name: string;
-  /** Short name for the demo kit switch. */
-  short: string;
   /** The first thing the person reads. */
   invited: string;
   intro: string;
@@ -100,6 +87,11 @@ export type Ui = {
   tomorrow: string;
   noTimesToday: string;
   confirm: (slot: string) => string;
+  /** Why the app asks for location before it sends the robot. */
+  locationWhy: string;
+  locating: string;
+  locationDenied: string;
+  tryAgain: string;
   pickTime: string;
   onTheWay: string;
   arrivesIn: (min: number) => string;
@@ -112,17 +104,16 @@ export type Ui = {
   openLid: string;
   lidClosed: string;
   thanksTitle: string;
+  /** Link text to the official page on what happens next. */
+  readMore: string;
+  /** The demo's way back to the start, offered once the flow is over. */
+  restartDemo: string;
   thanksBody: string;
-  demoLine: string;
-  restart: string;
-  otherKit: (name: string) => string;
-  unknownTitle: string;
-  unknownBody: string;
   hub: string;
   home: string;
 };
 
-export type KitText = { ui: Ui; tests: Record<TestKind, TestText>; robot: StepText[] };
+export type KitText = { ui: Ui; test: TestText; robot: StepText[] };
 
 export type KitLang = "fi" | "sv" | "en" | "ru" | "et" | "ar" | "uk" | "so" | "fa";
 

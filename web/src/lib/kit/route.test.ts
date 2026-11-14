@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { metresBetween, splitRoute, type LngLat } from "./route";
+import { hubNear, metresBetween, splitRoute, type LngLat } from "./route";
 import { ROBOT_ROUTE, ROUTE_METRES } from "@/data/robotRoute";
 
 const line: LngLat[] = [[24.8, 60.17], [24.81, 60.17], [24.82, 60.17]];
@@ -25,5 +25,14 @@ describe("the demo route", () => {
   it("is about as long as the router said", () => {
     const m = ROBOT_ROUTE.slice(1).reduce((sum, p, i) => sum + metresBetween(ROBOT_ROUTE[i], p), 0);
     expect(Math.abs(m - ROUTE_METRES) / ROUTE_METRES).toBeLessThan(0.02);
+  });
+});
+
+describe("hubNear", () => {
+  it("puts the hub under a kilometre and a half away", () => {
+    const home: LngLat = [24.94, 60.17];
+    const m = metresBetween(home, hubNear(home));
+    expect(m).toBeGreaterThan(500);
+    expect(m).toBeLessThan(1500);
   });
 });
