@@ -43,7 +43,7 @@ export function EvidenceTables({ assumptions, P }: { assumptions: readonly Assum
           distant is less likely to kill and cheaper to treat.
         </p>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px] text-sm">
+          <table className="responsive-options w-full min-w-[560px] text-sm">
             <thead className="text-left text-xs text-muted">
               <tr className="border-b border-ink align-bottom">
                 <th scope="col" className="py-2 pr-3 font-normal">Stage</th>
@@ -63,7 +63,7 @@ export function EvidenceTables({ assumptions, P }: { assumptions: readonly Assum
                     const key = c.keys[i];
                     const v = key ? P[key] : mixes[c.mix!][i];
                     return (
-                      <td key={c.label} className="py-2 pr-3 text-right tabular-nums">{c.fmt(v)}</td>
+                      <td key={c.label} data-label={`${c.label} · ${c.unit}`} className="py-2 pr-3 text-right tabular-nums">{c.fmt(v)}</td>
                     );
                   })}
                 </tr>

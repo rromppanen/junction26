@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { AnalysisLoading } from "./AnalysisLoading";
 import { ArrowLeft, ArrowRight, ChartLine, Lightbulb, RotateCcw, Route, Table2 } from "lucide-react";
 import { AppHeader, HeaderLink, IconHeading, More, Stat } from "@/components/ui";
 import { FadeIn } from "@/components/intake/fade";
@@ -25,10 +26,10 @@ export function GapDashboard({ id }: { id: string }) {
     return { report, detail, index };
   }, [loaded, id]);
 
-  if (loaded === null) return null;
+  if (loaded === null) return <AnalysisLoading />;
   if (!data?.detail) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-24 sm:px-6">
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-2xl px-4 py-24 sm:px-6">
         <FadeIn className="space-y-4">
           <h1 className="text-heading font-semibold">This gap is not in the current analysis</h1>
           <p className="text-lede text-muted">Your file stays in this browser tab only, so a gap link works only where the analysis was run.</p>
@@ -53,7 +54,7 @@ export function GapDashboard({ id }: { id: string }) {
   const wait = f.metric === "wait";
 
   return (
-    <main className="mx-auto max-w-5xl px-4 pb-16 pt-5 sm:px-6">
+    <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-4 pb-16 pt-5 sm:px-6">
       <AppHeader>
         <HeaderLink href="/findings" icon={ArrowLeft} label="All gaps" />
         <HeaderLink href="/" icon={RotateCcw} label="New analysis" />
@@ -68,15 +69,20 @@ export function GapDashboard({ id }: { id: string }) {
         {(s.detail || t) && <p className="mt-3 max-w-3xl text-lede text-muted">{[s.detail, t].filter(Boolean).join(" ")}</p>}
       </FadeIn>
 
+      <nav aria-label="Gap details" className="mt-6 flex flex-wrap gap-2 text-sm">
+        {[['where-h','Pathway'],['fig-h','Group comparison'],['ideas-h','What to check']].map(([anchor,label]) => <a key={anchor} href={`#${anchor}`} className="inline-flex min-h-11 items-center rounded-md border border-rule px-3 py-2 hover:bg-surface">{label}</a>)}
+      </nav>
+      <p className="mt-4 text-sm text-muted">Source: {loaded !== "missing" && loaded.setup.upload.fileName}. Comparison: the other groups in this breakdown, {detail.span}.</p>
       <FadeIn delay={200} className="mt-10 grid grid-cols-2 gap-x-6 gap-y-8 border-y border-rule py-6 md:grid-cols-4">
         <Stat value={wait ? `${g.figure!.toFixed(0)} d` : pct(g.figure)} label={short} tone="text-behind" />
         <Stat value={wait ? `${g.rest!.toFixed(0)} d` : pct(g.rest)} label="Everyone else" />
         <Stat value={wait ? `+${g.gap!.toFixed(0)} d` : `−${pts(g.gap!)}`} label={wait ? "Longer wait" : "Gap"} tone="text-behind" />
-        <Stat value={`≈${n0(impactOf(f))}`} label={wait ? "Extra days of waiting in total" : `People missed${detail.extraPositives ? `; ≈${n0(detail.extraPositives)} positive results not found` : ""}`} />
+        <Stat value={`≈${n0(impactOf(f))}`} label={wait ? "Calculated extra waiting days" : `Additional people at comparison rate`} />
       </FadeIn>
 
+      <p className="mt-3 max-w-3xl text-sm text-muted">The impact is a comparison scenario, not a measured outcome of an intervention. Differences between groups do not establish their cause.</p>
       <FadeIn delay={350}>
-        <section aria-labelledby="where-h" className="mt-12">
+        <section aria-labelledby="where-h" className="mt-12 scroll-mt-6">
           <IconHeading icon={Route} id="where-h" className="text-title">Where in the care pathway</IconHeading>
           <p className="mt-1 text-small text-muted">{who} at each step, against everyone else. The gap is at the outlined step.</p>
           <PathwayStrip detail={detail} label={short} />
@@ -84,7 +90,7 @@ export function GapDashboard({ id }: { id: string }) {
       </FadeIn>
 
       <FadeIn delay={500}>
-        <section aria-labelledby="fig-h" className="mt-14">
+        <section aria-labelledby="fig-h" className="mt-14 scroll-mt-6">
           <IconHeading icon={Icon} id="fig-h" className="text-title">{FIGURE_TITLE[d.kind]}</IconHeading>
           <p className="mt-1 mb-5 text-small text-muted">{METRIC_LABEL[f.metric]}, {detail.span}.</p>
           <GroupFigure kind={d.kind} groups={d.byMetric[f.metric]!} selected={g.value} metric={f.metric} />
@@ -93,7 +99,7 @@ export function GapDashboard({ id }: { id: string }) {
 
       {detail.series.filter((p) => p.group !== null).length >= 2 && (
         <FadeIn delay={650}>
-          <section aria-labelledby="time-h" className="mt-14">
+          <section aria-labelledby="time-h" className="mt-14 scroll-mt-6">
             <IconHeading icon={ChartLine} id="time-h" className="text-title">Over time</IconHeading>
             <p className="mt-1 mb-4 text-small text-muted">{METRIC_LABEL[f.metric]}, each year on its own.</p>
             <TrendLine series={detail.series} metric={f.metric} label={short} />
@@ -102,7 +108,7 @@ export function GapDashboard({ id }: { id: string }) {
       )}
 
       <FadeIn delay={800}>
-        <section aria-labelledby="ideas-h" className="mt-14 max-w-3xl">
+        <section aria-labelledby="ideas-h" className="mt-14 scroll-mt-6 rounded-lg border border-rule bg-surface p-5">
           <IconHeading icon={Lightbulb} id="ideas-h" className="text-title">Worth looking into</IconHeading>
           <p className="mt-1 text-small text-muted">Questions to check with the team, not findings from the data.</p>
           <ul className="mt-4 list-disc space-y-2 pl-5">
@@ -111,18 +117,18 @@ export function GapDashboard({ id }: { id: string }) {
         </section>
       </FadeIn>
 
-      <More label="The numbers behind this gap" icon={Table2} className="mt-12">
+      <More label="The numbers behind this gap" icon={Table2} className="mt-12 scroll-mt-6">
         <NumbersTable detail={detail} label={short} />
       </More>
 
       <nav aria-label="Other gaps" className="mt-14 flex flex-wrap justify-between gap-4 border-t border-rule pt-5 text-small">
         {prev ? (
-          <Link href={`/findings/${encodeURIComponent(gapId(prev))}`} className="inline-flex items-center gap-1.5 hover:underline">
+          <Link href={`/findings/${encodeURIComponent(gapId(prev))}`} className="inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-md border border-rule px-3 py-2 hover:bg-surface">
             <ArrowLeft aria-hidden size={15} /> {groupPhrase(prev.dimension.kind, prev.dimension.label, prev.group.value)} · {impactText(prev.metric, impactOf(prev))}
           </Link>
         ) : <span />}
         {next && (
-          <Link href={`/findings/${encodeURIComponent(gapId(next))}`} className="inline-flex items-center gap-1.5 hover:underline">
+          <Link href={`/findings/${encodeURIComponent(gapId(next))}`} className="inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-md border border-rule px-3 py-2 hover:bg-surface">
             {groupPhrase(next.dimension.kind, next.dimension.label, next.group.value)} · {impactText(next.metric, impactOf(next))} <ArrowRight aria-hidden size={15} />
           </Link>
         )}
@@ -188,7 +194,7 @@ function NumbersTable({ detail, label }: { detail: GapDetail; label: string }) {
     ["Average wait", (s) => (s.waitDays === null ? "–" : `${s.waitDays.toFixed(1)} days`)],
   ];
   return (
-    <table className="w-full max-w-xl border-collapse text-left text-small text-ink">
+    <div className="overflow-x-auto"><table className="w-full min-w-[22rem] max-w-xl border-collapse text-left text-small text-ink">
       <thead>
         <tr>
           <th scope="col" className="border-b border-rule py-1.5 pr-4 font-semibold">{detail.span}</th>
@@ -205,7 +211,7 @@ function NumbersTable({ detail, label }: { detail: GapDetail; label: string }) {
           </tr>
         ))}
       </tbody>
-    </table>
+    </table></div>
   );
 }
 
