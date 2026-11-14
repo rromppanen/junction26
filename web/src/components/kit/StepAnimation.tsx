@@ -1,10 +1,13 @@
+"use client";
+
+import { useSyncExternalStore } from "react";
 import type { Anim } from "@/lib/kit/content";
 import "./animations.css";
 
 /**
  * Minimal line drawings, one movement per step. The motion lives in animations.css.
- * Drawn in ink with teal for the part that matters; decorative, so hidden from screen readers
- * (the step title says the same thing in words).
+ * Drawn in ink with the brand blue for the part that matters; decorative, so hidden from screen
+ * readers (the step title says the same thing in words).
  */
 const INK = "var(--ink)";
 const BRAND = "var(--brand)";
@@ -13,12 +16,248 @@ const RULE = "var(--rule)";
 const LIQUID = "#dcecef";
 const CAP = "#3a9d5d";
 const STOOL = "#9a6a44";
+const PAPER = "#f6f2e7";
 const W = { stroke: INK, strokeWidth: 3, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 
-export function StepAnimation({ anim, className = "" }: { anim: Anim; className?: string }) {
+/** Each scene's loop length in seconds, and whether it fades out and in at the loop (scenes that do not end where they start). */
+const SCENES: Record<Anim, { d: number; fade: boolean; draw: () => React.ReactNode }> = {
+  unbag: { d: 3.6, fade: true, draw: () => (
+    <>
+      <g className="a a-unbag"><ClosedTube y={46} h={56} /></g>
+      <Bag />
+    </>
+  ) },
+  rebag: { d: 3.6, fade: true, draw: () => (
+    <>
+      <g className="a a-rebag"><ClosedTube y={46} h={56} /></g>
+      <Bag sealClass="a a-seal" />
+    </>
+  ) },
+  base: { d: 3.6, fade: true, draw: () => (
+    <>
+      <rect x={70} y={10} width={60} height={20} rx={5} fill="#fff" {...W} />
+      <ellipse cx={100} cy={85} rx={58} ry={44} fill="#fff" {...W} />
+      <ellipse cx={100} cy={88} rx={36} ry={26} fill={LIQUID} stroke={INK} strokeWidth={2} />
+      <g className="a a-base">
+        <rect x={56} y={60} width={88} height={52} rx={3} fill={PAPER} {...W} strokeWidth={2.5} />
+        {[72, 80, 88, 96].map((y) => (
+          <line key={y} x1={66} y1={y} x2={y === 96 ? 110 : 134} y2={y} stroke={INK} strokeWidth={1.5} opacity={0.35} />
+        ))}
+      </g>
+    </>
+  ) },
+  // The stick hangs inside the tube (drawn behind it); the cap sits on top (drawn in front). Both lift together.
+  twist: { d: 4.4, fade: true, draw: () => (
+    <>
+      <defs>
+        <clipPath id="kit-cap-clip"><rect x={84} y={42} width={32} height={20} rx={4} /></clipPath>
+      </defs>
+      <g className="a a-lift"><Stick x={100} top={60} /></g>
+      <TubeBody y={60} h={74} />
+      <g className="a a-lift">
+        <rect x={84} y={42} width={32} height={20} rx={4} fill={CAP} />
+        <g clipPath="url(#kit-cap-clip)">
+          <g className="a a-ridges">
+            {[-20, -14, -8, -2, 4, 10, 16, 22, 28].map((dx) => (
+              <line key={dx} x1={100 + dx} y1={45} x2={100 + dx} y2={59} stroke={INK} strokeWidth={1.5} opacity={0.45} />
+            ))}
+          </g>
+        </g>
+        <rect x={84} y={42} width={32} height={20} rx={4} fill="none" {...W} />
+      </g>
+      <g className="a a-turn-arrow" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M76 66 q24 12 48 0" stroke="#fff" strokeWidth={7} />
+        <path d="M76 66 q24 12 48 0" stroke={BRAND} strokeWidth={3} />
+        <path d="M116 62 l8 4 l-5 7" stroke={BRAND} strokeWidth={3} />
+      </g>
+    </>
+  ) },
+  // Leaning stick, pivoting on its tip, swept back and forth across the middle of the stool.
+  scrape: { d: 3, fade: false, draw: () => (
+    <>
+      <ellipse cx={100} cy={120} rx={82} ry={17} fill="#fff" {...W} />
+      <path d="M62 120 q4 -16 22 -14 q12 -12 28 -4 q18 -6 26 8 q4 10 -12 12 h-54 q-12 0 -10 -2z" fill={STOOL} stroke={INK} strokeWidth={2} />
+      <g className="a a-scrape">
+        <g transform="rotate(22 100 112)">
+          <Stick x={100} top={48} length={64} />
+          <rect x={84} y={30} width={32} height={20} rx={4} fill={CAP} {...W} />
+        </g>
+      </g>
+    </>
+  ) },
+  click: { d: 3.2, fade: true, draw: () => (
+    <>
+      <TubeBody />
+      <g className="a a-press">
+        <rect x={84} y={34} width={32} height={20} rx={4} fill={CAP} {...W} />
+      </g>
+      <g className="a a-burst" stroke={BRAND} strokeWidth={3} strokeLinecap="round">
+        <line x1={72} y1={30} x2={64} y2={22} />
+        <line x1={128} y1={30} x2={136} y2={22} />
+        <line x1={100} y1={22} x2={100} y2={12} />
+      </g>
+    </>
+  ) },
+  shake: { d: 3.2, fade: false, draw: () => (
+    <>
+      <g className="a a-shake"><ClosedTube y={46} /></g>
+      <path d="M52 60 q-10 28 0 56 M148 60 q10 28 0 56" fill="none" stroke={BRAND} strokeWidth={3} strokeLinecap="round" opacity={0.7} />
+    </>
+  ) },
+  // The sticker starts on the background form (left), is peeled off and put on the flat side of the tube (right).
+  label: { d: 5.2, fade: true, draw: () => (
+    <>
+      <rect x={14} y={26} width={78} height={100} rx={4} fill="#fff" {...W} strokeWidth={2.5} />
+      {[40, 50, 60, 70].map((y) => (
+        <line key={y} x1={24} y1={y} x2={y === 70 ? 60 : 82} y2={y} stroke={INK} strokeWidth={1.5} opacity={0.35} />
+      ))}
+      <rect x={54} y={86} width={20} height={30} rx={2} fill="none" stroke={RULE} strokeWidth={2} strokeDasharray="3 3" />
+      <ClosedTube x={140} y={46} h={80} />
+      <g className="a a-sticker">
+        <rect x={54} y={86} width={20} height={30} rx={2} fill="#fff" stroke={BRAND} strokeWidth={2.5} />
+        <line x1={58} y1={96} x2={70} y2={96} stroke={INK} strokeWidth={2} strokeLinecap="round" />
+        <line x1={58} y1={104} x2={66} y2={104} stroke={INK} strokeWidth={2} strokeLinecap="round" />
+      </g>
+    </>
+  ) },
+  // Ticks appear one by one, stay, then all clear before the next loop.
+  form: { d: 5, fade: false, draw: () => (
+    <>
+      <rect x={66} y={8} width={68} height={134} rx={12} fill="#fff" {...W} />
+      {[38, 70, 102].map((y, i) => (
+        <g key={y}>
+          <rect x={78} y={y} width={16} height={16} rx={3} fill="#fff" stroke={INK} strokeWidth={2} />
+          <line x1={100} y1={y + 8} x2={124} y2={y + 8} stroke={INK} strokeWidth={2} strokeLinecap="round" opacity={0.4} />
+          <path d={`M81 ${y + 8} l4 4 l7 -8`} fill="none" stroke={BRAND} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"
+            pathLength={1} className={`a a-tick t${i + 1}`} />
+        </g>
+      ))}
+    </>
+  ) },
+  // Back panel, then the bag, then the front pocket over the bag's lower half. The flap is drawn
+  // twice: behind the back panel while it stands open, in front once it folds past the top edge.
+  envelope: { d: 4.4, fade: true, draw: () => <EnvelopeScene /> },
+  robotArrive: { d: 3.6, fade: true, draw: () => (
+    <>
+      <Ground />
+      <rect x={166} y={40} width={26} height={93} rx={2} fill="#fff" {...W} />
+      <circle cx={172} cy={90} r={2.5} fill={INK} />
+      <g className="a a-arrive"><Robot /></g>
+    </>
+  ) },
+  robotUnlock: { d: 3.2, fade: true, draw: () => (
+    <>
+      <rect x={66} y={8} width={68} height={134} rx={12} fill="#fff" {...W} />
+      <rect x={88} y={50} width={24} height={20} rx={4} fill={SOFT} {...W} />
+      <path d="M93 50 v-8 a7 7 0 0 1 14 0 v8" fill="none" {...W} className="a a-shackle" />
+      <rect x={78} y={96} width={44} height={20} rx={10} fill={BRAND} className="a a-button" />
+      <circle cx={100} cy={106} r={14} fill="none" stroke={BRAND} strokeWidth={3} className="a a-tap" />
+    </>
+  ) },
+  robotPlace: { d: 3.6, fade: true, draw: () => (
+    <>
+      <Ground />
+      <Robot lidClass="a-lid-open" lidBehind light={false} cargo={
+        <g className="a a-dropin">
+          <rect x={76} y={4} width={48} height={30} rx={3} fill="#fff" {...W} />
+          <path d="M76 8 L100 22 L124 8" fill="none" {...W} strokeWidth={2} />
+        </g>
+      } />
+    </>
+  ) },
+  robotClose: { d: 3.6, fade: true, draw: () => (
+    <>
+      <Ground />
+      <Robot lidClass="a a-lid-close" light={false} />
+      <g className="a a-lock">
+        <circle cx={100} cy={34} r={14} fill={BRAND} />
+        <path d="M93 34 l5 5 l9 -10" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+    </>
+  ) },
+  // Plays once: the robot drives right off the picture, then a check takes its place and stays.
+  robotLeave: { d: 3.2, fade: false, draw: () => (
+    <>
+      <Ground />
+      <g className="a-leave">
+        <Robot />
+        <path d="M30 80 h-14 M34 96 h-20 M30 112 h-12" stroke={RULE} strokeWidth={3} strokeLinecap="round" />
+      </g>
+      <g className="a-done">
+        <circle cx={100} cy={78} r={30} fill={BRAND} />
+        <path d="M86 78 l10 10 l18 -20" fill="none" stroke="#fff" strokeWidth={6} strokeLinecap="round" strokeLinejoin="round"
+          pathLength={1} className="a-done-tick" />
+      </g>
+    </>
+  ) },
+};
+
+/*
+  The envelope flap changes shape rather than flipping, so it never thins to a line: the tip travels
+  from above the envelope to over the pocket, and the sides bow outwards on the way, as a folding
+  flap does seen from the front. Corners stay on the envelope's top corners and the shut flap's
+  point meets the pocket's V. SMIL drives the shape (CSS cannot morph a path in Safari).
+*/
+const FLAP_OPEN = "M40 70 Q70 50 100 30 Q130 50 160 70 Z";
+const FLAP_MID = "M40 70 Q70 60 100 66 Q130 60 160 70 Z";
+const FLAP_SHUT = "M40 70 Q70 90 100 110 Q130 90 160 70 Z";
+/*
+  The fold is one movement split across the two drawings at the top edge. The first half speeds up
+  into the hand-over and the second leaves it at the same speed (both curves have slope 1 there),
+  and each half lasts in proportion to how far the point travels (36 and 44 units), so the flap
+  never pauses at the edge.
+*/
+const HOLD = "0 0 1 1";
+const FOLD_IN = "0.5 0 0.75 0.75";
+const FOLD_OUT = "0.25 0.25 0.5 1";
+
+function EnvelopeScene() {
+  const still = usePrefersReducedMotion();
+  const D = "4.4s";
   return (
-    <svg viewBox="0 0 200 150" aria-hidden className={`kit-anim block h-auto w-full ${className}`}>
-      {DRAW[anim]()}
+    <>
+      <path d={still ? FLAP_SHUT : FLAP_OPEN} fill={SOFT} {...W} opacity={still ? 0 : 1}>
+        {!still && <>
+          <animate attributeName="d" dur={D} repeatCount="indefinite" calcMode="spline"
+            values={`${FLAP_OPEN};${FLAP_OPEN};${FLAP_MID};${FLAP_MID}`} keyTimes="0;0.54;0.63;1" keySplines={`${HOLD};${FOLD_IN};${HOLD}`} />
+          <animate attributeName="opacity" dur={D} repeatCount="indefinite" calcMode="discrete" values="1;0" keyTimes="0;0.63" />
+        </>}
+      </path>
+      <rect x={40} y={70} width={120} height={66} rx={4} fill={SOFT} {...W} />
+      <g className="a a-intoenv">
+        <rect x={70} y={8} width={60} height={44} rx={5} fill="#fff" {...W} />
+        <line x1={76} y1={16} x2={124} y2={16} stroke={BRAND} strokeWidth={3} strokeLinecap="round" />
+      </g>
+      {/* The pocket's V runs from the top corners to the shut flap's point, so the shut flap lies exactly on it. */}
+      <path d="M40 70 L100 110 L160 70 V132 a4 4 0 0 1 -4 4 H44 a4 4 0 0 1 -4 -4 Z" fill="#fff" {...W} />
+      <path d={still ? FLAP_SHUT : FLAP_MID} fill="#fff" {...W} opacity={still ? 1 : 0}>
+        {!still && <>
+          <animate attributeName="d" dur={D} repeatCount="indefinite" calcMode="spline"
+            values={`${FLAP_MID};${FLAP_MID};${FLAP_SHUT};${FLAP_SHUT}`} keyTimes="0;0.63;0.74;1" keySplines={`${HOLD};${FOLD_OUT};${HOLD}`} />
+          <animate attributeName="opacity" dur={D} repeatCount="indefinite" calcMode="discrete" values="0;1" keyTimes="0;0.63" />
+        </>}
+      </path>
+    </>
+  );
+}
+
+function subscribeMotion(cb: () => void) {
+  const q = window.matchMedia("(prefers-reduced-motion: reduce)");
+  q.addEventListener("change", cb);
+  return () => q.removeEventListener("change", cb);
+}
+
+/** SMIL ignores the CSS reduced-motion rule, so the envelope checks the setting itself. */
+function usePrefersReducedMotion(): boolean {
+  return useSyncExternalStore(subscribeMotion, () => window.matchMedia("(prefers-reduced-motion: reduce)").matches, () => false);
+}
+
+export function StepAnimation({ anim, className = "" }: { anim: Anim; className?: string }) {
+  const scene = SCENES[anim];
+  return (
+    <svg viewBox="0 0 200 150" aria-hidden className={`kit-anim block h-auto w-full ${className}`}
+      style={{ "--d": `${scene.d}s` } as React.CSSProperties}>
+      {scene.fade ? <g className="a a-fade">{scene.draw()}</g> : scene.draw()}
     </svg>
   );
 }
@@ -32,18 +271,13 @@ function TubeBody({ x = 88, y = 52, h = 72 }: { x?: number; y?: number; h?: numb
   );
 }
 
-/** The green cap with its stick hanging down from it. */
-function CapWithStick({ x = 88, y = 52, ridgesClass = "" }: { x?: number; y?: number; ridgesClass?: string }) {
+/** The sampling stick hanging down from (x, top), with its ridged tip at the bottom. */
+function Stick({ x, top, length = 56 }: { x: number; top: number; length?: number }) {
+  const tip = top + length;
   return (
     <>
-      <line x1={x + 12} y1={y} x2={x + 12} y2={y + 56} {...W} strokeWidth={2.5} />
-      <path d={`M${x + 8} ${y + 50} l8 2 l-8 3 l8 2 l-8 3`} fill="none" {...W} strokeWidth={2} />
-      <rect x={x - 4} y={y - 18} width={32} height={20} rx={4} fill={CAP} {...W} />
-      <g className={ridgesClass}>
-        {[4, 10, 16, 22].map((d) => (
-          <line key={d} x1={x - 4 + d + 2} y1={y - 14} x2={x - 4 + d + 2} y2={y - 2} stroke={INK} strokeWidth={1.5} opacity={0.5} />
-        ))}
-      </g>
+      <line x1={x} y1={top} x2={x} y2={tip - 2} {...W} strokeWidth={2.5} />
+      <path d={`M${x - 4} ${tip - 10} l8 2 l-8 3 l8 2 l-8 3`} fill="none" {...W} strokeWidth={2} />
     </>
   );
 }
@@ -66,15 +300,24 @@ function Bag({ sealClass = "" }: { sealClass?: string }) {
   );
 }
 
-/** Side view of a delivery robot; `cargo` is drawn between the lid and the body, so it can go in under an open lid. */
-function Robot({ lidClass = "", light = true, cargo }: { lidClass?: string; light?: boolean; cargo?: React.ReactNode }) {
+/**
+ * Side view of a delivery robot. `cargo` is drawn behind the body, so it disappears into the
+ * compartment. The lid is drawn on top of the body, so a closed lid rests on it; while it stands
+ * open with cargo going in (`lidBehind`), it is drawn first, so the cargo passes in front of it.
+ */
+function Robot({ lidClass = "", light = true, cargo, lidBehind = false }: {
+  lidClass?: string; light?: boolean; cargo?: React.ReactNode; lidBehind?: boolean;
+}) {
+  const lid = (
+    <g className={lidClass}>
+      <rect x={50} y={62} width={100} height={12} rx={6} fill={SOFT} {...W} />
+    </g>
+  );
   return (
     <>
+      {lidBehind && lid}
       <line x1={40} y1={100} x2={40} y2={24} {...W} strokeWidth={2} />
       <path d="M40 24 l-20 6 l20 6 z" fill={BRAND} stroke={BRAND} strokeWidth={2} strokeLinejoin="round" />
-      <g className={lidClass}>
-        <rect x={50} y={60} width={100} height={14} rx={7} fill={SOFT} {...W} />
-      </g>
       {cargo}
       <path d="M40 100 H50" {...W} strokeWidth={2} />
       <rect x={50} y={72} width={100} height={44} rx={12} fill="#fff" {...W} />
@@ -82,17 +325,7 @@ function Robot({ lidClass = "", light = true, cargo }: { lidClass?: string; ligh
       {[72, 100, 128].map((cx) => (
         <circle key={cx} cx={cx} cy={122} r={10} fill={INK} />
       ))}
-    </>
-  );
-}
-
-function Envelope({ flapClass = "", children }: { flapClass?: string; children?: React.ReactNode }) {
-  return (
-    <>
-      <rect x={40} y={70} width={120} height={66} rx={4} fill={SOFT} {...W} />
-      {children}
-      <path d="M40 74 L100 112 L160 74 V132 a4 4 0 0 1 -4 4 H44 a4 4 0 0 1 -4 -4 Z" fill="#fff" {...W} />
-      <path d="M40 72 L100 34 L160 72 Z" fill="#fff" {...W} className={flapClass} />
+      {!lidBehind && lid}
     </>
   );
 }
@@ -100,237 +333,3 @@ function Envelope({ flapClass = "", children }: { flapClass?: string; children?:
 function Ground() {
   return <line x1={10} y1={133} x2={190} y2={133} stroke={RULE} strokeWidth={3} strokeLinecap="round" />;
 }
-
-function Swab({ x, y }: { x: number; y: number }) {
-  // Horizontal swab, soft tip on the right at (x, y), handle running left.
-  return (
-    <>
-      <line x1={x - 90} y1={y} x2={x - 8} y2={y} {...W} strokeWidth={4} />
-      <ellipse cx={x} cy={y} rx={11} ry={6} fill={SOFT} stroke={BRAND} strokeWidth={3} />
-      <line x1={x - 60} y1={y - 5} x2={x - 60} y2={y + 5} {...W} strokeWidth={2} />
-    </>
-  );
-}
-
-const DRAW: Record<Anim, () => React.ReactNode> = {
-  unbag: () => (
-    <>
-      <g className="a a-unbag">
-        <ClosedTube y={46} h={56} />
-      </g>
-      <Bag />
-    </>
-  ),
-  rebag: () => (
-    <>
-      <g className="a a-rebag">
-        <ClosedTube y={46} h={56} />
-      </g>
-      <Bag sealClass="a a-seal" />
-    </>
-  ),
-  base: () => (
-    <>
-      <rect x={70} y={10} width={60} height={20} rx={5} fill="#fff" {...W} />
-      <ellipse cx={100} cy={85} rx={58} ry={44} fill="#fff" {...W} />
-      <ellipse cx={100} cy={88} rx={36} ry={26} fill="#dcecef" stroke={INK} strokeWidth={2} />
-      <g className="a a-base">
-        <rect x={56} y={60} width={88} height={52} rx={3} fill="#f6f2e7" {...W} strokeWidth={2.5} />
-        {[72, 80, 88, 96].map((y) => (
-          <line key={y} x1={66} y1={y} x2={y === 96 ? 110 : 134} y2={y} stroke={INK} strokeWidth={1.5} opacity={0.35} />
-        ))}
-      </g>
-    </>
-  ),
-  twist: () => (
-    <>
-      <g className="a a-twist-cap">
-        <CapWithStick ridgesClass="a a-twist-ridges" />
-      </g>
-      <TubeBody />
-      <path d="M80 28 a24 9 0 0 0 40 0" fill="none" stroke={BRAND} strokeWidth={3} strokeLinecap="round" className="a a-twist-arrow" />
-      <path d="M120 28 l-7 -4 m7 4 l-2 7" fill="none" stroke={BRAND} strokeWidth={3} strokeLinecap="round" className="a a-twist-arrow" />
-    </>
-  ),
-  scrape: () => (
-    <>
-      <ellipse cx={100} cy={120} rx={78} ry={18} fill="#fff" {...W} />
-      <path d="M78 118 q8 -14 22 -10 q14 -8 22 4 q4 8 -10 10 h-26 q-12 0 -8 -4z" fill={STOOL} stroke={INK} strokeWidth={2} />
-      <g className="a a-scrape">
-        <g transform="rotate(-18 100 60)">
-          <CapWithStick x={88} y={50} />
-        </g>
-      </g>
-    </>
-  ),
-  click: () => (
-    <>
-      <TubeBody />
-      <g className="a a-press">
-        <rect x={84} y={34} width={32} height={20} rx={4} fill={CAP} {...W} />
-      </g>
-      <g className="a a-burst" stroke={BRAND} strokeWidth={3} strokeLinecap="round">
-        <line x1={72} y1={30} x2={64} y2={22} />
-        <line x1={128} y1={30} x2={136} y2={22} />
-        <line x1={100} y1={22} x2={100} y2={12} />
-      </g>
-    </>
-  ),
-  shake: () => (
-    <>
-      <g className="a a-shake">
-        <ClosedTube y={46} />
-      </g>
-      <path d="M52 60 q-10 28 0 56 M148 60 q10 28 0 56" fill="none" stroke={BRAND} strokeWidth={3} strokeLinecap="round" opacity={0.7} />
-    </>
-  ),
-  label: () => (
-    <>
-      <ClosedTube y={40} />
-      <g className="a a-sticker">
-        <rect x={91} y={58} width={18} height={44} rx={2} fill="#fff" stroke={BRAND} strokeWidth={2.5} />
-        <line x1={95} y1={68} x2={105} y2={68} stroke={INK} strokeWidth={2} strokeLinecap="round" />
-        <line x1={95} y1={76} x2={102} y2={76} stroke={INK} strokeWidth={2} strokeLinecap="round" />
-      </g>
-    </>
-  ),
-  form: () => (
-    <>
-      <rect x={66} y={8} width={68} height={134} rx={12} fill="#fff" {...W} />
-      {[38, 70, 102].map((y, i) => (
-        <g key={y}>
-          <rect x={78} y={y} width={16} height={16} rx={3} fill="#fff" stroke={INK} strokeWidth={2} />
-          <line x1={100} y1={y + 8} x2={124} y2={y + 8} stroke={INK} strokeWidth={2} strokeLinecap="round" opacity={0.4} />
-          <path d={`M81 ${y + 8} l4 4 l7 -8`} fill="none" stroke={BRAND} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"
-            pathLength={1} className={`a a-tick ${i === 1 ? "d1" : i === 2 ? "d2" : ""}`} />
-        </g>
-      ))}
-    </>
-  ),
-  envelope: () => (
-    <Envelope flapClass="a a-flap">
-      <g className="a a-intoenv">
-        <rect x={70} y={30} width={60} height={44} rx={5} fill="#fff" {...W} />
-        <line x1={76} y1={38} x2={124} y2={38} stroke={BRAND} strokeWidth={3} strokeLinecap="round" />
-      </g>
-    </Envelope>
-  ),
-  wash: () => (
-    <>
-      <path d="M40 30 H112 a8 8 0 0 1 8 8 V48" fill="none" {...W} strokeWidth={6} />
-      <rect x={52} y={18} width={22} height={8} rx={3} fill={INK} />
-      {[0, 1, 2].map((i) => (
-        <path key={i} d="M120 58 q-4 6 0 9 q4 -3 0 -9z" fill={BRAND} className={`a a-drop ${i === 1 ? "d1" : i === 2 ? "d2" : ""}`} />
-      ))}
-      <path d="M72 128 q-6 -26 14 -30 l34 0 q20 4 14 30 z" fill="#fff" {...W} />
-      <path d="M86 98 q34 -10 34 0" fill="none" {...W} strokeWidth={2} />
-      {[[92, 112], [106, 106], [118, 116]].map(([cx, cy]) => (
-        <circle key={cx} cx={cx} cy={cy} r={4} fill="none" stroke={BRAND} strokeWidth={2} />
-      ))}
-    </>
-  ),
-  unwrap: () => (
-    <>
-      <g className="a a-unwrap">
-        <g transform="rotate(180 100 75)">
-          <Swab x={150} y={75} />
-        </g>
-        <circle cx={50} cy={75} r={17} fill="none" stroke={BRAND} strokeWidth={2} strokeDasharray="4 4" className="a a-notouch" />
-      </g>
-      <rect x={20} y={60} width={104} height={30} rx={5} fill="#eef4f2" fillOpacity={0.85} {...W} />
-      <line x1={124} y1={60} x2={124} y2={90} stroke={INK} strokeWidth={3} strokeDasharray="3 5" />
-    </>
-  ),
-  insert: () => (
-    <>
-      <path d="M130 50 q40 -12 64 0 v50 q-24 12 -64 0 z" fill={SOFT} stroke="none" />
-      <path d="M130 62 q30 -4 64 -2 M130 88 q30 4 64 2" fill="none" {...W} />
-      <g className="a a-insert">
-        <Swab x={110} y={75} />
-      </g>
-      <g className="a a-measure" stroke={BRAND} strokeWidth={2} strokeLinecap="round">
-        <line x1={132} y1={110} x2={168} y2={110} />
-        <line x1={132} y1={105} x2={132} y2={115} />
-        <line x1={168} y1={105} x2={168} y2={115} />
-      </g>
-      <text x={150} y={132} textAnchor="middle" fontSize={14} fontWeight={600} fill={BRAND} className="a a-measure">5 cm</text>
-    </>
-  ),
-  rotate: () => (
-    <>
-      <Swab x={130} y={75} />
-      <g className="a a-roll">
-        {[0, 8, 16].map((d) => (
-          <line key={d} x1={70} y1={70 + d} x2={78} y2={70 + d} stroke={INK} strokeWidth={1.5} opacity={0.4} />
-        ))}
-      </g>
-      <g className="a a-spin">
-        <path d="M130 51 a24 24 0 1 1 -22 14" fill="none" stroke={BRAND} strokeWidth={3} strokeLinecap="round" />
-        <path d="M108 65 l-1 -9 m1 9 l8 -3" fill="none" stroke={BRAND} strokeWidth={3} strokeLinecap="round" />
-      </g>
-      <text x={130} y={130} textAnchor="middle" fontSize={14} fontWeight={600} fill={BRAND}>10–30 s</text>
-    </>
-  ),
-  intube: () => (
-    <>
-      <g className="a a-swabdown">
-        <g transform="rotate(90 100 20)">
-          <Swab x={150} y={20} />
-        </g>
-      </g>
-      <rect x={86} y={80} width={28} height={60} rx={9} fill={LIQUID} fillOpacity={0.8} {...W} />
-      <g className="a a-capdown">
-        <rect x={82} y={62} width={36} height={20} rx={4} fill={BRAND} {...W} />
-      </g>
-    </>
-  ),
-  robotArrive: () => (
-    <>
-      <Ground />
-      <rect x={166} y={40} width={26} height={93} rx={2} fill="#fff" {...W} />
-      <circle cx={172} cy={90} r={2.5} fill={INK} />
-      <g className="a a-arrive">
-        <Robot />
-      </g>
-    </>
-  ),
-  robotUnlock: () => (
-    <>
-      <rect x={66} y={8} width={68} height={134} rx={12} fill="#fff" {...W} />
-      <rect x={88} y={50} width={24} height={20} rx={4} fill={SOFT} {...W} />
-      <path d="M93 50 v-8 a7 7 0 0 1 14 0 v8" fill="none" {...W} className="a a-shackle" />
-      <rect x={78} y={96} width={44} height={20} rx={10} fill={BRAND} className="a a-button" />
-      <circle cx={100} cy={106} r={14} fill="none" stroke={BRAND} strokeWidth={3} className="a a-tap" />
-    </>
-  ),
-  robotPlace: () => (
-    <>
-      <Ground />
-      <Robot lidClass="a-lid-open" light={false} cargo={
-        <g className="a a-dropin">
-          <rect x={76} y={4} width={48} height={30} rx={3} fill="#fff" {...W} />
-          <path d="M76 8 L100 22 L124 8" fill="none" {...W} strokeWidth={2} />
-        </g>
-      } />
-    </>
-  ),
-  robotClose: () => (
-    <>
-      <Ground />
-      <Robot lidClass="a a-lid-close" light={false} />
-      <g className="a a-lock">
-        <circle cx={100} cy={34} r={14} fill={BRAND} />
-        <path d="M93 34 l5 5 l9 -10" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
-      </g>
-    </>
-  ),
-  robotLeave: () => (
-    <>
-      <Ground />
-      <g className="a a-leave">
-        <Robot />
-        <path d="M30 80 h-14 M34 96 h-20 M30 112 h-12" stroke={RULE} strokeWidth={3} strokeLinecap="round" />
-      </g>
-    </>
-  ),
-};

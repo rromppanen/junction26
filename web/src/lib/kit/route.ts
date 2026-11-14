@@ -31,3 +31,27 @@ export function splitRoute(route: LngLat[], progress: number): { at: LngLat; don
   const end = route[route.length - 1];
   return { at: end, done: route, ahead: [end] };
 }
+
+/**
+ * Where the demo robot sets off from: a point roughly 800 m north-east of the person, standing in
+ * for the nearest sample hub (the demo has no real hubs).
+ */
+export function hubNear(home: LngLat): LngLat {
+  return [home[0] + 0.008, home[1] + 0.005];
+}
+
+/** The public OSRM walking router run by FOSSGIS on OpenStreetMap data. */
+const FOOT_ROUTER = "https://routing.openstreetmap.de/routed-foot/route/v1/foot";
+
+/** A walking route between two points along real streets and paths. Throws if the router fails or answers oddly. */
+export async function fetchWalkingRoute(from: LngLat, to: LngLat, signal?: AbortSignal): Promise<LngLat[]> {
+  const pts = [from, to].map(([lng, lat]) => `${lng.toFixed(6)},${lat.toFixed(6)}`).join(";");
+  const res = await fetch(`${FOOT_ROUTER}/${pts}?overview=full&geometries=geojson`, { signal });
+  if (!res.ok) throw new Error(`router answered ${res.status}`);
+  const body = (await res.json()) as { routes?: { geometry?: { coordinates?: unknown } }[] };
+  const coords = body.routes?.[0]?.geometry?.coordinates;
+  if (!Array.isArray(coords) || coords.length < 2 || !coords.every((c) => Array.isArray(c) && c.length >= 2 && c.every(Number.isFinite))) {
+    throw new Error("router returned no usable route");
+  }
+  return (coords as number[][]).map((c) => [c[0], c[1]]);
+}
