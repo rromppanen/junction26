@@ -82,10 +82,13 @@ export default function LiveMap({ fleet, ready, intake, routes, selected, onSele
   selected: string | null;
   onSelect: (robotId: string) => void;
 }) {
+  // The line the robot's current leg follows, start first and home last (the way back is drawn reversed).
   const lineOf = (v: RobotView): LatLng[] | undefined => {
     if (v.status.kind === "idle") return undefined;
     const t = v.status.trip;
-    return t.route ?? routes.get(routeKey(t)) ?? curvedRoute(HUBS[t.hub].at, t.home, routeKey(t));
+    if (v.status.kind === "returning" && t.stops > 1) return curvedRoute(t.backTo, t.home, `${routeKey(t)}:back`);
+    if (t.compartment > 1) return curvedRoute(t.from, t.home, routeKey(t));
+    return t.route ?? routes.get(routeKey(t)) ?? curvedRoute(t.from, t.home, routeKey(t));
   };
 
   return (
@@ -135,10 +138,20 @@ export default function LiveMap({ fleet, ready, intake, routes, selected, onSele
         if (v.status.kind === "idle") return null;
         const t = v.status.trip;
         const flagged = v.status.kind === "atDoor" && v.status.flagged;
+        // The run's later stops wait as plain pins, numbered by compartment.
+        const later = v.run.filter((x) => x.compartment > t.compartment && x.leftAt === undefined);
         return (
-          <Marker key={`home-${v.robot.id}`} position={t.home} icon={flagged ? homeFlaggedIcon : homeIcon} keyboard={false}>
-            <Tooltip permanent direction="right" offset={[10, 0]} className="home-label">{pickupCode(t.sampleId)}</Tooltip>
-          </Marker>
+          <Fragment key={`home-${v.robot.id}`}>
+            <Marker position={t.home} icon={flagged ? homeFlaggedIcon : homeIcon} keyboard={false}>
+              <Tooltip permanent direction="right" offset={[10, 0]} className="home-label">{pickupCode(t.sampleId)}</Tooltip>
+            </Marker>
+            {later.map((x) => (
+              <CircleMarker key={x.sampleId} center={x.home} radius={6}
+                pathOptions={{ color: colourOf(v), weight: 2, fillColor: "#ffffff", fillOpacity: 1 }}>
+                <Tooltip>{v.robot.name}, compartment {x.compartment} of {x.stops}: {pickupCode(x.sampleId)}</Tooltip>
+              </CircleMarker>
+            ))}
+          </Fragment>
         );
       })}
 

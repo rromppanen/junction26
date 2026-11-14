@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { HUBS, routeKey, type LatLng, type Trip } from "./fleet";
+import { routeKey, type LatLng, type Trip } from "./fleet";
 
 /**
  * Walking routes along real streets from the FOSSGIS OSRM server (OpenStreetMap data).
@@ -52,7 +52,8 @@ export function useRoutes(trips: Trip[]): Map<string, LatLng[]> {
   load();
 
   // Trips booked on the phone bring their own route; only the simulated ones need a router.
-  const wanted = trips.filter((t) => !t.route).map((t) => ({ key: routeKey(t), from: HUBS[t.hub].at, to: t.home }));
+  // Later stops of a run are short hops drawn as curves; only first legs from the hub need the router.
+  const wanted = trips.filter((t) => !t.route && t.compartment === 1).map((t) => ({ key: routeKey(t), from: t.from, to: t.home }));
   const missing = wanted.filter((w) => !cache.has(w.key) && !failed.has(w.key) && !inflight.has(w.key));
   const signature = missing.map((m) => m.key).join("|");
 
