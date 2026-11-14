@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Wordmark } from "@/components/Wordmark";
+import { Autopilot } from "@/components/demo/Autopilot";
 
 export const metadata: Metadata = { title: "Demo · Läpi" };
 
@@ -9,6 +10,7 @@ export default function DemoPage() {
       <div className="mx-auto w-full max-w-[96rem] pt-5">
         <Wordmark />
         <h1 className="mt-4 text-[length:var(--step-1)] font-semibold">Act on the phone; the board updates live.</h1>
+        <Autopilot />
         <div className="mt-4 rounded-3xl bg-brand-soft p-4 sm:p-8">
           <div className="flex flex-wrap items-start justify-center gap-8 min-[1100px]:flex-nowrap">
             <figure className="flex shrink-0 flex-col items-center gap-3">
