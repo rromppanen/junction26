@@ -53,7 +53,7 @@ export function GapFindings() {
       </AppHeader>
 
       <FadeIn>
-        <h1 className="text-display font-semibold tracking-[-0.02em]">Gaps in your data</h1>
+        <h1 className="text-display font-semibold tracking-[-0.02em]">{u.isPublic ? "Gaps in the public data" : "Gaps in your data"}</h1>
         <p className="mt-3 max-w-3xl text-lede text-muted">
           {u.fileName}
           {report.year !== null && <>, {report.year}</>}. I compared people {report.dimensions.length} ways
@@ -108,16 +108,18 @@ export function GapFindings() {
 
       {report.absent.length > 0 && (
         <section aria-labelledby="absent-h" className="mt-14">
-          <IconHeading icon={SearchX} id="absent-h" className="text-title">Not in this file</IconHeading>
+          <IconHeading icon={SearchX} id="absent-h" className="text-title">{u.isPublic ? "Not in the public data" : "Not in this file"}</IconHeading>
           <p className="mt-3 max-w-2xl">
-            Your file has no column for {listText(report.absent.map((k) => kindLabel(k).toLowerCase()))}, so gaps between those
-            groups can&apos;t be checked yet. Add any of them to the export and run the analysis again.
+            {u.isPublic ? "The public data has" : "Your file has"} no breakdown by {listText(report.absent.map((k) => kindLabel(k).toLowerCase()))}, so
+            gaps between those groups can&apos;t be checked{u.isPublic ? " here. Your own county's data could show them: start a new analysis and add a file." : " yet. Add any of them to the export and run the analysis again."}
           </p>
         </section>
       )}
 
       <More label="How this is worked out" icon={ListChecks} className="mt-12">
-        Every number comes straight from your file; the AI only worked out what each column means. For each way of grouping
+        {u.isPublic
+          ? "Every number comes straight from the Finnish Cancer Registry's public screening reports: counties and sexes for each year, and language, education and country of birth for the whole country in the latest year reported."
+          : "Every number comes straight from your file; the AI only worked out what each column means."} For each way of grouping
         people, every group is compared with everyone else in that breakdown, in the latest year
         {report.firstYear !== null ? ` (${report.year}, with the change since ${report.firstYear})` : ""}. Where the file has
         total rows (&ldquo;yhteensä&rdquo;), only rows that break down one thing at a time are used. A gap counts as clear when it

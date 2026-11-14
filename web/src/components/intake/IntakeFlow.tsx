@@ -7,6 +7,7 @@ import type { Table } from "@/lib/intake/csv";
 import { validateMapping, type Field, type Mapping } from "@/lib/intake/fields";
 import { PUBLIC_DATASETS, ROWS_KEY, SETUP_KEY, type AnalysisSetup, type Level, type PublicDataset } from "@/lib/intake/setup";
 import type { Understanding } from "@/lib/intake/understand";
+import type { PublicTable } from "@/lib/publicTable";
 import { FadeIn, useLeave } from "./fade";
 import { StepConversation, type Resolved } from "./StepConversation";
 import { DEFAULT_DATASETS, StepData } from "./StepData";
@@ -115,10 +116,24 @@ export function IntakeFlow() {
             fileName={fileName}
             understanding={understanding}
             settled={settled}
-            onFindings={(setup) => {
+            onFindings={async (chosen) => {
+              let setup = chosen;
+              let rows = setup.upload && table ? table.rows : null;
+              // Public data only: the same gap screens, on the public datasets shaped as one table.
+              if (!setup.upload && setup.datasets.length) {
+                try {
+                  const pub = await fetch("/api/public-data").then((r) => (r.ok ? (r.json() as Promise<PublicTable>) : null));
+                  if (pub) {
+                    setup = { ...setup, upload: { fileName: pub.fileName, headers: pub.headers, rowCount: pub.rows.length, mapping: pub.mapping, groupKinds: pub.groupKinds, isPublic: true } };
+                    rows = pub.rows;
+                  }
+                } catch {
+                  // offline: fall back to the public-data brief below
+                }
+              }
               try {
                 sessionStorage.setItem(SETUP_KEY, JSON.stringify(setup));
-                if (setup.upload && table) sessionStorage.setItem(ROWS_KEY, JSON.stringify(table.rows));
+                if (setup.upload && rows) sessionStorage.setItem(ROWS_KEY, JSON.stringify(rows));
                 else sessionStorage.removeItem(ROWS_KEY);
               } catch {
                 // storage unavailable: the findings page says so
@@ -180,6 +195,7 @@ function StepDone({
     audience: settled.level === "national" ? "national" : "county-board",
     level: settled.level,
     countyId: settled.level === "national" ? null : settled.countyId,
+    placeName: place,
   });
   const canOpen = datasets.length > 0 || fileOk;
 

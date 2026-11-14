@@ -17,7 +17,10 @@ const COUNTRY: Record<string, { country: string; people: string }> = {
   somalia: { country: "Somalia", people: "Somali" }, kiina: { country: "China", people: "Chinese" },
   thaimaa: { country: "Thailand", people: "Thai" }, vietnam: { country: "Vietnam", people: "Vietnamese" },
 };
-const OTHER = /^(muu|muut|muu maa|other|others|muu kieli)$/i;
+const OTHER = /^(muu|muut|muu maa|other|others|muu kieli|other or missing)$/i;
+/** The Cancer Registry's own group labels (public data). */
+const OFFICIAL_LANGUAGES = /^finnish, swedish or s[aá]mi$/i;
+const OTHER_EUROPE = /^other europe$/i;
 const MEN = /^(mies|miehet|m|male|men|man)$/i;
 const WOMEN = /^(nainen|naiset|n|f|female|women|woman)$/i;
 const FOREIGN = /^(ulkomaalaistaustainen|ulkomaalaistaustaiset|ulkomaal|foreign background|migrant|maahanmuuttaja)/i;
@@ -29,7 +32,8 @@ const key = (v: string) => v.trim().toLowerCase();
 export function groupLabel(kind: GroupKind, raw: string): string {
   const k = key(raw);
   if (OTHER.test(k)) return kind === "language" ? "Other languages" : kind === "nationality" || kind === "birthCountry" ? "Other countries" : "Other";
-  if (kind === "language") return LANGUAGE[k] ?? raw;
+  if (kind === "language") return OFFICIAL_LANGUAGES.test(k) ? "Finnish, Swedish or Sámi" : (LANGUAGE[k] ?? raw);
+  if (kind === "birthCountry" && OTHER_EUROPE.test(k)) return "Elsewhere in Europe";
   if (kind === "sex") return MEN.test(k) ? "Men" : WOMEN.test(k) ? "Women" : raw;
   if (kind === "nationality") return COUNTRY[k]?.people ?? raw;
   if (kind === "birthCountry") return COUNTRY[k]?.country ?? raw;
@@ -43,6 +47,7 @@ export function groupPhrase(kind: GroupKind, label: string, raw: string): string
   const other = OTHER.test(k);
   switch (kind) {
     case "language":
+      if (OFFICIAL_LANGUAGES.test(k)) return "Finnish, Swedish or Sámi speakers";
       return other ? "Speakers of other languages" : LANGUAGE[k] ? `${LANGUAGE[k]} speakers` : `Speakers of ${raw}`;
     case "sex":
       return MEN.test(k) ? "Men" : WOMEN.test(k) ? "Women" : `People recorded as ${raw}`;
@@ -51,11 +56,15 @@ export function groupPhrase(kind: GroupKind, label: string, raw: string): string
     case "nationality":
       return other ? "Citizens of other countries" : COUNTRY[k] ? `${COUNTRY[k].people} citizens` : `Citizens of ${raw}`;
     case "birthCountry":
+      if (OTHER_EUROPE.test(k)) return "People born elsewhere in Europe";
+      if (/^unknown$/i.test(k)) return "People whose country of birth is unknown";
       return other ? "People born in other countries" : `People born in ${COUNTRY[k]?.country ?? raw}`;
     case "migrantBackground":
       return FOREIGN.test(k) ? "People with a foreign background" : FINNISH_BG.test(k) ? "People with a Finnish background" : `People with background "${raw}"`;
     case "region":
       return `People in ${raw}`;
+    case "education":
+      return `People with ${raw.toLowerCase()} education`;
     default:
       return `${label} "${raw}"`;
   }

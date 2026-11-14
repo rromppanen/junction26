@@ -266,10 +266,12 @@ export function gapDetail(table: Table, mapping: Mapping, kinds: Record<string, 
   const value = finding.group.value;
 
   const steps = (rs: string[][]): Steps => {
+    // null, not 0, when the file has no figure for a step in these rows (e.g. a breakdown reported for one step only).
     const sum = (f: Field) => {
       const c = col.get(f);
       if (c === undefined) return null;
-      return rs.reduce((s, r) => s + (num(r[c]) ?? 0), 0);
+      const vals = rs.map((r) => num(r[c])).filter((v): v is number => v !== undefined);
+      return vals.length ? vals.reduce((a, b) => a + b, 0) : null;
     };
     let waitDays: number | null = null;
     const wc = col.get("waitDays");

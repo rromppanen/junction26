@@ -80,3 +80,23 @@ export function validateBrief(brief: Brief, facts: GapFacts[], knownSourceIds: s
   }
   return errors;
 }
+
+/**
+ * Numbers in `text` that are neither in `allowed` (within tolerance) nor exempt (years, small counts, references).
+ * Shared by the brief validator and the gap recommendations.
+ */
+export function unsupportedNumbers(text: string, allowed: number[]): string[] {
+  const out: string[] = [];
+  for (const raw of text.replace(REFERENCE_RE, " ").match(NUMBER_RE) ?? []) {
+    const n = parseNumber(raw);
+    if (isExempt(raw, n)) continue;
+    // Rounded figures are fine: "43%" for 42.6.
+    if (!allowed.some((a) => Math.abs(a - n) <= Math.max(TOLERANCE, 0.5))) out.push(raw);
+  }
+  return out;
+}
+
+/** Every number written in a piece of source text, so a recommendation may quote what its source says. */
+export function numbersIn(text: string): number[] {
+  return (text.replace(REFERENCE_RE, " ").match(NUMBER_RE) ?? []).map(parseNumber).filter(Number.isFinite);
+}

@@ -6,10 +6,13 @@ export type PublicDataset = "sotkanet-screening" | "registry-pathway" | "languag
 
 export type AnalysisSetup = {
   datasets: PublicDataset[];
-  upload: { fileName: string; headers: string[]; rowCount: number; mapping: Mapping; groupKinds: Record<string, GroupKind> } | null;
+  /** The table the gaps are found in: the user's file, or (isPublic) the public datasets shaped as one. */
+  upload: { fileName: string; headers: string[]; rowCount: number; mapping: Mapping; groupKinds: Record<string, GroupKind>; isPublic?: boolean } | null;
   audience: Audience;
   level: Level;
   countyId: number | null;
+  /** "Pohjois-Karjala" or "the whole country", for wording and for the recommendation agent. */
+  placeName?: string;
 };
 
 export const PUBLIC_DATASETS: { id: PublicDataset; nameEn: string; source: string; description: string }[] = [

@@ -10,6 +10,7 @@ import type { GroupKind } from "@/lib/intake/fields";
 import { FIGURE_TITLE, GroupFigure, TrendLine } from "./charts";
 import { n0, pct, pts, sentence, trend } from "./findingWords";
 import { KIND_ICON, groupLabel, groupPhrase, impactText } from "./groupWords";
+import { Recommendations } from "./Recommendations";
 import { useAnalysis } from "./useAnalysis";
 
 /** One gap, opened from the grid: what it is, where in the pathway it happens, the numbers and a fitting figure. */
@@ -22,7 +23,7 @@ export function GapDashboard({ id }: { id: string }) {
     const report = findGaps(table, u.mapping, u.groupKinds ?? {});
     const detail = gapDetail(table, u.mapping, u.groupKinds ?? {}, id);
     const index = report.findings.findIndex((f) => gapId(f) === id);
-    return { report, detail, index };
+    return { report, detail, index, setup: loaded.setup };
   }, [loaded, id]);
 
   if (loaded === null) return null;
@@ -40,7 +41,7 @@ export function GapDashboard({ id }: { id: string }) {
     );
   }
 
-  const { report, detail, index } = data;
+  const { report, detail, index, setup } = data;
   const f = detail.finding;
   const d = f.dimension;
   const g = f.group;
@@ -102,8 +103,23 @@ export function GapDashboard({ id }: { id: string }) {
       )}
 
       <FadeIn delay={800}>
+        <Recommendations
+          cacheKey={`gapRadar.recs:${setup.upload.fileName}:${id}`}
+          brief={{
+            who, kind: d.kind, kindLabel: d.label, metric: f.metric, metricLabel: METRIC_LABEL[f.metric],
+            figure: g.figure!, rest: g.rest!, gap: g.gap!, n: g.n, impact: impactOf(f), span: detail.span, trend: t,
+            group: detail.group, others: detail.rest, source: setup.upload.fileName,
+            // Public figures other than the county comparison are national; never let them read as the county's own.
+            place: setup.upload.isPublic
+              ? `the whole of Finland (national figures)${setup.placeName && setup.placeName !== "the whole country" ? `; the team works in ${setup.placeName}` : ""}`
+              : (setup.placeName ?? null),
+          }}
+        />
+      </FadeIn>
+
+      <FadeIn delay={900}>
         <section aria-labelledby="ideas-h" className="mt-14 max-w-3xl">
-          <IconHeading icon={Lightbulb} id="ideas-h" className="text-title">Worth looking into</IconHeading>
+          <IconHeading icon={Lightbulb} id="ideas-h" className="text-title">Questions for the team</IconHeading>
           <p className="mt-1 text-small text-muted">Questions to check with the team, not findings from the data.</p>
           <ul className="mt-4 list-disc space-y-2 pl-5">
             {ideas(f.metric, d.kind).map((q) => <li key={q}>{q}</li>)}
