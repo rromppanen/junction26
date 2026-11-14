@@ -3,14 +3,18 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { EVIDENCE } from "@/data/evidence";
 import type { GroupKind } from "./intake/fields";
 import type { MetricId, Steps } from "./gaps";
+import { MIN_QUOTE_LENGTH, normalize } from "./review";
 import { numbersIn, unsupportedNumbers } from "./validate";
 
 /**
  * Recommendations for one gap. An agent in four visible steps:
  * 1. read the gap (aggregate numbers only; no rows of the file ever leave the browser),
  * 2. search quality sources (systematic reviews, guidelines, peer-reviewed studies, national agencies),
- * 3. draft the most actionable, best-evidenced recommendations with Gemini, citing only what was found,
- * 4. check every source id and every number, retry once, else fall back to safe templates.
+ * 3. draft the most actionable, best-evidenced recommendations with Gemini, citing only what was found and
+ *    quoting each source word for word,
+ * 4. check every source id, quote and number in code, then 5. have a separate reviewer agent judge each
+ *    recommendation strictly against its quotes. Any problem sends the drafter back with the objections; if no
+ *    draft is approved within the rounds, safe templates are shown instead (fails closed, like lib/review.ts).
  * Evidence strength is graded by code from where each source comes from, never by the model.
  */
 
@@ -220,7 +224,8 @@ export type Recommendation = {
   firstStep: string;
   owner: string;
   measure: string;
-  sources: { id: string; says: string }[];
+  /** says: what the source shows, in one sentence; quote: copied word for word from the source, checked by code. */
+  sources: { id: string; says: string; quote: string }[];
   /** Strongest evidence among its sources, graded by code. */
   strength: Strength;
 };
@@ -255,7 +260,7 @@ const geminiDrafter: Drafter = async (prompt, sourceIds) => {
               type: Type.OBJECT,
               properties: {
                 title: str, action: str, why: str, firstStep: str, owner: str, measure: str,
-                sources: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING, enum: sourceIds }, says: str }, required: ["id", "says"] } },
+                sources: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING, enum: sourceIds }, says: str, quote: str }, required: ["id", "says", "quote"] } },
               },
               required: ["title", "action", "why", "firstStep", "owner", "measure", "sources"],
             },
@@ -267,6 +272,80 @@ const geminiDrafter: Drafter = async (prompt, sourceIds) => {
   });
   return JSON.parse(res.text ?? "");
 };
+
+/* ---------- Step 5: the independent reviewer ---------- */
+
+export type Reviewer = (prompt: string) => Promise<unknown>;
+
+const geminiReviewer: Reviewer = async (prompt) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("no GEMINI_API_KEY");
+  const ai = new GoogleGenAI({ apiKey });
+  const res = await ai.models.generateContent({
+    model: GEMINI_MODEL,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      temperature: 0,
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          verdicts: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                index: { type: Type.INTEGER },
+                verdict: { type: Type.STRING, enum: ["approve", "reject"] },
+                issues: { type: Type.ARRAY, items: { type: Type.STRING } },
+              },
+              required: ["index", "verdict", "issues"],
+            },
+          },
+        },
+        required: ["verdicts"],
+      },
+    },
+  });
+  return JSON.parse(res.text ?? "");
+};
+
+export function reviewPrompt(b: GapBrief, recs: Omit<Recommendation, "strength">[], sources: Source[]): string {
+  const byId = new Map(sources.map((s) => [s.id, s]));
+  return `You are a strict reviewer for a public-health team. Another agent drafted recommendations to close the gap below. Judge each one ONLY against the gap's facts and the quoted evidence. When in doubt, reject.
+
+THE GAP: ${JSON.stringify(factsBlock(b))}
+
+RECOMMENDATIONS:
+${JSON.stringify(recs.map((r, i) => ({
+  index: i + 1, title: r.title, action: r.action, why: r.why, firstStep: r.firstStep, owner: r.owner, measure: r.measure,
+  evidence: r.sources.map((c) => ({ source: byId.get(c.id)?.title, strength: byId.get(c.id)?.strength, claims: c.says, quote: c.quote })),
+})), null, 1)}
+
+Reject a recommendation if any of these is true, and say exactly what to fix in "issues":
+- its "claims" say more than its "quote" supports, or the quote does not support the action at all;
+- the action is vague (e.g. "raise awareness", "improve cooperation") rather than something a team can start;
+- it does not fit this group and this step of the pathway;
+- it describes national figures as one county's own, or misstates a number from THE GAP;
+- the measure would not show this gap closing.
+Approve only when none apply. Return one verdict per recommendation.`;
+}
+
+/** Reads the reviewer's answer: approved only if every recommendation is approved. */
+export function readReview(raw: unknown, count: number): { approved: boolean; feedback: string[] } {
+  const verdicts = (raw as { verdicts?: unknown })?.verdicts;
+  if (!Array.isArray(verdicts)) return { approved: false, feedback: ["The reviewer gave no verdicts."] };
+  const feedback: string[] = [];
+  for (let i = 1; i <= count; i++) {
+    const v = verdicts.find((x: { index?: unknown }) => x?.index === i) as { verdict?: unknown; issues?: unknown } | undefined;
+    if (!v) feedback.push(`Recommendation ${i}: the reviewer gave no verdict.`);
+    else if (v.verdict !== "approve") {
+      const issues = Array.isArray(v.issues) ? v.issues.filter((x): x is string => typeof x === "string" && !!x.trim()) : [];
+      feedback.push(...(issues.length ? issues.map((x) => `Recommendation ${i}: ${x}`) : [`Recommendation ${i} was rejected by the reviewer.`]));
+    }
+  }
+  return { approved: feedback.length === 0, feedback };
+}
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
 const rate = (a: number | null, b: number | null) => (a !== null && b ? r1((a / b) * 100) : null);
@@ -311,7 +390,7 @@ ${JSON.stringify(sources.map((s) => ({ id: s.id, strength: s.strength, kind: s.k
 RULES
 - Most actionable first: something the county can start within weeks, with a named owner, not "raise awareness".
 - Prefer actions backed by "strong" or "moderate" sources. "policy" sources say what Finland aims for, not what works: use them only to show fit with national goals, never as the only proof that an action works.
-- Every recommendation cites 1-3 source ids. For each, "says" states in one sentence what that source actually says, taken from its excerpt. Never claim more than the excerpt says.
+- Every recommendation cites 1-3 source ids. For each, "says" states in one sentence what that source actually says, and "quote" copies ${MIN_QUOTE_LENGTH}-200 characters WORD FOR WORD from that source's excerpt that support it. Never claim more than the quote says.
 - Numbers: use only numbers from THE GAP or from the excerpt of a source the recommendation cites. Do not invent effect sizes.
 - Tailor it to this group and this step of the pathway (${b.metricLabel}); say why it fits in "why", using the gap's numbers.
 - "firstStep": one concrete thing to do this month. "measure": how the team will see the gap close, using the same measure as the gap.
@@ -335,7 +414,11 @@ export function checkDraft(raw: unknown, b: GapBrief, sources: Source[]): { ok: 
     const text = (k: string) => (typeof r?.[k] === "string" ? (r[k] as string).trim() : "");
     const d: Draft = {
       title: text("title"), action: text("action"), why: text("why"), firstStep: text("firstStep"), owner: text("owner"), measure: text("measure"),
-      sources: Array.isArray(r?.sources) ? (r.sources as { id?: unknown; says?: unknown }[]).filter((s) => typeof s?.id === "string" && typeof s?.says === "string").map((s) => ({ id: s.id as string, says: (s.says as string).trim() })) : [],
+      sources: Array.isArray(r?.sources)
+        ? (r.sources as { id?: unknown; says?: unknown; quote?: unknown }[])
+            .filter((s) => typeof s?.id === "string" && typeof s?.says === "string")
+            .map((s) => ({ id: s.id as string, says: (s.says as string).trim(), quote: typeof s.quote === "string" ? s.quote.trim() : "" }))
+        : [],
     };
     for (const k of ["title", "action", "why", "firstStep", "owner", "measure"] as const) if (!d[k]) errors.push(`Recommendation ${n} has no ${k}.`);
     if (!d.sources.length) errors.push(`Recommendation ${n} cites no source.`);
@@ -344,6 +427,12 @@ export function checkDraft(raw: unknown, b: GapBrief, sources: Source[]): { ok: 
     const cited = d.sources.filter((s) => byId.has(s.id));
     if (cited.length && cited.every((s) => byId.get(s.id)!.strength === "policy") && sources.some((s) => s.strength !== "policy")) {
       errors.push(`Recommendation ${n} rests only on policy documents; cite a source that shows the action works.`);
+    }
+    for (const c of cited) {
+      const q = normalize(c.quote);
+      const src = byId.get(c.id)!;
+      if (q.length < MIN_QUOTE_LENGTH) errors.push(`Recommendation ${n}: the quote from ${c.id} is missing or shorter than ${MIN_QUOTE_LENGTH} characters.`);
+      else if (![src.excerpt, src.title].some((t) => normalize(t).includes(q))) errors.push(`Recommendation ${n}: the quote from ${c.id} does not appear word for word in that source: "${c.quote}"`);
     }
     const allowed = [...facts, ...cited.flatMap((s) => numbersIn(byId.get(s.id)!.excerpt))];
     for (const [field, value] of [["title", d.title], ["action", d.action], ["why", d.why], ["firstStep", d.firstStep], ["measure", d.measure], ...cited.map((s): [string, string] => [`source ${s.id} summary`, s.says])] as [string, string][]) {
@@ -366,7 +455,7 @@ export function fallbackRecommendations(b: GapBrief): Recommendation[] {
   const plural = b.who.charAt(0).toLowerCase() + b.who.slice(1);
   const measure = `${b.metricLabel} among ${plural}, compared with everyone else, every quarter.`;
   const says = (id: string) => EVIDENCE.find((e) => e.id === id)?.summaryEn ?? "";
-  const base: Omit<Recommendation, "strength">[] =
+  const base: (Omit<Recommendation, "strength" | "sources"> & { sources: { id: string; says: string }[] })[] =
     b.metric === "wait"
       ? [
           { title: "Find where the waiting time goes", action: `Map each step from a positive result to the follow-up for ${plural}: referral, booking and capacity.`, why: `${b.who} waited longer than everyone else in ${b.span}.`, firstStep: "Pull the dates of the last 20 follow-ups for this group and mark the longest step.", owner: "Screening programme lead", measure, sources: [{ id: "roadmap-p56-3.1.2", says: says("roadmap-p56-3.1.2") }] },
@@ -378,17 +467,23 @@ export function fallbackRecommendations(b: GapBrief): Recommendation[] {
           { title: "Send a reminder to everyone who has not responded", action: `Send a reminder to ${plural} who have not ${b.metric === "followUp" ? "booked their follow-up" : "taken part"} within a set time.`, why: "A reminder costs little and reaches those who meant to take part.", firstStep: "Set the reminder date and wording for the next round.", owner: "Screening programme office", measure, sources: [{ id: goal2, says: says(goal2) }] },
           { title: "Follow this gap every quarter", action: "Report this measure for this group every quarter and compare with other counties.", why: "A gap that is measured can be acted on.", firstStep: "Add this group to the programme's quarterly report.", owner: "Quality unit", measure, sources: [{ id: register, says: says(register) }] },
         ];
-  return base.map((r) => ({ ...r, strength: "policy" }));
+  return base.map((r) => ({ ...r, sources: r.sources.map((c) => ({ ...c, quote: c.says })), strength: "policy" }));
 }
 
 /* ---------- The agent: steps reported as they happen ---------- */
 
-export type StepId = "read" | "search" | "draft" | "check";
+export type StepId = "read" | "search" | "draft" | "check" | "review";
 export type AgentEvent =
   | { type: "step"; step: StepId; state: "running" | "done" | "skipped"; detail?: string }
   | { type: "result"; result: RecommendResult };
 
-export async function runAgent(b: GapBrief, emit: (e: AgentEvent) => void, draft: Drafter = geminiDrafter, apiKey = process.env.CONTEXT_DEV_API_KEY): Promise<void> {
+export async function runAgent(
+  b: GapBrief,
+  emit: (e: AgentEvent) => void,
+  draft: Drafter = geminiDrafter,
+  apiKey = process.env.CONTEXT_DEV_API_KEY,
+  review: Reviewer = geminiReviewer,
+): Promise<void> {
   const notes: string[] = [];
   emit({ type: "step", step: "read", state: "done", detail: `${b.who}: ${b.metricLabel.toLowerCase()}, ${b.span}.` });
 
@@ -404,36 +499,50 @@ export async function runAgent(b: GapBrief, emit: (e: AgentEvent) => void, draft
   });
   const sources = [...found.sources, ...policySources()];
 
-  emit({ type: "step", step: "draft", state: "running" });
-  let errors: string[] | undefined;
+  let feedback: string[] | undefined;
   let result: Recommendation[] | null = null;
-  for (let attempt = 0; attempt < ATTEMPTS && !result; attempt++) {
+  const timed = <T,>(p: Promise<T>) => Promise.race([p, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), DRAFT_TIMEOUT_MS))]);
+  for (let round = 1; round <= ATTEMPTS && !result; round++) {
+    const again = round > 1 ? ` (round ${round}, fixing ${feedback!.length} ${feedback!.length === 1 ? "objection" : "objections"})` : "";
     try {
-      const raw = await Promise.race([
-        draft(buildPrompt(b, sources, errors), sources.map((s) => s.id)),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), DRAFT_TIMEOUT_MS)),
-      ]);
-      if (attempt === 0) { emit({ type: "step", step: "draft", state: "done" }); emit({ type: "step", step: "check", state: "running" }); }
+      emit({ type: "step", step: "draft", state: "running", detail: again ? `Redrafting${again}.` : undefined });
+      const raw = await timed(draft(buildPrompt(b, sources, feedback), sources.map((s) => s.id)));
+      emit({ type: "step", step: "draft", state: "done", detail: again ? `Redrafted${again}.` : undefined });
+
+      emit({ type: "step", step: "check", state: "running" });
       const checked = checkDraft(raw, b, sources);
-      if ("ok" in checked) result = checked.ok.map((d) => withStrength(d, sources));
-      else {
-        errors = checked.errors;
-        console.warn("[recommend] draft rejected:", errors.join(" | "));
-        if (attempt === 0) emit({ type: "step", step: "check", state: "running", detail: `${errors.length} ${errors.length === 1 ? "problem" : "problems"} found; asking for a corrected draft.` });
+      if ("errors" in checked) {
+        feedback = checked.errors;
+        console.warn("[recommend] draft failed the checks:", feedback.join(" | "));
+        emit({ type: "step", step: "check", state: "running", detail: `${feedback.length} ${feedback.length === 1 ? "problem" : "problems"} with sources, quotes or numbers; sent back.` });
+        continue;
+      }
+      emit({ type: "step", step: "check", state: "done", detail: "Every source, quote and number checked." });
+
+      emit({ type: "step", step: "review", state: "running" });
+      const verdict = readReview(await timed(review(reviewPrompt(b, checked.ok, sources))), checked.ok.length);
+      if (verdict.approved) {
+        result = checked.ok.map((d) => withStrength(d, sources));
+        emit({ type: "step", step: "review", state: "done", detail: "The reviewer approved every recommendation." });
+      } else {
+        feedback = verdict.feedback;
+        console.warn("[recommend] reviewer rejected:", feedback.join(" | "));
+        emit({ type: "step", step: "review", state: "running", detail: `The reviewer raised ${feedback.length} ${feedback.length === 1 ? "objection" : "objections"}; sent back.` });
       }
     } catch (e) {
-      console.warn("[recommend] draft failed:", e instanceof Error ? e.message : e);
-      if (attempt === 0) { emit({ type: "step", step: "draft", state: "done", detail: "The AI could not draft; using safe templates." }); emit({ type: "step", step: "check", state: "running" }); }
+      // Fails closed: an agent that cannot answer means nothing unreviewed is shown.
+      console.warn("[recommend] agent call failed:", e instanceof Error ? e.message : e);
+      emit({ type: "step", step: "draft", state: "done", detail: "An AI step did not answer, so nothing unreviewed is shown." });
       break;
     }
   }
   const status: RecommendResult["status"] = result ? "ai" : "fallback";
   if (!result) {
-    notes.push("No AI draft passed the checks, so these are general recommendations from the national cancer strategy.");
+    notes.push("No AI draft passed both the checks and the reviewer, so these are general recommendations from the national cancer strategy.");
     result = fallbackRecommendations(b);
+    emit({ type: "step", step: "review", state: "skipped", detail: "Nothing approved: showing safe templates instead." });
   }
   result.sort((x, y) => ORDER.indexOf(x.strength) - ORDER.indexOf(y.strength));
-  emit({ type: "step", step: "check", state: "done", detail: status === "ai" ? "Every source and every number checked." : "Templates used." });
   const used = new Set(result.flatMap((r) => r.sources.map((s) => s.id)));
   emit({ type: "result", result: { status, recommendations: result, sources: sources.filter((s) => used.has(s.id) || s.strength !== "policy"), searched: found.searched, notes } });
 }

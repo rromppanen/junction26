@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BookOpenCheck, Check, CircleSlash, ExternalLink, FileSearch, PenLine, RefreshCw, ScanText, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
+import { BookOpenCheck, Check, CircleSlash, ExternalLink, FileSearch, PenLine, RefreshCw, Scale, ScanText, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
 import { IconHeading, More } from "@/components/ui";
 import { FadeIn, Thinking } from "@/components/intake/fade";
 import type { AgentEvent, GapBrief, RecommendResult, Source, StepId, Strength } from "@/lib/recommend";
@@ -15,7 +15,8 @@ const STEPS: { id: StepId; label: string; icon: LucideIcon }[] = [
   { id: "read", label: "Reading the gap", icon: ScanText },
   { id: "search", label: "Searching reviews, guidelines and studies", icon: FileSearch },
   { id: "draft", label: "Drafting the most actionable recommendations", icon: PenLine },
-  { id: "check", label: "Checking every source and number", icon: ShieldCheck },
+  { id: "check", label: "Checking every source, quote and number", icon: ShieldCheck },
+  { id: "review", label: "An independent reviewer judges each recommendation", icon: Scale },
 ];
 
 const STRENGTH: Record<Strength, { label: string; detail: string; tone: string; dots: number }> = {
@@ -27,7 +28,7 @@ const STRENGTH: Record<Strength, { label: string; detail: string; tone: string; 
 
 type StepState = { state: "waiting" | "running" | "done" | "skipped"; detail?: string };
 type Run = { steps: Record<StepId, StepState>; result: RecommendResult | null; error: string | null };
-const fresh = (): Run => ({ steps: { read: { state: "waiting" }, search: { state: "waiting" }, draft: { state: "waiting" }, check: { state: "waiting" } }, result: null, error: null });
+const fresh = (): Run => ({ steps: { read: { state: "waiting" }, search: { state: "waiting" }, draft: { state: "waiting" }, check: { state: "waiting" }, review: { state: "waiting" } }, result: null, error: null });
 
 export function Recommendations({ brief, cacheKey }: { brief: GapBrief; cacheKey: string }) {
   const [run, setRun] = useState<Run | null>(null);
@@ -78,7 +79,7 @@ export function Recommendations({ brief, cacheKey }: { brief: GapBrief; cacheKey
 
   const result = run?.result ?? null;
   return (
-    <section aria-labelledby="recs-h" className="mt-14">
+    <section aria-labelledby="recs-h" className="mt-14 scroll-mt-6">
       <IconHeading icon={Sparkles} id="recs-h" className="text-title">Recommendations</IconHeading>
 
       {!run && (
@@ -87,7 +88,10 @@ export function Recommendations({ brief, cacheKey }: { brief: GapBrief; cacheKey
             An agent searches systematic reviews, guidelines and studies for what has closed gaps like this one, reads them against this
             gap&apos;s numbers, and drafts the most actionable steps, strongest evidence first.
           </p>
-          <p className="mt-2 text-small text-muted">Only the gap&apos;s totals are sent, never the rows of your file. Every source and number is checked before you see it.</p>
+          <p className="mt-2 text-small text-muted">
+            Only the gap&apos;s totals are sent, never the rows of your file. Every source, quote and number is checked, and a second agent reviews each
+            recommendation against its evidence before you see it.
+          </p>
           <button type="button" onClick={() => void start()} className="mt-4 inline-flex items-center gap-2 rounded-[6px] bg-ink px-5 py-2.5 font-medium text-white">
             <Sparkles aria-hidden size={16} /> Find recommendations
           </button>
@@ -184,6 +188,7 @@ function RecCard({ rec, rank, sources }: { rec: RecommendResult["recommendations
             return (
               <li key={c.id} className="text-small">
                 <p>{c.says}</p>
+                {c.quote && c.quote !== c.says && <blockquote className="mt-1 border-l-2 border-rule pl-2 text-caption italic text-muted">&ldquo;{c.quote}&rdquo;</blockquote>}
                 {s && (
                   <a href={s.url} target="_blank" rel="noreferrer" className="mt-0.5 inline-flex items-center gap-1 text-caption text-muted hover:text-ink">
                     {s.kind} · {s.publisher} <ExternalLink aria-hidden size={11} />

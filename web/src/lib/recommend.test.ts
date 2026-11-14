@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { checkDraft, grade, policySources, programmeOf, queriesFor, runAgent, type AgentEvent, type GapBrief, type Source } from "./recommend";
+import { EVIDENCE } from "@/data/evidence";
+import { checkDraft, grade, policySources, programmeOf, queriesFor, readReview, runAgent, type AgentEvent, type GapBrief, type Reviewer, type Source } from "./recommend";
 import { parseGapBrief } from "./recommendInput";
 
 const brief: GapBrief = {
@@ -14,7 +15,7 @@ const src = (id: string, strength: Source["strength"], excerpt = "Reminders incr
 const good = (sources: string[], action = "Send translated invitations and a reminder.") => ({
   title: "Translate the invitation", action, why: "43.1% took part against 70.2%.", firstStep: "Pick the three most common languages.",
   owner: "Screening programme lead", measure: "Participation among speakers of other languages each quarter.",
-  sources: sources.map((id) => ({ id, says: "Reminders increased participation." })),
+  sources: sources.map((id) => ({ id, says: "What the source shows.", quote: EVIDENCE.find((e) => e.id === id)?.summaryEn.slice(0, 60) ?? (id === "src:2" ? "Participation rose from 40% to 52%." : "Reminders increased participation.") })),
 });
 
 afterEach(() => vi.restoreAllMocks());
@@ -42,6 +43,11 @@ describe("checking a draft", () => {
     const r = checkDraft({ recommendations: [good(["src:1"]), good(["src:2"]), good(["src:1", "roadmap-p10-socioeconomic"])] }, brief, sources);
     expect("ok" in r).toBe(true);
   });
+  it("rejects a quote that is not word for word in its source", () => {
+    const fake = { ...good(["src:1"]), sources: [{ id: "src:1", says: "x", quote: "Reminders tripled participation everywhere." }] };
+    const r = checkDraft({ recommendations: [fake, good(["src:1"]), good(["src:1"])] }, brief, sources);
+    expect("errors" in r && r.errors.join(" ")).toMatch(/does not appear word for word/);
+  });
   it("rejects unknown sources, invented numbers, and actions resting only on policy", () => {
     const r = checkDraft({ recommendations: [good(["src:9"]), good(["src:1"], "This raises participation by 15 points."), good(["roadmap-p10-socioeconomic"])] }, brief, sources);
     expect("errors" in r && r.errors.join(" ")).toMatch(/unknown source "src:9"/);
@@ -57,9 +63,10 @@ describe("checking a draft", () => {
 });
 
 describe("the agent", () => {
-  const run = async (draft: Parameters<typeof runAgent>[2]) => {
+  const approve: Reviewer = async () => ({ verdicts: [1, 2, 3].map((index) => ({ index, verdict: "approve", issues: [] })) });
+  const run = async (draft: Parameters<typeof runAgent>[2], review: Reviewer = approve) => {
     const events: AgentEvent[] = [];
-    await runAgent(brief, (e) => events.push(e), draft, undefined);
+    await runAgent(brief, (e) => events.push(e), draft, undefined, review);
     const result = events.find((e) => e.type === "result");
     return { events, result: result?.type === "result" ? result.result : null };
   };
@@ -68,7 +75,7 @@ describe("the agent", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     const { events, result } = await run(async () => { throw new Error("no key"); });
     expect(events.filter((e) => e.type === "step").map((e) => e.type === "step" && `${e.step}:${e.state}`)).toEqual(
-      ["read:done", "search:running", "search:skipped", "draft:running", "draft:done", "check:running", "check:done"],
+      ["read:done", "search:running", "search:skipped", "draft:running", "draft:done", "review:skipped"],
     );
     expect(result!.status).toBe("fallback");
     expect(result!.recommendations).toHaveLength(3);
@@ -98,5 +105,30 @@ describe("request body", () => {
     expect(parseGapBrief({ ...brief, figure: "43" })).toMatch(/figure/);
     expect(parseGapBrief({ ...brief, kind: "zzz" })).toMatch(/kind/);
     expect(parseGapBrief({ ...brief, who: "x".repeat(500) })).toMatch(/who/);
+  });
+});
+
+describe("the reviewer", () => {
+  it("approves only when every recommendation is approved, and turns rejections into feedback", () => {
+    expect(readReview({ verdicts: [1, 2, 3].map((index) => ({ index, verdict: "approve", issues: [] })) }, 3).approved).toBe(true);
+    const r = readReview({ verdicts: [{ index: 1, verdict: "approve", issues: [] }, { index: 2, verdict: "reject", issues: ["Too vague."] }] }, 3);
+    expect(r.approved).toBe(false);
+    expect(r.feedback).toEqual(["Recommendation 2: Too vague.", "Recommendation 3: the reviewer gave no verdict."]);
+  });
+
+  it("sends a rejected draft back with the reviewer's objections, and fails closed if never approved", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const prompts: string[] = [];
+    const draft = async (prompt: string) => {
+      prompts.push(prompt);
+      return { recommendations: [good(["strategy-goal2-screening-80"]), good(["roadmap-p10-socioeconomic"]), good(["strategy-p35-3.2"])] };
+    };
+    const reject: Reviewer = async () => ({ verdicts: [{ index: 1, verdict: "reject", issues: ["Raise awareness is not an action."] }] });
+    const events: AgentEvent[] = [];
+    await runAgent(brief, (e) => events.push(e), draft, undefined, reject);
+    expect(prompts).toHaveLength(3);
+    expect(prompts[1]).toContain("Raise awareness is not an action.");
+    const result = events.find((e) => e.type === "result");
+    expect(result?.type === "result" && result.result.status).toBe("fallback");
   });
 });
