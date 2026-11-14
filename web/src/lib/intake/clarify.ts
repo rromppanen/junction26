@@ -11,6 +11,7 @@ const TIMEOUT_MS = 15_000;
 const MAX_QUESTIONS = 5;
 const MAX_SAMPLE_ROWS = 5;
 const MAX_CELL = 100;
+const MAX_CELLS = 30;
 const MAX_TEXT = 300;
 
 export type Question = {
@@ -43,7 +44,7 @@ const FIELD_OPTIONS = [...FIELDS.map((f) => ({ value: f.id as string, label: f.l
 
 /** Defensive copy: at most 5 rows, cells capped at 100 characters. */
 export function trimSample(sample: string[][] | null): string[][] {
-  return (sample ?? []).slice(0, MAX_SAMPLE_ROWS).map((r) => r.map((c) => String(c).slice(0, MAX_CELL)));
+  return (sample ?? []).slice(0, MAX_SAMPLE_ROWS).map((r) => r.slice(0, MAX_CELLS).map((c) => String(c).slice(0, MAX_CELL)));
 }
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
@@ -135,12 +136,17 @@ export async function getQuestions(
       const raw = (await withTimeout(generate({ kind: "questions", headers, sample }), TIMEOUT_MS)) as { questions?: unknown };
       if (!raw || !Array.isArray(raw.questions)) throw new Error("unusable answer");
       const seen = new Set<string>();
+      // Unmapped headers always get a question first, then Gemini's extra ambiguous ones.
+      for (const h of unmapped) { seen.add(h); columnQs.push(columnQuestion(h, fallbackText(h))); }
+      const aiText = new Map<string, string>();
       for (const q of raw.questions as { column?: unknown; text?: unknown }[]) {
         if (typeof q?.column !== "string" || typeof q.text !== "string" || !q.text.trim()) continue;
-        if (!headers.includes(q.column) || seen.has(q.column)) continue;
-        seen.add(q.column);
-        columnQs.push(columnQuestion(q.column, q.text.trim().slice(0, MAX_TEXT)));
+        if (!headers.includes(q.column) || aiText.has(q.column)) continue;
+        const text = q.text.trim().slice(0, MAX_TEXT);
+        aiText.set(q.column, text);
+        if (!seen.has(q.column)) { seen.add(q.column); columnQs.push(columnQuestion(q.column, text)); }
       }
+      columnQs = columnQs.map((q) => (aiText.has(q.column!) ? { ...q, text: aiText.get(q.column!)! } : q));
       status = "ai";
     } catch (err) {
       console.warn("[intake] questions fallback:", err instanceof Error ? err.message : err);
@@ -168,8 +174,12 @@ export async function answersToSetup(
   let audience: Audience = "county-board";
   let level: Level = "county";
   let countyId: number | null = null;
-  let status: "ai" | "fallback" = "ai";
+  let status: "ai" | "fallback" = "fallback"; // "ai" only when Gemini actually interpreted free text
 
+  // Allowed values are rebuilt here; options supplied by a client are never trusted.
+  const counties = await countyOptions();
+  const allowedOf = (q: Question): { value: string; label: string }[] =>
+    q.kind === "audience" ? AUDIENCES : q.kind === "level" ? LEVELS : q.kind === "county" ? counties : FIELD_OPTIONS;
   const byId = new Map(questions.map((q) => [q.id, q]));
   const apply = (q: Question, value: string) => {
     if (q.kind === "audience") audience = value as Audience;
@@ -186,7 +196,7 @@ export async function answersToSetup(
     if (!q || done.has(q.id)) continue;
     done.add(q.id);
     if (a.option !== undefined) {
-      if (q.options.some((o) => o.value === a.option)) apply(q, a.option);
+      if (allowedOf(q).some((o) => o.value === a.option)) apply(q, a.option);
       else notes.push(`The chosen ${label(q)} answer was not one of the offered options; the default was kept.`);
     } else if (typeof a.text === "string" && a.text.trim()) {
       pending.push({ q, text: a.text.trim().slice(0, MAX_TEXT) });
@@ -197,21 +207,21 @@ export async function answersToSetup(
     try {
       const raw = (await withTimeout(generate({
         kind: "answers", headers: headers ?? [], sample,
-        items: pending.map(({ q, text }) => ({ questionId: q.id, question: q.text, text, allowed: q.options.map((o) => o.value) })),
+        items: pending.map(({ q, text }) => ({ questionId: q.id, question: q.text, text, allowed: allowedOf(q).map((o) => o.value) })),
       }), TIMEOUT_MS)) as { answers?: unknown };
       if (!raw || !Array.isArray(raw.answers)) throw new Error("unusable answer");
       const resolved = new Set<string>();
       for (const r of raw.answers as { questionId?: unknown; value?: unknown }[]) {
         const p = pending.find((x) => x.q.id === r?.questionId);
-        if (p && typeof r.value === "string" && p.q.options.some((o) => o.value === r.value) && !resolved.has(p.q.id)) {
+        if (p && typeof r.value === "string" && allowedOf(p.q).some((o) => o.value === r.value) && !resolved.has(p.q.id)) {
           apply(p.q, r.value);
           resolved.add(p.q.id);
         }
       }
+      status = "ai";
       for (const p of pending) if (!resolved.has(p.q.id)) notes.push(`Could not match the answer for ${label(p.q)}; the suggested value was kept.`);
     } catch (err) {
       console.warn("[intake] mapping fallback:", err instanceof Error ? err.message : err);
-      status = "fallback";
       for (const p of pending) notes.push(`Could not interpret the answer for ${label(p.q)}; the suggested value was kept.`);
     }
   }

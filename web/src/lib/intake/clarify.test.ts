@@ -26,7 +26,18 @@ describe("getQuestions", () => {
     const gen: Generator = async () => ({ questions: [{ column: "foo", text: "What is foo?" }, { column: "nope", text: "x" }] });
     const r = await getQuestions(input, gen);
     expect(r.status).toBe("ai");
-    expect(r.questions.filter((q) => q.kind === "column")).toMatchObject([{ column: "foo", text: "What is foo?" }]);
+    expect(r.questions.filter((q) => q.kind === "column")).toMatchObject([{ column: "foo", text: "What is foo?" }, { column: "bar" }]);
+  });
+  it("AI path still asks about unmapped headers Gemini did not mention", async () => {
+    const r = await getQuestions(input, async () => ({ questions: [] }));
+    expect(r.status).toBe("ai");
+    expect(r.questions.filter((q) => q.kind === "column").map((q) => q.column)).toEqual(["foo", "bar"]);
+  });
+  it("AI path merges unmapped first, then Gemini extras, capped at 2", async () => {
+    const r = await getQuestions({ ...input, headers: ["vuosi", "kutsutut", "osallistuneet", "foo"], sample: [["2024", "1", "1", "x"]] },
+      async () => ({ questions: [{ column: "kutsutut", text: "q?" }, { column: "foo", text: "foo text" }] }));
+    expect(r.questions.filter((q) => q.kind === "column").map((q) => [q.column, q.text])).toEqual([["foo", "foo text"], ["kutsutut", "q?"]]);
+    expect(r.questions).toHaveLength(5);
   });
   it("junk from Gemini falls back", async () => {
     const r = await getQuestions(input, async () => ({ questions: "oops" }));
@@ -57,24 +68,41 @@ describe("answersToSetup", () => {
     const gen = vi.fn<Generator>();
     const r = await answersToSetup(inp, questions, [
       { questionId: "audience", option: "national" }, { questionId: "level", option: "municipality" },
-      { questionId: "county", option: "7" }, { questionId: "col:foo", option: "positive" },
+      { questionId: "county", option: "977" }, { questionId: "col:foo", option: "positive" },
     ], gen);
     expect(gen).not.toHaveBeenCalled();
-    expect(r).toMatchObject({ status: "ai", audience: "national", level: "municipality", countyId: 7 });
+    expect(r).toMatchObject({ status: "fallback", audience: "national", level: "municipality", countyId: 977 });
     expect(r.mapping!.foo).toBe("positive");
   });
-  it("maps free text through the generator, only to allowed values", async () => {
-    const gen = vi.fn<Generator>(async () => ({ answers: [{ questionId: "col:foo", value: "invited" }] }));
+  it("rejects a generator value that is not a Field id, keeping the suggested value", async () => {
+    const h = ["vuosi", "kutsutut", "osallistuneet"];
+    const gen: Generator = async () => ({ answers: [{ questionId: "col:kutsutut", value: "bogus" }] });
+    const r = await answersToSetup({ datasets: [], headers: h, sample: [["2024", "10", "5"]] },
+      [{ id: "col:kutsutut", kind: "column", column: "kutsutut", text: "?", options: [] }],
+      [{ questionId: "col:kutsutut", text: "whatever" }], gen);
+    expect(r.mapping!.kutsutut).toBe("invited"); // suggested, not overwritten
+    expect(r.notes.join(" ")).toMatch(/kutsutut/);
+  });
+  it("maps free text via the generator and reports ai", async () => {
+    const gen: Generator = async () => ({ answers: [{ questionId: "col:foo", value: "positive" }] });
     const r = await answersToSetup({ ...inp, headers: ["vuosi", "kutsutut", "osallistuneet", "foo"], sample: [["2024", "10", "5", "2"]] }, questions,
-      [{ questionId: "col:foo", text: "kutsutut tarkoittaa kutsuttuja" }], gen);
-    // "invited" is not an allowed option for foo -> unresolved, noted
+      [{ questionId: "col:foo", text: "positive results" }], gen);
+    expect(r.status).toBe("ai");
+    expect(r.mapping!.foo).toBe("positive");
+  });
+  it("ignores options a client smuggled into the question", async () => {
+    const qs: Question[] = [{ id: "col:foo", kind: "column", column: "foo", text: "?", options: [{ value: "__evil__", label: "x" }] }];
+    const r = await answersToSetup({ datasets: [], headers: ["vuosi", "kutsutut", "osallistuneet", "foo"], sample: [["2024", "10", "5", "2"]] }, qs,
+      [{ questionId: "col:foo", option: "__evil__" }], noAi);
     expect(r.mapping!.foo).toBe("ignore");
-    expect(r.notes.join(" ")).toMatch(/foo/);
-    const gen2: Generator = async () => ({ answers: [{ questionId: "col:foo", value: "positive" }] });
-    const r2 = await answersToSetup({ ...inp, headers: ["vuosi", "kutsutut", "osallistuneet", "foo"], sample: [["2024", "10", "5", "2"]] }, questions,
-      [{ questionId: "col:foo", text: "positive results" }], gen2);
-    expect(r2.status).toBe("ai");
-    expect(r2.mapping!.foo).toBe("positive");
+    expect(r.notes.join(" ")).toMatch(/not one of the offered/);
+  });
+  it("rejects a county that is not in the dataset", async () => {
+    for (const bad of ["abc", "999999"]) {
+      const r = await answersToSetup(inp, questions, [{ questionId: "county", option: bad }], noAi);
+      expect(r.countyId).toBeNull();
+      expect(r.notes.join(" ")).toMatch(/county/);
+    }
   });
   it("maps kutsutut free text onto invited when allowed", async () => {
     const qs: Question[] = [{ id: "col:kutsutut", kind: "column", column: "kutsutut", text: "?", options: [{ value: "invited", label: "I" }] }];
