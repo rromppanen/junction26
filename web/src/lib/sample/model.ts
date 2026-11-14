@@ -55,8 +55,12 @@ export type Stage =
   | "colonoscopyBooked"
   | "done";
 
-/** How long the robot takes from the hub to the door. Sped up for the demo (a real trip is 10–15 minutes); the app says so. */
-export const ROBOT_TRAVEL_MS = 10_000;
+/** A typical real trip from the hub to the door: about a kilometre at walking pace. */
+export const REAL_TRIP_MS = 10 * 60_000;
+/** How long the demo robot takes. Sped up so the demo is watchable; the app shows by how much. */
+export const ROBOT_TRAVEL_MS = 15_000;
+/** How many times faster than real the demo robot drives (40). */
+export const ROBOT_SPEEDUP = Math.round(REAL_TRIP_MS / ROBOT_TRAVEL_MS);
 const DAY_MS = 86_400_000;
 const ROBOT_WAIT_FLAG_MS = 60_000;
 

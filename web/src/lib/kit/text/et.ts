@@ -36,7 +36,7 @@ export const et: KitText = {
     arrivesIn: (s) => `Kohal umbes ${s} s pärast`,
     almostThere: "Peaaegu kohal",
     from: "Lahkus lähimast proovipunktist",
-    spedUp: "Demos on robot kiirendatud, nii et see jõuab kohale mõne sekundiga.",
+    spedUp: (x) => `Kiirendatud ${x}×`,
     mapError: "Kaarti ei õnnestunud laadida. Robot on siiski teel.",
     arrived: "Robot on kohal",
     arrivedBody: "See ootab su ukse taga.",

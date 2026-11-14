@@ -36,7 +36,7 @@ export const en: KitText = {
     arrivesIn: (s) => `Arriving in about ${s} s`,
     almostThere: "Almost there",
     from: "Left the nearest sample hub",
-    spedUp: "In this demo the robot is sped up, so it arrives in a few seconds.",
+    spedUp: (x) => `${x}× speed`,
     mapError: "The map could not load. The robot is still on its way.",
     arrived: "The robot has arrived",
     arrivedBody: "It is waiting outside your door.",

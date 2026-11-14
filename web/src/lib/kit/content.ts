@@ -96,8 +96,8 @@ export type Ui = {
   arrivesIn: (seconds: number) => string;
   almostThere: string;
   from: string;
-  /** Says the demo robot is faster than a real one. */
-  spedUp: string;
+  /** A short label: how many times faster than real the demo robot drives. */
+  spedUp: (times: number) => string;
   mapError: string;
   arrived: string;
   arrivedBody: string;

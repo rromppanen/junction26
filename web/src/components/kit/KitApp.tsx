@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Bell, Check, ChevronLeft, ChevronRight, Clock, ExternalLink, Globe, Loader2, MapPin, RotateCcw, X } from "lucide-react";
-import { ROBOT_TRAVEL_MS, stageOf, type SampleEvent } from "@/lib/sample/model";
+import { ROBOT_SPEEDUP, ROBOT_TRAVEL_MS, stageOf, type SampleEvent } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
 import {
   isKitLang, KIT_LANGS, langInfo, READ_MORE, ROBOT_ANIMS, SOURCES, STEP_ANIMS, TEXT,
@@ -26,7 +26,7 @@ const CLICK_GUARD_MS = 350;
 const WINDOW_CLOSE_MS = 380;
 /** How long the arrival check stays (time to read it), and its fade out; the fade matches animations.css. */
 const ARRIVAL_SHOW_MS = 2600;
-const ARRIVAL_FADE_MS = 500;
+const ARRIVAL_FADE_MS = 900;
 
 /** The opening screens come before the sampling steps: -3 invitation and language, -2 what this is, -1 how it works. */
 const INVITE = -3;
@@ -308,18 +308,8 @@ export function KitApp() {
         onRetry={() => pending.current && void book(pending.current.label, pending.current.at)} />;
     }
 
-    // On the way, and for a moment after arriving: the map, with the arrival check over it once the robot is there.
-    if (stage === "robotEnRoute" || (stage === "robotAtDoor" && arrival !== "done")) {
-      const dispatchedAt = lastOf(me, "robotDispatched")?.at ?? now;
-      return (
-        <div className="relative flex min-h-0 flex-1 flex-col">
-          <LiveTracking route={route} dispatchedAt={dispatchedAt} t={t} />
-          {stage === "robotAtDoor" && <ArrivedMoment t={t} leaving={arrival === "leaving"} />}
-        </div>
-      );
-    }
-
-    if (stage === "robotAtDoor") {
+    // The hand-over steps once the robot is at the door.
+    const robotSteps = () => {
       const i = Math.min(robotStep, ROBOT_ANIMS.length - 1);
       const primary =
         i === 1 ? <Primary onClick={guarded(() => setRobotStep(2))}>{t.openLid}</Primary>
@@ -328,6 +318,32 @@ export function KitApp() {
       return (
         <StepView key={`r${i}`} anim={ROBOT_ANIMS[i]} text={text.robot[i]} index={i} total={ROBOT_ANIMS.length} t={t}
           kicker={t.arrived} onBack={guarded(() => setRobotStep(Math.max(0, i - 1)))} primary={primary} />
+      );
+    };
+
+    /*
+      On the way, and for a moment after arriving: the map, with the arrival check over it once the
+      robot is there. When the moment ends, the hand-over steps start fading in underneath while the
+      map and check fade out on top, so it is one crossfade. The map keeps its place in the tree
+      throughout, so it is never rebuilt.
+    */
+    if (stage === "robotEnRoute" || stage === "robotAtDoor") {
+      const dispatchedAt = lastOf(me, "robotDispatched")?.at ?? now;
+      const atDoor = stage === "robotAtDoor";
+      const showMap = !atDoor || arrival !== "done";
+      const showSteps = atDoor && arrival !== "showing";
+      const leaving = atDoor && arrival === "leaving";
+      // Both layers keep their places in the tree, so neither is rebuilt when the other comes or goes.
+      return (
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          {showSteps && <div className="absolute inset-0 flex flex-col">{robotSteps()}</div>}
+          {showMap && (
+            <div className={`relative z-10 flex min-h-0 flex-1 flex-col bg-surface ${leaving ? "kit-crossfade-out" : ""}`} aria-hidden={leaving || undefined}>
+              <LiveTracking route={route} dispatchedAt={dispatchedAt} t={t} />
+              {atDoor && <ArrivedMoment t={t} />}
+            </div>
+          )}
+        </div>
       );
     }
 
@@ -485,16 +501,16 @@ function LiveTracking({ route, dispatchedAt, t }: { route: LngLat[]; dispatchedA
           <div className="h-full rounded-full bg-brand" style={{ width: `${p * 100}%` }} />
         </div>
         <p className="mt-2 text-sm text-muted">{t.from}</p>
-        <p className="mt-3 text-xs text-muted">{t.spedUp}</p>
+        <p className="mt-2 text-xs font-semibold tabular-nums text-muted">{t.spedUp(ROBOT_SPEEDUP)}</p>
       </section>
     </>
   );
 }
 
 /** The robot is here: the map softens behind a check and a few words, then the app moves on by itself. */
-function ArrivedMoment({ t, leaving }: { t: Ui; leaving: boolean }) {
+function ArrivedMoment({ t }: { t: Ui }) {
   return (
-    <div role="status" className={`kit-arrived absolute inset-0 z-20 flex items-center justify-center ${leaving ? "kit-arrived-out" : ""}`}>
+    <div role="status" className="kit-arrived absolute inset-0 z-20 flex items-center justify-center">
       <div className="kit-arrived-veil absolute inset-0 bg-white/40 backdrop-blur-[6px]" aria-hidden />
       <div className="kit-arrived-card relative mx-8 flex flex-col items-center gap-4 rounded-3xl bg-surface/90 px-8 py-8 text-center shadow-2xl">
         <svg viewBox="0 0 64 64" className="size-20" aria-hidden>

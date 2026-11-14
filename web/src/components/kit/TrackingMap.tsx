@@ -38,8 +38,8 @@ function markerEl(kind: "robot" | "home" | "hub", label: string): HTMLElement {
 }
 
 /**
- * A live map of the robot's route, in the style of a courier tracker: the road still ahead in teal,
- * the part behind faded, and the robot moving along it as `progress` goes from 0 to 1.
+ * A live map of the robot's route, in the style of a courier tracker: only the road still ahead is
+ * drawn, and the robot moves along it as `progress` goes from 0 to 1.
  */
 export function TrackingMap({ route, progress, labels }: {
   route: LngLat[]; progress: number; labels: { robot: string; home: string; hub: string; error: string };
@@ -59,8 +59,7 @@ export function TrackingMap({ route, progress, labels }: {
   function draw(p: number) {
     const m = map.current;
     if (!m || !ready.current) return;
-    const { at, done, ahead } = splitRoute(routeRef.current, p);
-    (m.getSource("done") as GeoJSONSource | undefined)?.setData(line(done));
+    const { at, ahead } = splitRoute(routeRef.current, p);
     (m.getSource("ahead") as GeoJSONSource | undefined)?.setData(line(ahead));
     robot.current?.setLngLat(at);
   }
@@ -90,10 +89,7 @@ export function TrackingMap({ route, progress, labels }: {
         });
         instance.on("load", () => {
           if (!instance) return;
-          instance.addSource("done", { type: "geojson", data: line([]) });
           instance.addSource("ahead", { type: "geojson", data: line(routeRef.current) });
-          instance.addLayer({ id: "done", type: "line", source: "done", layout: { "line-cap": "round", "line-join": "round" },
-            paint: { "line-color": "#9aa9b6", "line-width": 5, "line-dasharray": [0.5, 1.6] } });
           instance.addLayer({ id: "ahead-casing", type: "line", source: "ahead", layout: { "line-cap": "round", "line-join": "round" },
             paint: { "line-color": "#ffffff", "line-width": 9 } });
           instance.addLayer({ id: "ahead", type: "line", source: "ahead", layout: { "line-cap": "round", "line-join": "round" },

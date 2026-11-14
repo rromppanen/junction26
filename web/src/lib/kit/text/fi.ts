@@ -36,7 +36,7 @@ export const fi: KitText = {
     arrivesIn: (s) => `Perillä noin ${s} sekunnissa`,
     almostThere: "Melkein perillä",
     from: "Lähti lähimmältä näyteasemalta",
-    spedUp: "Demossa robotti on nopeutettu, joten se saapuu muutamassa sekunnissa.",
+    spedUp: (x) => `Nopeutettu ${x}×`,
     mapError: "Karttaa ei voitu ladata. Robotti on silti matkalla.",
     arrived: "Robotti on perillä",
     arrivedBody: "Se odottaa ovesi edessä.",
