@@ -19,6 +19,7 @@ import { MEASURES } from "@/data/measureKit";
 import { MeasureKit } from "@/components/MeasureKit";
 import { PathwayFunnel } from "@/components/PathwayFunnel";
 import { DecisionBoard } from "@/components/DecisionBoard";
+import { StressTest } from "@/components/StressTest";
 import { loadPathway } from "@/lib/pathwayData";
 import { PATHWAY_COSTS } from "@/data/pathwayCosts";
 import { PathwayStrip } from "@/components/PathwayStrip";
@@ -209,6 +210,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
               regionId={regionId}
               name={name}
             />
+            <StressTest p={pathwayView.pathway} name={name} />
           </Part>
         </>
       )}

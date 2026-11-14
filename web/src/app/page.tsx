@@ -4,6 +4,9 @@ import { INDICATORS, indicatorBySlug } from "@/data/indicators";
 import { ON_PAR_THRESHOLD, latestYear, rankCounties } from "@/lib/gap";
 import type { GapFacts, GapStatus, Indicator, PathwayStage } from "@/lib/types";
 import { CountyMap } from "@/components/CountyMap";
+import { NationalView } from "@/components/NationalView";
+import { earlyWarnings, languageGaps, nationalPathway } from "@/lib/national";
+import { COLORECTAL_SOURCE, REGISTRY, loadPathway } from "@/lib/pathwayData";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
 import { Colophon } from "@/components/Colophon";
@@ -61,6 +64,21 @@ export default async function RadarPage({
   const ranked = rankCounties(ds, ind, year);
   const factsById = new Map<number, GapFacts>(ranked.map((f) => [f.regionId, f]));
   const regionName = new Map(ds.regions.map((r) => [r.id, r.name]));
+
+  // National layer: Registry counts, plus early warnings across every screening programme at its latest year.
+  const nationalPath = nationalPathway(REGISTRY.colorectal);
+  const warnings = earlyWarnings(
+    INDICATORS.filter((i) => i.target).flatMap((i) => rankCounties(ds, i, latestYear(ds, i))),
+  );
+  const countyList = ds.regions
+    .filter((r) => r.kind === "county")
+    .map((r) => ({ id: r.id, name: shortName(r.name) }))
+    .sort((a, b) => a.name.localeCompare(b.name, "fi"));
+  // The loop is shown on the county with the most findings to gain at its breaks.
+  const example = countyList
+    .map((c) => ({ ...c, gain: loadPathway(c.id)?.breaks.reduce((s, b) => s + b.cancers, 0) ?? -1 }))
+    .sort((a, b) => b.gain - a.gain)[0];
+  const indName = (id: number) => (INDICATORS.find((i) => i.id === id)?.nameEn.match(/^(\w+) cancer screening/i)?.[1] ?? "Screening");
   const national = ranked.find((f) => f.national !== null)?.national ?? null;
   const behind = ranked.filter((f) => f.status === "behind").length;
   const withData = ranked.filter((f) => f.value !== null).length;
@@ -116,6 +134,17 @@ export default async function RadarPage({
           )}
         </div>
       </section>
+
+      <NationalView
+        n={nationalPath}
+        languages={languageGaps(REGISTRY.groups)}
+        warnings={warnings}
+        countyName={(id) => shortName(regionName.get(id) ?? String(id))}
+        indicatorName={indName}
+        example={example}
+        counties={countyList}
+        registryUrl={COLORECTAL_SOURCE.url}
+      />
 
       <div className="mb-10 flex flex-col gap-3 rounded-[4px] bg-surface px-3 py-3 text-sm sm:px-4">
         <nav aria-label="Measure" className="flex flex-wrap gap-x-8 gap-y-2">
