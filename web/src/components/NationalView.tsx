@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, BellRing, Microscope, Route, Search, Gauge, Hammer, RefreshCw, type LucideIcon } from "lucide-react";
-import type { LanguageGap, NationalPathway, Warning } from "@/lib/national";
+import { ArrowRight, BellRing, TrendingUp, Microscope, Route, Search, Gauge, Hammer, RefreshCw, type LucideIcon } from "lucide-react";
+import type { Improver, LanguageGap, NationalPathway, Warning } from "@/lib/national";
 import { EvidenceTag } from "@/components/simulator/EvidenceTag";
 import { CountyPicker } from "./CountyPicker";
 
@@ -17,6 +17,7 @@ export function NationalView({
   n,
   languages,
   warnings,
+  rising = [],
   countyName,
   indicatorName,
   example,
@@ -26,6 +27,7 @@ export function NationalView({
   n: NationalPathway;
   languages: LanguageGap[];
   warnings: Warning[];
+  rising?: Improver[];
   countyName: (id: number) => string;
   indicatorName: (id: number) => string;
   example: { id: number; name: string };
@@ -94,8 +96,9 @@ export function NationalView({
         </p>
       </div>
 
+      <div className="mt-6 grid gap-x-10 gap-y-6 border-t border-rule pt-5 lg:grid-cols-2">
       {shownWarnings.length > 0 && (
-        <div className="mt-6 border-t border-rule pt-5">
+        <div>
           <h3 className="flex items-center gap-2 font-semibold">
             <BellRing aria-hidden size={16} className="text-muted" /> Early warning: screening falling over three years
           </h3>
@@ -116,6 +119,27 @@ export function NationalView({
           </p>
         </div>
       )}
+      {rising.length > 0 && (
+        <div>
+          <h3 className="flex items-center gap-2 font-semibold">
+            <TrendingUp aria-hidden size={16} className="text-muted" /> Replicate what works: screening rising over three years
+          </h3>
+          <ul className="mt-3 grid gap-y-1.5 text-sm">
+            {rising.slice(0, 6).map((w) => (
+              <li key={`${w.regionId}-${w.indicatorId}`} className="flex flex-wrap items-baseline gap-x-2">
+                <Link href={`/county/${w.regionId}#peer`} className="link font-medium">{countyName(w.regionId)}</Link>
+                <span className="text-muted">
+                  {indicatorName(w.indicatorId)}: <span className="font-semibold text-ahead">+{n1(w.rise)} points</span> to {n1(w.value)}% ({w.year})
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
+            <EvidenceTag kind="observed" /> A rise of a point or more against three years earlier, Sotkanet. Ask them what changed.
+          </p>
+        </div>
+      )}
+      </div>
 
       <div className="mt-6 border-t border-rule pt-5">
         <h3 className="font-semibold">The learning loop, shown on {example.name}</h3>

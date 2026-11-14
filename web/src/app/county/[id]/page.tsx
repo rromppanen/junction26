@@ -17,6 +17,7 @@ import { getReachDrafts } from "@/lib/reachDrafts";
 import { peoplePer1000ToReach } from "@/lib/impact";
 import { MEASURES } from "@/data/measureKit";
 import { MeasureKit } from "@/components/MeasureKit";
+import { MeasureUpload } from "@/components/MeasureUpload";
 import { PathwayFunnel } from "@/components/PathwayFunnel";
 import { DecisionBoard } from "@/components/DecisionBoard";
 import { StressTest } from "@/components/StressTest";
@@ -142,17 +143,19 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
     mortality,
   });
 
-  const parts: { id: string; icon: LucideIcon; label: string }[] = [
-    ...(pathwayView ? [{ id: "funnel", icon: Filter, label: "Where people fall off" }, { id: "decide", icon: Scale, label: "Decide" }] : []),
-    { id: "path", icon: Route, label: "Pathway" },
-    { id: "what-if", icon: SlidersHorizontal, label: "What if" },
-    { id: "rec", icon: ListChecks, label: "Next steps" },
-    { id: "lb", icon: Users, label: "Left behind" },
-    { id: "reach", icon: Megaphone, label: "Reach them" },
-    ...(peer && practices ? [{ id: "peer", icon: Handshake, label: "Learn from" }] : []),
-    { id: "mk", icon: Ruler, label: "Measure" },
-    { id: "ind", icon: LineChart, label: "Figures" },
-    { id: "ev", icon: BookOpen, label: "Evidence" },
+  // Sections in the order of the learning loop; the jump menu groups them by step.
+  const parts: { id: string; icon: LucideIcon; label: string; step: string }[] = [
+    { id: "path", icon: Route, label: "Pathway", step: "Understand" },
+    ...(pathwayView ? [{ id: "funnel", icon: Filter, label: "Where people fall off", step: "Understand" }] : []),
+    { id: "lb", icon: Users, label: "Left behind", step: "Understand" },
+    ...(pathwayView ? [{ id: "decide", icon: Scale, label: "Decide", step: "Simulate" }] : []),
+    { id: "what-if", icon: SlidersHorizontal, label: "What if", step: "Simulate" },
+    { id: "rec", icon: ListChecks, label: "Next steps", step: "Implement" },
+    { id: "reach", icon: Megaphone, label: "Reach them", step: "Implement" },
+    { id: "mk", icon: Ruler, label: "Measure", step: "Learn" },
+    ...(peer && practices ? [{ id: "peer", icon: Handshake, label: "Learn from", step: "Learn" }] : []),
+    { id: "ind", icon: LineChart, label: "Figures", step: "Reference" },
+    { id: "ev", icon: BookOpen, label: "Evidence", step: "Reference" },
   ];
   const part = (pid: string) => parts.find((x) => x.id === pid)!;
 
@@ -189,8 +192,11 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
 
       <nav aria-label="Sections" className="no-print sticky top-0 z-10 -mx-4 mb-2 overflow-x-auto border-y border-rule bg-paper/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
         <ul className="flex w-max gap-1 text-sm">
-          {parts.map((p) => (
-            <li key={p.id}>
+          {parts.map((p, i) => (
+            <li key={p.id} className="flex items-center">
+              {(i === 0 || parts[i - 1].step !== p.step) && (
+                <span className={`mr-1 text-xs font-semibold uppercase tracking-[0.06em] text-muted ${i ? "ml-3 border-l border-rule pl-3" : ""}`}>{p.step}</span>
+              )}
               <a href={`#${p.id}`} className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[3px] px-2.5 py-1.5 hover:bg-par-soft">
                 <p.icon aria-hidden size={15} strokeWidth={2} className="text-muted" />
                 {p.label}
@@ -199,24 +205,6 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
           ))}
         </ul>
       </nav>
-
-      {pathwayView && (
-        <>
-          <Part {...part("funnel")} title={`Where ${name} loses people`}>
-            <PathwayFunnel view={pathwayView} name={name} />
-          </Part>
-          <Part {...part("decide")} title={`Decide: options for ${name}`}>
-            <DecisionBoard
-              p={pathwayView.pathway}
-              order={pathwayView.breaks.map((b) => b.kind)}
-              defaults={PATHWAY_COSTS}
-              regionId={regionId}
-              name={name}
-            />
-            <StressTest p={pathwayView.pathway} name={name} />
-          </Part>
-        </>
-      )}
 
       <Part {...part("path")} title="Where along the pathway">
         <PathwayFingerprint facts={facts} indicators={INDICATORS} />
@@ -227,6 +215,29 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
           {stageNote} Referral and diagnosis have no public county figures, so nobody can see a gap there yet.
         </More>
       </Part>
+
+      {pathwayView && (
+      <Part {...part("funnel")} title={`Where ${name} loses people`}>
+        <PathwayFunnel view={pathwayView} name={name} />
+      </Part>
+      )}
+
+      <Part {...part("lb")} title={`Who is left behind inside ${name}`}>
+        <LeftBehind equity={equity} name={name} />
+      </Part>
+
+      {pathwayView && (
+      <Part {...part("decide")} title={`Decide: options for ${name}`}>
+        <DecisionBoard
+          p={pathwayView.pathway}
+          order={pathwayView.breaks.map((b) => b.kind)}
+          defaults={PATHWAY_COSTS}
+          regionId={regionId}
+          name={name}
+        />
+        <StressTest p={pathwayView.pathway} name={name} />
+      </Part>
+      )}
 
       <Part id="what-if" icon={SlidersHorizontal} title={`What if ${name} raised screening?`}>
         <ScenarioTool programmes={scenarioProgrammes} />
@@ -271,10 +282,6 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         </ol>
       </Part>
 
-      <Part {...part("lb")} title={`Who is left behind inside ${name}`}>
-        <LeftBehind equity={equity} name={name} />
-      </Part>
-
       <Part {...part("reach")} title={`Reach them: ${name}`}>
         {reachInd && reachFact ? (
           <ReachThem
@@ -290,6 +297,11 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         )}
       </Part>
 
+      <Part {...part("mk")} title="Start measuring">
+        <MeasureKit regionId={regionId} sourceNo={sourceIndex.get(MEASURES[0].evidenceId)} />
+        <MeasureUpload />
+      </Part>
+
       {peer && practices && (
         <Part {...part("peer")} title="A county to learn from">
           <PeerTwin
@@ -302,10 +314,6 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
           />
         </Part>
       )}
-
-      <Part {...part("mk")} title="Start measuring">
-        <MeasureKit regionId={regionId} sourceNo={sourceIndex.get(MEASURES[0].evidenceId)} />
-      </Part>
 
       <Part {...part("ind")} title={`The ${INDICATORS.length + (mortality ? 1 : 0)} measures`}>
         {mortality && <MortalityPanel m={mortality} name={name} />}

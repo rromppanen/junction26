@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { REGISTRY } from "./pathwayData";
 import { countyPathway, rankBreaks } from "./pathway";
-import { earlyWarnings, languageGaps, nationalPathway } from "./national";
+import { earlyWarnings, improvers, languageGaps, nationalPathway } from "./national";
 import type { GapFacts } from "./types";
 
 describe("nationalPathway", () => {
@@ -49,5 +49,11 @@ describe("earlyWarnings", () => {
     const w = earlyWarnings([f(1, -0.5), f(2, -1.0), f(3, -2.4), f(4, null), f(5, -3, null)]);
     expect(w.map((x) => x.regionId)).toEqual([3, 2]);
     expect(w[0]).toMatchObject({ drop: 2.4, belowTarget: true });
+  });
+
+  it("lists rises of a point or more as practices to replicate, largest first", () => {
+    const up = improvers([f(1, 0.5), f(2, 1.0), f(3, 3.2), f(4, -2)]);
+    expect(up.map((x) => x.regionId)).toEqual([3, 2]);
+    expect(up[0].rise).toBe(3.2);
   });
 });

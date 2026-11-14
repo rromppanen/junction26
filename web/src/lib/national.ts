@@ -100,3 +100,16 @@ export function earlyWarnings(facts: GapFacts[]): Warning[] {
     }))
     .sort((a, b) => b.drop - a.drop);
 }
+
+export type Improver = { regionId: number; indicatorId: number; value: number; rise: number; year: number };
+
+/**
+ * Practices to replicate: counties whose screening attendance rose by WARNING_DROP points or more over three
+ * years, largest rise first. Their own pages are where another county can look for what they changed.
+ */
+export function improvers(facts: GapFacts[]): Improver[] {
+  return facts
+    .filter((f) => f.target !== null && f.value !== null && f.trend3y !== null && f.trend3y >= WARNING_DROP)
+    .map((f) => ({ regionId: f.regionId, indicatorId: f.indicatorId, value: f.value as number, rise: round1(f.trend3y as number), year: f.year }))
+    .sort((a, b) => b.rise - a.rise);
+}
