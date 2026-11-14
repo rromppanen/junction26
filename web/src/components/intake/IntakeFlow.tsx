@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { QuestionInput } from "@/lib/intake/clarify";
 import type { Table } from "@/lib/intake/csv";
 import { validateMapping, type Field, type Mapping } from "@/lib/intake/fields";
-import { PUBLIC_DATASETS, type AnalysisSetup, type Level, type PublicDataset } from "@/lib/intake/setup";
+import { PUBLIC_DATASETS, ROWS_KEY, SETUP_KEY, type AnalysisSetup, type Level, type PublicDataset } from "@/lib/intake/setup";
 import type { Understanding } from "@/lib/intake/understand";
 import { FadeIn, useLeave } from "./fade";
 import { StepConversation, type Resolved } from "./StepConversation";
@@ -14,7 +14,6 @@ import { StepReading } from "./StepReading";
 
 /** Same value as NATIONAL in lib/intake/understand (a server module, so not imported here). */
 const NATIONAL = "national";
-export const SETUP_KEY = "gapRadar.analysisSetup";
 
 type Phase = "data" | "reading" | "ask" | "done";
 
@@ -103,10 +102,14 @@ export function IntakeFlow() {
             onFindings={(setup) => {
               try {
                 sessionStorage.setItem(SETUP_KEY, JSON.stringify(setup));
+                if (setup.upload && table) sessionStorage.setItem(ROWS_KEY, JSON.stringify(table.rows));
+                else sessionStorage.removeItem(ROWS_KEY);
               } catch {
-                // storage unavailable: the findings still open
+                // storage unavailable: the findings page says so
               }
-              leave(() => router.push(setup.countyId !== null ? `/county/${setup.countyId}` : "/map"));
+              // With a file, the findings are the gaps in it; otherwise the public-data brief.
+              const href = setup.upload ? "/findings" : setup.countyId !== null ? `/county/${setup.countyId}` : "/map";
+              leave(() => router.push(href));
             }}
             onStartOver={() =>
               go("data", () => {
@@ -156,7 +159,7 @@ function StepDone({
   const setup = (withFile: boolean): AnalysisSetup => ({
     datasets,
     upload: withFile && table && settled.mapping
-      ? { fileName, headers: table.headers, rowCount: table.rows.length, mapping: settled.mapping }
+      ? { fileName, headers: table.headers, rowCount: table.rows.length, mapping: settled.mapping, groupKinds: understanding.groupKinds }
       : null,
     audience: settled.level === "national" ? "national" : "county-board",
     level: settled.level,

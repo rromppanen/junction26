@@ -9,7 +9,7 @@ import { FadeIn } from "./fade";
 
 const MAX_BYTES = 1_000_000;
 /** A demo export with terse Finnish column names, so the AI has something to ask about. */
-const EXAMPLE = { url: "/demo/seulonta_pkarjala_2022-2024.csv", name: "seulonta_pkarjala_2022-2024.csv" };
+const EXAMPLE = { url: "/demo/suolistoseulonta_pkarjala_2022-2024.csv", name: "suolistoseulonta_pkarjala_2022-2024.csv" };
 export const DEFAULT_DATASETS: PublicDataset[] = ["sotkanet-screening", "registry-pathway"];
 
 type Props = {

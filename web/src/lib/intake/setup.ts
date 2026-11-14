@@ -1,4 +1,4 @@
-import type { Mapping } from "./fields";
+import type { GroupKind, Mapping } from "./fields";
 
 export type Audience = "county-board" | "screening-unit" | "national";
 export type Level = "municipality" | "county" | "national";
@@ -6,7 +6,7 @@ export type PublicDataset = "sotkanet-screening" | "registry-pathway" | "languag
 
 export type AnalysisSetup = {
   datasets: PublicDataset[];
-  upload: { fileName: string; headers: string[]; rowCount: number; mapping: Mapping } | null;
+  upload: { fileName: string; headers: string[]; rowCount: number; mapping: Mapping; groupKinds: Record<string, GroupKind> } | null;
   audience: Audience;
   level: Level;
   countyId: number | null;
@@ -18,3 +18,7 @@ export const PUBLIC_DATASETS: { id: PublicDataset; nameEn: string; source: strin
   { id: "languages", nameEn: "Language groups", source: "Statistics Finland", description: "Population by mother tongue for each area." },
   { id: "mortality", nameEn: "Cancer mortality", source: "Finnish Cancer Registry", description: "Cancer deaths by area and year." },
 ];
+
+/** Where the intake leaves its result for the findings page (this browser tab only; nothing is sent anywhere). */
+export const SETUP_KEY = "gapRadar.analysisSetup";
+export const ROWS_KEY = "gapRadar.analysisRows";
