@@ -2,7 +2,7 @@
 
 The screening nurse's board as its own Next.js app. It shows every sample on one board and flags the stuck ones.
 
-It is served under the base path `/nurse`. The main app in `../web` forwards `/nurse/*` here, so in the browser both apps share one origin. This matters because the board and the phone app (`/kit`) sync through `localStorage` and `BroadcastChannel`. Those work only within a single origin.
+It is served under the base path `/nurse`. The main app in `../web` forwards `/nurse/*` here, so in the browser both apps share one origin. This matters because the board and the phone app (`/kit`) sync between tabs through `localStorage` and `BroadcastChannel`, which work only within a single origin. Across devices, both poll the shared event log at `/api/samples`, served by the main app.
 
 ## Run it
 
@@ -24,7 +24,7 @@ npm run smoke -- http://localhost:3000   # loads /nurse through the main app
 
 ## Relation to web/
 
-The board components (`src/components/staff/`) and the sample model and store (`src/lib/sample/`) are copies from `web/`. The old `/staff` page there still works, so for now a fix to the shared logic goes into both places. Keep the storage key `lapi.demo.v4`, the channel name `lapi-demo` and `seed.ts` identical in both apps, or the live sync stops. Both apps seed the same storage, so whichever loads first would otherwise decide the demo data.
+The board components (`src/components/staff/`) and the sample model and store (`src/lib/sample/`) are copies from `web/`. `web/` no longer serves its copy of the board (`/staff` redirects to `/nurse`), but its phone app uses the same sample model, so a fix to the shared logic goes into both places. Keep the storage key `lapi.demo.v4`, the channel name `lapi-demo` and `seed.ts` identical in both apps (the `lapi` prefix is the project's earlier name; renaming it would reset every open demo), or the live sync stops. Both apps seed the same storage, so whichever loads first would otherwise decide the demo data.
 
 ## Demo data
 
