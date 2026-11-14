@@ -1,0 +1,7 @@
+# Never upload local secrets or build output (Vercel CLI deploys from this folder).
+.env*
+!.env.example
+node_modules
+.next
+.next-dev
+test-results
