@@ -2,10 +2,10 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { Fragment, useEffect, useMemo } from "react";
+import { Fragment } from "react";
 import { CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap } from "react-leaflet";
 import type { Sample } from "@/lib/sample/model";
-import { AREAS, HUBS, hubArea, curvedRoute, homeOf, pickupCode, positionOf, routeKey, splitLine, type LatLng, type RobotView, type HubId } from "@/lib/robots/fleet";
+import { AREAS, HUBS, curvedRoute, homeOf, pickupCode, positionOf, routeKey, splitLine, type LatLng, type RobotView } from "@/lib/robots/fleet";
 
 // The HUS palette of the user app (web/): brand blue for a robot on its way, like the kit's tracking map.
 const COLOUR = {
@@ -29,19 +29,13 @@ function colourOf(v: RobotView): string {
   return COLOUR[s.kind];
 }
 
-/**
- * A robot marker. A free robot sits at its hub, shifted by `slot` into rows of three to the
- * right of the hub square (in pixels, so the row keeps its shape at every zoom).
- */
-function robotIcon(v: RobotView, selected: boolean, slot = 0): L.DivIcon {
+function robotIcon(v: RobotView, selected: boolean): L.DivIcon {
   const idle = v.status.kind === "idle";
-  const size = idle ? 20 : 26;
-  const dx = idle ? 22 + (slot % 3) * 23 : 0;
-  const dy = idle ? -11 + Math.floor(slot / 3) * 23 : 0;
+  const size = idle ? 18 : 26;
   return L.divIcon({
-    className: idle ? "robot-pin is-parked" : "robot-pin",
+    className: "robot-pin",
     iconSize: [size, size],
-    iconAnchor: [size / 2 - dx, size / 2 - dy],
+    iconAnchor: [size / 2, size / 2],
     html: `<span class="robot-dot${idle ? " is-idle" : ""}${selected ? " is-selected" : ""}" style="background:${colourOf(v)}">${v.robot.id.slice(1)}</span>`,
   });
 }
@@ -61,14 +55,14 @@ function langLine(p: Sample["person"]): string {
 }
 
 /** A button that zooms back out to the whole capital region. */
-function FitButton({ bounds, label }: { bounds: L.LatLngBounds; label: string }) {
+function FitButton() {
   const map = useMap();
   return (
     <div className="leaflet-top leaflet-right">
       <div className="leaflet-control">
-        <button type="button" onClick={() => map.fitBounds(bounds)}
+        <button type="button" onClick={() => map.fitBounds(BOUNDS)}
           className="min-h-9 rounded-md border border-rule bg-white px-3 text-sm font-medium shadow-sm hover:bg-brand-soft">
-          {label}
+          Whole region
         </button>
       </div>
     </div>
@@ -79,15 +73,7 @@ function FitButton({ bounds, label }: { bounds: L.LatLngBounds; label: string })
  * The capital region on an OpenStreetMap base map: hubs, homes waiting for a pickup,
  * robots and the street routes they follow. Rendered only in the browser.
  */
-/** Zooms to the chosen hub's area, or back to the whole region, whenever the choice changes. */
-function FitToHub({ bounds }: { bounds: L.LatLngBounds }) {
-  const map = useMap();
-  useEffect(() => { map.fitBounds(bounds); }, [map, bounds]);
-  return null;
-}
-
-export default function LiveMap({ hub, fleet, ready, intake, routes, selected, onSelect }: {
-  hub: HubId | "all";
+export default function LiveMap({ fleet, ready, intake, routes, selected, onSelect }: {
   fleet: RobotView[];
   ready: Sample[];
   /** Samples waiting for a nurse, per hub id. */
@@ -96,8 +82,6 @@ export default function LiveMap({ hub, fleet, ready, intake, routes, selected, o
   selected: string | null;
   onSelect: (robotId: string) => void;
 }) {
-  const view = useMemo(() => (hub === "all" ? BOUNDS : L.latLngBounds(hubArea(hub)).pad(0.35)), [hub]);
-  const freeSlot: Record<string, number> = {};
   const lineOf = (v: RobotView): LatLng[] | undefined => {
     if (v.status.kind === "idle") return undefined;
     const t = v.status.trip;
@@ -106,8 +90,7 @@ export default function LiveMap({ hub, fleet, ready, intake, routes, selected, o
 
   return (
     <MapContainer bounds={BOUNDS} zoomSnap={0.25} zoomDelta={0.5} wheelPxPerZoomLevel={90} minZoom={9} maxZoom={16} scrollWheelZoom className="h-[min(72vh,680px)] min-h-[420px] w-full rounded-xl" attributionControl>
-      <FitButton bounds={view} label={hub === "all" ? "Whole region" : "Whole hub area"} />
-      <FitToHub bounds={view} />
+      <FitButton />
       {/* Esri's light grey canvas: quiet streets so the routes and robots stand out. No API key. */}
       <TileLayer
         url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
@@ -159,29 +142,21 @@ export default function LiveMap({ hub, fleet, ready, intake, routes, selected, o
         );
       })}
 
-      {/* Free robots are drawn in a row beside their hub; the label counts them. */}
-      {Object.values(HUBS).filter((h) => hub === "all" || h.id === hub).map((h) => {
+      {/* Parked robots are counted on their hub's label rather than stacked on top of it. */}
+      {Object.values(HUBS).map((h) => {
         const parked = fleet.filter((v) => v.robot.hub === h.id && v.status.kind === "idle").length;
         return (
           <Marker key={h.id} position={h.at} icon={intake[h.id] ? hubIntakeIcon : hubIcon} zIndexOffset={-100}>
             <Tooltip key={intake[h.id] ? "intake" : "ready"} permanent direction="bottom" offset={[0, 8]} className={`hub-label${intake[h.id] ? " has-intake" : ""}`}>
-              {h.name} · {intake[h.id] ? `${intake[h.id]} to collect` : `${parked} free`}
+              {h.name} · {intake[h.id] ? `${intake[h.id]} to collect` : `${parked} ready`}
             </Tooltip>
           </Marker>
         );
       })}
 
       {fleet.map((v) => {
+        if (v.status.kind === "idle") return null;
         const on = selected === v.robot.id;
-        if (v.status.kind === "idle") {
-          const slot = (freeSlot[v.robot.hub] = (freeSlot[v.robot.hub] ?? -1) + 1);
-          return (
-            <Marker key={`${v.robot.id}-free`} position={HUBS[v.robot.hub].at} icon={robotIcon(v, on, slot)}
-              zIndexOffset={500} eventHandlers={{ click: () => onSelect(v.robot.id) }} keyboard={false}>
-              <Tooltip direction="top" offset={[0, -12]}>{v.robot.name}, free at {HUBS[v.robot.hub].name}</Tooltip>
-            </Marker>
-          );
-        }
         return (
           <Marker key={v.robot.id} position={positionOf(v, lineOf(v), 0)} icon={robotIcon(v, on)}
             zIndexOffset={1000}

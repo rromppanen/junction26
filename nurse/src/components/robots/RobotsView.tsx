@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AppHeader, DemoBar } from "@/components/NurseNav";
 import { ME } from "@/components/staff/boardShared";
 import { useSamples } from "@/lib/sample/store";
-import { HUBS, hubOf, awaitingIntake, fleetAt, pickupCode, readyForPickup, simStep, tripsOf, type RobotView, type HubId, type SimSpeed } from "@/lib/robots/fleet";
+import { HUBS, awaitingIntake, fleetAt, pickupCode, readyForPickup, simStep, tripsOf, type RobotView, type SimSpeed } from "@/lib/robots/fleet";
 import { useRoutes } from "@/lib/robots/routes";
 
 // Leaflet needs the browser's window, so the map renders on the client only.
@@ -42,7 +42,6 @@ export function RobotsView() {
   const [selected, setSelected] = useState<string | null>(null);
   const [simulate, setSimulate] = useState(true);
   const [speed, setSpeed] = useState<SimSpeed>(20);
-  const [hub, setHub] = useState<HubId | "all">("all");
   const lastTick = useRef(0);
   useEffect(() => setMounted(true), []);
 
@@ -59,15 +58,10 @@ export function RobotsView() {
     for (const a of simStep(samples, now, ME, `Now, ${clock.format(now)}`, speed)) add(a.sampleId, a.event);
   }, [mounted, simulate, speed, now, samples, add]);
 
-  // Everything below is limited to the chosen hub; the simulation above still runs for all of them.
-  const inHub = (h: HubId) => hub === "all" || h === hub;
-  const shownFleet = fleet.filter((v) => inHub(v.robot.hub));
-  const shownReady = ready.filter((s) => inHub(hubOf(s.person)));
-  const active = shownFleet.filter((v) => v.status.kind !== "idle");
-  const free = shownFleet.length - active.length;
-  const listed = hub === "all" ? active : [...active, ...shownFleet.filter((v) => v.status.kind === "idle")];
-  const stuck = shownFleet.filter((v) => v.status.kind === "atDoor" && v.status.flagged);
-  const intake = awaitingIntake(samples, now).filter((g) => inHub(g.hub));
+  const active = fleet.filter((v) => v.status.kind !== "idle");
+  const free = fleet.length - active.length;
+  const stuck = fleet.filter((v) => v.status.kind === "atDoor" && v.status.flagged);
+  const intake = awaitingIntake(samples, now);
   const intakeCount = intake.reduce((n, g) => n + g.samples.length, 0);
   const toggle = (id: string) => setSelected((cur) => (cur === id ? null : id));
 
@@ -77,17 +71,7 @@ export function RobotsView() {
 
       <div className="mx-auto w-full max-w-[96rem] pt-6">
         <h1 className="text-[length:var(--step-2)] font-semibold leading-tight text-brand-strong">Robots</h1>
-        <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-muted">{hub === "all" ? "Helsinki, Espoo and Vantaa" : `Pickups from ${HUBS[hub].name}`}</p>
-          <label className="inline-flex items-center gap-2 text-sm font-medium">
-            Hub
-            <select value={hub} onChange={(e) => { setHub(e.target.value as HubId | "all"); setSelected(null); }}
-              className="min-h-11 rounded-lg border border-rule bg-white px-3 font-normal">
-              <option value="all">All hubs</option>
-              {Object.values(HUBS).map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
-            </select>
-          </label>
-        </div>
+        <p className="mt-1 text-muted">Helsinki, Espoo and Vantaa</p>
 
         {!mounted ? (
           <p className="mt-6 text-muted">Loading…</p>
@@ -110,7 +94,7 @@ export function RobotsView() {
             <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_23rem]">
               <section aria-label="Map" className="min-w-0">
                 <div className={`${card} overflow-hidden border-rule`}>
-                  <LiveMap hub={hub} fleet={shownFleet} ready={shownReady} intake={Object.fromEntries(intake.map((g) => [g.hub, g.samples.length]))} routes={routes} selected={selected} onSelect={toggle} />
+                  <LiveMap fleet={fleet} ready={ready} intake={Object.fromEntries(intake.map((g) => [g.hub, g.samples.length]))} routes={routes} selected={selected} onSelect={toggle} />
                 </div>
                 <ul aria-label="Map key" className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
                   <li className="flex items-center gap-2"><span className="size-3 rounded-full bg-brand" aria-hidden />Robot</li>
@@ -154,24 +138,22 @@ export function RobotsView() {
                 </section>
 
                 <section aria-labelledby="trips-h">
-                  {/* All hubs: robots on a trip. One hub: every robot of that hub, free ones last. */}
-                  <h2 id="trips-h" className="text-lg font-semibold">
-                    {hub === "all" ? `On a trip (${active.length})` : `Robots at ${HUBS[hub].name} (${shownFleet.length})`}
-                  </h2>
-                  {listed.length === 0 && <p className="mt-1 text-muted">All robots are free at their hubs.</p>}
+                  <h2 id="trips-h" className="text-lg font-semibold">On a trip ({active.length})</h2>
+                  {active.length === 0 && <p className="mt-1 text-muted">All robots are at their hubs.</p>}
                   <ul className={`${card} mt-2 divide-y divide-rule border-rule`}>
-                    {listed.map((v) => {
-                      const t = v.status.kind === "idle" ? null : v.status.trip;
+                    {active.map((v) => {
+                      if (v.status.kind === "idle") return null;
+                      const t = v.status.trip;
                       const on = selected === v.robot.id;
                       return (
                         <li key={v.robot.id}>
                           <button type="button" aria-pressed={on} onClick={() => toggle(v.robot.id)}
                             className={`flex min-h-14 w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-paper ${on ? "bg-brand-soft" : ""}`}>
                             <span className="min-w-0">
-                              <span className="block font-semibold">{v.robot.name}{t?.sampleId === ME ? " · phone demo" : ""}</span>
-                              <span className="block truncate text-sm text-muted">{t ? `${pickupCode(t.sampleId)}, ${t.person.area}` : HUBS[v.robot.hub].name}</span>
+                              <span className="block font-semibold">{v.robot.name}{t.sampleId === ME ? " · phone demo" : ""}</span>
+                              <span className="block truncate text-sm text-muted">{pickupCode(t.sampleId)}, {t.person.area}</span>
                             </span>
-                            <span className={`shrink-0 text-right text-sm ${t ? "" : "text-muted"}`}>{doing(v)}</span>
+                            <span className="shrink-0 text-right text-sm">{doing(v)}</span>
                           </button>
                         </li>
                       );
@@ -180,18 +162,18 @@ export function RobotsView() {
                 </section>
 
                 <section aria-labelledby="ready-h">
-                  <h2 id="ready-h" className="text-lg font-semibold">Waiting for a robot ({shownReady.length})</h2>
-                  {shownReady.length === 0 ? (
+                  <h2 id="ready-h" className="text-lg font-semibold">Waiting for a robot ({ready.length})</h2>
+                  {ready.length === 0 ? (
                     <p className="mt-1 text-muted">None.</p>
                   ) : (
                     <ul className={`${card} mt-2 divide-y divide-rule border-rule text-sm`}>
-                      {shownReady.slice(0, SHOWN).map((s) => (
+                      {ready.slice(0, SHOWN).map((s) => (
                         <li key={s.id} className="flex justify-between gap-3 px-3 py-2">
                           <span>{pickupCode(s.id)}, {s.person.area}</span>
                           <span className="text-muted">{ago(now - (s.events.find((e) => e.type === "sampleTaken")?.at ?? now))}</span>
                         </li>
                       ))}
-                      {shownReady.length > SHOWN && <li className="px-3 py-2 text-muted">and {shownReady.length - SHOWN} more</li>}
+                      {ready.length > SHOWN && <li className="px-3 py-2 text-muted">and {ready.length - SHOWN} more</li>}
                     </ul>
                   )}
                 </section>
