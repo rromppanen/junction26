@@ -11,12 +11,17 @@ const NON_PERSON_STEMS = [
   "yksikk", "yksikö", "ohjelm", "seulon",
 ];
 
+/** A header with a person qualifier is never exempted by a place/organisation qualifier. */
+const PERSON_STEMS = ["patient", "potilas", "asiakas", "henkilö", "client", "customer", "person"];
+
 export function personalDataHeaders(headers: string[]): string[] {
   return headers.filter(h => {
     const k = h.normalize("NFC").trim().toLowerCase();
     if (SUBSTRINGS.some(re => re.test(k))) return true;
     const tokens = k.split(/[^a-zäöå0-9]+/).filter(Boolean);
     if (tokens.some(t => ID_TOKENS.has(t))) return true;
-    return tokens.some(t => NAME_TOKENS.has(t)) && !tokens.some(t => NON_PERSON_STEMS.some(s => t.startsWith(s)));
+    if (!tokens.some(t => NAME_TOKENS.has(t))) return false;
+    if (tokens.some(t => PERSON_STEMS.some(s => t.startsWith(s)))) return true;
+    return !tokens.some(t => NON_PERSON_STEMS.some(s => t.startsWith(s)));
   });
 }
