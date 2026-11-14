@@ -38,18 +38,32 @@ describe("understandData", () => {
     expect(u.questions[0].confidence).toBeLessThan(CONFIDENT);
   });
 
-  it("always confirms a count column the AI guessed on its own, stating its guess", async () => {
+  it("trusts a confident AI guess that the numbers agree with: no question", async () => {
     const gen: UnderstandGenerator = async () => ({
       columns: [
-        { column: "pos_n", field: "positive", meaning: "Number of positive results.", confidence: 0.97, question: "q" },
+        { column: "pos_n", field: "positive", meaning: "Number of positive results.", confidence: 0.9, question: "q" },
         { column: "huom", field: "ignore", meaning: "Notes", confidence: 0.95, question: "q" },
       ],
     });
     const u = await understandData(file, gen);
-    expect(u.mapping!.pos_n).toBe("ignore"); // not used until confirmed
+    expect(u.mapping!.pos_n).toBe("positive");
+    expect(u.questions).toEqual([]);
+  });
+
+  it("asks about a confident AI guess the numbers contradict, and says why", async () => {
+    const gen: UnderstandGenerator = async () => ({
+      columns: [
+        { column: "pos_n", field: "positive", meaning: "Number of positive results.", confidence: 0.9, question: "q" },
+        { column: "huom", field: "ignore", meaning: "Notes", confidence: 0.95, question: "q" },
+      ],
+    });
+    const u = await understandData({ ...file, sample: [["2024", "Tampere", "1200", "900", "950", ""]] }, gen);
+    expect(u.mapping!.pos_n).toBe("ignore"); // not used until the user says what it is
     expect(u.questions).toHaveLength(1);
     expect(u.questions[0]).toMatchObject({ column: "pos_n", confirm: true, guess: { value: "positive" } });
-    expect(u.questions[0].text).toBe('I read "pos_n" as: number of positive results. For example: "40", "9". Is that right?');
+    expect(u.questions[0].text).toBe(
+      'I read "pos_n" as: number of positive results. But in some rows "pos_n" is larger than "osallistuneet", so I may be wrong. What does it contain?',
+    );
   });
 
   it("asks again when the AI gives one field to two columns", async () => {
