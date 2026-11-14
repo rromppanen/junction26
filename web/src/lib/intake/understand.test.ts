@@ -26,16 +26,30 @@ describe("understandData", () => {
   it("uses confident AI guesses without asking and asks about unsure ones with the AI's guess", async () => {
     const gen: UnderstandGenerator = async () => ({
       columns: [
-        { column: "pos_n", field: "positive", meaning: "Positive results", confidence: 0.92, question: "q1" },
+        { column: "pos_n", field: "waitDays", meaning: "Days waited", confidence: 0.92, question: "q1" },
         { column: "huom", field: "ignore", meaning: "Free-text notes", confidence: 0.6, question: "Is huom just notes?" },
       ],
     });
     const u = await understandData(file, gen);
     expect(u.status).toBe("ai");
-    expect(u.mapping!.pos_n).toBe("positive");
+    expect(u.mapping!.pos_n).toBe("waitDays");
     expect(u.questions).toHaveLength(1);
     expect(u.questions[0]).toMatchObject({ column: "huom", text: "Is huom just notes?", guess: { value: "ignore" } });
     expect(u.questions[0].confidence).toBeLessThan(CONFIDENT);
+  });
+
+  it("always confirms a count column the AI guessed on its own, stating its guess", async () => {
+    const gen: UnderstandGenerator = async () => ({
+      columns: [
+        { column: "pos_n", field: "positive", meaning: "Number of positive results.", confidence: 0.97, question: "q" },
+        { column: "huom", field: "ignore", meaning: "Notes", confidence: 0.95, question: "q" },
+      ],
+    });
+    const u = await understandData(file, gen);
+    expect(u.mapping!.pos_n).toBe("ignore"); // not used until confirmed
+    expect(u.questions).toHaveLength(1);
+    expect(u.questions[0]).toMatchObject({ column: "pos_n", confirm: true, guess: { value: "positive" } });
+    expect(u.questions[0].text).toBe('I read "pos_n" as: number of positive results. For example: "40", "9". Is that right?');
   });
 
   it("asks again when the AI gives one field to two columns", async () => {
@@ -82,7 +96,15 @@ describe("interpretAnswer", () => {
     expect(await interpretAnswer(input, col, "I don't know", "positive", noAi)).toEqual({ result: "skip" });
   });
 
-  it("only accepts AI values that are allowed for the question", async () => {
+  it("never accepts the guess the user just rejected", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const sticky: UnderstandGenerator = async () => ({ value: "examined" });
+    expect(await interpretAnswer(input, col, "no, those are the people who got referred", "examined", sticky)).toMatchObject({ value: "positive" });
+    expect(await interpretAnswer(input, col, "no, it's something else", "examined", sticky)).toEqual({ result: "unclear" });
+    expect(await interpretAnswer(input, col, "no, follow-up exams are right", "positive", sticky)).toMatchObject({ value: "examined" });
+  });
+
+    it("only accepts AI values that are allowed for the question", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     expect(await interpretAnswer(input, col, "abc", null, async () => ({ value: "examined" }))).toMatchObject({ result: "matched", value: "examined" });
     expect(await interpretAnswer(input, col, "abc", null, async () => ({ value: "999" }))).toEqual({ result: "unclear" });

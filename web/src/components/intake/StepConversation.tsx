@@ -105,7 +105,7 @@ export function StepConversation({ input, questions, onDone }: Props) {
           </FadeIn>
         ) : (
           <FadeIn delay={420} className="space-y-4">
-            {q.guess && !retry && (
+            {q.guess && !retry && !q.confirm && (
               <p className="text-small text-muted">
                 My best guess: <span className="font-medium text-ink">{q.guess.label}</span>
               </p>
@@ -124,7 +124,7 @@ export function StepConversation({ input, questions, onDone }: Props) {
                 value={text}
                 disabled={busy}
                 aria-label={retry ? followUp(q) : q.text}
-                placeholder="Type your answer"
+                placeholder={q.confirm && !retry ? "Yes, or tell me what it really is" : "Type your answer"}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {

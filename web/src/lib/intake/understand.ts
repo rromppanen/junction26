@@ -19,10 +19,22 @@ export const CONFIDENT = 0.75;
 const MAX_QUESTIONS = 6;
 const MAX_TEXT = 300;
 export const NATIONAL = "national";
+/**
+ * Every figure in the findings is computed from these columns, so a guess the AI made on its own (not from a
+ * known column name) is always confirmed with the user, however sure the AI says it is.
+ */
+const COUNT_FIELDS: Field[] = ["invited", "attended", "positive", "examined"];
+const UNCONFIRMED = 0.7;
 
 export type Guess = { value: string; label: string };
 /** A question the AI asks because its own confidence is below {@link CONFIDENT}. */
-export type ConvQuestion = Question & { kind: "column" | "county"; guess: Guess | null; confidence: number };
+export type ConvQuestion = Question & {
+  kind: "column" | "county";
+  guess: Guess | null;
+  confidence: number;
+  /** The question states the AI's guess and only asks the user to confirm or correct it. */
+  confirm?: boolean;
+};
 export type ColumnGuess = {
   header: string;
   field: Field;
@@ -47,7 +59,7 @@ export type Interpretation =
 
 export type UnderstandTask =
   | { kind: "columns"; headers: string[]; sample: string[][] }
-  | { kind: "interpret"; question: string; text: string; headers: string[]; sample: string[][]; options: Guess[] };
+  | { kind: "interpret"; question: string; text: string; headers: string[]; sample: string[][]; options: Guess[]; proposed: Guess | null };
 /** Returns Gemini's parsed JSON (unvalidated); injected in tests. */
 export type UnderstandGenerator = (task: UnderstandTask) => Promise<unknown>;
 
@@ -105,7 +117,7 @@ For each column return: the field, a short plain-English meaning (max 12 words),
 ${data}
 
 Question: ${JSON.stringify(task.question)}
-Answer: ${JSON.stringify(task.text)}
+${task.proposed ? `The question proposed "${task.proposed.value}" (${task.proposed.label}). If the user rejects it ("no", "not quite", "ei"), choose what they say it is instead, or "unclear" if they don't say.\n` : ""}Answer: ${JSON.stringify(task.text)}
 
 Allowed values (value: label):
 ${task.options.map((o) => `- ${o.value}: ${o.label}`).join("\n")}`;
@@ -118,7 +130,7 @@ ${task.options.map((o) => `- ${o.value}: ${o.label}`).join("\n")}`;
   const res = await ai.models.generateContent({
     model: GEMINI_MODEL,
     contents: prompt,
-    config: { responseMimeType: "application/json", responseSchema: schema },
+    config: { responseMimeType: "application/json", responseSchema: schema, temperature: 0 },
   });
   return JSON.parse(res.text ?? "");
 };
@@ -229,7 +241,8 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
         const desc = FIELDS.find((f) => f.id === named)!.description;
         columns.push({ header: h, field: named, meaning: a && a.field === named && a.meaning ? a.meaning : desc, confidence: 0.95, source: "name" });
       } else if (a) {
-        columns.push({ header: h, field: a.field, meaning: a.meaning || fieldLabel(a.field), confidence: a.confidence, source: "ai" });
+        const confidence = COUNT_FIELDS.includes(a.field) ? Math.min(a.confidence, UNCONFIRMED) : a.confidence;
+        columns.push({ header: h, field: a.field, meaning: a.meaning || fieldLabel(a.field), confidence, source: "ai" });
       } else {
         columns.push({ header: h, field: "ignore", meaning: "Not sure yet.", confidence: 0.2, source: "none" });
       }
@@ -253,14 +266,19 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
   for (const c of columns) {
     if (c.confidence >= CONFIDENT) continue;
     const col = headers!.indexOf(c.header);
+    const confirm = c.source === "ai" && COUNT_FIELDS.includes(c.field);
+    const meaning = c.meaning.replace(/\.$/, "");
     questions.push({
       id: `col:${c.header}`,
       kind: "column",
       column: c.header,
-      text: askText.get(c.header) ?? `What does the column "${c.header}" contain?${examples(sample, col)}`,
+      text: confirm
+        ? `I read "${c.header}" as: ${meaning.charAt(0).toLowerCase()}${meaning.slice(1)}.${examples(sample, col)} Is that right?`
+        : (askText.get(c.header) ?? `What does the column "${c.header}" contain?${examples(sample, col)}`),
       options: FIELD_OPTIONS,
       guess: c.field === "ignore" && c.source === "none" ? null : { value: c.field, label: fieldLabel(c.field) },
       confidence: c.confidence,
+      ...(confirm ? { confirm: true } : {}),
     });
   }
   if (place.confidence < CONFIDENT) {
@@ -280,6 +298,7 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
 
 const SKIP = /^(skip|pass|no idea|not sure|i don'?t know|dunno|en tiedä|ei aavistusta|ohita)\b/;
 const YES = /^(yes|yep|yeah|yup|correct|right|exactly|that'?s (it|right|correct)|kyllä|joo|juu|kyl|oikein|just niin)\b/;
+const NO = /^(no|nope|not|nah|wrong|incorrect|ei|eikä|väärin|ei ole)\b/;
 const NATIONAL_WORDS = /\b(whole country|all of finland|national|nationwide|finland|koko maa|koko suomi|suomi|valtakunnallinen)\b/;
 const FIELD_WORDS: Record<Field, RegExp> = {
   year: /\b(year|vuosi|vuoden)\b/,
@@ -332,13 +351,17 @@ export async function interpretAnswer(
   try {
     const raw = (await withTimeout(generate({
       kind: "interpret", question: question.text, text: answer, headers: input.headers ?? [], sample: trimSample(input.sample), options,
+      proposed: guess && label(guess) ? { value: guess, label: label(guess)! } : null,
     }), TIMEOUT_MS)) as { value?: unknown };
     const v = raw?.value;
     if (v === "skip") return { result: "skip" };
-    if (typeof v === "string" && label(v)) return { result: "matched", value: v, label: label(v)! };
+    // A model can stick to the guess the user just rejected; never accept that.
+    const rejectedGuess = guess !== null && v === guess && NO.test(t);
+    if (typeof v === "string" && label(v) && !rejectedGuess) return { result: "matched", value: v, label: label(v)! };
   } catch (err) {
     console.warn("[intake] interpret fallback:", err instanceof Error ? err.message : err);
   }
   const v = localMatch(question, answer, p);
+  if (v && guess && v === guess && NO.test(t)) return { result: "unclear" };
   return v && label(v) ? { result: "matched", value: v, label: label(v)! } : { result: "unclear" };
 }
