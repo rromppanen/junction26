@@ -1,27 +1,29 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Bell, Check, ChevronLeft, ChevronRight, Clock, Globe, X } from "lucide-react";
+import { Bell, Check, ChevronLeft, ChevronRight, Clock, ExternalLink, Globe, Loader2, MapPin, RotateCcw, X } from "lucide-react";
 import { ROBOT_TRAVEL_MS, robotProgress, stageOf, type SampleEvent } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
 import {
-  isKitLang, KIT_LANGS, langInfo, ROBOT_ANIMS, SOURCES, STEP_ANIMS, TEST_KINDS, TEXT,
-  type Anim, type KitLang, type StepText, type TestKind, type Ui,
+  isKitLang, KIT_LANGS, langInfo, READ_MORE, ROBOT_ANIMS, SOURCES, STEP_ANIMS, TEXT,
+  type Anim, type KitLang, type StepText, type Ui,
 } from "@/lib/kit/content";
 import { pickupWindows, type Window } from "@/lib/kit/slots";
 import { StepAnimation } from "./StepAnimation";
 import { TrackingMap } from "./TrackingMap";
+import { ROBOT_ROUTE } from "@/data/robotRoute";
+import type { LngLat } from "@/lib/kit/route";
+import { forgetRobotRoute, locateAndRoute, storedRoute } from "./useRobotRoute";
 import "./animations.css";
 
 const ME = "me";
 const LANG_KEY = "lapi.kit.language";
-// Versioned: an older build stored the step index differently.
-const STEP_KEY = "lapi.kit.progress.v2";
+// Versioned: older builds stored the step index differently.
+const STEP_KEY = "lapi.kit.progress.v3";
 const CLICK_GUARD_MS = 350;
-const TOAST_MS = 6000;
-const WINDOW_CLOSE_MS = 220;
+/** Matches the window's closing animation in animations.css. */
+const WINDOW_CLOSE_MS = 380;
 
 /** The opening screens come before the sampling steps: -3 invitation and language, -2 what this is, -1 how it works. */
 const INVITE = -3;
@@ -49,10 +51,8 @@ function writeStored(key: string, value: string | null) {
 export function KitApp() {
   const params = useSearchParams();
   const router = useRouter();
-  const param = params.get("test") ?? "fit";
   /** The demo's start page links here with start=1: begin a fresh run from the invitation. */
   const fresh = params.get("start") === "1";
-  const kind = (TEST_KINDS as string[]).includes(param) ? (param as TestKind) : null;
   const { samples, now, add, reset } = useSamples();
   const me = samples.find((s) => s.id === ME);
 
@@ -61,24 +61,29 @@ export function KitApp() {
   const [step, setStepState] = useState(INVITE);
   const [robotStep, setRobotStep] = useState(0);
   const [panel, setPanel] = useState<"why" | "lang" | null>(null);
-  const [toast, setToast] = useState(false);
+  const [route, setRoute] = useState<LngLat[]>(ROBOT_ROUTE);
+  /** Booking waits for location: the robot is only sent once the person has allowed it. */
+  const [locating, setLocating] = useState<"idle" | "asking" | "denied">("idle");
+  const pending = useRef<{ label: string; at?: number } | null>(null);
 
-  const stepKey = `${STEP_KEY}.${kind}`;
+  const stepKey = STEP_KEY;
   useEffect(() => {
     if (fresh) {
       reset();
       clearLocal();
-      router.replace(`/kit?test=${kind ?? "fit"}`);
+      router.replace("/kit");
       setMounted(true);
       return;
     }
     setMounted(true);
+    const saved = storedRoute();
+    if (saved) setRoute(saved);
     const l = readStored(LANG_KEY);
     if (isKitLang(l)) setStoredLang(l);
     const raw = readStored(stepKey);
     const s = Number(raw);
     if (raw !== null && Number.isInteger(s) && s >= INVITE) setStepState(s);
-    // Runs once per kit; reset, clearLocal and router are stable for that purpose.
+    // Runs once on load; reset, clearLocal and router are stable for that purpose.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepKey]);
 
@@ -97,9 +102,12 @@ export function KitApp() {
     writeStored(stepKey, null);
     setRobotStep(0);
     setPanel(null);
-    setToast(false);
+    setLocating("idle");
+    pending.current = null;
+    setRoute(ROBOT_ROUTE);
     setStoredLang(null);
     writeStored(LANG_KEY, null);
+    forgetRobotRoute();
   }
 
   // A reset from another tab (or the fleet board) brings the person back to an untouched invitation.
@@ -113,11 +121,24 @@ export function KitApp() {
 
   const stage = me ? stageOf(me, now) : "invited";
 
-  // The arrival notification: a banner (and a buzz where phones support it) when the robot reaches the door.
+  async function book(label: string, at?: number) {
+    pending.current = { label, at };
+    setLocating("asking");
+    const r = await locateAndRoute();
+    if (r === "denied") {
+      setLocating("denied");
+      return;
+    }
+    setRoute(r);
+    setLocating("idle");
+    act({ type: "pickupBooked", slot: label, ...(at !== undefined ? { slotAt: at } : {}) });
+    act({ type: "robotDispatched" });
+  }
+
+  // When the robot reaches the door the app moves on to the arrival steps by itself (and buzzes where phones can).
   const prevStage = useRef(stage);
   useEffect(() => {
     if (stage === "robotAtDoor" && prevStage.current === "robotEnRoute") {
-      setToast(true);
       setRobotStep(0);
       try {
         navigator.vibrate?.([200, 100, 200]);
@@ -127,11 +148,6 @@ export function KitApp() {
     }
     prevStage.current = stage;
   }, [stage]);
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(false), TOAST_MS);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   // Ignore taps right after a screen change, so a double tap cannot act on the next screen.
   const screenKey = `${stage}:${step}:${robotStep}`;
@@ -149,7 +165,7 @@ export function KitApp() {
   const info = langInfo(lang);
   const text = TEXT[lang];
   const t = text.ui;
-  const test = kind ? text.tests[kind] : null;
+  const test = text.test;
 
   return (
     <main className="min-h-dvh bg-paper sm:flex sm:h-dvh sm:items-center sm:justify-center sm:p-4">
@@ -167,26 +183,11 @@ export function KitApp() {
 
         {!mounted || !me ? (
           <div className="flex-1" aria-busy="true" />
-        ) : !kind || !test ? (
-          <Centered demo={null}><h1 className="text-2xl font-semibold">{t.unknownTitle}</h1><p className="text-muted">{t.unknownBody}</p></Centered>
         ) : (
-          renderScreen(kind)
+          renderScreen()
         )}
 
-        {toast && (
-          <div role="status" className="kit-toast absolute inset-x-3 top-3 z-20 flex items-center gap-3 rounded-2xl bg-brand-strong p-4 text-white shadow-xl">
-            <Bell aria-hidden size={22} className="shrink-0" />
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold">{t.arrived}</p>
-              <p className="text-sm text-white/85">{t.arrivedBody}</p>
-            </div>
-            <button type="button" onClick={() => setToast(false)} aria-label={t.close} className="flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-white/10">
-              <X aria-hidden size={18} />
-            </button>
-          </div>
-        )}
-
-        {panel === "why" && kind && test && (
+        {panel === "why" && (
           <InfoWindow title={t.whyTitle} closeLabel={t.close} onClose={() => setPanel(null)}>
             <p className="text-lg leading-relaxed">{test.why.lead}</p>
             <ul className="mt-4 space-y-3">
@@ -198,7 +199,7 @@ export function KitApp() {
             <div className="mt-5 border-t border-rule pt-4" dir="ltr" lang="en">
               <h3 className="text-sm font-semibold">{t.sources}</h3>
               <ul className="mt-2 space-y-1 text-sm">
-                {SOURCES[kind].map((s) => (
+                {SOURCES.map((s) => (
                   <li key={s.url}><a href={s.url} target="_blank" rel="noreferrer" className="link text-muted">{s.label}</a></li>
                 ))}
               </ul>
@@ -215,13 +216,18 @@ export function KitApp() {
     </main>
   );
 
-  function renderScreen(k: TestKind) {
-    if (!me || !test) return null;
-    const demo = <DemoFooter t={t} kind={k} lang={lang} onReset={() => { reset(); clearLocal(); }} />;
+  function renderScreen() {
+    if (!me) return null;
+    const restart = (
+      <button type="button" onClick={() => { reset(); clearLocal(); }}
+        className="mx-auto mt-4 inline-flex min-h-12 items-center gap-2 rounded-xl border border-rule px-5 text-sm font-semibold text-muted hover:bg-brand-soft">
+        <RotateCcw aria-hidden size={16} />{t.restartDemo}
+      </button>
+    );
 
     if (stage === "invited" && step === INVITE) {
       return (
-        <Body key="invite" demo={demo} footer={<Primary onClick={guarded(() => { if (!me.events.some((e) => e.type === "kitOpened")) act({ type: "kitOpened" }); setStep(ABOUT); })}>{t.next}</Primary>}>
+        <Body key="invite" footer={<Primary onClick={guarded(() => { if (!me.events.some((e) => e.type === "kitOpened")) act({ type: "kitOpened" }); setStep(ABOUT); })}>{t.next}</Primary>}>
           <h1 className="mt-2 text-[1.75rem] font-semibold leading-tight text-brand-strong">{test.invited}</h1>
           <p className="mt-3 leading-relaxed text-muted">{t.invitedSub}</p>
           <h2 className="mt-7 text-base font-semibold">{t.chooseLang}</h2>
@@ -233,7 +239,7 @@ export function KitApp() {
 
     if (stage === "invited" && step === ABOUT) {
       return (
-        <Body key="about" demo={demo} footer={<Nav back={t.back} onBack={guarded(() => setStep(INVITE))} primary={<Primary onClick={guarded(() => setStep(HOW))}>{t.next}</Primary>} />}>
+        <Body key="about" footer={<Nav back={t.back} onBack={guarded(() => setStep(INVITE))} primary={<Primary onClick={guarded(() => setStep(HOW))}>{t.next}</Primary>} />}>
           <h1 className="mt-2 text-[1.6rem] font-semibold leading-tight">{t.aboutTitle}</h1>
           <p className="mt-3 text-lg leading-relaxed">{test.intro}</p>
           <ul className="mt-5 space-y-2.5">
@@ -252,7 +258,7 @@ export function KitApp() {
     if (stage === "invited" && step === HOW) {
       const rows = [t.howSample, t.howRobot, test.resultWait];
       return (
-        <Body key="how" demo={demo} footer={<Nav back={t.back} onBack={guarded(() => setStep(ABOUT))} primary={<Primary onClick={guarded(() => setStep(0))}>{t.startSampling}</Primary>} />}>
+        <Body key="how" footer={<Nav back={t.back} onBack={guarded(() => setStep(ABOUT))} primary={<Primary onClick={guarded(() => setStep(0))}>{t.startSampling}</Primary>} />}>
           <h1 className="mt-2 text-[1.6rem] font-semibold leading-tight">{t.howTitle}</h1>
           <ol className="mt-5 space-y-5">
             {rows.map((r, i) => (
@@ -267,11 +273,11 @@ export function KitApp() {
     }
 
     if (stage === "invited") {
-      const anims = STEP_ANIMS[k];
+      const anims = STEP_ANIMS;
       const i = Math.min(step, anims.length - 1);
       const last = i === anims.length - 1;
       return (
-        <StepView key={`s${i}`} demo={demo} anim={anims[i]} text={test.steps[i]} index={i} total={anims.length} t={t}
+        <StepView key={`s${i}`} anim={anims[i]} text={test.steps[i]} index={i} total={anims.length} t={t}
           onBack={guarded(() => setStep(i === 0 ? HOW : i - 1))}
           primary={last
             ? <Primary onClick={guarded(() => act({ type: "sampleTaken" }))}>{t.sampleDone}</Primary>
@@ -281,10 +287,8 @@ export function KitApp() {
 
     // Choosing any time sends the robot at once (a demo shortcut; a real service would wait for the window).
     if (stage === "sampleTaken" || stage === "pickupBooked") {
-      return <Booking key="book" lang={lang} t={t} now={now} onBook={(label, at) => {
-        act({ type: "pickupBooked", slot: label, ...(at !== undefined ? { slotAt: at } : {}) });
-        act({ type: "robotDispatched" });
-      }} />;
+      return <Booking key="book" lang={lang} t={t} now={now} locating={locating} onBook={(label, at) => void book(label, at)}
+        onRetry={() => pending.current && void book(pending.current.label, pending.current.at)} />;
     }
 
     if (stage === "robotEnRoute") {
@@ -293,7 +297,7 @@ export function KitApp() {
       return (
         <div className="relative flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1" dir="ltr">
-            <TrackingMap progress={p} labels={{ robot: t.onTheWay, home: t.home, hub: t.hub, error: t.mapError }} />
+            <TrackingMap route={route} progress={p} labels={{ robot: t.onTheWay, home: t.home, hub: t.hub, error: t.mapError }} />
           </div>
           <section className="relative z-10 -mt-5 rounded-t-3xl bg-surface px-5 pb-5 pt-5 shadow-[0_-8px_24px_-12px_rgba(0,60,108,0.3)]" aria-live="polite">
             <p className="text-sm font-semibold text-muted">{t.onTheWay}</p>
@@ -315,52 +319,50 @@ export function KitApp() {
         : i === ROBOT_ANIMS.length - 1 ? <Primary onClick={guarded(() => act({ type: "pickedUp" }))}>{t.lidClosed}</Primary>
         : <Primary onClick={guarded(() => setRobotStep(i + 1))}>{t.next}</Primary>;
       return (
-        <StepView key={`r${i}`} demo={demo} anim={ROBOT_ANIMS[i]} text={text.robot[i]} index={i} total={ROBOT_ANIMS.length} t={t}
+        <StepView key={`r${i}`} anim={ROBOT_ANIMS[i]} text={text.robot[i]} index={i} total={ROBOT_ANIMS.length} t={t}
           kicker={t.arrived} onBack={guarded(() => setRobotStep(Math.max(0, i - 1)))} primary={primary} />
       );
     }
 
     if (stage === "pickedUp" || stage === "atLab") {
       return (
-        <Centered key="thanks" demo={demo}>
+        <Centered key="thanks">
           <div className="mx-auto w-full max-w-[260px]"><StepAnimation anim="robotLeave" /></div>
           <h1 className="text-2xl font-semibold text-brand-strong">{t.thanksTitle}</h1>
           <p className="text-muted">{t.thanksBody}</p>
           <p className="text-muted">{test.resultWait}</p>
+          <a href={READ_MORE[lang] ?? READ_MORE.en} target="_blank" rel="noreferrer"
+            className="mx-auto mt-2 inline-flex min-h-11 items-center gap-2 rounded-lg px-3 font-semibold text-brand underline underline-offset-4 hover:bg-brand-soft">
+            {t.readMore}<ExternalLink aria-hidden size={16} />
+          </a>
+          {restart}
         </Centered>
       );
     }
 
     const result = stage === "negative" ? test.negative : test.positive;
     return (
-      <Centered key="result" demo={demo}>
+      <Centered key="result">
         <h1 className="text-2xl font-semibold text-brand-strong">{result.title}</h1>
         <p className="leading-relaxed text-muted">{result.body}</p>
+        {restart}
       </Centered>
     );
   }
 }
 
 /** A screen's content fades and rises in, one child after another; the actions stay at the bottom. */
-function Body({ children, footer, demo }: { children: React.ReactNode; footer: React.ReactNode; demo: React.ReactNode }) {
+function Body({ children, footer }: { children: React.ReactNode; footer: React.ReactNode }) {
   return (
     <>
       <div className="kit-enter min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-5" aria-live="polite">{children}</div>
-      <div className="space-y-1 px-5 pb-2 pt-2">
-        {footer}
-        {demo}
-      </div>
+      <div className="px-5 pb-5 pt-2">{footer}</div>
     </>
   );
 }
 
-function Centered({ children, demo }: { children: React.ReactNode; demo: React.ReactNode }) {
-  return (
-    <>
-      <div className="kit-enter flex min-h-0 flex-1 flex-col justify-center gap-3 overflow-y-auto px-5 text-center" aria-live="polite">{children}</div>
-      <div className="px-5 pb-2">{demo}</div>
-    </>
-  );
+function Centered({ children }: { children: React.ReactNode }) {
+  return <div className="kit-enter flex min-h-0 flex-1 flex-col justify-center gap-3 overflow-y-auto px-5 pb-8 text-center" aria-live="polite">{children}</div>;
 }
 
 function Nav({ back, onBack, primary }: { back: string; onBack: () => void; primary: React.ReactNode }) {
@@ -374,11 +376,11 @@ function Nav({ back, onBack, primary }: { back: string; onBack: () => void; prim
   );
 }
 
-function StepView({ anim, text, index, total, t, onBack, primary, kicker, demo }: {
-  anim: Anim; text: StepText; index: number; total: number; t: Ui; onBack: () => void; primary: React.ReactNode; kicker?: string; demo: React.ReactNode;
+function StepView({ anim, text, index, total, t, onBack, primary, kicker }: {
+  anim: Anim; text: StepText; index: number; total: number; t: Ui; onBack: () => void; primary: React.ReactNode; kicker?: string;
 }) {
   return (
-    <Body demo={demo} footer={<Nav back={t.back} onBack={onBack} primary={primary} />}>
+    <Body footer={<Nav back={t.back} onBack={onBack} primary={primary} />}>
       <div>
         {kicker && <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-brand"><Bell aria-hidden size={16} />{kicker}</p>}
         <p className="text-sm font-semibold text-muted">{t.stepOf(index + 1, total)}</p>
@@ -447,20 +449,10 @@ function InfoWindow({ title, closeLabel, onClose, children }: { title: string; c
   );
 }
 
-function DemoFooter({ t, kind, lang, onReset }: { t: Ui; kind: TestKind; lang: KitLang; onReset: () => void }) {
-  const other = TEST_KINDS.find((k) => k !== kind) ?? "fit";
-  return (
-    <div className="flex items-center gap-1 text-xs text-muted">
-      <span className="min-w-0 flex-1 truncate">{t.demoLine}</span>
-      <button type="button" onClick={onReset} className="inline-flex min-h-11 shrink-0 items-center px-1.5 underline">{t.restart}</button>
-      <Link href={`/kit?test=${other}`} onClick={onReset} className="inline-flex min-h-11 shrink-0 items-center px-1.5 underline">
-        {t.otherKit(TEXT[lang].tests[other].short)}
-      </Link>
-    </div>
-  );
-}
-
-function Booking({ lang, t, now, onBook }: { lang: KitLang; t: Ui; now: number; onBook: (label: string, at?: number) => void }) {
+function Booking({ lang, t, now, locating, onBook, onRetry }: {
+  lang: KitLang; t: Ui; now: number; locating: "idle" | "asking" | "denied"; onBook: (label: string, at?: number) => void; onRetry: () => void;
+}) {
+  const busy = locating === "asking";
   const today = pickupWindows(now, 0);
   const [day, setDay] = useState<0 | 1>(today.length ? 0 : 1);
   const [chosen, setChosen] = useState<Window | null>(null);
@@ -474,7 +466,14 @@ function Booking({ lang, t, now, onBook }: { lang: KitLang; t: Ui; now: number; 
       <div className="kit-enter min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-5">
         <h1 className="text-[1.6rem] font-semibold leading-tight">{t.bookTitle}</h1>
         <p className="mt-2 flex gap-2 text-muted"><Clock aria-hidden size={18} className="mt-1 shrink-0 text-brand" />{t.bookBody}</p>
-        <button type="button" onClick={() => onBook(t.asap)}
+        <p className="mt-2 flex gap-2 text-muted"><MapPin aria-hidden size={18} className="mt-1 shrink-0 text-brand" />{t.locationWhy}</p>
+        {locating === "denied" && (
+          <div role="alert" className="mt-4 rounded-xl border-s-4 border-[#e30513] bg-[#fdecee] p-4">
+            <p className="leading-relaxed">{t.locationDenied}</p>
+            <button type="button" onClick={onRetry} className="primary-action mt-3 w-full !rounded-lg">{t.tryAgain}</button>
+          </div>
+        )}
+        <button type="button" disabled={busy} onClick={() => onBook(t.asap)}
           className="mt-5 flex min-h-16 w-full items-center justify-between gap-3 rounded-xl border-2 border-brand bg-brand-soft px-4 text-start hover:bg-[#cddff0]">
           <span><span className="block font-semibold text-brand-strong">{t.asap}</span><span className="text-sm text-muted">{t.asapNote}</span></span>
           <ChevronRight aria-hidden className="shrink-0 text-brand rtl:rotate-180" />
@@ -507,9 +506,9 @@ function Booking({ lang, t, now, onBook }: { lang: KitLang; t: Ui; now: number; 
         </div>
       </div>
       <div className="px-5 pb-4 pt-2">
-        <button type="button" disabled={!chosen} onClick={() => chosen && onBook(label(chosen), chosen.at)}
+        <button type="button" disabled={!chosen || busy} onClick={() => chosen && onBook(label(chosen), chosen.at)}
           className="primary-action !min-h-14 w-full !rounded-xl !text-base disabled:opacity-40">
-          {chosen ? t.confirm(label(chosen)) : t.pickTime}
+          {busy ? <><Loader2 aria-hidden size={18} className="animate-spin" />{t.locating}</> : chosen ? t.confirm(label(chosen)) : t.pickTime}
         </button>
       </div>
     </>
