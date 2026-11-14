@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, BellOff, ChevronRight, Send } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { AppHeader, DemoBar } from "@/components/NurseNav";
-import { flagsOf, reminderNote, stageOf, STAGES_FOR_BOARD, type EventType, type Flag, type Stage } from "@/lib/sample/model";
+import { flagsOf, stageOf, STAGES_FOR_BOARD, type EventType, type Flag, type Stage } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
 import { pickupCode } from "@/lib/robots/fleet";
 import { SampleDrawer } from "./SampleDrawer";
@@ -17,14 +17,18 @@ function unreminded(r: Row): boolean {
   return r.flags.some((f) => f.kind === "noSample" && (f.remindedDaysAgo === null || f.remindedDaysAgo === undefined));
 }
 
+/** Short, plain wording for the list; the full label stays in the detail panel. */
+function shortFlag(f: Flag): string {
+  if (f.kind === "noSample") return `No sample, ${f.days} d`;
+  if (f.kind === "positiveNoBooking") return `Positive, not booked, ${f.days} d`;
+  return f.label;
+}
+
 /** Tells a reminded person apart from one nobody has contacted yet. */
-function ReminderTag({ flag }: { flag: Flag }) {
-  const none = flag.remindedDaysAgo === null || flag.remindedDaysAgo === undefined;
-  return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${none ? "bg-behind-soft text-behind" : "bg-par-soft text-muted"}`}>
-      {none ? <BellOff size={12} aria-hidden /> : <Send size={12} aria-hidden />} {reminderNote(flag)}
-    </span>
-  );
+function reminderText(f: Flag): string | null {
+  if (f.kind !== "noSample") return null;
+  if (f.remindedDaysAgo === null || f.remindedDaysAgo === undefined) return "Not reminded";
+  return f.remindedDaysAgo === 0 ? "Reminded today" : `Reminded ${f.remindedDaysAgo} d ago`;
 }
 
 /** Stages where the robots page refers to the sample by its anonymous pickup code. */
@@ -185,12 +189,10 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
                       <span className={`min-w-0 flex-col items-start gap-1 ${flags.length ? "flex" : "hidden lg:flex"}`}>
                         {flags.length > 0 ? (
                           <>
-                            <span className="inline-flex items-start gap-1 font-medium text-behind">
-                              <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden /> {flags[0].label}
-                            </span>
-                            {reminderNote(flags[0]) && <ReminderTag flag={flags[0]} />}
+                            <span className="font-medium text-behind" title={flags[0].label}>{shortFlag(flags[0])}</span>
+                            {reminderText(flags[0]) && <span className="text-xs text-muted">{reminderText(flags[0])}</span>}
                           </>
-                        ) : <span className="hidden text-muted lg:inline">No flags</span>}
+                        ) : <span className="hidden text-muted lg:inline">–</span>}
                       </span>
                       <span className="flex flex-col items-start gap-1">
                         <span className="inline-flex items-center gap-2 font-medium">{STAGE_LABEL[r.stage]} <ChevronRight size={16} aria-hidden /></span>
