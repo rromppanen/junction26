@@ -1,13 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Map as MlMap, Marker, GeoJSONSource } from "maplibre-gl";
+import type { Map as MlMap, Marker, GeoJSONSource, LngLatBoundsLike } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { ROBOT_ROUTE } from "@/data/robotRoute";
 import { splitRoute, type LngLat } from "@/lib/kit/route";
 
 /** OpenFreeMap: free vector tiles from OpenStreetMap data, no key needed. */
 const STYLE = "https://tiles.openfreemap.org/styles/positron";
+
+const PADDING = { top: 56, bottom: 48, left: 40, right: 40 };
+
+function boundsOf(route: LngLat[]): LngLatBoundsLike {
+  const lngs = route.map((c) => c[0]);
+  const lats = route.map((c) => c[1]);
+  return [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]];
+}
 
 function line(coords: LngLat[]): GeoJSON.Feature<GeoJSON.LineString> {
   return { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: coords } };
@@ -34,10 +41,16 @@ function markerEl(kind: "robot" | "home" | "hub", label: string): HTMLElement {
  * A live map of the robot's route, in the style of a courier tracker: the road still ahead in teal,
  * the part behind faded, and the robot moving along it as `progress` goes from 0 to 1.
  */
-export function TrackingMap({ progress, labels }: { progress: number; labels: { robot: string; home: string; hub: string; error: string } }) {
+export function TrackingMap({ route, progress, labels }: {
+  route: LngLat[]; progress: number; labels: { robot: string; home: string; hub: string; error: string };
+}) {
   const box = useRef<HTMLDivElement>(null);
   const map = useRef<MlMap | null>(null);
   const robot = useRef<Marker | null>(null);
+  const hub = useRef<Marker | null>(null);
+  const home = useRef<Marker | null>(null);
+  const routeRef = useRef(route);
+  routeRef.current = route;
   const ready = useRef(false);
   const latest = useRef(progress);
   const [failed, setFailed] = useState(false);
@@ -46,7 +59,7 @@ export function TrackingMap({ progress, labels }: { progress: number; labels: { 
   function draw(p: number) {
     const m = map.current;
     if (!m || !ready.current) return;
-    const { at, done, ahead } = splitRoute(ROBOT_ROUTE, p);
+    const { at, done, ahead } = splitRoute(routeRef.current, p);
     (m.getSource("done") as GeoJSONSource | undefined)?.setData(line(done));
     (m.getSource("ahead") as GeoJSONSource | undefined)?.setData(line(ahead));
     robot.current?.setLngLat(at);
@@ -59,13 +72,11 @@ export function TrackingMap({ progress, labels }: { progress: number; labels: { 
       try {
         const ml = await import("maplibre-gl");
         if (cancelled || !box.current) return;
-        const bounds = new ml.LngLatBounds(ROBOT_ROUTE[0], ROBOT_ROUTE[0]);
-        ROBOT_ROUTE.forEach((c) => bounds.extend(c));
         instance = new ml.Map({
           container: box.current,
           style: STYLE,
-          bounds,
-          fitBoundsOptions: { padding: { top: 48, bottom: 48, left: 40, right: 40 } },
+          bounds: boundsOf(routeRef.current),
+          fitBoundsOptions: { padding: PADDING },
           attributionControl: false,
           dragRotate: false,
           pitchWithRotate: false,
@@ -80,17 +91,20 @@ export function TrackingMap({ progress, labels }: { progress: number; labels: { 
         instance.on("load", () => {
           if (!instance) return;
           instance.addSource("done", { type: "geojson", data: line([]) });
-          instance.addSource("ahead", { type: "geojson", data: line(ROBOT_ROUTE) });
+          instance.addSource("ahead", { type: "geojson", data: line(routeRef.current) });
           instance.addLayer({ id: "done", type: "line", source: "done", layout: { "line-cap": "round", "line-join": "round" },
             paint: { "line-color": "#9aa9b6", "line-width": 5, "line-dasharray": [0.5, 1.6] } });
           instance.addLayer({ id: "ahead-casing", type: "line", source: "ahead", layout: { "line-cap": "round", "line-join": "round" },
             paint: { "line-color": "#ffffff", "line-width": 9 } });
           instance.addLayer({ id: "ahead", type: "line", source: "ahead", layout: { "line-cap": "round", "line-join": "round" },
             paint: { "line-color": "#004b87", "line-width": 5 } });
-          new ml.Marker({ element: markerEl("hub", labels.hub) }).setLngLat(ROBOT_ROUTE[0]).addTo(instance);
-          new ml.Marker({ element: markerEl("home", labels.home) }).setLngLat(ROBOT_ROUTE[ROBOT_ROUTE.length - 1]).addTo(instance);
-          robot.current = new ml.Marker({ element: markerEl("robot", labels.robot) }).setLngLat(ROBOT_ROUTE[0]).addTo(instance);
+          const r = routeRef.current;
+          hub.current = new ml.Marker({ element: markerEl("hub", labels.hub) }).setLngLat(r[0]).addTo(instance);
+          home.current = new ml.Marker({ element: markerEl("home", labels.home) }).setLngLat(r[r.length - 1]).addTo(instance);
+          robot.current = new ml.Marker({ element: markerEl("robot", labels.robot) }).setLngLat(r[0]).addTo(instance);
           ready.current = true;
+          // The route may have changed (location arrived) while the style loaded: frame the current one.
+          instance.fitBounds(boundsOf(r), { padding: PADDING, duration: 0 });
           draw(latest.current);
         });
         // If the style has not loaded in 12 s (offline, tiles blocked), say so instead of showing a blank box.
@@ -108,10 +122,22 @@ export function TrackingMap({ progress, labels }: { progress: number; labels: { 
       instance?.remove();
       map.current = null;
       robot.current = null;
+      hub.current = null;
+      home.current = null;
     };
     // The map is created once; labels only name the markers.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // A new route (the person's real location arrived): move the end markers and frame the whole route.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready.current) return;
+    hub.current?.setLngLat(route[0]);
+    home.current?.setLngLat(route[route.length - 1]);
+    m.fitBounds(boundsOf(route), { padding: PADDING, duration: 900 });
+    draw(latest.current);
+  }, [route]);
 
   useEffect(() => {
     draw(progress);
