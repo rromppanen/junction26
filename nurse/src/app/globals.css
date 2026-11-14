@@ -233,3 +233,12 @@ button:disabled { cursor: not-allowed; }
   border-radius: 9999px; border: 2px solid #fff; background: var(--ink); box-shadow: 0 1px 4px rgba(29, 37, 44, 0.35);
 }
 .home-pin.is-flagged span { background: var(--behind); box-shadow: 0 0 0 6px rgba(163, 74, 8, 0.25); }
+
+/* Keep Leaflet below the map controls and participant action drawer. */
+.hospital-map { z-index: 0; }
+#map-filters input[type="checkbox"] { accent-color: var(--brand); flex-shrink: 0; }
+
+.participant-pin { background: none; border: 0; }
+.participant-pin span { display: block; width: 100%; height: 100%; border: 2px solid var(--brand); border-radius: 50%; background: white; box-shadow: 0 1px 4px #1d252c40; }
+.participant-pin span.is-flagged { border-color: white; background: var(--behind); }
+.waiting-pin span { border-color: var(--ink); }
