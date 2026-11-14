@@ -7,6 +7,8 @@ const MAX_HEADERS = 30;
 const MAX_HEADER_CHARS = 100;
 const MAX_ITEMS = 5;
 const MAX_ID = 64;
+/** Column question ids are `col:<header>`, so they may be as long as the longest allowed header plus the prefix. */
+const MAX_QUESTION_ID = 4 + MAX_HEADER_CHARS;
 const MAX_TEXT = 500;
 const KINDS = ["column", "audience", "level", "county"];
 
@@ -52,7 +54,7 @@ export function parseMappingBody(body: unknown): { input: QuestionInput; questio
   if (!Array.isArray(body.answers) || body.answers.length > MAX_ITEMS) return `answers must be a list of at most ${MAX_ITEMS}.`;
   const questions: Question[] = [];
   for (const q of body.questions) {
-    if (!isObj(q) || typeof q.id !== "string" || !q.id || q.id.length > MAX_ID) return "Each question needs an id of 1-64 characters.";
+    if (!isObj(q) || typeof q.id !== "string" || !q.id || q.id.length > MAX_QUESTION_ID) return `Each question needs an id of 1-${MAX_QUESTION_ID} characters.`;
     if (typeof q.kind !== "string" || !KINDS.includes(q.kind)) return "Each question needs a valid kind.";
     if (typeof q.text !== "string" || q.text.length > MAX_TEXT) return "Each question needs text of at most 500 characters.";
     let column: string | undefined;
@@ -64,7 +66,7 @@ export function parseMappingBody(body: unknown): { input: QuestionInput; questio
   }
   const answers: Answer[] = [];
   for (const a of body.answers) {
-    if (!isObj(a) || typeof a.questionId !== "string" || !a.questionId || a.questionId.length > MAX_ID) return "Each answer needs a questionId of 1-64 characters.";
+    if (!isObj(a) || typeof a.questionId !== "string" || !a.questionId || a.questionId.length > MAX_QUESTION_ID) return `Each answer needs a questionId of 1-${MAX_QUESTION_ID} characters.`;
     if (a.option !== undefined && (typeof a.option !== "string" || a.option.length > MAX_ID)) return "An answer option must be a short string.";
     if (a.text !== undefined && (typeof a.text !== "string" || a.text.length > MAX_TEXT)) return "Free-text answers must be at most 500 characters.";
     answers.push({ questionId: a.questionId, option: a.option as string | undefined, text: a.text as string | undefined });

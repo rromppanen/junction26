@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { POST as mapping } from "@/app/api/intake/mapping/route";
 import { POST as questions } from "@/app/api/intake/questions/route";
+import { getQuestions, type Generator } from "./clarify";
 
 const req = (url: string, body: unknown, raw = false) =>
   new Request(`http://x/${url}`, { method: "POST", headers: { "content-type": "application/json" }, body: raw ? (body as string) : JSON.stringify(body) });
@@ -16,7 +17,8 @@ describe("mapping route validation", () => {
     ["column not in headers", { input, questions: [{ ...q, column: "nope" }], answers: [] }],
     ["too many questions", { input, questions: Array(6).fill(q), answers: [] }],
     ["long free text", { input, questions: [q], answers: [{ questionId: q.id, text: "x".repeat(501) }] }],
-    ["long id", { input, questions: [{ ...q, id: "x".repeat(65) }], answers: [] }],
+    ["long id", { input, questions: [{ ...q, id: "x".repeat(105) }], answers: [] }],
+    ["long answer questionId", { input, questions: [q], answers: [{ questionId: "x".repeat(105), option: "invited" }] }],
     ["non-string option", { input, questions: [q], answers: [{ questionId: q.id, option: 5 }] }],
   ];
   for (const [name, body] of bad) {
@@ -26,6 +28,23 @@ describe("mapping route validation", () => {
   it("200 for a good body", async () => {
     const res = await mapping(req("m", { input, questions: [q], answers: [{ questionId: q.id, option: "invited" }] }));
     expect(res.status).toBe(200);
+  });
+});
+
+describe("long column headers", () => {
+  // ~90 characters: the column question id `col:<header>` is longer than other ids but must still round-trip.
+  const header = "seulontaan kutsuttujen naisten lukumäärä hyvinvointialueittain ja kunnittain vuonna 2024 yht";
+  const longInput = { datasets: [], headers: ["vuosi", header], sample: [["2024", "1 234"]] };
+  const noAi: Generator = async () => { throw new Error("no key"); };
+  it("questions -> mapping round-trip succeeds and applies the column answer", async () => {
+    expect(header.length).toBeGreaterThan(85);
+    expect((await questions(req("q", longInput))).status).toBe(200);
+    const r = await getQuestions(longInput, noAi);
+    const colQ = r.questions.find((x) => x.kind === "column" && x.column === header)!;
+    expect(colQ.id.length).toBeGreaterThan(64);
+    const res = await mapping(req("m", { input: longInput, questions: r.questions, answers: [{ questionId: colQ.id, option: "invited" }] }));
+    expect(res.status).toBe(200);
+    expect((await res.json()).mapping[header]).toBe("invited");
   });
 });
 

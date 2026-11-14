@@ -129,6 +129,16 @@ describe("personalDataHeaders", () => {
   it.each(["kunta", "alue", "area name", "kuntanimi", "programme_name", "region_name", "municipality name", "county name", "vuosi",
     "hyvinvointialueen nimi", "maakunnan nimi", "sairaanhoitopiirin nimi", "kuntayhtymän nimi", "alueen nimi", "unit_name", "hospital_name"])(
     "does not flag %s", h => expect(personalDataHeaders([h])).toEqual([]));
+  it.each(["henkilönimi", "asiakasnimi", "potilasnimi", "lapsennimi", "etunimi", "sukunimi", "firstname", "lastname", "fullname",
+    "patientname", "Henkilo\u0308nimi", "kunta_potilasnimi"])(
+    "flags glued compound name header %s", h => expect(personalDataHeaders([h])).toEqual([h]));
+  it.each(["kuntanimi", "kunnannimi", "alueennimi", "regionname", "kunta", "alue", "region_name"])(
+    "does not flag place/organisation name header %s", h => expect(personalDataHeaders([h])).toEqual([]));
+  it.each(["patient_id", "person id", "henkilö_id", "henkilon id", "asiakasnumero", "potilasnro", "potilaan numero", "asiakkaan_nro",
+    "PatientId", "kunta_asiakas_id", "sotu", "sosiaaliturvatunnus", "sposti", "s-posti"])(
+    "flags row-level identifier %s", h => expect(personalDataHeaders([h])).toEqual([h]));
+  it.each(["region_id", "kunta_id", "alue_id", "year", "programme_id", "vuosi", "postinumero"])(
+    "does not flag aggregate key %s", h => expect(personalDataHeaders([h])).toEqual([]));
 });
 
 describe("PUBLIC_DATASETS", () => {

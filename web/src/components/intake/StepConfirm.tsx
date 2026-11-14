@@ -45,7 +45,7 @@ export function StepConfirm({ datasets, table, fileName, result, onBack, onConfi
   const counties = countyQuestion?.options ?? [];
   const errors = useMemo(() => (table ? validateMapping(table, mapping) : []), [table, mapping]);
   const effectiveCounty = level === "national" ? null : countyId;
-  const needsCounty = level === "county" && countyId === null;
+  const needsCounty = level !== "national" && countyId === null;
 
   return (
     <section aria-labelledby="step3-h" className="space-y-8">
