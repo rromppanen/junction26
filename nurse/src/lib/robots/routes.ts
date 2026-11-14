@@ -10,7 +10,7 @@ import { HUBS, routeKey, type LatLng, type Trip } from "./fleet";
  * the map keeps its drawn curve, so the demo never depends on the network.
  */
 const ROUTER = "https://routing.openstreetmap.de/routed-foot/route/v1/foot";
-const STORE_KEY = "lapi.routes.v1";
+const ROUTE_CACHE_NAME = "lapi.routes.v1";
 
 const cache = new Map<string, LatLng[]>();
 const failed = new Set<string>();
@@ -21,7 +21,7 @@ function load() {
   if (loaded || typeof window === "undefined") return;
   loaded = true;
   try {
-    const raw = window.localStorage.getItem(STORE_KEY);
+    const raw = window.localStorage.getItem(ROUTE_CACHE_NAME);
     if (raw) for (const [k, v] of Object.entries(JSON.parse(raw) as Record<string, LatLng[]>)) cache.set(k, v);
   } catch {
     /* storage blocked or corrupt: fetch again */
@@ -30,7 +30,7 @@ function load() {
 
 function save() {
   try {
-    window.localStorage.setItem(STORE_KEY, JSON.stringify(Object.fromEntries(cache)));
+    window.localStorage.setItem(ROUTE_CACHE_NAME, JSON.stringify(Object.fromEntries(cache)));
   } catch {
     /* storage blocked: memory still holds the routes */
   }
