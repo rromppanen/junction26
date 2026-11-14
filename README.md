@@ -30,7 +30,7 @@ Keep this section current. On Sunday morning it becomes the submission form text
 
 - **In two minutes:** the county's biggest gap, its Goal 3 cancer-death rate against Finland, where the pathway breaks, who is missed, a costed option and the first action, each linked to the working.
 - **See and locate:** a map and ranking on THL Sotkanet indicators, and the county's bowel-screening funnel in people (invited → tested → positive → colonoscopy) from Cancer Registry counts, with the larger break ranked by findings missed against the best quarter of counties.
-- **Decide:** a board of options at four targets with people, colonoscopies, cancers and precursors found, cost a year and cost per finding, at cited unit prices (Pohjois-Pohjanmaa's 2025 price list). A breast screening simulator adds life-years, deaths averted, cost per life-year, sensitivity and uncertainty, with every assumption adjustable. The tools compare; the county chooses.
+- **Decide:** a board of options at four targets with people, colonoscopies, cancers and precursors found, cost a year and cost per finding, at cited unit prices (Pohjois-Pohjanmaa's 2025 price list). A breast screening simulator adds life-years, deaths averted, cost per life-year, sensitivity and uncertainty from two choices (the target and the outreach cost) and a cautious, central or optimistic reading of sourced evidence. The tools compare; the county chooses.
 - **Act:** three sourced next steps with an owner and timeframe, invitation and SMS drafts in the largest foreign languages of the lagging areas, and a one-page board memo in Finnish.
 - **Monitor:** a monthly kit for the delays nobody publishes yet (THL guidance 21/2016).
 

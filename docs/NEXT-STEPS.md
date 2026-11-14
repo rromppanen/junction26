@@ -49,7 +49,7 @@ python docs/pitch/make_deck.py                            # rebuilds the deck PD
 ## Nice to have, only if time allows before the freeze
 
 - **Breast and cervical funnels.** Like the bowel one: positive → examined. Needs new Finnish Cancer Registry parsers, about 3 hours.
-- **Real mentor figures.** Ask the AstraZeneca mentors for the breast stage mix and the mammography cost, to replace the simulator's placeholders.
+- **Real mentor figures.** Ask the AstraZeneca mentors for Finnish stage at diagnosis by screening attendance and survival by stage. The simulator calibrates the first and uses US data for the second.
 - **New Context.dev key.** The current one returns 401. Get one from context.dev/dashboard; it is needed for the bounty.
 - **Name.** Decide between Gap Radar, NULLPATH and ONCO-NATION. The deck, app and README all say Gap Radar; renaming means editing `make_deck.py` and the app header.
 - **Old PRs.** Decide on PR #6 and close PR #8.

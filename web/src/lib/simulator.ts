@@ -1,7 +1,7 @@
 /**
  * Breast screening gap simulator: what raising a county's mammography attendance to a target would be worth.
  *
- * Same model as simulation_test/gap_radar_breast_screening_simulator.ipynb, which adapts the stage-distribution
+ * Same model as the team's notebook (gap_radar_breast_screening_simulator.ipynb), which adapts the stage-distribution
  * logic of Shafik et al. (2022). Screening helps only by moving diagnoses to earlier stages:
  *   stage mix(county) = attendance × mix(attenders) + (1 − attendance) × mix(non-attenders)
  * Raising attendance moves cancers from the non-attender mix to the attender mix. That change runs through
@@ -35,8 +35,16 @@ export const PARAM_KEYS = [
 export type ParamKey = (typeof PARAM_KEYS)[number];
 export type Params = Record<ParamKey, number>;
 
-/** Where an assumption's value comes from. "placeholder" values are illustrative until replaced with a source. */
-export type AssumptionStatus = "placeholder" | "from-data" | "fixed";
+/**
+ * Where an assumption's value comes from:
+ *   from-data   – read from the county dataset
+ *   sourced     – a figure published by a named source
+ *   derived     – calculated from published figures; the note says how
+ *   choice      – not evidence: the user's own decision or local cost
+ *   fixed       – part of the programme's design
+ *   placeholder – illustrative until replaced with a source
+ */
+export type AssumptionStatus = "placeholder" | "from-data" | "sourced" | "derived" | "choice" | "fixed";
 
 export type Assumption = {
   key: ParamKey;
@@ -45,6 +53,9 @@ export type Assumption = {
   high: number;
   status: AssumptionStatus;
   note: string;
+  /** Short citation and its public address, when the value has one. */
+  source?: string;
+  url?: string;
 };
 
 /** One county's observed inputs: attendance in %, population in people, and (when known) women aged 50–69. */
@@ -119,6 +130,45 @@ export function totals(P: Params, counties: readonly CountyInput[]): Totals {
 export function paramsFrom(assumptions: readonly Assumption[]): Params {
   const P = {} as Params;
   for (const a of assumptions) P[a.key] = a.base;
+  return P;
+}
+
+export type Scenario = "cautious" | "central" | "optimistic";
+
+/** The end of each evidence range that makes closing the gap look better. Choices and fixed inputs are left out. */
+const BETTER_WHEN: Partial<Record<ParamKey, "low" | "high">> = {
+  incidence_50_69: "high",
+  att_regional: "low",
+  att_distant: "low",
+  non_regional: "high",
+  non_distant: "high",
+  ly_lost_local: "low",
+  ly_lost_regional: "high",
+  ly_lost_distant: "high",
+  death_local: "low",
+  death_regional: "high",
+  death_distant: "high",
+  cost_local: "low",
+  cost_regional: "high",
+  cost_distant: "high",
+  cost_screen: "low",
+  overdiagnosis: "low",
+};
+
+/**
+ * One switch in place of a slider per evidence figure. "central" is every base value; "cautious" and
+ * "optimistic" move every evidence figure halfway from its base to the less or more favourable end of its
+ * range. Halfway, because every figure sitting at its extreme at once is not a plausible world.
+ */
+export function scenarioParams(assumptions: readonly Assumption[], scenario: Scenario): Params {
+  const P = paramsFrom(assumptions);
+  if (scenario === "central") return P;
+  for (const a of assumptions) {
+    const better = BETTER_WHEN[a.key];
+    if (!better) continue;
+    const end = (scenario === "optimistic") === (better === "high") ? a.high : a.low;
+    P[a.key] = (a.base + end) / 2;
+  }
   return P;
 }
 
@@ -234,6 +284,9 @@ export function spearman(a: readonly number[], b: readonly number[]): number | n
 const STATUS_FROM_CSV: Record<string, AssumptionStatus> = {
   PLACEHOLDER: "placeholder",
   "FROM DATASET": "from-data",
+  SOURCED: "sourced",
+  DERIVED: "derived",
+  CHOICE: "choice",
   FIXED: "fixed",
 };
 
