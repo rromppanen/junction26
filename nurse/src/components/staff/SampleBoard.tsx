@@ -6,11 +6,9 @@ import { AppHeader, DemoBar } from "@/components/NurseNav";
 import { flagsOf, reminderNote, stageOf, STAGES_FOR_BOARD, type EventType, type Flag, type Stage } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
 import { pickupCode } from "@/lib/robots/fleet";
-import { MiniTimeline } from "./MiniTimeline";
-import { SampleActions } from "./SampleActions";
 import { SampleDrawer } from "./SampleDrawer";
 import {
-  BTN, DEMO_NOTE, EVENT_LABEL, ME, STAGE_LABEL, inStage, matches, msInStage, stepIndex, timeFmt, type Row,
+  BTN, DEMO_NOTE, EVENT_LABEL, ME, STAGE_LABEL, inStage, matches, msInStage, type Row,
 } from "./boardShared";
 
 export { DEMO_NOTE };
@@ -67,8 +65,6 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
   const flagged = rows.filter((r) => r.flags.length > 0).length;
   const invited = rows.filter((r) => r.stage === "invited").length;
 
-  const live = rows.find((r) => r.s.id === ME) ?? null;
-  const latest = live ? [...live.s.events].sort((a, b) => b.at - a.at)[0] : undefined;
   const sel = rows.find((r) => r.s.id === selected) ?? null;
 
   const search = query.trim().toLocaleLowerCase();
@@ -131,26 +127,6 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
             </div>
             <p role="status" aria-live="polite" className={status ? "mt-3 text-sm font-medium text-brand-strong" : "sr-only"}>{status}</p>
 
-            {live && (
-              <details aria-label="Phone demo" open={embed || undefined} className="mt-3 border-b border-rule pb-3">
-                <summary className="cursor-pointer py-2 text-sm font-medium text-muted">Phone demo: {live.s.person.name}</summary>
-                <div className="pt-2">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand">Phone demo</span>
-                  <h2 className="text-base font-semibold">{live.s.person.name}</h2>
-                  <span className="text-sm text-muted">Stage: {STAGE_LABEL[live.stage]}</span>
-                  <MiniTimeline step={stepIndex(live.stage)} flagged={live.flags.length > 0} />
-                </div>
-                {latest && (
-                  <p className="mt-1 text-sm text-muted">Latest: {EVENT_LABEL[latest.type]}, {timeFmt.format(latest.at)}</p>
-                )}
-                {live.flags.map((f) => (
-                  <p key={f.kind} className="mt-2 rounded-md bg-behind-soft px-2 py-1 text-sm font-medium text-behind">{f.label}</p>
-                ))}
-                <SampleActions key={live.s.id} row={live} now={now} busy={busy} act={act} />
-                </div>
-              </details>
-            )}
 
             <form role="search" className="mt-5 flex flex-wrap items-end gap-4" onSubmit={(e) => e.preventDefault()}>
               <label className="flex min-w-0 flex-1 basis-64 flex-col gap-1 text-sm font-medium">
