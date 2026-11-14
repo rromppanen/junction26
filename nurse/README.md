@@ -76,4 +76,4 @@ The nurse app uses the same HUS styling as the user app in `web/`: `globals.css`
 
 ## Reminders and the hub filter
 
-On the participant list, a "No sample after N days" flag carries a second tag: **No reminder yet** (orange) or **Reminder sent N d ago** (grey). Flagged people nobody has reminded sort first. The robots page has a **Hub** picker: one hub shows only its robots, routes, waiting samples and tasks, and the map zooms to its area. The simulation keeps running for every hub.
+On the participant list, a "No sample after N days" flag carries a second tag: **No reminder yet** (orange) or **Reminder sent N d ago** (grey). Flagged people nobody has reminded sort first. The robots page has a **Hub** picker: one hub shows all its robots (free ones too), routes, waiting samples and tasks, and the map zooms to its area. The simulation keeps running for every hub. On the map, free robots sit as white numbered markers in a row beside their hub, so every robot is always visible.

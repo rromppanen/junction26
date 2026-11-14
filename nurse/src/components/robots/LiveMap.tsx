@@ -29,13 +29,19 @@ function colourOf(v: RobotView): string {
   return COLOUR[s.kind];
 }
 
-function robotIcon(v: RobotView, selected: boolean): L.DivIcon {
+/**
+ * A robot marker. A free robot sits at its hub, shifted by `slot` into rows of three to the
+ * right of the hub square (in pixels, so the row keeps its shape at every zoom).
+ */
+function robotIcon(v: RobotView, selected: boolean, slot = 0): L.DivIcon {
   const idle = v.status.kind === "idle";
-  const size = idle ? 18 : 26;
+  const size = idle ? 20 : 26;
+  const dx = idle ? 22 + (slot % 3) * 23 : 0;
+  const dy = idle ? -11 + Math.floor(slot / 3) * 23 : 0;
   return L.divIcon({
-    className: "robot-pin",
+    className: idle ? "robot-pin is-parked" : "robot-pin",
     iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    iconAnchor: [size / 2 - dx, size / 2 - dy],
     html: `<span class="robot-dot${idle ? " is-idle" : ""}${selected ? " is-selected" : ""}" style="background:${colourOf(v)}">${v.robot.id.slice(1)}</span>`,
   });
 }
@@ -91,6 +97,7 @@ export default function LiveMap({ hub, fleet, ready, intake, routes, selected, o
   onSelect: (robotId: string) => void;
 }) {
   const view = useMemo(() => (hub === "all" ? BOUNDS : L.latLngBounds(hubArea(hub)).pad(0.35)), [hub]);
+  const freeSlot: Record<string, number> = {};
   const lineOf = (v: RobotView): LatLng[] | undefined => {
     if (v.status.kind === "idle") return undefined;
     const t = v.status.trip;
@@ -152,21 +159,29 @@ export default function LiveMap({ hub, fleet, ready, intake, routes, selected, o
         );
       })}
 
-      {/* Parked robots are counted on their hub's label rather than stacked on top of it. */}
+      {/* Free robots are drawn in a row beside their hub; the label counts them. */}
       {Object.values(HUBS).filter((h) => hub === "all" || h.id === hub).map((h) => {
         const parked = fleet.filter((v) => v.robot.hub === h.id && v.status.kind === "idle").length;
         return (
           <Marker key={h.id} position={h.at} icon={intake[h.id] ? hubIntakeIcon : hubIcon} zIndexOffset={-100}>
             <Tooltip key={intake[h.id] ? "intake" : "ready"} permanent direction="bottom" offset={[0, 8]} className={`hub-label${intake[h.id] ? " has-intake" : ""}`}>
-              {h.name} · {intake[h.id] ? `${intake[h.id]} to collect` : `${parked} ready`}
+              {h.name} · {intake[h.id] ? `${intake[h.id]} to collect` : `${parked} free`}
             </Tooltip>
           </Marker>
         );
       })}
 
       {fleet.map((v) => {
-        if (v.status.kind === "idle") return null;
         const on = selected === v.robot.id;
+        if (v.status.kind === "idle") {
+          const slot = (freeSlot[v.robot.hub] = (freeSlot[v.robot.hub] ?? -1) + 1);
+          return (
+            <Marker key={`${v.robot.id}-free`} position={HUBS[v.robot.hub].at} icon={robotIcon(v, on, slot)}
+              zIndexOffset={500} eventHandlers={{ click: () => onSelect(v.robot.id) }} keyboard={false}>
+              <Tooltip direction="top" offset={[0, -12]}>{v.robot.name}, free at {HUBS[v.robot.hub].name}</Tooltip>
+            </Marker>
+          );
+        }
         return (
           <Marker key={v.robot.id} position={positionOf(v, lineOf(v), 0)} icon={robotIcon(v, on)}
             zIndexOffset={1000}

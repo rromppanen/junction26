@@ -218,7 +218,9 @@ button:disabled { cursor: not-allowed; }
   border-radius: 9999px; border: 2px solid #fff; color: #fff; font-size: 12px; font-weight: 700;
   box-shadow: 0 1px 4px rgba(18, 39, 46, 0.35);
 }
-.robot-dot.is-idle { border-color: var(--par); color: var(--ink); font-size: 9px; box-shadow: none; }
+.robot-dot.is-idle { background: #fff !important; border-color: var(--brand); color: var(--brand-strong); font-size: 10px; box-shadow: 0 1px 3px rgba(29, 37, 44, 0.3); }
+/* Free robots sit still at their hub: no glide when the list re-renders. */
+.leaflet-marker-icon.robot-pin.is-parked { transition: none; }
 .robot-dot.is-selected { outline: 3px solid var(--ink); outline-offset: 2px; }
 .hub-pin { background: none; border: 0; }
 .hub-pin span { display: block; height: 18px; width: 18px; border-radius: 4px; background: var(--brand-strong); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(18, 39, 46, 0.35); }

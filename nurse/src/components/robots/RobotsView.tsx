@@ -65,6 +65,7 @@ export function RobotsView() {
   const shownReady = ready.filter((s) => inHub(hubOf(s.person)));
   const active = shownFleet.filter((v) => v.status.kind !== "idle");
   const free = shownFleet.length - active.length;
+  const listed = hub === "all" ? active : [...active, ...shownFleet.filter((v) => v.status.kind === "idle")];
   const stuck = shownFleet.filter((v) => v.status.kind === "atDoor" && v.status.flagged);
   const intake = awaitingIntake(samples, now).filter((g) => inHub(g.hub));
   const intakeCount = intake.reduce((n, g) => n + g.samples.length, 0);
@@ -153,22 +154,24 @@ export function RobotsView() {
                 </section>
 
                 <section aria-labelledby="trips-h">
-                  <h2 id="trips-h" className="text-lg font-semibold">On a trip ({active.length})</h2>
-                  {active.length === 0 && <p className="mt-1 text-muted">All robots are at their hubs.</p>}
+                  {/* All hubs: robots on a trip. One hub: every robot of that hub, free ones last. */}
+                  <h2 id="trips-h" className="text-lg font-semibold">
+                    {hub === "all" ? `On a trip (${active.length})` : `Robots at ${HUBS[hub].name} (${shownFleet.length})`}
+                  </h2>
+                  {listed.length === 0 && <p className="mt-1 text-muted">All robots are free at their hubs.</p>}
                   <ul className={`${card} mt-2 divide-y divide-rule border-rule`}>
-                    {active.map((v) => {
-                      if (v.status.kind === "idle") return null;
-                      const t = v.status.trip;
+                    {listed.map((v) => {
+                      const t = v.status.kind === "idle" ? null : v.status.trip;
                       const on = selected === v.robot.id;
                       return (
                         <li key={v.robot.id}>
                           <button type="button" aria-pressed={on} onClick={() => toggle(v.robot.id)}
                             className={`flex min-h-14 w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-paper ${on ? "bg-brand-soft" : ""}`}>
                             <span className="min-w-0">
-                              <span className="block font-semibold">{v.robot.name}{t.sampleId === ME ? " · phone demo" : ""}</span>
-                              <span className="block truncate text-sm text-muted">{pickupCode(t.sampleId)}, {t.person.area}</span>
+                              <span className="block font-semibold">{v.robot.name}{t?.sampleId === ME ? " · phone demo" : ""}</span>
+                              <span className="block truncate text-sm text-muted">{t ? `${pickupCode(t.sampleId)}, ${t.person.area}` : HUBS[v.robot.hub].name}</span>
                             </span>
-                            <span className="shrink-0 text-right text-sm">{doing(v)}</span>
+                            <span className={`shrink-0 text-right text-sm ${t ? "" : "text-muted"}`}>{doing(v)}</span>
                           </button>
                         </li>
                       );
