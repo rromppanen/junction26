@@ -48,6 +48,9 @@ export const sv: KitText = {
     thanksBody: "Du behöver inte göra något mer.",
     hub: "Provstation",
     home: "Hem",
+    scheduledTitle: "Hämtningen är bokad",
+    scheduledBody: "Ha returkuvertet redo. När det är dags ger sig roboten av och du kan följa den här.",
+    sendNow: "Skicka roboten nu",
   },
   test: {
     name: "Screening för tarmcancer",

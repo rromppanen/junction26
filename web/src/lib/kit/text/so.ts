@@ -48,6 +48,9 @@ export const so: KitText = {
     thanksBody: "Wax kale oo aad samaynayso ma jiraan.",
     hub: "Xarunta muunadaha",
     home: "Guriga",
+    scheduledTitle: "Qaadista waa la ballansaday",
+    scheduledBody: "Baqshadda celinta diyaar u hay. Marka waqtigu yimaado, robot-ku wuu ambabaxayaa waadna halkan ka daba-gali kartaa.",
+    sendNow: "Robot-ka hadda dir",
   },
   test: {
     name: "Baaritaanka kansarka mindhicirka",
