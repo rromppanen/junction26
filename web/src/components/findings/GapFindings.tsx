@@ -2,70 +2,23 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, FileSearch, ListChecks, Map as MapIcon, RotateCcw, SearchX, Users } from "lucide-react";
+import { ArrowLeft, LayoutGrid, ListChecks, Map as MapIcon, RotateCcw, SearchX, Users } from "lucide-react";
 import { AppHeader, HeaderLink, IconHeading, More, StatusIcon } from "@/components/ui";
 import { FadeIn } from "@/components/intake/fade";
-import { findGaps, LEVEL_PP, METRIC_LABEL, MIN_GROUP, type Dimension, type Finding, type GapStatus, type GroupStat, type MetricId } from "@/lib/gaps";
-import { kindLabel } from "@/lib/gaps";
-import { ROWS_KEY, SETUP_KEY, type AnalysisSetup } from "@/lib/intake/setup";
-import type { GapStatus as ChartStatus } from "@/lib/types";
-import { groupLabel, groupPhrase } from "./groupWords";
-
-type Loaded = { setup: AnalysisSetup; rows: string[][] } | "missing" | null;
-
-const SHOWN_FINDINGS = 5;
-const ICON_STATUS: Record<GapStatus, ChartStatus> = { behind: "behind", ahead: "ahead", level: "on-par", unclear: "on-par", few: "no-data" };
-const STATUS_WORD: Record<GapStatus, string> = { behind: "Behind", ahead: "Ahead", level: "Level", unclear: "Maybe, too few to be sure", few: `Under ${MIN_GROUP} people` };
-
-const n0 = (v: number) => Math.round(v).toLocaleString("en-GB");
-const pct = (v: number | null) => (v === null ? "–" : `${v.toFixed(0)}%`);
-const plural = (v: number, one: string, many: string) => `${Math.abs(v).toFixed(0)} ${Math.round(Math.abs(v)) === 1 ? one : many}`;
-const pts = (v: number) => plural(v, "point", "points");
-const days = (v: number | null) => (v === null ? "–" : `${v.toFixed(0)} d`);
-
-function sentence(f: Finding): { lead: string; detail: string | null } {
-  const { dimension: d, metric: m, group: g } = f;
-  const who = groupPhrase(d.kind, d.label, g.value);
-  if (m === "wait") {
-    return { lead: `${who} waited ${g.gap!.toFixed(0)} days longer than everyone else (${g.figure!.toFixed(0)} vs ${g.rest!.toFixed(0)} days).`, detail: null };
-  }
-  const verb = m === "participation" ? "took part in screening" : "completed follow-up after a positive result";
-  const more = m === "participation" ? "would have been screened" : "would have had their follow-up";
-  return {
-    lead: `${who} ${verb} ${pts(g.gap!)} less often than everyone else (${pct(g.figure)} vs ${pct(g.rest)}).`,
-    detail: g.missing > 0 ? `About ${n0(g.missing)} more ${g.missing === 1 ? "person" : "people"} ${more} at the same rate.` : null,
-  };
-}
-
-function trend(f: Finding, firstYear: number | null, years: number[]): string | null {
-  if (f.dimension.pooled[f.metric]) return `${years[0]}–${years.at(-1)} added together.`;
-  const { gap, firstGap } = f.group;
-  if (firstYear === null || gap === null || firstGap === null) return null;
-  // Rates: a more negative gap is wider. Waits: a larger gap is wider.
-  const wider = f.metric === "wait" ? gap - firstGap : firstGap - gap;
-  // Year-to-year noise in an aggregate file is easily a point or two.
-  if (Math.abs(wider) < 2) return `About the same as in ${firstYear}.`;
-  return `${wider > 0 ? "Wider" : "Narrower"} by ${f.metric === "wait" ? plural(wider, "day", "days") : pts(wider)} since ${firstYear}.`;
-}
+import { findGaps, kindLabel, LEVEL_PP, METRIC_LABEL, MIN_GROUP, type Dimension, type GroupStat, type MetricId } from "@/lib/gaps";
+import { ICON_STATUS, STATUS_WORD, days, pct } from "./findingWords";
+import { GapGrid } from "./GapGrid";
+import { groupLabel } from "./groupWords";
+import { useAnalysis } from "./useAnalysis";
 
 /** The findings for an uploaded file: gaps between every kind of group the file has. */
 export function GapFindings() {
-  const [loaded, setLoaded] = useState<Loaded>(null);
+  const loaded = useAnalysis();
   const [metric, setMetric] = useState<MetricId>("participation");
-
-  useEffect(() => {
-    try {
-      const setup = JSON.parse(sessionStorage.getItem(SETUP_KEY) ?? "null") as AnalysisSetup | null;
-      const rows = JSON.parse(sessionStorage.getItem(ROWS_KEY) ?? "null") as string[][] | null;
-      setLoaded(setup?.upload && Array.isArray(rows) ? { setup, rows } : "missing");
-    } catch {
-      setLoaded("missing");
-    }
-  }, []);
 
   const report = useMemo(() => {
     if (!loaded || loaded === "missing") return null;
-    const u = loaded.setup.upload!;
+    const u = loaded.setup.upload;
     return findGaps({ headers: u.headers, rows: loaded.rows }, u.mapping, u.groupKinds ?? {});
   }, [loaded]);
 
@@ -89,8 +42,6 @@ export function GapFindings() {
   const { setup } = loaded;
   const u = setup.upload!;
   const county = setup.countyId;
-  const top = report.findings.slice(0, SHOWN_FINDINGS);
-  const rest = report.findings.length - top.length;
   const breakdowns = report.dimensions.filter((d) => d.byMetric[metric]);
 
   return (
@@ -113,41 +64,24 @@ export function GapFindings() {
 
       <section aria-labelledby="top-h" className="mt-12">
         <FadeIn delay={200}>
-          <IconHeading icon={FileSearch} id="top-h" className="text-title">Biggest gaps</IconHeading>
+          <IconHeading icon={LayoutGrid} id="top-h" className="text-title">
+            {report.findings.length === 0 ? "No clear gaps" : `${report.findings.length} ${report.findings.length === 1 ? "gap" : "gaps"}, biggest impact first`}
+          </IconHeading>
+          {report.findings.length > 0 && (
+            <p className="mt-1 text-small text-muted">Ranked by what closing each gap would be worth. Open one for the details.</p>
+          )}
         </FadeIn>
-        {top.length === 0 ? (
+        {report.findings.length === 0 ? (
           <FadeIn delay={300}>
             <p className="mt-4 max-w-2xl text-lede">
-              No clear gaps. Every group is within {LEVEL_PP} points of everyone else, or too small to tell.
+              Every group is within {LEVEL_PP} points of everyone else, or too small to tell.
             </p>
           </FadeIn>
         ) : (
-          <ol className="mt-5 space-y-3">
-            {top.map((f, i) => {
-              const s = sentence(f);
-              const t = trend(f, report.firstYear, report.years);
-              return (
-                <FadeIn key={`${f.dimension.header}-${f.metric}-${f.group.value}`} delay={300 + i * 140}>
-                  <li className="grid grid-cols-[4.5rem_1fr] gap-4 rounded-[6px] border border-rule bg-surface p-4 sm:grid-cols-[6rem_1fr]">
-                    <div className="text-behind">
-                      <div className="text-heading font-semibold leading-none tabular-nums">
-                        {f.metric === "wait" ? `+${f.group.gap!.toFixed(0)}` : `−${Math.abs(f.group.gap!).toFixed(0)}`}
-                      </div>
-                      <div className="mt-1 text-caption">{f.metric === "wait" ? "days" : "points"}</div>
-                    </div>
-                    <div>
-                      <p className="font-medium">{s.lead}</p>
-                      <p className="mt-1 text-small text-muted">
-                        {[s.detail, t, `${f.dimension.label} · ${METRIC_LABEL[f.metric].toLowerCase()}`].filter(Boolean).join(" ")}
-                      </p>
-                    </div>
-                  </li>
-                </FadeIn>
-              );
-            })}
-          </ol>
+          <div className="mt-5">
+            <GapGrid findings={report.findings} delay={350} />
+          </div>
         )}
-        {rest > 0 && <p className="mt-3 text-small text-muted">{rest} more {rest === 1 ? "gap" : "gaps"} in the breakdowns below.</p>}
       </section>
 
       <section aria-labelledby="all-h" className="mt-14">
@@ -198,7 +132,7 @@ export function GapFindings() {
 
 const listText = (xs: string[]) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} or ${xs.at(-1)}`);
 
-function Breakdown({ d, metric, years }: { d: Dimension; metric: MetricId; years: number[] }) {
+export function Breakdown({ d, metric, years }: { d: Dimension; metric: MetricId; years: number[] }) {
   const groups = d.byMetric[metric]!;
   const isWait = metric === "wait";
   const max = isWait ? Math.max(...groups.map((g) => g.figure ?? 0), 1) : 100;

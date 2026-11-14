@@ -1,3 +1,4 @@
+import { Earth, Flag, GraduationCap, Hourglass, Languages, MapPin, Plane, Tag, Users, Wallet, type LucideIcon } from "lucide-react";
 import type { GroupKind } from "@/lib/intake/fields";
 
 /**
@@ -58,4 +59,17 @@ export function groupPhrase(kind: GroupKind, label: string, raw: string): string
     default:
       return `${label} "${raw}"`;
   }
+}
+
+/** An icon per kind of group, always shown next to its text label. */
+export const KIND_ICON: Record<GroupKind, LucideIcon> = {
+  language: Languages, sex: Users, age: Hourglass, nationality: Flag, birthCountry: Earth, migrantBackground: Plane,
+  education: GraduationCap, income: Wallet, region: MapPin, other: Tag,
+};
+
+const n0 = (v: number) => Math.round(v).toLocaleString("en-GB");
+/** What closing a gap would be worth, in words: "145 people missed" or "1,200 extra days of waiting". */
+export function impactText(metric: "participation" | "followUp" | "wait", impact: number): string {
+  if (metric === "wait") return `${n0(impact)} extra days of waiting`;
+  return `${n0(impact)} ${Math.round(impact) === 1 ? "person" : "people"} missed`;
 }
