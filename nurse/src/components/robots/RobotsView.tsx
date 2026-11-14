@@ -183,7 +183,7 @@ export function RobotsView() {
                             className={`flex min-h-14 w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-paper ${on ? "bg-brand-soft" : ""}`}>
                             <span className="min-w-0">
                               <span className="block font-semibold">{v.robot.name}{t.sampleId === ME ? " · phone demo" : ""}</span>
-                              <span className="block truncate text-sm text-muted">{pickupCode(t.sampleId)}, {t.person.area}</span>
+                              <span className="block truncate text-sm text-muted">{pickupCode(t.sampleId)}, {t.route ? "the phone's location" : t.person.area}</span>
                             </span>
                             <span className="shrink-0 text-right text-sm">{doing(v)}</span>
                           </button>

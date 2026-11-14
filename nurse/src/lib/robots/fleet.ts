@@ -86,6 +86,8 @@ export type Trip = {
   bookedAt: number;
   /** One-way driving time, in ms. */
   travelMs: number;
+  /** The street route from the phone's booking, hub first and home last; absent for simulated households. */
+  route?: LatLng[];
   /** When the robot left the door: the sample was handed over, or the booking was replaced. */
   leftAt?: number;
   handedOver: boolean;
@@ -185,6 +187,23 @@ export function splitLine(line: LatLng[], t: number): { done: LatLng[]; ahead: L
   return { done: line, ahead: [line[line.length - 1]] };
 }
 
+/**
+ * A route shared by the phone ([lng, lat] points) as map points ([lat, lng]), or undefined when it is
+ * missing or malformed: anyone can write to the shared demo log, so only finite coordinate pairs pass.
+ */
+export function sharedRoute(raw: unknown): LatLng[] | undefined {
+  if (!Array.isArray(raw) || raw.length < 2 || raw.length > 500) return undefined;
+  const out: LatLng[] = [];
+  for (const p of raw) {
+    if (!Array.isArray(p) || p.length !== 2) return undefined;
+    const [lng, lat] = p as unknown[];
+    if (typeof lng !== "number" || typeof lat !== "number" || !Number.isFinite(lng) || !Number.isFinite(lat)) return undefined;
+    if (Math.abs(lng) > 180 || Math.abs(lat) > 90) return undefined;
+    out.push([lat, lng]);
+  }
+  return out;
+}
+
 export function routeKey(t: Pick<Trip, "hub" | "sampleId">): string {
   return `${t.hub}:${t.sampleId}`;
 }
@@ -199,11 +218,14 @@ export function tripsOf(samples: Sample[]): Trip[] {
       if (e.type !== "pickupBooked") return;
       const travelMs = e.travelMs ?? ROBOT_TRAVEL_MS;
       const end = events.slice(i + 1).find((x) => x.type === "pickedUp" || x.type === "pickupBooked");
+      // The phone sends its route as [lng, lat]; the map works in [lat, lng].
+      const route = sharedRoute(e.route);
       drafts.push({
         sampleId: s.id,
         person: s.person,
         hub: hubOf(s.person),
-        home: homeOf(s.person),
+        home: route ? route[route.length - 1] : homeOf(s.person),
+        ...(route ? { route } : {}),
         ...(e.slot ? { slot: e.slot } : {}),
         bookedAt: e.at,
         travelMs,
@@ -263,7 +285,7 @@ export function positionOf(v: RobotView, route: LatLng[] | undefined, parkedInde
     return [lat - 0.0012, lng - 0.0045 + parkedIndex * 0.003];
   }
   if (s.kind === "atDoor") return s.trip.home;
-  const line = route ?? curvedRoute(HUBS[s.trip.hub].at, s.trip.home, routeKey(s.trip));
+  const line = route ?? s.trip.route ?? curvedRoute(HUBS[s.trip.hub].at, s.trip.home, routeKey(s.trip));
   return pointAlong(line, s.kind === "outbound" ? s.progress : 1 - s.progress);
 }
 
