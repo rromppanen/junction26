@@ -52,6 +52,8 @@ npm run dev        # http://localhost:3000
 
 Optional keys go in `web/.env.local`: `GEMINI_API_KEY` (AI analyst; without it a rule-based brief is shown), `GEMINI_MODEL`, `CONTEXT_DEV_API_KEY` (live web context), `DATABASE_URL` (otherwise the bundled Sotkanet snapshot is used). Run `npm run check` before pushing; CI runs the same checks.
 
+`npm run smoke -- <base url>` loads every page once and fails on any error; run it against the deployed site before the demo to warm the pages. Deployment steps are in [docs/DEPLOY.md](docs/DEPLOY.md), and the pitch script and Q&A prep in [docs/pitch/script.md](docs/pitch/script.md).
+
 ## Team
 
 _TBD: names and roles._

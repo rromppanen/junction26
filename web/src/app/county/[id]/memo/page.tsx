@@ -8,6 +8,9 @@ import { describeFingerprintFi, fmtFi, whatItTakesFi } from "@/lib/memoFi";
 import { PrintButton } from "@/components/PrintButton";
 import type { LiveSnippet } from "@/lib/context";
 import { loadPathway } from "@/lib/pathwayData";
+import { MemoExtras } from "@/components/MemoExtras";
+import { countyMortality, type MortalityRow } from "@/lib/mortality";
+import MORTALITY_ROWS from "@/data/mortality.json";
 import { MemoProposal, parseProposal } from "@/components/MemoProposal";
 
 export const dynamic = "force-dynamic";
@@ -36,10 +39,11 @@ export default async function MemoPage({
   const regionId = Number(id);
   const loaded = await loadCountyBrief(regionId, "fi");
   if (!loaded) notFound();
-  const { name, facts, live, peer, brief } = loaded;
+  const { name, facts, live, peer, brief, region } = loaded;
+  const mortality = countyMortality(MORTALITY_ROWS as MortalityRow[], region.name);
 
   const fp = describeFingerprintFi(diagnosePathway(facts, INDICATORS));
-  const pathwayView = proposal ? loadPathway(regionId) : null;
+  const pathwayView = loadPathway(regionId);
   const citable = [...live.snippets, ...(peer?.snippets ?? [])];
   const sourceIds = [...new Set(brief.recommendations.flatMap((r) => r.sources))];
   const idx = new Map(sourceIds.map((s, i) => [s, i + 1]));
@@ -76,6 +80,7 @@ export default async function MemoPage({
       </header>
 
       {proposal && pathwayView && <MemoProposal view={pathwayView} params={proposal} />}
+      <MemoExtras mortality={mortality} pathway={pathwayView?.pathway ?? null} showOption={!proposal} />
 
       <section aria-labelledby="m-act">
         <h2 id="m-act" className="mb-1 text-base font-semibold">Ehdotetut toimenpiteet</h2>

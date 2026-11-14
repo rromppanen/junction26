@@ -13,6 +13,7 @@
     "shapes": "tsx scripts/shapes.ts",
     "check": "npm run lint && npm test && npm run build",
     "data": "node scripts/ensure-data.mjs",
+    "smoke": "node scripts/smoke.mjs",
     "predev": "npm run data",
     "pretest": "npm run data",
     "prebuild": "npm run data"
