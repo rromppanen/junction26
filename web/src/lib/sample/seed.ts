@@ -40,7 +40,7 @@ const SPECS: Spec[] = [
   // Positive, colonoscopy booked.
   { id: "p9", name: "Eeva N.", age: 64, municipality: "Asikkala", lang: "fi",
     events: [["invited", d(40)], ["sampleTaken", d(30)], ["pickedUp", d(27)], ["atLab", d(27)], ["resultPositive", d(12)],
-      ["colonoscopyBooked", d(10), "Mon 24 Nov 09:30"]] },
+      ["colonoscopyBooked", d(10), "Tue 24 Nov 09:30"]] },
   // Done: negative result.
   { id: "p10", name: "Juha P.", age: 59, municipality: "Lahti", lang: "fi",
     events: [["invited", d(45)], ["sampleTaken", d(38)], ["pickedUp", d(35)], ["atLab", d(35)], ["resultNegative", d(20)]] },

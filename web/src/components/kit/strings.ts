@@ -87,7 +87,7 @@ const en: KitStrings = {
   negBody: "No blood found. Next invitation in two years.",
   posTitle: "Result: blood was found",
   posBody:
-    "Blood was found. This is common, about 4 in 100 samples, and usually not cancer, but it needs a colonoscopy.",
+    "Blood was found. This is common, about 4 in 100 samples. The usual next step is a colonoscopy.",
   posChoose: "Choose a time for the colonoscopy",
   interpreter: "I need an interpreter",
   bookedTitle: "Colonoscopy booked",
@@ -97,7 +97,7 @@ const en: KitStrings = {
   doneTitle: "Colonoscopy done",
   doneBody: "Colonoscopy done. The unit will tell you the findings.",
   demoLine: "Demo: invented people; the robot, lab and bookings are simulated.",
-  restart: "Restart the demo (staff view)",
+  restart: "Restart the demo",
 };
 
 const fi: KitStrings = {
@@ -140,7 +140,7 @@ const fi: KitStrings = {
   negBody: "Verta ei löytynyt. Seuraava kutsu tulee kahden vuoden päästä.",
   posTitle: "Tulos: verta löytyi",
   posBody:
-    "Verta löytyi. Se on tavallista, noin 4 näytteessä sadasta, eikä yleensä tarkoita syöpää, mutta tarvitset paksunsuolen tähystyksen.",
+    "Verta löytyi. Se on tavallista, noin 4 näytteessä sadasta. Tavallinen jatkotutkimus on paksunsuolen tähystys.",
   posChoose: "Valitse aika tähystykseen",
   interpreter: "Tarvitsen tulkin",
   bookedTitle: "Tähystys varattu",
@@ -150,7 +150,7 @@ const fi: KitStrings = {
   doneTitle: "Tähystys tehty",
   doneBody: "Tähystys on tehty. Yksikkö kertoo löydökset.",
   demoLine: "Demo: kuvitellut henkilöt; robotti, laboratorio ja varaukset ovat simuloituja.",
-  restart: "Aloita demo alusta (henkilökunnan näkymä)",
+  restart: "Aloita demo alusta",
 };
 
 const sv: KitStrings = {
@@ -193,7 +193,7 @@ const sv: KitStrings = {
   negBody: "Inget blod hittades. Nästa kallelse kommer om två år.",
   posTitle: "Svar: blod hittades",
   posBody:
-    "Blod hittades. Det är vanligt, i ungefär 4 prov av 100, och betyder oftast inte cancer, men du behöver en koloskopi.",
+    "Blod hittades. Det är vanligt, i ungefär 4 prov av 100. Nästa steg är vanligen en koloskopi.",
   posChoose: "Välj tid för koloskopin",
   interpreter: "Jag behöver tolk",
   bookedTitle: "Koloskopi bokad",
@@ -203,7 +203,7 @@ const sv: KitStrings = {
   doneTitle: "Koloskopin är gjord",
   doneBody: "Koloskopin är gjord. Enheten berättar vad som hittades.",
   demoLine: "Demo: påhittade personer; roboten, labbet och bokningarna är simulerade.",
-  restart: "Starta om demon (personalvy)",
+  restart: "Starta om demon",
 };
 
 export const STRINGS: Record<Lang, KitStrings> = { fi, sv, en };

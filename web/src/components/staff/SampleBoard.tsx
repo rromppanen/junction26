@@ -78,7 +78,7 @@ const STAGE_LABEL: Record<Stage, string> = {
   done: "Done",
 };
 
-const BTN = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-rule bg-white px-3 py-2 text-sm font-medium hover:bg-surface disabled:opacity-50";
+const BTN = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-rule bg-white px-3 py-2 text-sm font-medium hover:bg-brand-soft disabled:opacity-50";
 
 function SampleActions({ row, now, busy, note, setNote, act }: {
   row: Row;

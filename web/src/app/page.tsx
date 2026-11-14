@@ -22,7 +22,7 @@ export default function StartPage() {
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {LINKS.map((l) => (
             <Link key={l.href} href={l.href}
-              className={`flex min-h-28 flex-col justify-between rounded-xl border p-4 ${l.primary ? "border-brand bg-brand text-white hover:bg-brand-strong" : "border-rule bg-white hover:bg-surface"}`}>
+              className={`flex min-h-28 flex-col justify-between rounded-xl border p-4 ${l.primary ? "border-brand bg-brand text-white hover:bg-brand-strong" : "border-rule bg-white hover:bg-brand-soft"}`}>
               <span className="text-lg font-semibold">{l.title}</span>
               <span className={`text-sm ${l.primary ? "text-white/90" : "text-muted"}`}>{l.text}</span>
             </Link>

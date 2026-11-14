@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronRight } from "lucide-react";
 import { Wordmark } from "@/components/Wordmark";
@@ -54,7 +53,7 @@ function mmss(ms: number): string {
 }
 
 export function KitApp() {
-  const { samples, now, add } = useSamples();
+  const { samples, now, add, reset } = useSamples();
   const [mounted, setMounted] = useState(false);
   const [stored, setStored] = useState<Lang | null>(null);
   const [interpreter, setInterpreter] = useState(false);
@@ -79,6 +78,21 @@ export function KitApp() {
   }
 
   const me = samples.find((s) => s.id === ME);
+  // When the demo is reset (here or from the board), start the next run like the first: no interpreter tick, the person's own language.
+  const meEvents = me?.events.length ?? 0;
+  const prevEvents = useRef(meEvents);
+  useEffect(() => {
+    if (meEvents === 1 && prevEvents.current > 1) {
+      setInterpreter(false);
+      setStored(null);
+      try {
+        window.localStorage.removeItem(LANG_KEY);
+      } catch {
+        /* ignore */
+      }
+    }
+    prevEvents.current = meEvents;
+  }, [meEvents]);
   const lang: Lang = stored ?? me?.person.lang ?? "fi";
   const screenKey = me ? `${stageOf(me, now)}:${me.events.some((e) => e.type === "kitOpened")}` : "";
   const shownAt = useRef(0);
@@ -274,7 +288,7 @@ export function KitApp() {
 
         <footer className="space-y-2 border-t border-rule px-5 py-4 text-xs text-muted">
           <p>{t.demoLine}</p>
-          <Link href="/staff" className="inline-flex min-h-11 items-center underline">{t.restart}</Link>
+          <button type="button" onClick={reset} className="inline-flex min-h-11 items-center underline">{t.restart}</button>
         </footer>
       </>
     );
