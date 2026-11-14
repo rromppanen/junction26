@@ -5,6 +5,9 @@ export type EventType =
   | "kitOpened"
   | "sampleTaken"
   | "pickupBooked"
+  // Written by the phone app (web/) when it books a pickup; shown in history, not used for the stage here.
+  | "robotDispatched"
+  | "robotArrived"
   | "pickedUp"
   | "atLab"
   | "resultNegative"

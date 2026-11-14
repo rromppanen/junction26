@@ -8,6 +8,8 @@ export const EVENT_LABEL: Record<EventType, string> = {
   kitOpened: "Kit opened",
   sampleTaken: "Sample taken",
   pickupBooked: "Robot pickup booked",
+  robotDispatched: "Robot sent out",
+  robotArrived: "Robot at the door",
   pickedUp: "Picked up by robot",
   atLab: "Arrived at the lab",
   resultNegative: "Result: no blood found",
