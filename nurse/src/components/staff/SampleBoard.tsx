@@ -180,7 +180,7 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
                           )}
                         </span>
                         <span className="block text-muted">
-                          {p.municipality} · {p.lang.toUpperCase()}{p.interpreter ? ` · interpreter: ${p.interpreter}` : ""}
+                          {p.area ? `${p.area}, ` : ""}{p.municipality} · {p.homeLanguage ? `${p.homeLanguage} · app ` : ""}{p.lang.toUpperCase()}{p.interpreter ? ` · interpreter: ${p.interpreter}` : ""}
                         </span>
                       </span>
                       <span className="flex flex-col items-start gap-1 sm:items-end">

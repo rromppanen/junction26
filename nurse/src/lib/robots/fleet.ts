@@ -4,54 +4,64 @@ import { ROBOT_TRAVEL_MS, ROBOT_WAIT_FLAG_MS, stageOf, type Person, type Sample 
  * The robot fleet, derived from the sample events.
  * The samples hold no robots: a "pickupBooked" event dispatches one, which drives out for
  * ROBOT_TRAVEL_MS, waits at the door until "pickedUp", then drives back for the same time.
- * Replaying every booking in order gives each trip a robot, so the result is the same in every tab.
+ * Replaying every booking in order gives each trip a robot, so every tab shows the same result.
  */
 
-export type Point = { x: number; y: number };
+/** [latitude, longitude] */
+export type LatLng = [number, number];
 
-/** Map coordinates: a 800 × 750 view of Päijät-Häme, plus an inset for Helsinki. */
-export const MAP = { width: 800, height: 750 };
-export const INSET = { x: 16, y: 560, width: 220, height: 170, label: "Inset, not to scale" };
+export type HubId = "meilahti" | "itakeskus" | "malmi" | "tikkurila" | "myyrmaki" | "matinkyla";
 
-export type DepotId = "lahti" | "helsinki";
-export const DEPOTS: Record<DepotId, { id: DepotId; name: string; at: Point }> = {
-  lahti: { id: "lahti", name: "Lahti lab", at: { x: 352, y: 420 } },
-  helsinki: { id: "helsinki", name: "Helsinki hub", at: { x: 66, y: 680 } },
+/** Robot hubs around the capital region. Robots start and end each trip at their hub. */
+export const HUBS: Record<HubId, { id: HubId; name: string; at: LatLng }> = {
+  meilahti: { id: "meilahti", name: "Meilahti lab", at: [60.1900, 24.9060] },
+  itakeskus: { id: "itakeskus", name: "Itäkeskus hub", at: [60.2115, 25.0850] },
+  malmi: { id: "malmi", name: "Malmi hub", at: [60.2590, 24.9930] },
+  tikkurila: { id: "tikkurila", name: "Tikkurila hub", at: [60.2935, 25.0400] },
+  myyrmaki: { id: "myyrmaki", name: "Myyrmäki hub", at: [60.2600, 24.8500] },
+  matinkyla: { id: "matinkyla", name: "Matinkylä hub", at: [60.1610, 24.7400] },
 };
 
-/**
- * Municipality centres. Päijät-Häme points are projected from real coordinates
- * (x = (lon − 25.2) / 1.1 × 800, y = (61.25 − lat) / 0.5 × 750); Helsinki sits in the inset.
- */
-export const PLACES: Record<string, { at: Point; depot: DepotId }> = {
-  Lahti: { at: { x: 334, y: 405 }, depot: "lahti" },
-  Hollola: { at: { x: 233, y: 300 }, depot: "lahti" },
-  Nastola: { at: { x: 531, y: 450 }, depot: "lahti" },
-  Orimattila: { at: { x: 386, y: 675 }, depot: "lahti" },
-  Heinola: { at: { x: 611, y: 75 }, depot: "lahti" },
-  Asikkala: { at: { x: 255, y: 120 }, depot: "lahti" },
-  Helsinki: { at: { x: 160, y: 625 }, depot: "helsinki" },
+/** Neighbourhood centres and the hub that serves each. */
+export const AREAS: Record<string, { at: LatLng; hub: HubId }> = {
+  Kallio: { at: [60.1841, 24.9497], hub: "meilahti" },
+  "Sörnäinen": { at: [60.1872, 24.9620], hub: "meilahti" },
+  Kontula: { at: [60.2360, 25.0830], hub: "itakeskus" },
+  "Mellunmäki": { at: [60.2380, 25.1080], hub: "itakeskus" },
+  Vuosaari: { at: [60.2096, 25.1410], hub: "itakeskus" },
+  Myllypuro: { at: [60.2238, 25.0770], hub: "itakeskus" },
+  "Itäkeskus": { at: [60.2107, 25.0820], hub: "itakeskus" },
+  "Länsimäki": { at: [60.2518, 25.1020], hub: "itakeskus" },
+  Malmi: { at: [60.2509, 25.0110], hub: "malmi" },
+  "Pihlajamäki": { at: [60.2393, 25.0140], hub: "malmi" },
+  Hakunila: { at: [60.2778, 25.1080], hub: "tikkurila" },
+  "Koivukylä": { at: [60.3217, 25.0600], hub: "tikkurila" },
+  Tikkurila: { at: [60.2925, 25.0440], hub: "tikkurila" },
+  "Myyrmäki": { at: [60.2614, 24.8540], hub: "myyrmaki" },
+  "Kannelmäki": { at: [60.2398, 24.8780], hub: "myyrmaki" },
+  "Leppävaara": { at: [60.2190, 24.8130], hub: "myyrmaki" },
+  "Matinkylä": { at: [60.1596, 24.7380], hub: "matinkyla" },
+  Espoonlahti: { at: [60.1480, 24.6580], hub: "matinkyla" },
+  "Espoon keskus": { at: [60.2050, 24.6560], hub: "matinkyla" },
 };
 
-export type Robot = { id: string; name: string; depot: DepotId };
-export const FLEET: Robot[] = [
-  { id: "r1", name: "Robot 1", depot: "lahti" },
-  { id: "r2", name: "Robot 2", depot: "lahti" },
-  { id: "r3", name: "Robot 3", depot: "lahti" },
-  { id: "r4", name: "Robot 4", depot: "lahti" },
-  { id: "r5", name: "Robot 5", depot: "helsinki" },
-  { id: "r6", name: "Robot 6", depot: "helsinki" },
-];
+/** Where the map opens: the capital region. */
+export const MAP_CENTER: LatLng = [60.225, 24.92];
 
-export type Route = { from: Point; ctrl: Point; to: Point };
+export type Robot = { id: string; name: string; hub: HubId };
+const PER_HUB: [HubId, number][] = [["meilahti", 2], ["itakeskus", 3], ["malmi", 2], ["tikkurila", 2], ["myyrmaki", 2], ["matinkyla", 2]];
+export const FLEET: Robot[] = PER_HUB.flatMap(([hub, n]) => Array.from({ length: n }, () => hub)).map((hub, i) => ({
+  id: `r${i + 1}`,
+  name: `Robot ${i + 1}`,
+  hub,
+}));
 
 export type Trip = {
   robotId: string;
   sampleId: string;
   person: Person;
-  depot: DepotId;
-  home: Point;
-  route: Route;
+  hub: HubId;
+  home: LatLng;
   slot?: string;
   bookedAt: number;
   /** When the robot left the door: the sample was handed over, or the booking was replaced. */
@@ -65,51 +75,73 @@ export type RobotStatus =
   | { kind: "atDoor"; trip: Trip; waitedMs: number; flagged: boolean }
   | { kind: "returning"; trip: Trip; progress: number; etaMs: number };
 
-export type RobotView = { robot: Robot; status: RobotStatus; at: Point };
+export type RobotView = { robot: Robot; status: RobotStatus };
 
-function hash(s: string): number {
+export function hash(s: string): number {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
   return h >>> 0;
 }
 
-export function placeOf(municipality: string): { at: Point; depot: DepotId } {
-  return PLACES[municipality] ?? { at: DEPOTS.lahti.at, depot: "lahti" };
+/** The hub that serves this person; people with an unknown area go to the central lab. */
+export function hubOf(person: Person): HubId {
+  return (person.area && AREAS[person.area]?.hub) || "meilahti";
 }
 
-/** A stable spot near the municipality centre, so homes in one town do not overlap. */
-export function homeOf(person: Person): Point {
-  const { at, depot } = placeOf(person.municipality);
+/** A stable spot a few hundred metres from the neighbourhood centre, so homes do not overlap. */
+export function homeOf(person: Person): LatLng {
+  const centre = (person.area && AREAS[person.area]?.at) || HUBS.meilahti.at;
   const h = hash(person.id);
   const angle = ((h % 360) * Math.PI) / 180;
-  const r = (depot === "helsinki" ? 10 : 22) + ((h >>> 9) % 18);
-  return { x: Math.round(at.x + Math.cos(angle) * r), y: Math.round(at.y + Math.sin(angle) * r) };
+  const r = 0.0015 + ((h >>> 9) % 100) / 100 * 0.0025; // degrees of latitude, about 170–450 m
+  return [centre[0] + Math.sin(angle) * r, centre[1] + (Math.cos(angle) * r) / Math.cos((centre[0] * Math.PI) / 180)];
 }
 
-/** A gentle curve from the depot to the home; the bend side comes from the sample id. */
-export function routeTo(from: Point, to: Point, key: string): Route {
-  const mx = (from.x + to.x) / 2;
-  const my = (from.y + to.y) / 2;
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
+/** A gentle curve from the hub to the home, used until (or instead of) a street route. */
+export function curvedRoute(from: LatLng, to: LatLng, key: string): LatLng[] {
   const side = hash(key) % 2 === 0 ? 1 : -1;
-  return { from, to, ctrl: { x: mx - dy * 0.22 * side, y: my + dx * 0.22 * side } };
+  const ctrl: LatLng = [
+    (from[0] + to[0]) / 2 - (to[1] - from[1]) * 0.12 * side,
+    (from[1] + to[1]) / 2 + (to[0] - from[0]) * 0.35 * side,
+  ];
+  const pts: LatLng[] = [];
+  for (let i = 0; i <= 24; i++) {
+    const u = i / 24;
+    const a = (1 - u) * (1 - u), b = 2 * (1 - u) * u, c = u * u;
+    pts.push([a * from[0] + b * ctrl[0] + c * to[0], a * from[1] + b * ctrl[1] + c * to[1]]);
+  }
+  return pts;
 }
 
-/** The point at t (0..1) along the route. */
-export function routePoint(r: Route, t: number): Point {
+function dist(a: LatLng, b: LatLng): number {
+  const k = Math.cos((a[0] * Math.PI) / 180);
+  return Math.hypot(a[0] - b[0], (a[1] - b[1]) * k);
+}
+
+/** The point at fraction t (0..1) of the line's length. */
+export function pointAlong(line: LatLng[], t: number): LatLng {
+  if (line.length === 0) return HUBS.meilahti.at;
+  if (line.length === 1) return line[0];
   const u = Math.min(1, Math.max(0, t));
-  const a = (1 - u) * (1 - u);
-  const b = 2 * (1 - u) * u;
-  const c = u * u;
-  return { x: a * r.from.x + b * r.ctrl.x + c * r.to.x, y: a * r.from.y + b * r.ctrl.y + c * r.to.y };
+  const seg = line.slice(1).map((p, i) => dist(line[i], p));
+  const total = seg.reduce((s, x) => s + x, 0);
+  let left = total * u;
+  for (let i = 0; i < seg.length; i++) {
+    if (left <= seg[i] || i === seg.length - 1) {
+      const f = seg[i] === 0 ? 0 : Math.min(1, left / seg[i]);
+      const [a, b] = [line[i], line[i + 1]];
+      return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+    }
+    left -= seg[i];
+  }
+  return line[line.length - 1];
 }
 
-export function routePath(r: Route): string {
-  return `M${r.from.x} ${r.from.y} Q${r.ctrl.x} ${r.ctrl.y} ${r.to.x} ${r.to.y}`;
+export function routeKey(t: Pick<Trip, "hub" | "sampleId">): string {
+  return `${t.hub}:${t.sampleId}`;
 }
 
-/** Every pickup booking as a trip, oldest first, each given a robot from the person's depot. */
+/** Every pickup booking as a trip, oldest first, each given a robot from the person's hub. */
 export function tripsOf(samples: Sample[]): Trip[] {
   type Draft = Omit<Trip, "robotId">;
   const drafts: Draft[] = [];
@@ -117,16 +149,12 @@ export function tripsOf(samples: Sample[]): Trip[] {
     const events = [...s.events].sort((a, b) => a.at - b.at);
     events.forEach((e, i) => {
       if (e.type !== "pickupBooked") return;
-      const rest = events.slice(i + 1);
-      const end = rest.find((x) => x.type === "pickedUp" || x.type === "pickupBooked");
-      const { depot } = placeOf(s.person.municipality);
-      const home = homeOf(s.person);
+      const end = events.slice(i + 1).find((x) => x.type === "pickedUp" || x.type === "pickupBooked");
       drafts.push({
         sampleId: s.id,
         person: s.person,
-        depot,
-        home,
-        route: routeTo(DEPOTS[depot].at, home, s.id),
+        hub: hubOf(s.person),
+        home: homeOf(s.person),
         ...(e.slot ? { slot: e.slot } : {}),
         bookedAt: e.at,
         ...(end ? { leftAt: Math.max(end.at, e.at + ROBOT_TRAVEL_MS) } : {}),
@@ -138,7 +166,7 @@ export function tripsOf(samples: Sample[]): Trip[] {
 
   const busyUntil = new Map<string, number>(FLEET.map((r) => [r.id, -Infinity]));
   return drafts.map((d) => {
-    const pool = FLEET.filter((r) => r.depot === d.depot);
+    const pool = FLEET.filter((r) => r.hub === d.hub);
     const robot =
       pool.find((r) => (busyUntil.get(r.id) ?? -Infinity) <= d.bookedAt) ??
       pool.reduce((best, r) => ((busyUntil.get(r.id) ?? 0) < (busyUntil.get(best.id) ?? 0) ? r : best));
@@ -164,9 +192,8 @@ function statusFor(trip: Trip, now: number): RobotStatus | null {
   return null;
 }
 
-/** Where every robot is now and what it is doing. Parked robots line up beside their depot. */
+/** What every robot is doing now. */
 export function fleetAt(trips: Trip[], now: number): RobotView[] {
-  const parked: Record<DepotId, number> = { lahti: 0, helsinki: 0 };
   return FLEET.map((robot) => {
     let status: RobotStatus = { kind: "idle" };
     for (const t of trips) {
@@ -174,35 +201,65 @@ export function fleetAt(trips: Trip[], now: number): RobotView[] {
       const s = statusFor(t, now);
       if (s) status = s;
     }
-    let at: Point;
-    switch (status.kind) {
-      case "outbound":
-        at = routePoint(status.trip.route, status.progress);
-        break;
-      case "atDoor":
-        at = status.trip.home;
-        break;
-      case "returning":
-        at = routePoint(status.trip.route, 1 - status.progress);
-        break;
-      default: {
-        const d = DEPOTS[robot.depot].at;
-        const n = parked[robot.depot]++;
-        at = { x: d.x + 24 + n * 18, y: d.y };
-      }
-    }
-    return { robot, status, at };
+    return { robot, status };
   });
 }
 
-/** Trips whose robot is back at the depot, newest first. */
+/** Where the robot is on the map, given the route its trip follows (hub first, home last). */
+export function positionOf(v: RobotView, route: LatLng[] | undefined, parkedIndex: number): LatLng {
+  const s = v.status;
+  if (s.kind === "idle") {
+    const [lat, lng] = HUBS[v.robot.hub].at;
+    return [lat - 0.0012, lng - 0.0045 + parkedIndex * 0.003];
+  }
+  if (s.kind === "atDoor") return s.trip.home;
+  const line = route ?? curvedRoute(HUBS[s.trip.hub].at, s.trip.home, routeKey(s.trip));
+  return pointAlong(line, s.kind === "outbound" ? s.progress : 1 - s.progress);
+}
+
+/** Trips whose robot is back at the hub, newest first. */
 export function finishedTrips(trips: Trip[], now: number): Trip[] {
   return trips
     .filter((t) => t.leftAt !== undefined && now >= t.leftAt + ROBOT_TRAVEL_MS)
     .sort((a, b) => (b.leftAt ?? 0) - (a.leftAt ?? 0));
 }
 
-/** Samples taken at home with no robot booked yet. */
+/** Samples taken at home with no robot booked yet, longest waiting first. */
 export function readyForPickup(samples: Sample[], now: number): Sample[] {
-  return samples.filter((s) => stageOf(s, now) === "sampleTaken");
+  const takenAt = (s: Sample) => s.events.find((e) => e.type === "sampleTaken")?.at ?? now;
+  return samples.filter((s) => stageOf(s, now) === "sampleTaken").sort((a, b) => takenAt(a) - takenAt(b));
+}
+
+// ---- Simulated other households -------------------------------------------------------------
+
+/** One household that does not come to the door, so the "waiting too long" flag shows. */
+export const NO_ANSWER_ID = "p24";
+const NO_ANSWER_MS = 75_000;
+/** Gap between simulated bookings, so robots leave one at a time. */
+export const DISPATCH_GAP_MS = 9_000;
+
+export type SimAction = { sampleId: string; event: { type: "pickupBooked"; slot: string } | { type: "pickedUp" } };
+
+/**
+ * The next simulated events for everyone except the phone user: hand samples to robots
+ * waiting at the door, and book a robot for the sample that has waited longest
+ * when its hub has a robot free. Pure, so every tab would decide the same.
+ */
+export function simStep(samples: Sample[], now: number, me: string, slotLabel: string): SimAction[] {
+  const trips = tripsOf(samples);
+  const actions: SimAction[] = [];
+
+  for (const t of trips) {
+    if (t.sampleId === me || t.leftAt !== undefined) continue;
+    const delay = t.sampleId === NO_ANSWER_ID ? NO_ANSWER_MS : 3_000 + (hash(t.sampleId) % 8) * 1_000;
+    if (now >= t.bookedAt + ROBOT_TRAVEL_MS + delay) actions.push({ sampleId: t.sampleId, event: { type: "pickedUp" } });
+  }
+
+  const lastBooking = Math.max(-Infinity, ...trips.filter((t) => t.sampleId !== me).map((t) => t.bookedAt));
+  if (now - lastBooking >= DISPATCH_GAP_MS) {
+    const idle = new Set(fleetAt(trips, now).filter((v) => v.status.kind === "idle").map((v) => v.robot.hub));
+    const next = readyForPickup(samples, now).find((s) => s.id !== me && idle.has(hubOf(s.person)));
+    if (next) actions.push({ sampleId: next.id, event: { type: "pickupBooked", slot: slotLabel } });
+  }
+  return actions;
 }

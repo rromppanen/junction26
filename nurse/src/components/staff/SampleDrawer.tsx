@@ -40,7 +40,7 @@ export function SampleDrawer({ row, now, busy, act, onClose }: {
           <div className="min-w-0">
             <h2 id="drawer-title" className="text-lg font-semibold">{p.name}</h2>
             <p className="text-sm text-muted">
-              {p.age}, {p.municipality}, {p.lang.toUpperCase()}{p.interpreter ? `, interpreter: ${p.interpreter}` : ""}
+              {p.age}, {p.area ? `${p.area}, ` : ""}{p.municipality}, {p.homeLanguage ? `${p.homeLanguage}, app ` : ""}{p.lang.toUpperCase()}{p.interpreter ? `, interpreter: ${p.interpreter}` : ""}
             </p>
           </div>
           <button ref={closeRef} type="button" onClick={onClose} aria-label="Close"

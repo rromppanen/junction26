@@ -1,87 +1,141 @@
 import { describe, expect, it } from "vitest";
 import { ROBOT_TRAVEL_MS, type Sample } from "@/lib/sample/model";
 import { seedSamples } from "@/lib/sample/seed";
-import { DEPOTS, FLEET, finishedTrips, fleetAt, homeOf, readyForPickup, routePoint, routeTo, tripsOf } from "./fleet";
+import {
+  AREAS, DISPATCH_GAP_MS, FLEET, HUBS, NO_ANSWER_ID, finishedTrips, fleetAt, homeOf, hubOf, pointAlong, positionOf,
+  readyForPickup, simStep, tripsOf,
+} from "./fleet";
 
 const T0 = 1_800_000_000_000;
 
-function sample(id: string, municipality: string, events: [Sample["events"][number]["type"], number][]): Sample {
+function sample(id: string, area: string, events: [Sample["events"][number]["type"], number][]): Sample {
   return {
     id,
-    person: { id, name: id, age: 60, municipality, lang: "fi" },
+    person: { id, name: id, age: 60, municipality: "Helsinki", area, lang: "en" },
     events: events.map(([type, at]) => ({ type, at })),
   };
 }
 
-function statusOf(samples: Sample[], now: number, robotId: string) {
+function viewOf(samples: Sample[], now: number, robotId: string) {
   return fleetAt(tripsOf(samples), now).find((v) => v.robot.id === robotId)!;
 }
 
+const firstAt = (hub: string) => FLEET.find((r) => r.hub === hub)!.id;
+
+describe("demo data", () => {
+  const now = Date.now();
+  const seed = seedSamples(now);
+
+  it("places every person in a known capital-region neighbourhood", () => {
+    for (const s of seed) expect(AREAS[s.person.area ?? ""], s.person.area).toBeDefined();
+  });
+
+  it("is mostly people whose mother tongue is neither Finnish nor Swedish", () => {
+    const minority = seed.filter((s) => s.person.homeLanguage && !["Finnish", "Swedish"].includes(s.person.homeLanguage));
+    expect(minority.length / seed.length).toBeGreaterThan(0.6);
+    expect(new Set(minority.map((s) => s.person.homeLanguage)).size).toBeGreaterThanOrEqual(10);
+  });
+
+  it("has samples waiting for a pickup across several hubs", () => {
+    const ready = readyForPickup(seed, now);
+    expect(ready.length).toBeGreaterThanOrEqual(8);
+    expect(new Set(ready.map((s) => hubOf(s.person))).size).toBeGreaterThanOrEqual(4);
+  });
+});
+
 describe("robot fleet", () => {
-  it("has every robot parked at its depot when no pickup is under way", () => {
+  it("has every robot parked when no pickup is under way", () => {
     const now = Date.now();
-    const views = fleetAt(tripsOf(seedSamples(now)), now);
-    expect(views).toHaveLength(FLEET.length);
-    expect(views.every((v) => v.status.kind === "idle")).toBe(true);
+    expect(fleetAt(tripsOf(seedSamples(now)), now).every((v) => v.status.kind === "idle")).toBe(true);
   });
 
   it("keeps the seeded completed pickups as finished trips, newest first", () => {
     const now = Date.now();
-    const trips = tripsOf(seedSamples(now));
-    expect(finishedTrips(trips, now).map((t) => t.sampleId)).toEqual(["p6", "p7"]);
+    expect(finishedTrips(tripsOf(seedSamples(now)), now).map((t) => t.sampleId)).toEqual(["p6", "p23", "p7"]);
   });
 
   it("follows a robot out, at the door, flagged and back", () => {
-    const booked = sample("a", "Lahti", [["sampleTaken", T0 - 1000], ["pickupBooked", T0]]);
+    const booked = sample("a", "Kontula", [["sampleTaken", T0 - 1000], ["pickupBooked", T0]]);
+    const r = firstAt("itakeskus");
 
-    const out = statusOf([booked], T0 + ROBOT_TRAVEL_MS / 2, "r1");
+    const out = viewOf([booked], T0 + ROBOT_TRAVEL_MS / 2, r);
     expect(out.status.kind).toBe("outbound");
-    if (out.status.kind === "outbound") expect(out.status.progress).toBeCloseTo(0.5);
 
-    const door = statusOf([booked], T0 + ROBOT_TRAVEL_MS + 5_000, "r1");
+    const door = viewOf([booked], T0 + ROBOT_TRAVEL_MS + 5_000, r);
     expect(door.status).toMatchObject({ kind: "atDoor", flagged: false });
-    expect(door.at).toEqual(homeOf(booked.person));
-
-    const late = statusOf([booked], T0 + ROBOT_TRAVEL_MS + 61_000, "r1");
-    expect(late.status).toMatchObject({ kind: "atDoor", flagged: true });
+    expect(positionOf(door, undefined, 0)).toEqual(homeOf(booked.person));
+    expect(viewOf([booked], T0 + ROBOT_TRAVEL_MS + 61_000, r).status).toMatchObject({ kind: "atDoor", flagged: true });
 
     const handed = { ...booked, events: [...booked.events, { type: "pickedUp" as const, at: T0 + 30_000 }] };
-    const back = statusOf([handed], T0 + 30_000 + ROBOT_TRAVEL_MS / 4, "r1");
-    expect(back.status.kind).toBe("returning");
-
-    const home = statusOf([handed], T0 + 30_000 + ROBOT_TRAVEL_MS, "r1");
-    expect(home.status.kind).toBe("idle");
+    expect(viewOf([handed], T0 + 30_000 + ROBOT_TRAVEL_MS / 4, r).status.kind).toBe("returning");
+    expect(viewOf([handed], T0 + 30_000 + ROBOT_TRAVEL_MS, r).status.kind).toBe("idle");
   });
 
-  it("sends a different robot when the first is busy", () => {
-    const a = sample("a", "Lahti", [["pickupBooked", T0]]);
-    const b = sample("b", "Nastola", [["pickupBooked", T0 + 1000]]);
-    const ids = tripsOf([a, b]).map((t) => t.robotId);
-    expect(ids).toEqual(["r1", "r2"]);
+  it("sends a second robot from the same hub when the first is busy, and reuses it once back", () => {
+    const a = sample("a", "Kontula", [["pickupBooked", T0], ["pickedUp", T0 + ROBOT_TRAVEL_MS]]);
+    const b = sample("b", "Vuosaari", [["pickupBooked", T0 + 1000]]);
+    const c = sample("c", "Myllypuro", [["pickupBooked", T0 + 3 * ROBOT_TRAVEL_MS]]);
+    const ids = tripsOf([a, b, c]).map((t) => t.robotId);
+    expect(ids[0]).not.toBe(ids[1]);
+    expect(ids[2]).toBe(ids[0]);
   });
 
-  it("reuses a robot once it is back at the depot", () => {
-    const a = sample("a", "Lahti", [["pickupBooked", T0], ["pickedUp", T0 + ROBOT_TRAVEL_MS]]);
-    const b = sample("b", "Lahti", [["pickupBooked", T0 + 3 * ROBOT_TRAVEL_MS]]);
-    expect(tripsOf([a, b]).map((t) => t.robotId)).toEqual(["r1", "r1"]);
+  it("serves each neighbourhood from its own hub", () => {
+    const [trip] = tripsOf([sample("e", "Espoonlahti", [["pickupBooked", T0]])]);
+    expect(trip.hub).toBe("matinkyla");
+    expect(FLEET.find((r) => r.id === trip.robotId)?.hub).toBe("matinkyla");
   });
 
-  it("serves Helsinki from the Helsinki hub", () => {
-    const h = sample("h", "Helsinki", [["pickupBooked", T0]]);
-    const [trip] = tripsOf([h]);
-    expect(trip.depot).toBe("helsinki");
-    expect(FLEET.find((r) => r.id === trip.robotId)?.depot).toBe("helsinki");
+  it("puts homes within half a kilometre of their neighbourhood centre", () => {
+    const p = sample("x", "Kontula", []).person;
+    const [lat, lng] = homeOf(p);
+    const [clat, clng] = AREAS.Kontula.at;
+    const km = Math.hypot((lat - clat) * 111, (lng - clng) * 111 * Math.cos((clat * Math.PI) / 180));
+    expect(km).toBeLessThan(0.5);
   });
 
-  it("draws routes from the depot to the home", () => {
-    const home = { x: 500, y: 100 };
-    const r = routeTo(DEPOTS.lahti.at, home, "x");
-    expect(routePoint(r, 0)).toEqual(DEPOTS.lahti.at);
-    expect(routePoint(r, 1)).toEqual(home);
+  it("walks a polyline by length", () => {
+    const line: [number, number][] = [HUBS.meilahti.at, [HUBS.meilahti.at[0] + 0.01, HUBS.meilahti.at[1]]];
+    expect(pointAlong(line, 0)).toEqual(line[0]);
+    expect(pointAlong(line, 1)).toEqual(line[1]);
+    expect(pointAlong(line, 0.5)[0]).toBeCloseTo(HUBS.meilahti.at[0] + 0.005);
+  });
+});
+
+describe("simulated households", () => {
+  const slot = "Now";
+
+  it("books the longest-waiting sample first and never touches the phone user", () => {
+    const me = sample("me", "Kallio", [["sampleTaken", T0 - 10 * 3_600_000]]);
+    const older = sample("old", "Kontula", [["sampleTaken", T0 - 5 * 3_600_000]]);
+    const newer = sample("new", "Malmi", [["sampleTaken", T0 - 3_600_000]]);
+    expect(simStep([me, older, newer], T0, "me", slot)).toEqual([{ sampleId: "old", event: { type: "pickupBooked", slot } }]);
   });
 
-  it("lists samples taken with no robot booked", () => {
-    const now = Date.now();
-    expect(readyForPickup(seedSamples(now), now).map((s) => s.id)).toEqual(["p5"]);
+  it("waits between bookings", () => {
+    const booked = sample("a", "Kontula", [["sampleTaken", T0 - 1000], ["pickupBooked", T0]]);
+    const waiting = sample("b", "Malmi", [["sampleTaken", T0 - 1000]]);
+    expect(simStep([booked, waiting], T0 + 1000, "me", slot)).toEqual([]);
+    expect(simStep([booked, waiting], T0 + DISPATCH_GAP_MS, "me", slot).map((a) => a.sampleId)).toEqual(["b"]);
+  });
+
+  it("hands the sample over a few seconds after the robot arrives", () => {
+    const booked = sample("a", "Kontula", [["sampleTaken", T0 - 1000], ["pickupBooked", T0]]);
+    expect(simStep([booked], T0 + ROBOT_TRAVEL_MS, "me", slot)).toEqual([]);
+    expect(simStep([booked], T0 + ROBOT_TRAVEL_MS + 11_000, "me", slot)).toEqual([{ sampleId: "a", event: { type: "pickedUp" } }]);
+  });
+
+  it("leaves one household unanswered long enough to raise the flag", () => {
+    const booked = sample(NO_ANSWER_ID, "Malmi", [["sampleTaken", T0 - 1000], ["pickupBooked", T0]]);
+    const flaggedAt = T0 + ROBOT_TRAVEL_MS + 61_000;
+    expect(simStep([booked], flaggedAt, "me", slot)).toEqual([]);
+    expect(viewOf([booked], flaggedAt, firstAt("malmi")).status).toMatchObject({ kind: "atDoor", flagged: true });
+    expect(simStep([booked], T0 + ROBOT_TRAVEL_MS + 76_000, "me", slot)).toEqual([{ sampleId: NO_ANSWER_ID, event: { type: "pickedUp" } }]);
+  });
+
+  it("only books when the hub has a robot free", () => {
+    const busy = FLEET.filter((r) => r.hub === "malmi").map((r, i) => sample(`busy${i}`, "Malmi", [["pickupBooked", T0 + i]]));
+    const waiting = sample("w", "Pihlajamäki", [["sampleTaken", T0 - 1000]]);
+    expect(simStep([...busy, waiting], T0 + DISPATCH_GAP_MS + 10, "me", slot).filter((a) => a.event.type === "pickupBooked")).toEqual([]);
   });
 });

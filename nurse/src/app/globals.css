@@ -197,3 +197,23 @@ button:disabled { cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
   .draw-check { animation: none; }
 }
+
+/* ---- Robots map (Leaflet) ---- */
+.leaflet-container { font-family: var(--font-inter), system-ui, sans-serif; background: var(--paper); }
+.robot-pin { background: none; border: 0; }
+/* Robots glide between the once-a-second updates; not while the map itself zooms. */
+.leaflet-marker-icon.robot-pin { transition: transform 1s linear; }
+.leaflet-zoom-anim .leaflet-marker-icon.robot-pin { transition: none; }
+@media (prefers-reduced-motion: reduce) { .leaflet-marker-icon.robot-pin { transition: none; } }
+.robot-dot {
+  display: flex; height: 100%; width: 100%; align-items: center; justify-content: center;
+  border-radius: 9999px; border: 2px solid #fff; color: #fff; font-size: 12px; font-weight: 700;
+  box-shadow: 0 1px 4px rgba(18, 39, 46, 0.35);
+}
+.robot-dot.is-idle { border-color: var(--par); color: var(--ink); font-size: 9px; box-shadow: none; }
+.robot-dot.is-selected { outline: 3px solid var(--ink); outline-offset: 2px; }
+.hub-pin { background: none; border: 0; }
+.hub-pin span { display: block; height: 18px; width: 18px; border-radius: 4px; background: var(--brand-strong); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(18, 39, 46, 0.35); }
+.leaflet-tooltip.hub-label { background: transparent; border: 0; box-shadow: none; color: var(--brand-strong); font-weight: 700; font-size: 12px; padding: 0; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
+.leaflet-tooltip.hub-label::before { display: none; }
+.leaflet-tooltip.home-label { font-size: 11px; font-weight: 600; padding: 1px 6px; color: var(--ink); }
