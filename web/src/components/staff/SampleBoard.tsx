@@ -3,16 +3,21 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 import { Wordmark } from "@/components/Wordmark";
-import { flagsOf, stageOf, STAGES_FOR_BOARD, type EventType } from "@/lib/sample/model";
+import { activeBooking, flagsOf, stageOf, STAGES_FOR_BOARD, type EventType } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
 import { MiniTimeline } from "./MiniTimeline";
 import { SampleActions } from "./SampleActions";
+import { RobotLine } from "./RobotLine";
 import { SampleDrawer } from "./SampleDrawer";
 import {
-  BTN, DEMO_NOTE, EVENT_LABEL, ME, STAGE_LABEL, inStage, matches, msInStage, stepIndex, timeFmt, type Row,
+  BTN, DEMO_NOTE, EVENT_LABEL, LIVE_IDS, inStage, matches, msInStage, programmeBadge, rowStageLabel, stepIndex, type Row,
 } from "./boardShared";
 
 export { DEMO_NOTE };
+
+function isLive(id: string): boolean {
+  return (LIVE_IDS as readonly string[]).includes(id);
+}
 
 export function SampleBoard({ embed = false }: { embed?: boolean }) {
   const { samples, now, add, reset } = useSamples();
@@ -34,7 +39,7 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
       samples
         .map((s): Row => ({ s, stage: stageOf(s, now), flags: flagsOf(s, now) }))
         .sort((a, b) =>
-          (a.s.id === ME ? 0 : 1) - (b.s.id === ME ? 0 : 1) ||
+          (isLive(a.s.id) ? 0 : 1) - (isLive(b.s.id) ? 0 : 1) ||
           (b.flags.length > 0 ? 1 : 0) - (a.flags.length > 0 ? 1 : 0) ||
           msInStage(b.s, now) - msInStage(a.s, now)),
     [samples, now],
@@ -44,8 +49,7 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
   const flagged = rows.filter((r) => r.flags.length > 0).length;
   const awaiting = rows.filter((r) => r.stage === "positive").length;
 
-  const live = rows.find((r) => r.s.id === ME) ?? null;
-  const latest = live ? [...live.s.events].sort((a, b) => b.at - a.at)[0] : undefined;
+  const liveRows = LIVE_IDS.map((id) => rows.find((r) => r.s.id === id)).filter((r): r is Row => !!r);
   const sel = rows.find((r) => r.s.id === selected) ?? null;
 
   const counts = STAGES_FOR_BOARD.map((c) => {
@@ -103,7 +107,7 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
               {[
                 ["In progress", inProgress, false],
                 ["Flagged", flagged, flagged > 0],
-                ["Positives awaiting colonoscopy", awaiting, false],
+                ["Positives awaiting follow-up", awaiting, false],
               ].map(([label, n, warn]) => (
                 <div key={label as string} className={`rounded-xl border bg-white ${embed ? "px-3 py-1.5" : "p-3"} ${warn ? "border-behind" : "border-rule"}`}>
                   <dd className={`font-semibold ${embed ? "text-lg" : "text-2xl"} ${warn ? "text-behind" : ""}`}>{n as number}</dd>
@@ -113,21 +117,29 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
             </dl>
             <p className="sr-only" aria-live="polite">{status}</p>
 
-            {live && (
-              <section aria-label="Live sample (phone)" className="mt-3 rounded-xl border-2 border-brand bg-white p-3">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand">Live sample (phone)</span>
-                  <h2 className="text-base font-semibold">{live.s.person.name}</h2>
-                  <span className="text-sm text-muted">Stage: {STAGE_LABEL[live.stage]}</span>
-                  <MiniTimeline step={stepIndex(live.stage)} flagged={live.flags.length > 0} />
-                </div>
-                {latest && (
-                  <p className="mt-1 text-sm text-muted">Latest: {EVENT_LABEL[latest.type]}, {timeFmt.format(latest.at)}</p>
-                )}
-                {live.flags.map((f) => (
-                  <p key={f.kind} className="mt-2 rounded-md bg-behind-soft px-2 py-1 text-sm font-medium text-behind">{f.label}</p>
-                ))}
-                <SampleActions key={live.s.id} row={live} now={now} busy={busy} act={act} />
+            {liveRows.length > 0 && (
+              <section aria-label="Live samples (phone)" className="mt-3 grid gap-3 md:grid-cols-2">
+                {liveRows.map((live) => {
+                  const slot = activeBooking(live.s)?.slot;
+                  return (
+                    <div key={live.s.id} className="rounded-xl border-2 border-brand bg-white p-3">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand">Live (phone)</span>
+                        <h2 className="text-base font-semibold">{live.s.person.name}</h2>
+                        <span className="rounded-full border border-rule px-2 py-0.5 text-xs text-muted">{programmeBadge(live.s.programme)}</span>
+                      </div>
+                      <p className="mt-1 flex flex-wrap items-center gap-x-3 text-sm text-muted">
+                        <span>{rowStageLabel(live)}{slot ? ` · ${slot}` : ""}</span>
+                        <MiniTimeline step={stepIndex(live.stage)} flagged={live.flags.length > 0} />
+                      </p>
+                      <RobotLine sample={live.s} now={now} className="mt-2" />
+                      {live.flags.map((f) => (
+                        <p key={f.kind} className="mt-2 rounded-md bg-behind-soft px-2 py-1 text-sm font-medium text-behind">{f.label}</p>
+                      ))}
+                      <SampleActions key={live.s.id} row={live} now={now} busy={busy} act={act} />
+                    </div>
+                  );
+                })}
               </section>
             )}
 
@@ -167,10 +179,11 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
                     >
                       <span className="min-w-0">
                         <span className="flex flex-wrap items-center gap-2">
-                          {s.id === ME && (
+                          {isLive(s.id) && (
                             <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand">Live (phone)</span>
                           )}
                           <span className="font-semibold">{p.name}, {p.age}</span>
+                          <span className="rounded-full border border-rule px-2 py-0.5 text-xs text-muted">{programmeBadge(s.programme)}</span>
                           {flags.length > 0 && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-behind-soft px-2 py-0.5 text-xs font-medium text-behind">
                               <AlertTriangle size={12} aria-hidden /> {flags[0].label}
@@ -183,7 +196,7 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
                       </span>
                       <span className="flex flex-col items-start gap-1 sm:items-end">
                         <MiniTimeline step={stepIndex(r.stage)} flagged={flags.length > 0} />
-                        <span className="text-xs text-muted">{STAGE_LABEL[r.stage]} · {inStage(s, now)}</span>
+                        <span className="text-xs text-muted">{rowStageLabel(r)}{activeBooking(s)?.slot ? ` · ${activeBooking(s)?.slot}` : ""} · {inStage(s, now)}</span>
                       </span>
                     </button>
                   </li>

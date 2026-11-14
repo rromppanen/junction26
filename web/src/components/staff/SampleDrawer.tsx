@@ -4,7 +4,9 @@ import { useEffect, useRef } from "react";
 import { AlertTriangle, X } from "lucide-react";
 import { MiniTimeline } from "./MiniTimeline";
 import { SampleActions } from "./SampleActions";
-import { EVENT_LABEL, STAGE_LABEL, stepIndex, timeFmt, type ActFn, type Row } from "./boardShared";
+import { activeBooking } from "@/lib/sample/model";
+import { RobotLine } from "./RobotLine";
+import { EVENT_LABEL, programmeBadge, rowStageLabel, stepIndex, timeFmt, type ActFn, type Row } from "./boardShared";
 
 export function SampleDrawer({ row, now, busy, act, onClose }: {
   row: Row;
@@ -17,6 +19,10 @@ export function SampleDrawer({ row, now, busy, act, onClose }: {
   const closeFn = useRef(onClose);
   closeFn.current = onClose;
   const p = row.s.person;
+  const booking = activeBooking(row.s);
+  const bookings = row.s.events
+    .filter((e) => e.type === "pickupBooked" || e.type === "clinicBooked" || e.type === "bookingCancelled")
+    .sort((a, b) => a.at - b.at);
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -50,13 +56,27 @@ export function SampleDrawer({ row, now, busy, act, onClose }: {
         </div>
         <p className="mt-2 flex flex-wrap items-center gap-3 text-sm">
           <MiniTimeline step={stepIndex(row.stage)} flagged={row.flags.length > 0} />
-          <span className="text-muted">{STAGE_LABEL[row.stage]}</span>
+          <span className="text-muted">{programmeBadge(row.s.programme)} · {rowStageLabel(row)}</span>
         </p>
         {row.flags.map((f) => (
           <p key={f.kind} className="mt-2 flex items-start gap-1 rounded-md bg-behind-soft px-2 py-1 text-sm font-medium text-behind">
             <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden /> {f.label}
           </p>
         ))}
+
+        <RobotLine sample={row.s} now={now} className="mt-3" />
+        <h3 className="mt-4 text-sm font-semibold">Booking</h3>
+        <p className="mt-1 text-sm">{booking ? `${booking.slot ?? EVENT_LABEL[booking.type]}` : "No active booking"}</p>
+        {bookings.length > 0 && (
+          <ol className="mt-1 space-y-1 text-xs text-muted">
+            {bookings.map((e, i) => (
+              <li key={`${e.type}-${e.at}-${i}`}>
+                {e.type === "bookingCancelled" ? "Cancelled" : i === 0 ? "Booked" : "Rebooked"}
+                {e.slot ? `: ${e.slot}` : ""} · {timeFmt.format(e.at)}
+              </li>
+            ))}
+          </ol>
+        )}
 
         <SampleActions key={row.s.id} row={row} now={now} busy={busy} act={act} />
 

@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { CalendarCheck, CheckCircle2, FlaskConical, Phone, Send } from "lucide-react";
-import { BTN, colonoscopySlots, type ActFn, type Row } from "./boardShared";
+import { BTN, followUpSlots, type ActFn, type Row } from "./boardShared";
 
 export function SampleActions({ row, now, busy, act }: { row: Row; now: number; busy: boolean; act: ActFn }) {
   const [calling, setCalling] = useState(false);
   const [note, setNote] = useState("Called, agreed next step");
   const open = row.stage !== "done" && row.stage !== "negative";
   const id = row.s.id;
+  const bowel = row.s.programme === "bowel";
   return (
     <div className="mt-3 flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
@@ -22,19 +23,24 @@ export function SampleActions({ row, now, busy, act }: { row: Row; now: number; 
             <Phone size={16} aria-hidden /> Call
           </button>
         )}
+        {row.stage === "booked" && row.s.programme === "cervical" && (
+          <button type="button" className={BTN} disabled={busy} onClick={() => act(row, "clinicVisited")}>
+            <CalendarCheck size={16} aria-hidden /> Record clinic visit
+          </button>
+        )}
         {row.stage === "atLab" && (
           <>
             <button type="button" className={BTN} disabled={busy} onClick={() => act(row, "resultNegative")}>
-              <FlaskConical size={16} aria-hidden /> Result: no blood
+              <FlaskConical size={16} aria-hidden /> Result: no findings
             </button>
             <button type="button" className={BTN} disabled={busy} onClick={() => act(row, "resultPositive")}>
-              <FlaskConical size={16} aria-hidden /> Result: blood found
+              <FlaskConical size={16} aria-hidden /> Result: positive
             </button>
           </>
         )}
         {row.stage === "colonoscopyBooked" && (
           <button type="button" className={BTN} disabled={busy} onClick={() => act(row, "colonoscopyDone")}>
-            <CheckCircle2 size={16} aria-hidden /> Mark colonoscopy done
+            <CheckCircle2 size={16} aria-hidden /> Mark done
           </button>
         )}
       </div>
@@ -52,8 +58,8 @@ export function SampleActions({ row, now, busy, act }: { row: Row; now: number; 
       )}
       {row.stage === "positive" && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium">Book colonoscopy</span>
-          {colonoscopySlots(now).map((slot) => (
+          <span className="text-sm font-medium">{bowel ? "Book colonoscopy" : "Book follow-up visit"}</span>
+          {followUpSlots(now).map((slot) => (
             <button key={slot} type="button" className={BTN} disabled={busy}
               onClick={() => act(row, "colonoscopyBooked", { slot })}>
               <CalendarCheck size={16} aria-hidden /> {slot}

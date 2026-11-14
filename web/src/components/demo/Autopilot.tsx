@@ -33,12 +33,20 @@ function colonoscopySlot(): string {
   return `${fmt.format(d)} 9:00`;
 }
 
+function clinicSlot(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 3);
+  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+  const fmt = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  return `${fmt.format(d)} 10:30`;
+}
+
 function isTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
   return t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName);
 }
 
-export function Autopilot() {
+export function Autopilot({ onWho }: { onWho: (who: "me" | "me-cx") => void }) {
   const { samples, add, reset } = useSamples();
   const [running, setRunning] = useState(false);
   const [finished, setFinished] = useState(false);
@@ -50,6 +58,8 @@ export function Autopilot() {
   addRef.current = add;
   const resetRef = useRef(reset);
   resetRef.current = reset;
+  const onWhoRef = useRef(onWho);
+  onWhoRef.current = onWho;
   const abortRef = useRef<AbortController | null>(null);
   const runningRef = useRef(false);
 
@@ -82,16 +92,18 @@ export function Autopilot() {
 
     try {
       setCaption("Resetting the demo");
+      onWhoRef.current("me");
       resetRef.current();
       await sleep(2000, signal);
-      setCaption("Aino opens her kit");
-      addRef.current(ME, { type: "kitOpened" });
-      await sleep(3000, signal);
-      setCaption("Aino takes the sample at home");
-      addRef.current(ME, { type: "sampleTaken" });
+      setCaption("Aino scans the QR code on her letter");
+      addRef.current(ME, { type: "letterOpened" });
       await sleep(3000, signal);
       setCaption("Aino books a robot pickup");
-      addRef.current(ME, { type: "pickupBooked", slot: "Now (demo)" });
+      addRef.current(ME, { type: "pickupBooked", slot: "Now (demo)", startsAt: Date.now() });
+      await sleep(2000, signal);
+      setCaption("Aino takes the sample at home");
+      addRef.current(ME, { type: "sampleTaken" });
+      await sleep(1000, signal);
       setCaption("The robot is on its way");
       await waitRobot();
       await sleep(2000, signal);
@@ -104,7 +116,13 @@ export function Autopilot() {
       setCaption("Aino books a colonoscopy with an interpreter");
       addRef.current(ME, { type: "colonoscopyBooked", slot: colonoscopySlot(), note: "Interpreter needed" });
       await sleep(3000, signal);
-      setCaption("Done: every step visible to Aino and the nurse");
+      setCaption("Sanna books her cervical screening at the clinic");
+      onWhoRef.current("me-cx");
+      addRef.current("me-cx", { type: "letterOpened" });
+      await sleep(2000, signal);
+      addRef.current("me-cx", { type: "clinicBooked", slot: clinicSlot(), startsAt: Date.now() + 3 * 86_400_000 });
+      await sleep(3000, signal);
+      setCaption("Done: every step visible to the person and the nurse");
       setFinished(true);
     } catch (err) {
       if (!(err instanceof Cancelled)) setCaption("");
