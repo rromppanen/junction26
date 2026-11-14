@@ -2,23 +2,26 @@
 
 import Link from "next/link";
 import { useDeferredValue, useMemo, useState } from "react";
-import { ChevronDown, Dices, Gauge, ListOrdered, RotateCcw, SlidersHorizontal, TriangleAlert, Upload, Users } from "lucide-react";
-import { DEFAULT_ASSUMPTIONS, PARAM_GROUPS, PARAM_META } from "@/data/simulatorAssumptions";
+import { BookOpen, ChevronDown, Dices, Download, FileText, Gauge, Info, ListOrdered, RotateCcw, SlidersHorizontal, TriangleAlert, Upload, Users } from "lucide-react";
+import { assumptionsReportHtml, assumptionsToCsv } from "@/lib/assumptionsExport";
+import { CHOICE_KEYS, DEFAULT_ASSUMPTIONS, PARAM_META } from "@/data/simulatorAssumptions";
 import {
   invalidStageMix,
   monteCarlo,
-  paramsFrom,
   parseAssumptionsCsv,
   quantile,
+  scenarioParams,
   sensitivity,
   simulate,
   totals,
   type Assumption,
   type ParamKey,
   type Params,
+  type Scenario,
 } from "@/lib/simulator";
 import { IconHeading, More, Stat } from "@/components/ui";
-import { EvidenceTag, PlaceholderTag } from "./EvidenceTag";
+import { EvidenceTag } from "./EvidenceTag";
+import { EvidenceTables } from "./EvidenceTables";
 import { AttendanceChart, CostHistogram, SensitivityChart } from "./SimulatorCharts";
 import { eur, eurShort, num } from "./format";
 import type { SimCounty } from "./types";
@@ -27,65 +30,46 @@ const DRAWS = 2000;
 
 const gapCounties = (counties: SimCounty[], target: number) => counties.filter((c) => c.attendance < target).map((c) => c.id);
 
-function sliderBounds(a: Assumption): [number, number] {
-  const m = PARAM_META[a.key];
-  if (m.min !== undefined && m.max !== undefined) return [m.min, m.max];
-  const span = a.high - a.low || Math.abs(a.base) * 0.5 || 1;
-  const lo = Math.max(0, a.low - span);
-  const hi = m.scale === 100 ? Math.min(1, a.high + span) : a.high + span;
-  return [lo * m.scale, hi * m.scale];
-}
-
-function stepFor(lo: number, hi: number, decimals: number): number {
-  return Math.max(Math.pow(10, -decimals), Number(((hi - lo) / 400).toPrecision(1)));
-}
-
-function AssumptionControl({
+/** One of the two figures the user sets: a slider with an exact-value box and a line of plain guidance. */
+function ChoiceControl({
   a,
+  label,
+  hint,
+  step,
   value,
   onChange,
 }: {
   a: Assumption;
+  label: string;
+  hint: React.ReactNode;
+  step: number;
   value: number;
   onChange: (v: number) => void;
 }) {
   const m = PARAM_META[a.key];
   const id = `sim-${a.key}`;
-  if (a.status === "fixed" || !(a.low < a.high)) {
-    return (
-      <div className="flex items-baseline justify-between gap-3 text-sm" title={a.note}>
-        <span>{m.label}</span>
-        <span className="tabular-nums">
-          {num(value * m.scale, m.decimals)} <span className="text-xs text-muted">{m.unit}</span>
-        </span>
-      </div>
-    );
-  }
-  const [lo, hi] = sliderBounds(a);
-  const step = stepFor(lo, hi, m.decimals);
-  const display = value * m.scale;
-  const changed = Math.abs(value - a.base) > 1e-12;
+  const lo = m.min ?? a.low;
+  const hi = m.max ?? a.high;
   return (
-    <div className="grid gap-1" title={a.note}>
+    <div className="grid gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
-        <label htmlFor={id} className="text-sm font-medium">
-          {m.label}
-          {changed && <span className="ml-1 text-muted" aria-label="changed">•</span>}
-        </label>
+        <label htmlFor={id} className="font-medium">{label}</label>
         <span className="flex items-baseline gap-1">
           <input
             type="number"
             id={`${id}-n`}
-            aria-label={`${m.label}, exact value`}
+            aria-label={`${label}, exact value`}
+            min={lo}
+            max={hi}
             step={step}
-            value={Number(display.toFixed(m.decimals + 2))}
+            value={Number(value.toFixed(m.decimals))}
             onChange={(e) => {
               const v = Number(e.target.value);
-              if (e.target.value !== "" && Number.isFinite(v)) onChange(v / m.scale);
+              if (e.target.value !== "" && Number.isFinite(v)) onChange(Math.min(hi, Math.max(lo, v)));
             }}
-            className="w-20 rounded-[3px] border border-rule bg-paper px-1.5 py-0.5 text-right text-sm tabular-nums"
+            className="w-20 rounded-[3px] border border-rule bg-paper px-1.5 py-0.5 text-right tabular-nums"
           />
-          <span className="whitespace-nowrap text-xs text-muted">{m.unit}</span>
+          <span className="text-sm text-muted">{m.unit}</span>
         </span>
       </div>
       <input
@@ -94,19 +78,44 @@ function AssumptionControl({
         min={lo}
         max={hi}
         step={step}
-        value={display}
-        onChange={(e) => onChange(Number(e.target.value) / m.scale)}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
         className="w-full accent-ink"
       />
-      <div className="flex items-center justify-between gap-2 text-xs text-muted">
-        <span className="tabular-nums">
-          Range {num(a.low * m.scale, m.decimals)}–{num(a.high * m.scale, m.decimals)} · base {num(a.base * m.scale, m.decimals)}
-        </span>
-        {a.key === "target_attendance" ? <span>Scenario choice</span> : a.status === "placeholder" ? <PlaceholderTag /> : <EvidenceTag kind="observed" />}
-      </div>
+      <p className="text-xs text-muted">{hint}</p>
     </div>
   );
 }
+
+function downloadFile(name: string, text: string, type: string) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Opens the report in a new tab and starts printing, where the browser offers "Save as PDF". */
+function openPrintable(html: string): boolean {
+  const w = window.open("", "_blank");
+  if (!w) return false;
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 250);
+  return true;
+}
+
+const SCENARIOS: { id: Scenario; label: string; help: string }[] = [
+  { id: "cautious", label: "Cautious", help: "Every evidence figure moved halfway to the end of its range that makes screening look worse." },
+  { id: "central", label: "Central", help: "Every evidence figure at its best estimate." },
+  { id: "optimistic", label: "Optimistic", help: "Every evidence figure moved halfway to the end of its range that makes screening look better." },
+];
+
 
 export function ScreeningSimulator({
   counties,
@@ -120,7 +129,10 @@ export function ScreeningSimulator({
   initialFocus: number | null;
 }) {
   const [assumptions, setAssumptions] = useState<Assumption[]>(DEFAULT_ASSUMPTIONS);
-  const [P, setP] = useState<Params>(() => paramsFrom(DEFAULT_ASSUMPTIONS));
+  // Three inputs in all: the target, the outreach cost, and one switch that moves the evidence figures together.
+  const [choices, setChoices] = useState<Partial<Record<ParamKey, number>>>({});
+  const [scenario, setScenario] = useState<Scenario>("central");
+  const P = useMemo<Params>(() => ({ ...scenarioParams(assumptions, scenario), ...choices }), [assumptions, scenario, choices]);
   const [focus, setFocus] = useState<number | null>(initialFocus);
   // Counties left out of the totals. Kept as exclusions, so a county that falls below a raised target is counted.
   const [excluded, setExcluded] = useState<Set<number>>(() =>
@@ -128,8 +140,6 @@ export function ScreeningSimulator({
   );
   const [seed, setSeed] = useState(42);
   const [csvNote, setCsvNote] = useState<string | null>(null);
-  // Outcomes built on placeholder assumptions stay hidden until the user asks for them.
-  const [showIllustrative, setShowIllustrative] = useState(false);
 
   const byId = useMemo(() => new Map(counties.map((c) => [c.id, c])), [counties]);
   const focusCounty = focus !== null ? byId.get(focus) ?? null : null;
@@ -145,10 +155,17 @@ export function ScreeningSimulator({
   // The heavier analyses follow the sliders a moment later, so dragging stays smooth.
   const dP = useDeferredValue(P);
   const dScope = useDeferredValue(scope);
-  const sens = useMemo(() => sensitivity(dP, assumptions, dScope), [dP, assumptions, dScope]);
-  const draws = useMemo(() => monteCarlo(dP, assumptions, dScope, DRAWS, seed), [dP, assumptions, dScope, seed]);
+  // Only the evidence is uncertain: the user's choices stay as set, and every county has its own count of women.
+  const evidence = useMemo(
+    () => assumptions.filter((a) => !CHOICE_KEYS.includes(a.key) && a.key !== "women_50_69_share"),
+    [assumptions],
+  );
+  const sens = useMemo(() => sensitivity(dP, evidence, dScope), [dP, evidence, dScope]);
+  const draws = useMemo(() => monteCarlo(dP, evidence, dScope, DRAWS, seed), [dP, evidence, dScope, seed]);
 
-  const set = (key: ParamKey, v: number) => setP((prev) => ({ ...prev, [key]: v }));
+  const set = (key: ParamKey, v: number) => setChoices((prev) => ({ ...prev, [key]: v }));
+  const assumption = (key: ParamKey) => assumptions.find((a) => a.key === key)!;
+  const changed = scenario !== "central" || CHOICE_KEYS.some((k) => choices[k] !== undefined && choices[k] !== assumption(k).base);
 
   const showAll = () => {
     setFocus(null);
@@ -162,8 +179,8 @@ export function ScreeningSimulator({
       return next;
     });
   const reset = () => {
-    setP(paramsFrom(assumptions));
-    setCsvNote(null);
+    setChoices({});
+    setScenario("central");
   };
   const loadCsv = (file: File) => {
     file
@@ -175,8 +192,9 @@ export function ScreeningSimulator({
           return;
         }
         setAssumptions(res.assumptions);
-        setP(paramsFrom(res.assumptions));
-        setCsvNote(`Using ${file.name}. Reset returns to its values.`);
+        setChoices({});
+        setScenario("central");
+        setCsvNote(`Using the figures in ${file.name}.`);
       })
       .catch(() => setCsvNote(`Couldn't read ${file.name}.`));
   };
@@ -184,7 +202,7 @@ export function ScreeningSimulator({
   const badMix = invalidStageMix(P);
   const placeholders = assumptions.filter((a) => a.status === "placeholder").length;
   const target = P.target_attendance;
-  const showOutcomes = placeholders === 0 || showIllustrative;
+  const best = counties.reduce<SimCounty | null>((b, c) => (b === null || c.attendance > b.attendance ? c : b), null);
 
   // Headline: one county when focused, otherwise every county counted.
   let headline: string;
@@ -203,11 +221,11 @@ export function ScreeningSimulator({
 
   const tableRows = counties
     .map((c) => ({ c, r: simulate(P, c.attendance, c.population, c.women), gap: Math.max(target - c.attendance, 0) }))
-    .sort((a, b) => (showOutcomes ? b.r.ly - a.r.ly : b.r.screens - a.r.screens) || a.c.attendance - b.c.attendance);
+    .sort((a, b) => b.r.ly - a.r.ly || a.c.attendance - b.c.attendance);
   const maxLy = Math.max(...tableRows.map((x) => x.r.ly), 1e-9);
 
   return (
-    <div className="grid gap-12">
+    <div className="grid gap-14">
       <section aria-labelledby="sim-headline">
         <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
           <Gauge aria-hidden size={16} strokeWidth={2} /> Breast screening simulator · women aged 50–69
@@ -219,54 +237,81 @@ export function ScreeningSimulator({
           {headline}
         </h1>
         <p className="mt-4 max-w-3xl font-serif text-lg leading-snug">
-          Compare a target attendance rate with the published baseline. Extra screens are calculated from attendance,
-          population and the screening interval; they are a scenario, not a measured increase. Change the target below
-          and choose which counties to include.
+          Screening helps by finding cancers at an earlier stage. Choose a target and what you would spend to reach it.
         </p>
-        {!showOutcomes && (
-          <div className="mt-6 flex max-w-3xl flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setShowIllustrative(true)}
-              className="inline-flex items-center gap-1.5 rounded-[3px] border border-rule px-3 py-1.5 text-sm hover:bg-par-soft"
-            >
-              <TriangleAlert aria-hidden size={14} /> Show illustrative outcomes
-            </button>
-            <span className="text-sm text-muted">
-              Built on {placeholders} placeholder assumptions; not for quoting.
-            </span>
+
+        <div role="group" aria-labelledby="assumptions-h" className="mt-7 rounded-[4px] border border-rule bg-surface p-4 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 id="assumptions-h" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Your choices</h2>
+            {changed && (
+              <button type="button" onClick={reset} className="inline-flex items-center gap-1.5 rounded-[3px] px-2 py-0.5 text-sm text-muted hover:bg-par-soft hover:text-ink">
+                <RotateCcw aria-hidden size={13} /> Reset
+              </button>
+            )}
           </div>
-        )}
-        {showIllustrative && placeholders > 0 && (
-          <button type="button" onClick={() => setShowIllustrative(false)}
-            className="mt-4 rounded-[3px] border border-rule px-3 py-2 text-sm hover:bg-par-soft">Hide illustrative outcomes</button>
-        )}
-        {showOutcomes && (<>
-        {placeholders > 0 && (
-          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.08em] text-behind">
-            Illustration: {placeholders} placeholder assumptions, not for quoting
-          </p>
-        )}
-        <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-6 sm:flex sm:flex-wrap sm:gap-x-12">
+          <div className="mt-3 grid gap-x-8 gap-y-6 md:grid-cols-3">
+            <ChoiceControl
+              a={assumption("target_attendance")}
+              label="Target attendance"
+              step={0.5}
+              value={P.target_attendance}
+              onChange={(v) => set("target_attendance", v)}
+              hint={
+                <>
+                  National goal: 80% in every county.
+                  {best && ` Best today: ${best.name}, ${num(best.attendance, 1)}%.`}
+                </>
+              }
+            />
+            <ChoiceControl
+              a={assumption("cost_outreach")}
+              label="Outreach cost"
+              step={5}
+              value={P.cost_outreach}
+              onChange={(v) => set("cost_outreach", v)}
+              hint="Per extra woman screened: reminders, letters in her language, a navigator or a mobile unit. No published figure; use your own."
+            />
+            <fieldset className="grid content-start gap-1.5">
+              <legend className="mb-1.5 font-medium">Evidence</legend>
+              <div className="grid grid-cols-3 overflow-hidden rounded-[3px] border border-ink">
+                {SCENARIOS.map((s) => (
+                  <label
+                    key={s.id}
+                    className={`cursor-pointer px-1 py-1 text-center text-sm focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-ink ${
+                      scenario === s.id ? "bg-ink font-semibold text-paper" : "bg-paper hover:bg-par-soft"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="sim-scenario"
+                      value={s.id}
+                      checked={scenario === s.id}
+                      onChange={() => setScenario(s.id)}
+                      className="sr-only"
+                    />
+                    {s.label}
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-muted">{SCENARIOS.find((s) => s.id === scenario)!.help}</p>
+            </fieldset>
+          </div>
+        </div>
+
+        <div aria-live="polite" className="mt-7 grid grid-cols-2 gap-x-6 gap-y-6 sm:flex sm:flex-wrap sm:gap-x-12">
           <Stat value={num(t.ly, 1)} label="life-years gained a year" />
           <Stat value={num(t.deaths, 1)} label="breast cancer deaths averted a year" />
           <Stat value={eurShort(t.net)} label="net cost a year" />
           <Stat value={t.ly > 0 ? (t.net < 0 ? "Saves money" : eur(t.icer)) : "–"} label="per life-year gained" />
         </div>
-        <p className="mt-4 flex flex-wrap items-center gap-2 text-sm text-muted">
+        <p className="mt-4 flex max-w-3xl flex-wrap items-center gap-2 text-sm text-muted">
           <EvidenceTag kind="simulated" />
           <span>
-            {num(t.shifted, 1)} cancers a year found earlier, {num(t.late, 1)} of them before they reach a late stage.
-            Programme {eurShort(t.programme)}, treatment {eurShort(t.treatment)}.
+            {num(t.shifted, 1)} cancers a year found earlier, {num(t.late, 1)} of them before they spread. The cancer
+            strategy aims for about 1,330 fewer cancer deaths a year; this would be {num(t.deaths, 1)} of them.
           </span>
         </p>
-        <p className="mt-3 max-w-3xl text-sm text-muted">
-          Screening attendance is a Goal 2 target (80% in every county). Its payoff counts towards Goal 3, whose headline
-          target is 10% fewer cancer deaths: about 1,330 a year from today&rsquo;s 13,300 (strategy p. 5). Closing these
-          gaps would avert about {num(t.deaths, 1)} of them each year.
-        </p>
-        </>)}
-        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
           <span className="text-muted">
             {focusCounty ? `Showing ${focusCounty.name}.` : `${scope.length} ${scope.length === 1 ? "county" : "counties"} counted.`}{" "}
             Finland as a whole: {num(national ?? NaN, 1)}% in {year}.
@@ -283,74 +328,12 @@ export function ScreeningSimulator({
           )}
         </div>
         {placeholders > 0 && (
-          <p className="mt-5 flex max-w-3xl items-start gap-2 rounded-[4px] bg-par-soft px-3 py-2.5 text-sm">
+          <p className="mt-5 flex max-w-3xl items-start gap-2 rounded-[4px] bg-par-soft px-3 py-2.5 text-sm" role="status">
             <TriangleAlert aria-hidden size={16} className="mt-0.5 shrink-0" />
-            <span>
-              Clinical outcomes and costs depend on {placeholders} placeholder assumptions. They remain illustrative
-              until sourced values are supplied. Published attendance and calculated extra screens are shown separately.
-            </span>
+            <span>{placeholders} of the figures in the loaded file are placeholders. Treat the results as an illustration.</span>
           </p>
         )}
       </section>
-
-      <div className="grid gap-x-10 gap-y-12 lg:grid-cols-[300px_minmax(0,1fr)]">
-        <aside aria-labelledby="assumptions-h" className="rounded-[4px] border border-rule bg-surface p-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:self-start lg:overflow-y-auto">
-          <IconHeading icon={SlidersHorizontal} id="assumptions-h" className="text-xl">Scenario settings</IconHeading>
-          <div className="mt-5">
-            {assumptions.filter((a) => a.key === "target_attendance").map((a) => (
-              <AssumptionControl key={a.key} a={a} value={P[a.key]} onChange={(v) => set(a.key, v)} />
-            ))}
-          </div>
-          <details className="more group mt-5 border-t border-rule pt-3">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 py-2 text-sm font-semibold [&::-webkit-details-marker]:hidden">
-              Advanced assumptions
-              <ChevronDown aria-hidden size={16} className="shrink-0 transition-transform group-open:rotate-180" />
-            </summary>
-            <p className="mt-1 text-sm text-muted">Population, clinical outcomes and costs. Changes update the scenario below.</p>
-          <div className="mt-3 flex flex-wrap gap-2 text-sm">
-            <button type="button" onClick={reset} className="inline-flex items-center gap-1.5 rounded-[3px] border border-rule px-2.5 py-1 hover:bg-par-soft">
-              <RotateCcw aria-hidden size={14} /> Reset
-            </button>
-            <label className="relative inline-flex cursor-pointer items-center gap-1.5 rounded-[3px] border border-rule px-2.5 py-1 hover:bg-par-soft focus-within:outline focus-within:outline-2 focus-within:outline-ink">
-              <Upload aria-hidden size={14} /> Load assumptions.csv
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                className="absolute inset-0 cursor-pointer opacity-0"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) loadCsv(f);
-                  e.target.value = "";
-                }}
-              />
-            </label>
-          </div>
-          {csvNote && <p className="mt-2 text-xs text-muted" role="status">{csvNote}</p>}
-          <More label="How the ranges are used" className="mt-2">
-            Each slider shows the low–high range from assumptions.csv. The sensitivity chart moves each assumption to
-            those two ends; the uncertainty section draws all of them at once inside that range, peaking at your setting.
-          </More>
-          <div className="mt-5 grid gap-7">
-            {PARAM_GROUPS.filter((g) => g !== "Target").map((g) => {
-              const items = assumptions.filter((a) => PARAM_META[a.key].group === g);
-              if (!items.length) return null;
-              return (
-                <fieldset key={g} className="grid gap-4">
-                  <legend className="mb-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted">{g}</legend>
-                  {g === "Stage at diagnosis" && badMix.length > 0 && (
-                    <p className="text-xs font-semibold text-behind" role="alert">
-                      Regional and distant add up to more than 100% for {badMix.join(" and ")}. Lower one of them.
-                    </p>
-                  )}
-                  {items.map((a) => (
-                    <AssumptionControl key={a.key} a={a} value={P[a.key]} onChange={(v) => set(a.key, v)} />
-                  ))}
-                </fieldset>
-              );
-            })}
-          </div>
-          </details>
-        </aside>
 
         <div className="grid min-w-0 gap-14">
           <section aria-labelledby="gap-h">
@@ -374,7 +357,7 @@ export function ScreeningSimulator({
             <IconHeading icon={ListOrdered} id="county-h" className="text-xl">Compare the county scenarios</IconHeading>
             <p className="mb-4 mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
               <EvidenceTag kind="simulated" />
-              {showOutcomes ? "Per year, for one year of diagnoses." : "Calculated extra screens per year at your chosen target."} Untick a county to leave it out of the totals.
+              Per year, for one year of diagnoses. Untick a county to leave it out of the totals.
             </p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -386,11 +369,9 @@ export function ScreeningSimulator({
                     <th scope="col" className="py-2 pr-3 text-right font-normal" title="Change a year, least-squares over the years shown">Trend</th>
                     <th scope="col" className="py-2 pr-3 text-right font-normal">Gap</th>
                     <th scope="col" className="py-2 pr-3 text-right font-normal">Extra screens</th>
-                    {showOutcomes && (<>
                     <th scope="col" className="py-2 pr-3 text-right font-normal">Life-years</th>
                     <th scope="col" className="py-2 pr-3 text-right font-normal">Deaths averted</th>
                     <th scope="col" className="py-2 text-right font-normal">Net cost</th>
-                    </>)}
                   </tr>
                 </thead>
                 <tbody>
@@ -424,7 +405,6 @@ export function ScreeningSimulator({
                         </td>
                         <td className="py-1.5 pr-3 text-right tabular-nums">{has ? num(gap, 1) : "at target"}</td>
                         <td className="py-1.5 pr-3 text-right tabular-nums">{has ? num(r.screens) : "–"}</td>
-                        {showOutcomes && (<>
                         <td className="whitespace-nowrap py-1.5 pr-3 text-right tabular-nums">
                           {has && (
                             <span
@@ -437,7 +417,6 @@ export function ScreeningSimulator({
                         </td>
                         <td className="py-1.5 pr-3 text-right tabular-nums">{has ? num(r.deaths, 2) : "–"}</td>
                         <td className="py-1.5 text-right tabular-nums">{has ? eur(r.net) : "–"}</td>
-                        </>)}
                       </tr>
                     );
                   })}
@@ -448,11 +427,9 @@ export function ScreeningSimulator({
                     <th scope="row" className="py-2 pr-3 text-left">Counted</th>
                     <td colSpan={3} />
                     <td className="py-2 pr-3 text-right tabular-nums">{num(t.screens)}</td>
-                    {showOutcomes && (<>
                     <td className="py-2 pr-3 text-right tabular-nums">{num(t.ly, 1)}</td>
                     <td className="py-2 pr-3 text-right tabular-nums">{num(t.deaths, 2)}</td>
                     <td className="py-2 text-right tabular-nums">{eur(t.net)}</td>
-                    </>)}
                   </tr>
                 </tfoot>
               </table>
@@ -466,7 +443,57 @@ export function ScreeningSimulator({
             </More>
           </section>
 
-          {showOutcomes && (
+          <section aria-labelledby="evidence-h" className="scroll-mt-4">
+            <IconHeading icon={BookOpen} id="evidence-h" className="text-xl">What the model assumes</IconHeading>
+            <p className="mb-5 mt-1 flex max-w-3xl items-start gap-2 text-sm text-muted">
+              <Info aria-hidden size={15} className="mt-0.5 shrink-0" />
+              <span>
+                Published figures, or figures calculated from them. None is measured in a single county, so read the
+                results as an order of magnitude. The Evidence switch above moves them all together.
+              </span>
+            </p>
+            {badMix.length > 0 && (
+              <p className="mb-3 text-sm font-semibold text-behind" role="alert">
+                Regional and distant shares add up to more than 100% for {badMix.join(" and ")}. Check the loaded file.
+              </p>
+            )}
+            <EvidenceTables assumptions={assumptions} P={P} />
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+              <label className="relative inline-flex cursor-pointer items-center gap-1.5 rounded-[3px] border border-rule px-2.5 py-1 text-muted hover:bg-par-soft hover:text-ink focus-within:outline focus-within:outline-2 focus-within:outline-ink">
+                <Upload aria-hidden size={14} /> Use your own figures (CSV)
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="absolute inset-0 cursor-pointer opacity-0"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) loadCsv(f);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => downloadFile("screening-simulator-assumptions.csv", assumptionsToCsv(assumptions, choices), "text/csv;charset=utf-8")}
+                className="inline-flex items-center gap-1.5 rounded-[3px] border border-rule px-2.5 py-1 text-muted hover:bg-par-soft hover:text-ink"
+              >
+                <Download aria-hidden size={14} /> Download assumptions (CSV)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!openPrintable(assumptionsReportHtml(assumptions, P, scenario))) {
+                    setCsvNote("Your browser blocked the new tab. Allow pop-ups for this site to save the PDF.");
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 rounded-[3px] border border-rule px-2.5 py-1 text-muted hover:bg-par-soft hover:text-ink"
+              >
+                <FileText aria-hidden size={14} /> Save as PDF
+              </button>
+              {csvNote && <span className="text-xs text-muted" role="status">{csvNote}</span>}
+            </div>
+          </section>
+
           <details className="group" open={false}>
             <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-[3px] border border-rule px-3 py-2 font-semibold hover:bg-par-soft [&::-webkit-details-marker]:hidden">
               <SlidersHorizontal aria-hidden size={16} className="text-muted" />
@@ -542,9 +569,7 @@ export function ScreeningSimulator({
             </section>
           </div>
           </details>
-          )}
         </div>
-      </div>
     </div>
   );
 }

@@ -129,12 +129,15 @@ export default async function SimulatorPage({ searchParams }: { searchParams: Pr
         <IconHeading icon={Info} id="limits-h" className="text-xl">What this model leaves out</IconHeading>
         <ul className="mt-3 grid max-w-3xl list-disc gap-2 pl-5 text-sm">
           <li>
-            <strong>Illustrative outcomes.</strong> Stage mix, survival, cost and incidence inputs include placeholders.
-            Clinical and cost results stay hidden until requested; opening them does not verify those inputs.
+            <strong>Calibrated, not measured.</strong> Finland publishes no stage at diagnosis by screening attendance.
+            The model&rsquo;s stage figures are set so that they reproduce two published Finnish results: the share of
+            cancers found localized, and 28% lower breast cancer mortality among screened women. Survival by stage is
+            from US data, and treatment costs are specialised care at 2019 prices.
           </li>
           <li>
-            <strong>Self-selection.</strong> Women who skip screening may differ in other ways too, so making them attend
-            probably gains less than the raw stage difference suggests. Like Shafik et al., there is no natural-history model.
+            <strong>Self-selection.</strong> Women who skip screening differ in other ways too. The 28% is corrected for
+            that, but women brought in by outreach may gain less than today&rsquo;s attenders. Like Shafik et al., there
+            is no natural-history model.
           </li>
           <li>
             <strong>Simplifications.</strong> Survival and costs are fixed per stage; no QALYs, no discounting, no harm from

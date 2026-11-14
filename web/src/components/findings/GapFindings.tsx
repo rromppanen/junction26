@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { AnalysisLoading } from "./AnalysisLoading";
 import { ArrowLeft, LayoutGrid, ListChecks, Map as MapIcon, RotateCcw, SearchX, Users } from "lucide-react";
 import { AppHeader, HeaderLink, IconHeading, More, StatusIcon } from "@/components/ui";
 import { FadeIn } from "@/components/intake/fade";
@@ -14,6 +15,8 @@ import { useAnalysis } from "./useAnalysis";
 /** The findings for an uploaded file: gaps between every kind of group the file has. */
 export function GapFindings() {
   const loaded = useAnalysis();
+  const [query, setQuery] = useState("");
+  const [findingMetric, setFindingMetric] = useState<MetricId | "all">("all");
   const [metric, setMetric] = useState<MetricId>("participation");
 
   const report = useMemo(() => {
@@ -26,7 +29,7 @@ export function GapFindings() {
     if (report && !report.metrics.includes(metric) && report.metrics.length) setMetric(report.metrics[0]);
   }, [report, metric]);
 
-  if (loaded === null) return null;
+  if (loaded === null) return <AnalysisLoading />;
   if (loaded === "missing" || !report) {
     return (
       <main id="main-content" tabIndex={-1} className="mx-auto max-w-2xl px-4 py-24 sm:px-6">
@@ -42,6 +45,9 @@ export function GapFindings() {
   const { setup } = loaded;
   const u = setup.upload!;
   const county = setup.countyId;
+  const visibleFindings = report.findings.filter((f) =>
+    (findingMetric === "all" || f.metric === findingMetric) &&
+    `${f.dimension.label} ${groupLabel(f.dimension.kind, f.group.value)}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   const breakdowns = report.dimensions.filter((d) => d.byMetric[metric]);
 
   return (
@@ -55,20 +61,23 @@ export function GapFindings() {
       <FadeIn>
         <h1 className="text-display font-semibold tracking-[-0.02em]">{u.isPublic ? "Gaps in the public data" : "Gaps in your data"}</h1>
         <p className="mt-3 max-w-3xl text-lede text-muted">
-          {u.fileName}
-          {report.year !== null && <>, {report.year}</>}. I compared people {report.dimensions.length} ways
-          {report.dimensions.length ? `: by ${report.dimensions.map((d) => d.label.toLowerCase()).join(", ")}` : ""}. Each group is
-          set against everyone else in the same breakdown.
+          Compare each group with everyone else in the same breakdown. Choose a gap to see its evidence, trend and questions to investigate.
+
         </p>
+        <div className="mt-5 flex flex-wrap gap-2 text-sm text-muted">
+          <span className="max-w-full break-all rounded-md border border-rule bg-surface px-3 py-2">File: {u.fileName}</span>
+          <span className="rounded-md border border-rule px-3 py-2">{report.year ?? "Available years"} · {report.dimensions.length} breakdowns</span>
+          <span className="rounded-md border border-rule px-3 py-2">Data saved in this tab</span>
+        </div>
       </FadeIn>
 
       <section aria-labelledby="top-h" className="mt-12">
         <FadeIn delay={200}>
           <IconHeading icon={LayoutGrid} id="top-h" className="text-title">
-            {report.findings.length === 0 ? "No clear gaps" : `${report.findings.length} ${report.findings.length === 1 ? "gap" : "gaps"}, biggest impact first`}
+            {report.findings.length === 0 ? "No clear gaps" : `${report.findings.length} ${report.findings.length === 1 ? "gap" : "gaps"} to investigate`}
           </IconHeading>
           {report.findings.length > 0 && (
-            <p className="mt-1 text-small text-muted">Ranked by what closing each gap would be worth. Open one for the details.</p>
+            <p className="mt-1 text-small text-muted">Filter by pathway measure to compare like for like. Each card separates the measured difference from its calculated impact.</p>
           )}
         </FadeIn>
         {report.findings.length === 0 ? (
@@ -79,7 +88,22 @@ export function GapFindings() {
           </FadeIn>
         ) : (
           <div className="mt-5">
-            <GapGrid findings={report.findings} delay={350} />
+            <div className="mb-5 grid gap-4 rounded-lg border border-rule bg-surface p-4 sm:grid-cols-2">
+              <label className="grid gap-1.5 text-sm font-medium">Find a group
+                <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search area, language or group" className="w-full rounded-md border border-rule bg-paper px-3 py-2 font-normal" />
+              </label>
+              <label className="grid gap-1.5 text-sm font-medium">Pathway measure
+                <select value={findingMetric} onChange={(e) => setFindingMetric(e.target.value as MetricId | "all")} className="rounded-md border border-rule bg-paper px-3 py-2 font-normal">
+                  <option value="all">All measures</option>
+                  {report.metrics.map((m) => <option key={m} value={m}>{METRIC_LABEL[m]}</option>)}
+                </select>
+              </label>
+            </div>
+            <p role="status" className="mb-3 text-sm text-muted">Showing {visibleFindings.length} of {report.findings.length} gaps</p>
+            {visibleFindings.length ? <GapGrid findings={visibleFindings} /> : <div className="rounded-lg border border-rule p-6">
+              <p className="font-semibold">No gaps match these filters</p>
+              <button type="button" onClick={() => { setQuery(""); setFindingMetric("all"); }} className="link mt-2">Clear filters</button>
+            </div>}
           </div>
         )}
       </section>
@@ -87,12 +111,11 @@ export function GapFindings() {
       <section aria-labelledby="all-h" className="mt-14">
         <IconHeading icon={Users} id="all-h" className="text-title">Every breakdown</IconHeading>
         {report.metrics.length > 1 && (
-          <div role="tablist" aria-label="Pathway step" className="mt-4 flex flex-wrap gap-2">
+          <div role="group" aria-label="Breakdown pathway measure" className="mt-4 flex flex-wrap gap-2">
             {report.metrics.map((m) => (
               <button
                 key={m}
-                role="tab"
-                aria-selected={metric === m}
+                aria-pressed={metric === m}
                 onClick={() => setMetric(m)}
                 className={`rounded-full border px-3 py-1 text-small ${metric === m ? "border-ink bg-ink text-white" : "border-rule text-muted hover:border-par"}`}
               >
@@ -139,7 +162,7 @@ export function Breakdown({ d, metric, years }: { d: Dimension; metric: MetricId
   const isWait = metric === "wait";
   const max = isWait ? Math.max(...groups.map((g) => g.figure ?? 0), 1) : 100;
   return (
-    <article>
+    <article className="rounded-lg border border-rule bg-surface p-4">
       <h3 className="font-semibold">
         {d.label} <span className="text-small font-normal text-muted">· column {d.header}</span>
       </h3>
@@ -160,15 +183,15 @@ function Row({ d, g, max, isWait }: { d: Dimension; g: GroupStat; max: number; i
   const text = g.status === "behind" ? "text-behind" : g.status === "ahead" ? "text-ahead" : "text-muted";
   const label = groupLabel(d.kind, g.value);
   return (
-    <li className="grid grid-cols-[minmax(0,9rem)_1fr_3.5rem_4.5rem] items-center gap-x-3 border-b border-rule py-2 text-small" title={STATUS_WORD[g.status]}>
-      <span className="truncate" title={label === g.value ? g.value : `${label} (${g.value})`}>{label}</span>
+    <li className="grid grid-cols-[minmax(0,1fr)_3.5rem_4.5rem] sm:grid-cols-[minmax(0,9rem)_1fr_3.5rem_4.5rem] items-center gap-x-3 border-b border-rule py-2 text-small" title={STATUS_WORD[g.status]}>
+      <span className="min-w-0 break-words" title={label === g.value ? g.value : `${label} (${g.value})`}>{label}</span>
       {g.figure === null ? (
-        <span className="col-span-3 text-muted">
+        <span className="col-span-2 text-muted sm:col-span-3">
           {g.n < MIN_GROUP ? `Under ${MIN_GROUP} people, not shown` : "Too few others to compare with"}
         </span>
       ) : (
         <>
-          <span className="relative h-2 rounded-full bg-par-soft" aria-hidden>
+          <span className="relative hidden h-2 rounded-full bg-par-soft sm:block" aria-hidden>
             <span className={`absolute inset-y-0 left-0 rounded-full ${tone}`} style={{ width: `${Math.min(100, (g.figure / max) * 100)}%` }} />
             {g.rest !== null && <span className="absolute -inset-y-1 w-px bg-ink" style={{ left: `${Math.min(100, (g.rest / max) * 100)}%` }} />}
           </span>

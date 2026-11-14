@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { QuestionInput } from "@/lib/intake/clarify";
 import type { Table } from "@/lib/intake/csv";
@@ -228,9 +229,10 @@ function StepDone({
             onClick={() => onFindings(setup(fileOk))}
             className="rounded-[6px] bg-ink px-6 py-3 font-medium text-white"
           >
-            {table && !fileOk ? "See findings without my file" : "See the findings"}
+            {fileOk ? "See the findings" : settled.countyId !== null ? "Open county brief" : "Explore counties on the map"}
           </button>
         )}
+        {settled.countyId !== null && <Link href="/map" className="inline-flex min-h-11 items-center rounded-md border border-rule px-4 py-2 text-sm font-medium hover:bg-surface">Compare counties on the map</Link>}
         <button type="button" onClick={onStartOver} className="px-2 py-3 text-small text-muted hover:text-ink">
           Start over
         </button>

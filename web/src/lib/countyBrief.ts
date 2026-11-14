@@ -29,6 +29,7 @@ export async function loadCountyBrief(regionId: number, language: Language = "en
       ? { twinName: shortName(twin.twin.name), indicator: worstInd, countyValue: worst.value, twinValue: twin.twinValue, snippets: practices.snippets }
       : undefined;
   const equity = equityFacts(ds, regionId, INDICATORS, CONTEXT_INDICATORS);
-  const brief = await getBrief({ regionName: name, language, facts, indicators: INDICATORS, live: live.snippets, equity, peer });
+  const municipalityNames = ds.regions.filter((r) => r.kind === "municipality" && r.parentId === regionId).map((r) => r.name);
+  const brief = await getBrief({ regionName: name, language, facts, indicators: INDICATORS, live: live.snippets, equity, peer, municipalityNames });
   return { ds, region, nationalRegion, name, facts, live, practices, peer, equity, brief };
 }
