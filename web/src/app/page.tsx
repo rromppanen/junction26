@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const APPS = [
   { href: "/kit?start=1", title: "Customer app", text: "Book a robot to pick up your sample from home." },
-  { href: "/staff", title: "Fleet monitoring", text: "Follow the robots and every sample they carry." },
+  { href: "/nurse", title: "Fleet monitoring", text: "Follow the robots and every sample they carry." },
 ];
 
 export default function StartPage() {
