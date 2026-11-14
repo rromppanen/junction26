@@ -92,7 +92,6 @@ export type Ui = {
   next: string;
   back: string;
   sampleDone: string;
-  followLeaflet: string;
   bookTitle: string;
   bookBody: string;
   asap: string;

@@ -20,7 +20,6 @@ export const sv: KitText = {
     next: "Nästa",
     back: "Tillbaka",
     sampleDone: "Klart, boka hämtning",
-    followLeaflet: "Om anvisningen i din förpackning skiljer sig från den här, följ förpackningens anvisning.",
     bookTitle: "När får roboten komma?",
     bookBody: "Så snart som möjligt är bäst. Provet ska skickas senast nästa dag.",
     asap: "Så snart som möjligt",

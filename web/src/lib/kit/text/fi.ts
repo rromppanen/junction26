@@ -20,7 +20,6 @@ export const fi: KitText = {
     next: "Seuraava",
     back: "Takaisin",
     sampleDone: "Valmis, varaa nouto",
-    followLeaflet: "Jos pakkauksesi ohje poikkeaa tästä, noudata pakkauksen ohjetta.",
     bookTitle: "Milloin robotti saa tulla?",
     bookBody: "Mahdollisimman pian on paras. Näyte pitää lähettää viimeistään seuraavana päivänä.",
     asap: "Mahdollisimman pian",

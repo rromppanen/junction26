@@ -272,7 +272,6 @@ export function KitApp() {
       const last = i === anims.length - 1;
       return (
         <StepView key={`s${i}`} demo={demo} anim={anims[i]} text={test.steps[i]} index={i} total={anims.length} t={t}
-          note={i === 0 ? t.followLeaflet : undefined}
           onBack={guarded(() => setStep(i === 0 ? HOW : i - 1))}
           primary={last
             ? <Primary onClick={guarded(() => act({ type: "sampleTaken" }))}>{t.sampleDone}</Primary>
@@ -375,8 +374,8 @@ function Nav({ back, onBack, primary }: { back: string; onBack: () => void; prim
   );
 }
 
-function StepView({ anim, text, index, total, t, onBack, primary, note, kicker, demo }: {
-  anim: Anim; text: StepText; index: number; total: number; t: Ui; onBack: () => void; primary: React.ReactNode; note?: string; kicker?: string; demo: React.ReactNode;
+function StepView({ anim, text, index, total, t, onBack, primary, kicker, demo }: {
+  anim: Anim; text: StepText; index: number; total: number; t: Ui; onBack: () => void; primary: React.ReactNode; kicker?: string; demo: React.ReactNode;
 }) {
   return (
     <Body demo={demo} footer={<Nav back={t.back} onBack={onBack} primary={primary} />}>
@@ -394,7 +393,6 @@ function StepView({ anim, text, index, total, t, onBack, primary, note, kicker, 
       </div>
       <h1 className="mt-5 text-[1.45rem] font-semibold leading-snug">{text.title}</h1>
       {text.body && <p className="mt-2 leading-relaxed text-muted">{text.body}</p>}
-      {note && <p className="mt-4 text-sm text-muted">{note}</p>}
     </Body>
   );
 }

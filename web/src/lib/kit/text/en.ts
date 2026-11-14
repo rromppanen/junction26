@@ -20,7 +20,6 @@ export const en: KitText = {
     next: "Next",
     back: "Back",
     sampleDone: "Done, book the pickup",
-    followLeaflet: "If the leaflet in your kit says something different, follow the leaflet.",
     bookTitle: "When can the robot come?",
     bookBody: "As soon as possible is best. The sample has to be sent by the next day at the latest.",
     asap: "As soon as possible",

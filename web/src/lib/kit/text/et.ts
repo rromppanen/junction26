@@ -20,7 +20,6 @@ export const et: KitText = {
     next: "Edasi",
     back: "Tagasi",
     sampleDone: "Valmis, telli äravedu",
-    followLeaflet: "Kui sinu komplekti juhend erineb sellest, järgi komplekti juhendit.",
     bookTitle: "Millal võib robot tulla?",
     bookBody: "Mida varem, seda parem. Proov tuleb saata hiljemalt järgmisel päeval.",
     asap: "Võimalikult kiiresti",

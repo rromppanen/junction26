@@ -20,7 +20,6 @@ export const so: KitText = {
     next: "Xiga",
     back: "Dib u noqo",
     sampleDone: "Waa dhammaatay, ballanso qaadista",
-    followLeaflet: "Haddii warqadda tilmaamaha ee qalabkaagu ay wax kale sheegto, raac warqadda.",
     bookTitle: "Goorma ayuu robotku iman karaa?",
     bookBody: "Sida ugu dhakhsaha badan ayaa ugu fiican. Muunadda waa in la diraa ugu dambayn maalinta xigta.",
     asap: "Sida ugu dhakhsaha badan",
