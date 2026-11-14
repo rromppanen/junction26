@@ -219,7 +219,7 @@ export function Bars({ kind, groups, selected, metric }: Props) {
 /** Picks the figure that suits the kind of group. */
 export function GroupFigure(p: Props) {
   if (p.kind === "region") return <AreaMap {...p} />;
-  if (p.kind === "sex" || (p.groups.filter((g) => g.figure !== null).length <= 2 && p.metric !== "wait" && p.kind !== "migrantBackground")) return <PeopleCompare {...p} />;
+  if (p.kind === "sex" && p.metric !== "wait") return <PeopleCompare {...p} />;
   if (p.kind === "age") return <AgeColumns {...p} />;
   if (["language", "nationality", "birthCountry", "migrantBackground"].includes(p.kind)) return <DotGrids {...p} />;
   return <Bars {...p} />;

@@ -11,6 +11,7 @@ import type { GroupKind } from "@/lib/intake/fields";
 import { FIGURE_TITLE, GroupFigure, TrendLine } from "./charts";
 import { n0, pct, pts, sentence, trend } from "./findingWords";
 import { KIND_ICON, groupLabel, groupPhrase, impactText } from "./groupWords";
+import { Recommendations } from "./Recommendations";
 import { useAnalysis } from "./useAnalysis";
 
 /** One gap, opened from the grid: what it is, where in the pathway it happens, the numbers and a fitting figure. */
@@ -23,7 +24,7 @@ export function GapDashboard({ id }: { id: string }) {
     const report = findGaps(table, u.mapping, u.groupKinds ?? {});
     const detail = gapDetail(table, u.mapping, u.groupKinds ?? {}, id);
     const index = report.findings.findIndex((f) => gapId(f) === id);
-    return { report, detail, index };
+    return { report, detail, index, setup: loaded.setup };
   }, [loaded, id]);
 
   if (loaded === null) return <AnalysisLoading />;
@@ -41,7 +42,7 @@ export function GapDashboard({ id }: { id: string }) {
     );
   }
 
-  const { report, detail, index } = data;
+  const { report, detail, index, setup } = data;
   const f = detail.finding;
   const d = f.dimension;
   const g = f.group;
@@ -70,7 +71,7 @@ export function GapDashboard({ id }: { id: string }) {
       </FadeIn>
 
       <nav aria-label="Gap details" className="mt-6 flex flex-wrap gap-2 text-sm">
-        {[['where-h','Pathway'],['fig-h','Group comparison'],['ideas-h','What to check']].map(([anchor,label]) => <a key={anchor} href={`#${anchor}`} className="inline-flex min-h-11 items-center rounded-md border border-rule px-3 py-2 hover:bg-surface">{label}</a>)}
+        {[['where-h','Pathway'],['fig-h','Group comparison'],['recs-h','Recommendations'],['ideas-h','What to check']].map(([anchor,label]) => <a key={anchor} href={`#${anchor}`} className="inline-flex min-h-11 items-center rounded-md border border-rule px-3 py-2 hover:bg-surface">{label}</a>)}
       </nav>
       <p className="mt-4 text-sm text-muted">Source: {loaded !== "missing" && loaded.setup.upload.fileName}. Comparison: the other groups in this breakdown, {detail.span}.</p>
       <FadeIn delay={200} className="mt-10 grid grid-cols-2 gap-x-6 gap-y-8 border-y border-rule py-6 md:grid-cols-4">
@@ -108,6 +109,21 @@ export function GapDashboard({ id }: { id: string }) {
       )}
 
       <FadeIn delay={800}>
+        <Recommendations
+          cacheKey={`gapRadar.recs:${setup.upload.fileName}:${id}`}
+          brief={{
+            who, kind: d.kind, kindLabel: d.label, metric: f.metric, metricLabel: METRIC_LABEL[f.metric],
+            figure: g.figure!, rest: g.rest!, gap: g.gap!, n: g.n, impact: impactOf(f), span: detail.span, trend: t,
+            group: detail.group, others: detail.rest, source: setup.upload.fileName,
+            // Public figures other than the county comparison are national; never let them read as the county's own.
+            place: setup.upload.isPublic
+              ? `the whole of Finland (national figures)${setup.placeName && setup.placeName !== "the whole country" ? `; the team works in ${setup.placeName}` : ""}`
+              : (setup.placeName ?? null),
+          }}
+        />
+      </FadeIn>
+
+      <FadeIn delay={900}>
         <section aria-labelledby="ideas-h" className="mt-14 scroll-mt-6 rounded-lg border border-rule bg-surface p-5">
           <IconHeading icon={Lightbulb} id="ideas-h" className="text-title">Worth looking into</IconHeading>
           <p className="mt-1 text-small text-muted">Questions to check with the team, not findings from the data.</p>

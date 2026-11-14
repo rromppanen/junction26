@@ -121,4 +121,12 @@ describe("findGaps", () => {
     expect(d.extraPositives).toBe(2); // 30 people missed x 5% positive among everyone else
     expect(gapDetail(t, m, {}, "participation|lang|nope")).toBeNull();
   });
+
+  it("leaves a step empty (not zero) when a breakdown has no figures for it", () => {
+    const h = ["year", "lang", "invited", "attended", "positive"];
+    const m: Mapping = { year: "year", lang: "group", invited: "invited", attended: "attended", positive: "positive" };
+    const t = { headers: h, rows: [["2024", "fi", "1000", "700", ""], ["2024", "ru", "100", "40", ""]] };
+    const f = findGaps(t, m).findings[0];
+    expect(gapDetail(t, m, {}, gapId(f))!.group).toMatchObject({ attended: 40, positive: null });
+  });
 });
