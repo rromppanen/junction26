@@ -31,7 +31,7 @@ export function MeasureUpload() {
         Fill in the CSV above each month and load it here to see each delay over time. The file stays in your browser; nothing is sent anywhere.
       </p>
       <div className="mt-3 flex flex-wrap gap-2 text-sm">
-        <label className="relative inline-flex cursor-pointer items-center gap-1.5 rounded-[3px] border border-rule px-2.5 py-1 hover:bg-par-soft">
+        <label className="relative inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-rule px-2.5 py-1 hover:bg-par-soft">
           <Upload aria-hidden size={14} /> Load your CSV
           <input
             type="file"
@@ -44,7 +44,7 @@ export function MeasureUpload() {
             }}
           />
         </label>
-        <button type="button" onClick={() => { setParsed(parseMeasureCsv(exampleMeasureCsv())); setSource("example"); }} className="rounded-[3px] border border-rule px-2.5 py-1 hover:bg-par-soft">
+        <button type="button" onClick={() => { setParsed(parseMeasureCsv(exampleMeasureCsv())); setSource("example"); }} className="rounded-md border border-rule px-2.5 py-1 hover:bg-par-soft">
           Try with example figures
         </button>
       </div>
@@ -52,7 +52,7 @@ export function MeasureUpload() {
       {parsed && parsed.series.length > 0 && (
         <div className="mt-4">
           {source === "example" && (
-            <p className="mb-3 inline-block rounded-[3px] bg-par-soft px-2 py-1 text-xs font-semibold">Example figures, not any county&rsquo;s data</p>
+            <p className="mb-3 inline-block rounded-md bg-par-soft px-2 py-1 text-xs font-semibold">Example figures, not any county&rsquo;s data</p>
           )}
           <ul className="grid gap-x-8 gap-y-5 sm:grid-cols-3">
             {parsed.series.map((s) => (

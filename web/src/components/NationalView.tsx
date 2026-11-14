@@ -44,7 +44,7 @@ export function NationalView({
   const shownWarnings = warnings.slice(0, 6);
 
   return (
-    <section id="national" aria-labelledby="national-h" className="mb-12 scroll-mt-4 rounded-[4px] bg-surface px-4 py-6 sm:px-6">
+    <section id="national" aria-labelledby="national-h" className="mb-12 scroll-mt-4 rounded-lg bg-surface px-4 py-6 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="national-h" className="flex items-center gap-2 text-xl font-semibold tracking-tight">
           <Route aria-hidden size={18} className="text-muted" /> Finland&rsquo;s cancer pathway, nationally
@@ -146,7 +146,7 @@ export function NationalView({
         <ol className="mt-3 grid gap-2 sm:grid-cols-5">
           {steps.map((s, i) => (
             <li key={s.name}>
-              <a href={s.href} className="group flex h-full flex-col gap-1 rounded-[3px] border border-rule bg-paper px-3 py-2.5 hover:border-ink">
+              <a href={s.href} className="group flex h-full flex-col gap-1 rounded-md border border-rule bg-paper px-3 py-2.5 hover:border-ink">
                 <span className="flex items-center gap-1.5 text-sm font-semibold">
                   <s.icon aria-hidden size={15} className="text-muted" />
                   {i + 1}. {s.name}

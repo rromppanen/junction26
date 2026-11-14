@@ -24,7 +24,7 @@ export function MeasureKit({ regionId, sourceNo }: { regionId: number; sourceNo?
       <a
         href={`/county/${regionId}/measure`}
         download
-        className="no-print mt-4 inline-flex items-center gap-2 rounded-[3px] bg-ink px-3.5 py-2 text-sm font-semibold text-paper hover:bg-ink/85"
+        className="no-print mt-4 inline-flex items-center gap-2 rounded-md bg-brand px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-strong"
       >
         <Download aria-hidden size={16} />
         Download CSV template

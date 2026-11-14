@@ -13,7 +13,7 @@ function gapUnit(unit: string): string {
 // Swedish border, where no county is drawn. Coordinates are in the shape file's units.
 const VIEW = { x: -104, y: -4 };
 const NOTE_RIGHT = 150; // right edge of the note column; Lapland and Pohjois-Pohjanmaa start east of ~200
-const NOTE_TOP = [395, 555]; // upper and lower note; the lower one must end above Pohjanmaa (y ~685)
+const NOTE_TOP = [375, 560]; // upper and lower note; the lower one must end above Pohjanmaa (y ~685)
 
 type Note = { key: string; heading: string; lines: string[]; status: GapStatus; target: number[]; inInset: boolean };
 
@@ -216,7 +216,7 @@ export function CountyMap({
       <p className="mb-1 mt-5 text-xs text-muted">Helsinki and the rest of Uusimaa, enlarged</p>
       <svg
         viewBox={`${cx0 - pad} ${cy0 - pad} ${cx1 - cx0 + pad * 2} ${cy1 - cy0 + pad * 2}`}
-        className="block h-auto w-full rounded-[3px] border border-dashed border-par"
+        className="block h-auto w-full rounded-md border border-dashed border-par"
         role="group"
         aria-label="Capital region counties, enlarged"
       >
@@ -253,7 +253,7 @@ function mapNotes(
         ? ""
         : g === 0
           ? "Level with Finland"
-          : `${Math.abs(g).toFixed(1)} ${gapUnit(unit)} ${g < 0 ? "behind" : "ahead of"} Finland`;
+          : `${Math.abs(g).toFixed(1)} ${gapUnit(unit)} ${g < 0 ? "behind" : "ahead"}`; // "Finland" is in the heading's sense already; keeps the note short enough not to collide
     return {
       key: end,
       heading,

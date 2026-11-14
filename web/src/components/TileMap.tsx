@@ -60,7 +60,7 @@ export function TileMap({
       <Link
         href={`/county/${r.id}`}
         title={`${shortName(r.name)}: ${fmt(f?.value, unit)}`}
-        className={`flex h-full flex-col justify-between rounded-[3px] px-1.5 pb-1 pt-1.5 text-left leading-none outline-offset-2 hover:outline-2 hover:outline-ink ${STATUS_CLASSES[status]}`}
+        className={`flex h-full flex-col justify-between rounded-md px-1.5 pb-1 pt-1.5 text-left leading-none outline-offset-2 hover:outline-2 hover:outline-ink ${STATUS_CLASSES[status]}`}
       >
         <span lang="fi" className="font-narrow line-clamp-2 hyphens-auto text-[11px] leading-[1.1] [overflow-wrap:anywhere] sm:text-xs">{shortName(r.name)}</span>
         <span className="font-narrow text-base font-semibold tabular-nums sm:text-lg">{fmt(f?.value, unit)}</span>

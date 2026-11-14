@@ -10,7 +10,7 @@ export default function StartPage() {
   return (
     <main id="main-content" tabIndex={-1} className="min-h-dvh px-4 pb-12 sm:px-6">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2 pt-5">
-        <Wordmark className="opacity-70 transition-opacity hover:opacity-100" />
+        <Wordmark />
         <Link href="/map" className="inline-flex min-h-11 items-center rounded-md border border-rule px-3 py-2 text-sm font-medium hover:bg-surface">County data explorer</Link>
       </div>
       <div className="mx-auto w-full max-w-6xl pt-6">

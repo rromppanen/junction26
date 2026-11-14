@@ -55,7 +55,7 @@ const NEXT_ACTION: Partial<Record<Status, string>> = {
 };
 
 const btn = "min-h-11 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50";
-const primary = `${btn} bg-ink text-paper`;
+const primary = `${btn} bg-brand text-white`;
 const secondary = `${btn} border border-rule`;
 
 export function FollowUpBoard() {
@@ -194,7 +194,7 @@ export function FollowUpBoard() {
         <button type="button" onClick={reset} className={`${secondary} ml-auto`}>Reset demo</button>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <section aria-labelledby="worklist-h">
           <h2 id="worklist-h" className="text-[length:var(--step-1)] font-semibold">Positive tests awaiting follow-up</h2>
           <p className="mt-1 text-sm text-muted">Sorted by a plain rule: unbooked and overdue first, then days waited. No AI risk score.</p>

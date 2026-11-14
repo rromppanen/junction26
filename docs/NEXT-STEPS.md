@@ -28,7 +28,7 @@ python docs/pitch/make_deck.py                            # rebuilds the deck PD
 | What | Where | State |
 | --- | --- | --- |
 | App: deck, measure upload, county page in loop order | PR #20, branch `feat/deck-and-loop` | CI green, **not merged yet** |
-| Pitch deck (12 slides, startup style, dark) | `docs/pitch/gap-radar-deck-mockup.pdf`, built by `docs/pitch/make_deck.py` | Placeholders: team names, demo link |
+| Pitch deck (12 slides, startup style, dark) | `docs/pitch/lapi-deck-mockup.pdf`, built by `docs/pitch/make_deck.py` (rebuild it: the committed `gap-radar-deck-mockup.pdf` still shows the old name and colours) | Placeholders: team names, demo link |
 | 2:00 video script | `docs/pitch/video-script.md` | Ready to record |
 | 3:00 live pitch + hardest Q&A | `docs/pitch/script.md` | Ready |
 | Deploy guide | `docs/DEPLOY.md` | Not deployed yet |
@@ -51,7 +51,7 @@ python docs/pitch/make_deck.py                            # rebuilds the deck PD
 - **Breast and cervical funnels.** Like the bowel one: positive → examined. Needs new Finnish Cancer Registry parsers, about 3 hours.
 - **Real mentor figures.** Ask the AstraZeneca mentors for Finnish stage at diagnosis by screening attendance and survival by stage. The simulator calibrates the first and uses US data for the second.
 - **New Context.dev key.** The current one returns 401. Get one from context.dev/dashboard; it is needed for the bounty.
-- **Name.** Decide between Gap Radar, NULLPATH and ONCO-NATION. The deck, app and README all say Gap Radar; renaming means editing `make_deck.py` and the app header.
+- **Name.** Decided: **Läpi** (Finnish for "through"), replacing Gap Radar. App, README, deck builder and scripts are renamed.
 - **Old PRs.** Decide on PR #6 and close PR #8.
 
 ## Checks before submitting

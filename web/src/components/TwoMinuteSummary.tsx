@@ -8,7 +8,7 @@ import type { SummaryLine } from "@/lib/summary";
 export function TwoMinuteSummary({ lines }: { lines: SummaryLine[] }) {
   if (lines.length === 0) return null;
   return (
-    <section aria-labelledby="summary-h" className="mt-8 rounded-[4px] bg-surface px-4 py-5 sm:px-6">
+    <section aria-labelledby="summary-h" className="mt-8 rounded-lg bg-surface px-4 py-5 sm:px-6">
       <h2 id="summary-h" className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.08em] text-muted">
         <Clock aria-hidden size={15} strokeWidth={2} />
         One decision to explore

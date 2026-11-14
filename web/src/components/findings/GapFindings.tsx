@@ -36,7 +36,7 @@ export function GapFindings() {
         <FadeIn className="space-y-4">
           <h1 className="text-heading font-semibold">No data to look at yet</h1>
           <p className="text-lede text-muted">Your file stays in this browser tab only. Start an analysis to see the gaps in it.</p>
-          <Link href="/" className="inline-block rounded-[6px] bg-ink px-6 py-3 font-medium text-white">Start an analysis</Link>
+          <Link href="/" className="inline-block rounded-xl bg-brand px-6 py-3 font-medium text-white">Start an analysis</Link>
         </FadeIn>
       </main>
     );
@@ -117,7 +117,7 @@ export function GapFindings() {
                 key={m}
                 aria-pressed={metric === m}
                 onClick={() => setMetric(m)}
-                className={`rounded-full border px-3 py-1 text-small ${metric === m ? "border-ink bg-ink text-white" : "border-rule text-muted hover:border-par"}`}
+                className={`rounded-full border px-3 py-1 text-small ${metric === m ? "border-brand bg-brand text-white" : "border-rule text-muted hover:border-par"}`}
               >
                 {METRIC_LABEL[m]}
               </button>

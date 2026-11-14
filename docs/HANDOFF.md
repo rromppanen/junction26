@@ -1,4 +1,4 @@
-# Handoff: Gap Radar (Junction 2026, AstraZeneca challenge)
+# Handoff: Läpi, formerly Gap Radar (Junction 2026, AstraZeneca challenge)
 
 Checkpoint written Sat 14.11.2026, about 13:00. It replaces the 00:30 version. Read it first, then `docs/challenge.md`. A teammate's handover is in [NEXT-STEPS.md](NEXT-STEPS.md) (deck, video script, the `feat/deck-and-loop` branch). Read both.
 
@@ -74,7 +74,7 @@ The judge's ranked next work:
 5. Clarity:
    - cut the 2-minute summary to three lines (gap, option, first action);
    - fold "Learn from", "Figures" and "Evidence" under "More";
-   - rename `docs/idea.md` to Gap Radar and add the team names and video link.
+   - rename `docs/idea.md` to Läpi and add the team names and video link.
 6. Optional, high risk: the Cancer Registry diagnosis-method (toteamistapa) export per county, comparing screening with symptoms.
 7. Skip these: the mortality indicator (`MortalityPanel` exists) and the summary and national view (they exist).
 

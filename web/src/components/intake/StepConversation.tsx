@@ -132,13 +132,13 @@ export function StepConversation({ input, questions, onDone }: Props) {
                     void answer();
                   }
                 }}
-                className="block w-full resize-none rounded-[6px] border border-rule bg-surface px-4 py-3 text-lede outline-none focus:border-ink disabled:opacity-60"
+                className="block w-full resize-none rounded-xl border border-rule bg-surface px-4 py-3 text-lede outline-none focus:border-ink disabled:opacity-60"
               />
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="submit"
                   disabled={busy || !text.trim()}
-                  className="rounded-[6px] bg-ink px-5 py-2.5 font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
+                  className="rounded-xl bg-brand px-5 py-2.5 font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   {busy ? <Thinking label="Understanding your answer" /> : "Answer"}
                 </button>
@@ -147,7 +147,7 @@ export function StepConversation({ input, questions, onDone }: Props) {
                     type="button"
                     disabled={busy}
                     onClick={() => settle(q.guess!.value, `Great: ${q.guess!.label.toLowerCase()}.`)}
-                    className="rounded-[6px] border border-rule px-4 py-2.5 hover:bg-par-soft disabled:opacity-40"
+                    className="rounded-xl border border-rule px-4 py-2.5 hover:bg-par-soft disabled:opacity-40"
                   >
                     Yes, that&apos;s it
                   </button>

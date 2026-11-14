@@ -1,6 +1,6 @@
 # junction26
 
-> **Punchline:** Gap Radar shows each Finnish wellbeing services county where people fall off its cancer pathway, what closing each gap would cost and gain, and the material to act on it.
+> **Punchline:** Läpi shows each Finnish wellbeing services county where people fall off its cancer pathway, what closing each gap would cost and gain, and the material to act on it.
 
 Our Junction 2026 project (Hype Arena, Espoo, 13–15 Nov 2026).
 Theme: *European Tech Renaissance*, where idealism meets caution in shaping tomorrow's technology and society.
@@ -11,8 +11,8 @@ Keep this section current. On Sunday morning it becomes the submission form text
 
 | Field | Value |
 | --- | --- |
-| Name | Gap Radar |
-| Punchline | Gap Radar shows each Finnish wellbeing services county where people fall off its cancer pathway, what closing each gap would cost and gain, and the material to act on it. |
+| Name | Läpi |
+| Punchline | Läpi shows each Finnish wellbeing services county where people fall off its cancer pathway, what closing each gap would cost and gain, and the material to act on it. |
 | Challenge(s) | AstraZeneca: Equal Care Across Finland. Tech bounties: Google DeepMind Best Use of Gemini API; Context.dev Fully Structured Web |
 | Technologies | Next.js, TypeScript, Tailwind CSS, Gemini API, Context.dev, THL Sotkanet open data, Finnish Cancer Registry screening reports and statistics, Statistics Finland, Vitest, GitHub Actions |
 | Demo link | _TBD_ |
@@ -26,7 +26,7 @@ Keep this section current. On Sunday morning it becomes the submission form text
 
 **Who it is for.** The cancer-care lead or screening coordinator of one of Finland's 21 wellbeing services counties (plus Helsinki and Åland), who has to take a costed proposal to the county board.
 
-**What we built.** Gap Radar is a web app with one page per county:
+**What we built.** Läpi is a web app with one page per county:
 
 - **In two minutes:** the county's biggest gap, its Goal 3 cancer-death rate against Finland, where the pathway breaks, who is missed, a costed option and the first action, each linked to the working.
 - **See and locate:** a map and ranking on THL Sotkanet indicators, and the county's bowel-screening funnel in people (invited → tested → positive → colonoscopy) from Cancer Registry counts, with the larger break ranked by findings missed against the best quarter of counties.

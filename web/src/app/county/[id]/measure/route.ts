@@ -11,7 +11,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   return new Response(measureCsv(), {
     headers: {
       "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="gap-radar-mittarit-${regionId}.csv"`,
+      "content-disposition": `attachment; filename="lapi-mittarit-${regionId}.csv"`,
     },
   });
 }

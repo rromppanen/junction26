@@ -1,8 +1,8 @@
-# NULLPATH
+# Läpi
 
 **Find where access breaks.**
 
-NULLPATH shows a wellbeing services county the exact step where people fall off the cancer pathway, what closing that break would take and cost, and hands over the material to act on it.
+Läpi shows a wellbeing services county the exact step where people fall off the cancer pathway, what closing that break would take and cost, and hands over the material to act on it.
 
 A *null path* is a pathway that ends in nothing: an invitation with no screening, or a positive test with no examination.
 
@@ -104,7 +104,7 @@ The contrast is the point: the same programme breaks at different steps in diffe
 
 - **Goal 3, sub-goal 3.2, primary** (reliable information on regional differences in diagnostics): the share of positives examined, and the wait to diagnostic colonoscopy, per county.
 - **Goal 3, sub-goal 3.1** (equal, delay-free care along national pathways): the recording kit for referral, diagnosis and treatment-start times, which have no public data. Colonoscopy is diagnostics, so the wait is not claimed as a treatment target time.
-- **Goal 3, equal outcomes:** 5-year survival per county for bowel, breast and cervical cancer (Sotkanet 3627, 3625, 3626), shown as context. The headline survival target concerns lung, pancreatic and liver cancer, which have no county data; NULLPATH does not claim it.
+- **Goal 3, equal outcomes:** 5-year survival per county for bowel, breast and cervical cancer (Sotkanet 3627, 3625, 3626), shown as context. The headline survival target concerns lung, pancreatic and liver cancer, which have no county data; Läpi does not claim it.
 - **Goal 2** (80% participation in every programme in every county): the participation step, labelled Goal 2.
 
 ## Where the AI is
@@ -178,4 +178,4 @@ Their answers count as evidence under the brief and fill the board's unit costs.
 
 ## Pitch in one breath
 
-Finland sends over a million cancer screening invitations a year. A quarter of a million lead nowhere, and one in five positive bowel tests is never followed up in the programme. Where that happens differs by county: in Helsinki people don't come; in Päijät-Häme they come and wait. NULLPATH shows each county its own break, in people; lets its cancer lead compare what each fix costs and finds; and prints the board memo. The strategy says equal care. This is where it stops being equal, and what Monday's decision is.
+Finland sends over a million cancer screening invitations a year. A quarter of a million lead nowhere, and one in five positive bowel tests is never followed up in the programme. Where that happens differs by county: in Helsinki people don't come; in Päijät-Häme they come and wait. Läpi shows each county its own break, in people; lets its cancer lead compare what each fix costs and finds; and prints the board memo. The strategy says equal care. This is where it stops being equal, and what Monday's decision is.

@@ -83,7 +83,7 @@ export function Recommendations({ brief, cacheKey }: { brief: GapBrief; cacheKey
       <IconHeading icon={Sparkles} id="recs-h" className="text-title">Recommendations</IconHeading>
 
       {!run && (
-        <FadeIn className="mt-4 max-w-3xl rounded-[6px] border border-rule bg-surface p-5">
+        <FadeIn className="mt-4 max-w-3xl rounded-xl border border-rule bg-surface p-5">
           <p>
             An agent searches systematic reviews, guidelines and studies for what has closed gaps like this one, reads them against this
             gap&apos;s numbers, and drafts the most actionable steps, strongest evidence first.
@@ -92,7 +92,7 @@ export function Recommendations({ brief, cacheKey }: { brief: GapBrief; cacheKey
             Only the gap&apos;s totals are sent, never the rows of your file. Every source, quote and number is checked, and a second agent reviews each
             recommendation against its evidence before you see it.
           </p>
-          <button type="button" onClick={() => void start()} className="mt-4 inline-flex items-center gap-2 rounded-[6px] bg-ink px-5 py-2.5 font-medium text-white">
+          <button type="button" onClick={() => void start()} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 font-medium text-white">
             <Sparkles aria-hidden size={16} /> Find recommendations
           </button>
         </FadeIn>
@@ -167,7 +167,7 @@ function RecCard({ rec, rank, sources }: { rec: RecommendResult["recommendations
     </div>
   );
   return (
-    <article className="flex h-full flex-col rounded-[6px] border border-rule bg-surface p-5">
+    <article className="flex h-full flex-col rounded-xl border border-rule bg-surface p-5">
       <div className="flex items-center justify-between gap-2">
         <span className="text-caption tabular-nums text-muted">#{rank}</span>
         <StrengthBadge strength={rec.strength} />
