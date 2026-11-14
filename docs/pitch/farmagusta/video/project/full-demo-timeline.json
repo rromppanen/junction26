@@ -1,0 +1,114 @@
+[
+  {
+    "section": "opening-hook",
+    "timeline_in": "00:00:00:00",
+    "timeline_out": "00:00:02:20",
+    "duration_seconds": 2.8333333333333335,
+    "asset": "selects/opening-hook.mp4",
+    "placeholder": false
+  },
+  {
+    "section": "brand",
+    "timeline_in": "00:00:02:20",
+    "timeline_out": "00:00:06:00",
+    "duration_seconds": 3.1666666666666665,
+    "asset": "project/graphics/brand.mp4",
+    "placeholder": false
+  },
+  {
+    "section": "problem",
+    "timeline_in": "00:00:06:00",
+    "timeline_out": "00:00:14:00",
+    "duration_seconds": 8.0,
+    "asset": "project/graphics/problem.mp4",
+    "placeholder": false
+  },
+  {
+    "section": "invitation",
+    "timeline_in": "00:00:14:00",
+    "timeline_out": "00:00:22:00",
+    "duration_seconds": 8.0,
+    "asset": "project/graphics/invitation.mp4",
+    "placeholder": false
+  },
+  {
+    "section": "scan",
+    "timeline_in": "00:00:22:00",
+    "timeline_out": "00:00:34:00",
+    "duration_seconds": 12.0,
+    "asset": "project/graphics/scan.mp4",
+    "placeholder": true
+  },
+  {
+    "section": "home-test",
+    "timeline_in": "00:00:34:00",
+    "timeline_out": "00:00:50:00",
+    "duration_seconds": 16.0,
+    "asset": "project/graphics/home-test.mp4",
+    "placeholder": true
+  },
+  {
+    "section": "booking",
+    "timeline_in": "00:00:50:00",
+    "timeline_out": "00:01:04:00",
+    "duration_seconds": 14.0,
+    "asset": "project/graphics/booking.mp4",
+    "placeholder": true
+  },
+  {
+    "section": "tracking",
+    "timeline_in": "00:01:04:00",
+    "timeline_out": "00:01:18:00",
+    "duration_seconds": 14.0,
+    "asset": "project/graphics/tracking.mp4",
+    "placeholder": true
+  },
+  {
+    "section": "hospital",
+    "timeline_in": "00:01:18:00",
+    "timeline_out": "00:01:38:00",
+    "duration_seconds": 20.0,
+    "asset": "project/graphics/hospital.mp4",
+    "placeholder": true
+  },
+  {
+    "section": "robot-approach",
+    "timeline_in": "00:01:38:00",
+    "timeline_out": "00:01:42:00",
+    "duration_seconds": 4.0,
+    "asset": "selects/robot-approach.mp4",
+    "placeholder": false
+  },
+  {
+    "section": "handoff",
+    "timeline_in": "00:01:42:00",
+    "timeline_out": "00:01:47:05",
+    "duration_seconds": 5.208333333333333,
+    "asset": "selects/handoff.mp4",
+    "placeholder": false
+  },
+  {
+    "section": "departure",
+    "timeline_in": "00:01:47:05",
+    "timeline_out": "00:01:51:10",
+    "duration_seconds": 4.208333333333333,
+    "asset": "selects/departure.mp4",
+    "placeholder": false
+  },
+  {
+    "section": "final-departure",
+    "timeline_in": "00:01:51:10",
+    "timeline_out": "00:01:55:10",
+    "duration_seconds": 4.0,
+    "asset": "selects/final-departure.mp4",
+    "placeholder": false
+  },
+  {
+    "section": "closing",
+    "timeline_in": "00:01:55:10",
+    "timeline_out": "00:02:00:00",
+    "duration_seconds": 4.583333333333333,
+    "asset": "project/graphics/closing.mp4",
+    "placeholder": false
+  }
+]
