@@ -73,7 +73,7 @@ export const fi: KitText = {
       { title: "Merkitse päivämäärä näytetarraan ja kiinnitä tarra putkeen.", body: "Tarra on kiinni kutsukirjeessä. Kirjoita siihen näytteenottopäivä, irrota viivakoodillinen tarra paperista ja liimaa se pystyyn putken litteälle puolelle." },
       { title: "Laita putki palautuspussiin ja sulje pussi huolellisesti.", body: "Palautuspussi tuli kutsun mukana, ja sen sisällä on imuliina." },
       { title: "Täytä seulonnan esitiedot.", body: "Sähköisesti osoitteessa seula.hus.fi tai kirjeen QR-koodilla. Tunnus: näytetarran H-kirjaimella alkava numero. Salasana: henkilötunnuksesi alkuosa. Jos sähköinen lomake ei onnistu, täytä kirjeen mukana tullut paperilomake." },
-      { title: "Laita pussi pahviseen palautuskuoreen.", body: "Jos täytit paperilomakkeen, laita sekin kuoreen. Säilytä näyte huoneenlämmössä. Näyte pitää palauttaa viimeistään näytteenottoa seuraavana arkipäivänä, joten varaa robotin nouto seuraavaksi." },
+      { title: "Laita suljettu palautuspussi pahviseen palautuskuoreen.", body: "Jos täytit paperilomakkeen, laita sekin kuoreen. Säilytä näyte huoneenlämmössä. Näyte pitää palauttaa viimeistään näytteenottoa seuraavana arkipäivänä, joten varaa robotin nouto seuraavaksi." },
     ],
     resultWait: "Saat tuloksen noin kuukauden kuluessa, ensisijaisesti sähköisenä kirjeenä.",
     negative: { title: "Näytteessä ei ollut verta", body: "Sinut kutsutaan seuraavan kerran kahden vuoden päästä. Jos sinulla on oireita sitä ennen, ota yhteys terveysasemaan." },

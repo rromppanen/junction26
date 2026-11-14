@@ -73,7 +73,7 @@ export const en: KitText = {
       { title: "Date the sample label and stick it on the tube.", body: "The label is attached to your invitation letter. Write the date you took the sample on it, peel the barcode label off the paper and stick it upright on the flat side of the tube." },
       { title: "Put the tube in the return bag and seal it carefully.", body: "The return bag came with your invitation and has an absorbent cloth inside." },
       { title: "Fill in the background information.", body: "Online at seula.hus.fi, or scan the QR code in your letter. User ID: the number starting with H on the sample label. Password: the first six digits of your personal identity code. If you can't use the online form, fill in the paper form that came with the letter." },
-      { title: "Put the bag in the cardboard return envelope.", body: "If you filled in the paper form, put it in the envelope too. Keep the sample at room temperature. It must be returned by the next working day at the latest, so book the robot pickup next." },
+      { title: "Put the sealed return bag in the cardboard return envelope.", body: "If you filled in the paper form, put it in the envelope too. Keep the sample at room temperature. It must be returned by the next working day at the latest, so book the robot pickup next." },
     ],
     resultWait: "You will get the result in about a month, by electronic letter if you use one, otherwise by post.",
     negative: { title: "No blood was found", body: "You will be invited again in two years. If you have symptoms before then, contact your health centre." },
