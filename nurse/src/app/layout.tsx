@@ -8,11 +8,11 @@ const heading = Poppins({ variable: "--font-poppins", subsets: ["latin", "latin-
 
 export const metadata: Metadata = {
   title: {
-    default: "Nurse board | Läpi",
-    template: "%s | Läpi nurse board",
+    default: "Nurse board | farmagusta",
+    template: "%s | farmagusta nurse board",
   },
   description: "Track screening participation, help people return their samples, and coordinate collection with the laboratory.",
-  applicationName: "Läpi nurse board",
+  applicationName: "farmagusta nurse board",
 };
 
 export const viewport: Viewport = {

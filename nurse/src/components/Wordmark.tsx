@@ -1,22 +1,10 @@
-/**
- * The Läpi mark and name, linking to the Läpi start page.
- * A plain link, not next/link: "/" is outside this app's /nurse base path.
- * The main web app serves it on the same origin.
- * The mark is a path passing a gate: nobody falls out between a test and treatment.
- * It is drawn in the brand teal only, so the status colours keep meaning status.
- */
+/** The farmagusta wordmark, shared with the pitch deck. */
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
     // Cross-app link: next/link would prefix the /nurse base path.
     // eslint-disable-next-line @next/next/no-html-link-for-pages
-    <a href="/" className={`wordmark inline-flex items-center gap-2 ${className}`}>
-      {/* Läpi ("through"): a path that passes a gate and carries on. */}
-      <svg aria-hidden viewBox="0 0 30 16" width="30" height="16" className="shrink-0">
-        <path d="M2 8 H25" stroke="var(--brand)" strokeWidth="2.6" strokeLinecap="round" />
-        <path d="M20.5 3.5 L26.5 8 L20.5 12.5" fill="none" stroke="var(--brand)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-        <rect x="11" y="1" width="3.4" height="14" rx="1.7" fill="var(--brand-strong)" />
-      </svg>
-      <span className="text-[1.125rem] font-semibold tracking-[-0.015em]">Läpi</span>
+    <a href="/" aria-label="farmagusta home" className={`wordmark inline-flex items-baseline font-heading text-[1.25rem] font-semibold tracking-[-0.04em] text-brand ${className}`}>
+      <span>farmagusta<span aria-hidden className="text-accent">.</span></span>
     </a>
   );
 }
