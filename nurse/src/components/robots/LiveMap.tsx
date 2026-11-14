@@ -10,9 +10,9 @@ import { AREAS, HUBS, curvedRoute, homeOf, pickupCode, positionOf, routeKey, spl
 // The HUS palette of the user app (web/): brand blue for a robot on its way, like the kit's tracking map.
 const COLOUR = {
   outbound: "#004b87",
-  atDoor: "#00797c",
+  atDoor: "#004b87",
   flagged: "#a34a08",
-  returning: "#6d8582",
+  returning: "#004b87",
   idle: "#ffffff",
   ink: "#1d252c",
   hub: "#003c6c",

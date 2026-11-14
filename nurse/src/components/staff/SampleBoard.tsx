@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, ChevronRight, RotateCcw } from "lucide-react";
-import { NurseNav } from "@/components/NurseNav";
-import { Wordmark } from "@/components/Wordmark";
+import { AlertTriangle, ChevronRight } from "lucide-react";
+import { AppHeader, DemoBar } from "@/components/NurseNav";
 import { flagsOf, stageOf, STAGES_FOR_BOARD, type EventType, type Stage } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
 import { pickupCode } from "@/lib/robots/fleet";
@@ -102,20 +101,8 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
 
   return (
     <main id="main-content" tabIndex={-1} className="min-h-dvh px-4 pb-12 sm:px-6">
-      <header className="-mx-4 border-b border-rule bg-surface px-4 sm:-mx-6 sm:px-6">
-        <div className="mx-auto flex min-h-14 w-full max-w-[96rem] flex-wrap items-center justify-between gap-3 py-2">
-        <div className="flex flex-wrap items-center gap-3">
-          <Wordmark />
-          <span className="text-sm text-muted">Screening nurse</span>
-          <NurseNav />
-        </div>
-        <button type="button" className={BTN} onClick={() => { if (!window.confirm("Reset all demo people and remove recorded actions?")) return; reset(); setSelected(null); clearBusy(); setStatus("Demo reset."); }}>
-          <RotateCcw size={16} aria-hidden /> Reset demo
-        </button>
-      </div>
-      </header>
+      <AppHeader />
       <div className="mx-auto w-full max-w-[96rem] pt-3">
-        {!embed && <p className="text-xs text-muted">{DEMO_NOTE}</p>}
         {!mounted ? (
           <p className="mt-6 text-muted">Loading the board…</p>
         ) : (
@@ -218,6 +205,7 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
           </>
         )}
       </div>
+      {!embed && <DemoBar onReset={() => { if (!window.confirm("Start the demo again? This removes all recorded actions.")) return; reset(); setSelected(null); clearBusy(); setStatus("Demo started again."); }} />}
       {sel && <SampleDrawer row={sel} now={now} busy={busy} act={act} status={status} onClose={closeDrawer} />}
     </main>
   );
