@@ -7,6 +7,8 @@ import { diagnosePathway } from "@/lib/fingerprint";
 import { describeFingerprintFi, fmtFi, whatItTakesFi } from "@/lib/memoFi";
 import { PrintButton } from "@/components/PrintButton";
 import type { LiveSnippet } from "@/lib/context";
+import { loadPathway } from "@/lib/pathwayData";
+import { MemoProposal, parseProposal } from "@/components/MemoProposal";
 
 export const dynamic = "force-dynamic";
 
@@ -26,14 +28,18 @@ function sourceLabel(id: string, live: LiveSnippet[]): string {
   return `${doc}${ev.page ? `, s. ${ev.page}` : ""}`;
 }
 
-export default async function MemoPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function MemoPage({
+  params, searchParams,
+}: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { id } = await params;
+  const proposal = parseProposal(await searchParams);
   const regionId = Number(id);
   const loaded = await loadCountyBrief(regionId, "fi");
   if (!loaded) notFound();
   const { name, facts, live, peer, brief } = loaded;
 
   const fp = describeFingerprintFi(diagnosePathway(facts, INDICATORS));
+  const pathwayView = proposal ? loadPathway(regionId) : null;
   const citable = [...live.snippets, ...(peer?.snippets ?? [])];
   const sourceIds = [...new Set(brief.recommendations.flatMap((r) => r.sources))];
   const idx = new Map(sourceIds.map((s, i) => [s, i + 1]));
@@ -68,6 +74,8 @@ export default async function MemoPage({ params }: { params: Promise<{ id: strin
         <p className="mt-2 text-sm leading-snug">{brief.finding}</p>
         <p className="mt-2 text-sm font-semibold">{fp}</p>
       </header>
+
+      {proposal && pathwayView && <MemoProposal view={pathwayView} params={proposal} />}
 
       <section aria-labelledby="m-act">
         <h2 id="m-act" className="mb-1 text-base font-semibold">Ehdotetut toimenpiteet</h2>

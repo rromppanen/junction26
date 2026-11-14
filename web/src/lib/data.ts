@@ -55,7 +55,7 @@ async function fromDatabase(url: string): Promise<Dataset> {
       values.push({ indicatorId: r.indicator_id, regionId: r.region_id, year: r.year, value: Number(r.value) });
       fetchedAt = Math.max(fetchedAt, new Date(r.fetched_at).getTime());
     }
-    return { regions: [...regions.values()], values, fetchedAt: new Date(fetchedAt).toISOString(), source: "database" };
+    return { regions: [...regions.values()], values, fetchedAt: new Date(fetchedAt).toISOString(), languages: (snapshot as { languages?: Dataset["languages"] }).languages, source: "database" };
   } finally {
     await client.end().catch(() => {});
   }
