@@ -25,6 +25,8 @@ export type SampleEvent = {
   slot?: string;
   /** for pickupBooked: when the pickup window starts (epoch ms) */
   slotAt?: number;
+  /** for pickupBooked: how long the robot drives one way, in ms. The nurse app times its fleet from this. */
+  travelMs?: number;
 };
 
 export type Person = {

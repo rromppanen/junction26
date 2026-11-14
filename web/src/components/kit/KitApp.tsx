@@ -142,7 +142,8 @@ export function KitApp() {
     }
     setRoute(r);
     setLocating("idle");
-    act({ type: "pickupBooked", slot: label, ...(at !== undefined ? { slotAt: at } : {}) });
+    // travelMs lets the nurse app's fleet drive the same robot on the same clock as this phone.
+    act({ type: "pickupBooked", slot: label, travelMs: ROBOT_TRAVEL_MS, ...(at !== undefined ? { slotAt: at } : {}) });
     act({ type: "robotDispatched" });
   }
 
