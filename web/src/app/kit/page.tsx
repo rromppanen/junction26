@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { KitApp } from "@/components/kit/KitApp";
 
-export const metadata: Metadata = { title: { absolute: "Screening home sample" } };
+export const metadata: Metadata = { title: { absolute: "Screening home sample | farmagusta" } };
 
 export default function KitPage() {
   return (

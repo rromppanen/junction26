@@ -8,13 +8,13 @@ const heading = Poppins({ variable: "--font-poppins", subsets: ["latin", "latin-
 
 export const metadata: Metadata = {
   title: {
-    default: "Läpi: every bowel screening sample, from home to care",
+    default: "farmagusta: helping more people complete screening",
     // A page sets only its own name ("Nurse board", "Page not found"); the product name follows.
-    template: "%s | Läpi",
+    template: "%s | farmagusta",
   },
   description:
-    "A home bowel screening test, a robot pickup and a nurse board that follows every sample until a positive result reaches a colonoscopy.",
-  applicationName: "Läpi",
+    "Clear screening invitations, home test guidance and sample collection, with a nurse board to help more people take part.",
+  applicationName: "farmagusta",
 };
 
 export const viewport: Viewport = {
