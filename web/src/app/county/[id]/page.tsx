@@ -20,6 +20,8 @@ import { MeasureKit } from "@/components/MeasureKit";
 import { PathwayFunnel } from "@/components/PathwayFunnel";
 import { DecisionBoard } from "@/components/DecisionBoard";
 import { StressTest } from "@/components/StressTest";
+import { EvidenceTag } from "@/components/simulator/EvidenceTag";
+import { EVIDENCE_KIND_HELP, EVIDENCE_KIND_LABEL, type EvidenceKind } from "@/data/simulatorEvidence";
 import { loadPathway } from "@/lib/pathwayData";
 import { PATHWAY_COSTS } from "@/data/pathwayCosts";
 import { PathwayStrip } from "@/components/PathwayStrip";
@@ -347,6 +349,14 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
       </Part>
 
       <Part {...part("ev")} title="Evidence">
+        <dl className="mb-4 grid max-w-3xl gap-x-4 gap-y-1.5 text-sm sm:grid-cols-[8rem_minmax(0,1fr)]">
+          {(["observed", "inferred", "simulated", "expert"] as EvidenceKind[]).map((k) => (
+            <div key={k} className="contents">
+              <dt><EvidenceTag kind={k} /></dt>
+              <dd className="text-muted">{EVIDENCE_KIND_HELP[k]}<span className="sr-only"> ({EVIDENCE_KIND_LABEL[k]})</span></dd>
+            </div>
+          ))}
+        </dl>
         <div className="space-y-3">
           <More label={`Sources (${sources.length})`} icon={BookOpen}>
             {sources.length === 0 ? (
@@ -429,12 +439,18 @@ function compareToFinland(f: GapFacts, unit: string): string {
 }
 
 /** A section of the brief: its icon and name on top, then the content. `id` is the jump-menu anchor. */
+const PART_KIND: Record<string, EvidenceKind> = {
+  funnel: "observed", decide: "simulated", path: "observed", "what-if": "simulated", lb: "inferred", peer: "observed", ind: "observed",
+};
+
 function Part({ id, icon: Icon, title, children }: { id: string; icon: LucideIcon; label?: string; title: string; children: React.ReactNode }) {
+  const kind = PART_KIND[id];
   return (
     <section id={id} aria-labelledby={`${id}-h`} className="print-break scroll-mt-14 border-t border-ink py-8 first-of-type:border-t-0">
       <h2 id={`${id}-h`} className="mb-5 flex items-center gap-2 text-xl font-semibold leading-tight tracking-tight">
         <Icon aria-hidden size={20} strokeWidth={2} className="shrink-0 text-muted" />
         {title}
+        {kind && <EvidenceTag kind={kind} className="ml-1" />}
       </h2>
       <div className="min-w-0">{children}</div>
     </section>

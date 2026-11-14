@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useDeferredValue, useMemo, useState } from "react";
-import { Dices, Gauge, ListOrdered, RotateCcw, SlidersHorizontal, TriangleAlert, Upload, Users } from "lucide-react";
+import { ChevronDown, Dices, Gauge, ListOrdered, RotateCcw, SlidersHorizontal, TriangleAlert, Upload, Users } from "lucide-react";
 import { DEFAULT_ASSUMPTIONS, PARAM_GROUPS, PARAM_META } from "@/data/simulatorAssumptions";
 import {
   invalidStageMix,
@@ -419,7 +419,13 @@ export function ScreeningSimulator({
             </More>
           </section>
 
-          <div className="grid gap-x-10 gap-y-14 xl:grid-cols-2">
+          <details className="group" open={false}>
+            <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-[3px] border border-rule px-3 py-2 font-semibold hover:bg-par-soft [&::-webkit-details-marker]:hidden">
+              <SlidersHorizontal aria-hidden size={16} className="text-muted" />
+              Show the analysis: what drives the result and how sure we can be
+              <ChevronDown aria-hidden size={15} className="transition-transform group-open:rotate-180" />
+            </summary>
+          <div className="mt-8 grid gap-x-10 gap-y-14 xl:grid-cols-2">
             <section aria-labelledby="sens-h" className="min-w-0">
               <IconHeading icon={SlidersHorizontal} id="sens-h" className="text-xl">What drives the result</IconHeading>
               <p className="mb-4 mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
@@ -487,6 +493,7 @@ export function ScreeningSimulator({
               )}
             </section>
           </div>
+          </details>
         </div>
       </div>
     </div>
