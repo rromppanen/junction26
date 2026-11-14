@@ -8,22 +8,14 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "ingest": "tsx scripts/ingest.ts",
     "ingest:registry": "tsx scripts/ingest-registry.ts",
-    "shapes": "tsx scripts/shapes.ts",
-    "shapes:municipalities": "tsx scripts/municipality-shapes.ts",
     "check": "npm run lint && npm test && npm run build",
-    "data": "node scripts/ensure-data.mjs",
-    "smoke": "node scripts/smoke.mjs",
-    "predev": "npm run data",
-    "pretest": "npm run data",
-    "prebuild": "npm run data"
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
     "lucide-react": "0.468.0",
     "next": "15.5.4",
-    "pg": "^8.16.3",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
@@ -31,7 +23,6 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/pg": "^8.15.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
