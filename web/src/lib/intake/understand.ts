@@ -2,7 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { shortName } from "@/components/format";
 import { getDataset } from "@/lib/data";
 import { trimSample, type Question, type QuestionInput } from "./clarify";
-import { FIELDS, suggestMapping, type Field, type Mapping } from "./fields";
+import { FIELDS, GROUP_KINDS, groupKindOf, suggestMapping, type Field, type GroupKind, type Mapping } from "./fields";
 import { personalDataHeaders } from "./privacy";
 import type { Level } from "./setup";
 
@@ -41,12 +41,16 @@ export type ColumnGuess = {
   meaning: string;
   confidence: number;
   source: "name" | "ai" | "none";
+  /** Set for population-group columns: what the groups are (language, sex, age…). */
+  groupKind?: GroupKind;
 };
 export type PlaceGuess = { countyId: number | null; level: Level; confidence: number; reason: string };
 export type Understanding = {
   status: "ai" | "fallback";
   columns: ColumnGuess[];
   mapping: Mapping | null;
+  /** Population-group column -> its kind, for every column that may end up as a group. */
+  groupKinds: Record<string, GroupKind>;
   place: PlaceGuess;
   questions: ConvQuestion[];
   /** County options (and "the whole country"), so the client can name the place it ends up with. */
@@ -91,7 +95,7 @@ ${fieldList()}
 
 ${data}
 
-For each column return: the field, a short plain-English meaning (max 12 words), your confidence from 0 to 1 that the field is right, and one short friendly question you would ask the user if you were unsure (plain English, no jargon, mention an example value from the sample). Be honest: use a confidence below 0.75 when the header is abbreviated, ambiguous or could fit more than one field. Use each field other than "ignore" for at most one column. Do not invent data.`;
+Several columns may be population groups (language, sex, age group, nationality, country of birth, migrant background, education, income…); for each of those also give groupKind. For each column return: the field, a short plain-English meaning (max 12 words), your confidence from 0 to 1 that the field is right, and one short friendly question you would ask the user if you were unsure (plain English, no jargon, mention an example value from the sample). Be honest: use a confidence below 0.75 when the header is abbreviated, ambiguous or could fit more than one field. Use each field other than "ignore" and "group" for at most one column. Do not invent data.`;
     schema = {
       type: Type.OBJECT,
       properties: {
@@ -105,6 +109,7 @@ For each column return: the field, a short plain-English meaning (max 12 words),
               meaning: { type: Type.STRING },
               confidence: { type: Type.NUMBER },
               question: { type: Type.STRING },
+              groupKind: { type: Type.STRING, enum: [...GROUP_KINDS.map((g) => g.id), "other"] },
             },
             required: ["column", "field", "meaning", "confidence", "question"],
           },
@@ -216,7 +221,7 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
 
   if (headers && headers.length) {
     const byName = suggestMapping(headers);
-    const ai = new Map<string, { field: Field; meaning: string; confidence: number }>();
+    const ai = new Map<string, { field: Field; meaning: string; confidence: number; groupKind?: GroupKind }>();
     try {
       const raw = (await withTimeout(generate({ kind: "columns", headers, sample }), TIMEOUT_MS)) as { columns?: unknown };
       if (!raw || !Array.isArray(raw.columns)) throw new Error("unusable answer");
@@ -227,6 +232,7 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
           field: c.field as Field,
           meaning: typeof c.meaning === "string" ? c.meaning.trim().slice(0, MAX_TEXT) : "",
           confidence: clamp01(c.confidence),
+          groupKind: typeof c.groupKind === "string" && [...GROUP_KINDS.map((g) => g.id as string), "other"].includes(c.groupKind) ? (c.groupKind as GroupKind) : undefined,
         });
         if (typeof c.question === "string" && c.question.trim()) askText.set(c.column, c.question.trim().slice(0, MAX_TEXT));
       }
@@ -247,10 +253,15 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
         columns.push({ header: h, field: "ignore", meaning: "Not sure yet.", confidence: 0.2, source: "none" });
       }
     });
-    // Each field may hold only one column: the most confident one keeps it; the others become questions.
+    for (const c of columns) {
+      if (c.field !== "group") continue;
+      const byHeader = groupKindOf(c.header);
+      c.groupKind = byHeader !== "other" ? byHeader : (ai.get(c.header)?.groupKind ?? "other");
+    }
+    // Each field may hold only one column (groups excepted): the most confident one keeps it; the others become questions.
     const owner = new Map<Field, ColumnGuess>();
     for (const c of [...columns].sort((x, y) => y.confidence - x.confidence)) {
-      if (c.field === "ignore") continue;
+      if (c.field === "ignore" || c.field === "group") continue;
       if (owner.has(c.field)) c.confidence = Math.min(c.confidence, 0.5);
       else owner.set(c.field, c);
     }
@@ -261,6 +272,10 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
     ? (Object.fromEntries(columns.map((c) => [c.header, c.confidence >= CONFIDENT ? c.field : "ignore"])) as Mapping)
     : null;
   const place = guessPlace(headers, sample, mapping, p);
+  // Kinds for every column, so a column the user later calls a group still gets a sensible label.
+  const groupKinds: Record<string, GroupKind> = Object.fromEntries(
+    (headers ?? []).map((h) => [h, columns.find((c) => c.header === h)?.groupKind ?? groupKindOf(h)]),
+  );
 
   const questions: ConvQuestion[] = [];
   for (const c of columns) {
@@ -293,7 +308,7 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
   }
   // The place question always survives the cap: findings cannot open without it.
   const capped = questions.length > MAX_QUESTIONS ? [...questions.slice(0, MAX_QUESTIONS - 1), questions.at(-1)!] : questions;
-  return { status, columns, mapping, place, questions: capped, places: p.options };
+  return { status, columns, mapping, groupKinds, place, questions: capped, places: p.options };
 }
 
 const SKIP = /^(skip|pass|no idea|not sure|i don'?t know|dunno|en tiedä|ei aavistusta|ohita)\b/;

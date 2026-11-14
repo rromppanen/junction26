@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { QuestionInput } from "@/lib/intake/clarify";
+import { groupKindLabel } from "@/lib/intake/fields";
 import type { Understanding } from "@/lib/intake/understand";
 import { FadeIn, Thinking, postJson } from "./fade";
 
@@ -29,6 +30,10 @@ function summary(u: Understanding, fileName: string): string[] {
   } else {
     lines.push("I know the public datasets already.");
   }
+  const groups = u.columns.filter((c) => c.field === "group" && !u.questions.some((q) => q.column === c.header));
+  const ways = [...(u.columns.some((c) => c.field === "region" && c.confidence >= 0.75) ? ["area"] : []),
+    ...groups.map((c) => groupKindLabel(c.groupKind ?? "other", c.header).toLowerCase())];
+  if (ways.length >= 2) lines.push(`I can compare people by ${ways.slice(0, -1).join(", ")} and ${ways.at(-1)}.`);
   if (u.place.countyId !== null && !u.questions.some((q) => q.kind === "county")) {
     const name = u.places.find((p) => p.value === String(u.place.countyId))?.label;
     if (name) lines.push(`Your figures look like they are from ${name}.`);
