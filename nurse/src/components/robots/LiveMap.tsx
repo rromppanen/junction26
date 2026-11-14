@@ -139,12 +139,14 @@ export default function LiveMap({
   participants,
   showRoutes,
   showHubs,
+  locations,
   onSample,
   onHub,
 }: {
   participants: Row[];
   showRoutes: boolean;
   showHubs: boolean;
+  locations: string[];
   onSample: (id: string) => void;
   onHub: (id: string) => void;
   fleet: RobotView[];
@@ -307,34 +309,36 @@ export default function LiveMap({
 
       {/* Parked robots are counted on their hub's label rather than stacked on top of it. */}
       {showHubs &&
-        Object.values(HUBS).map((h) => {
-          const parked = fleet.filter(
-            (v) => v.robot.hub === h.id && v.status.kind === "idle",
-          ).length;
-          return (
-            <Marker
-              key={h.id}
-              position={h.at}
-              icon={intake[h.id] ? hubIntakeIcon : hubIcon}
-              zIndexOffset={2000}
-              title={h.name}
-              eventHandlers={{ click: () => onHub(h.id) }}
-            >
-              <Tooltip
-                key={intake[h.id] ? "intake" : "ready"}
-                permanent
-                direction="bottom"
-                offset={[0, 8]}
-                className={`hub-label${intake[h.id] ? " has-intake" : ""}`}
+        Object.values(HUBS)
+          .filter((h) => locations.includes(h.id))
+          .map((h) => {
+            const parked = fleet.filter(
+              (v) => v.robot.hub === h.id && v.status.kind === "idle",
+            ).length;
+            return (
+              <Marker
+                key={h.id}
+                position={h.at}
+                icon={intake[h.id] ? hubIntakeIcon : hubIcon}
+                zIndexOffset={2000}
+                title={h.name}
+                eventHandlers={{ click: () => onHub(h.id) }}
               >
-                {h.name} ·{" "}
-                {intake[h.id]
-                  ? `${intake[h.id]} to collect`
-                  : `${parked} ready`}
-              </Tooltip>
-            </Marker>
-          );
-        })}
+                <Tooltip
+                  key={intake[h.id] ? "intake" : "ready"}
+                  permanent
+                  direction="bottom"
+                  offset={[0, 8]}
+                  className={`hub-label${intake[h.id] ? " has-intake" : ""}`}
+                >
+                  {h.name} ·{" "}
+                  {intake[h.id]
+                    ? `${intake[h.id]} to collect`
+                    : `${parked} ready`}
+                </Tooltip>
+              </Marker>
+            );
+          })}
 
       {fleet.map((v) => {
         if (v.status.kind === "idle") return null;

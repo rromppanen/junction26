@@ -2,13 +2,11 @@
 
 import { Wordmark } from "./Wordmark";
 
-export function AppHeader() {
+export function AppHeader({ children }: { children?: React.ReactNode }) {
   return (
     <header className="flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-rule bg-surface px-4 sm:px-6">
       <Wordmark />
-      <span className="text-sm font-semibold text-brand-strong">
-        Hospital · live map
-      </span>
+      {children}
     </header>
   );
 }

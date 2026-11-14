@@ -23,6 +23,7 @@ import {
   HUBS,
   awaitingIntake,
   fleetAt,
+  hubOf,
   pickupCode,
   readyForPickup,
   simStep,
@@ -65,6 +66,9 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(true);
   const [layers, setLayers] = useState(INITIAL_LAYERS);
   const [stages, setStages] = useState(() => STAGES_FOR_BOARD.map(() => true));
+  const [locations, setLocations] = useState<HubId[]>(() =>
+    Object.values(HUBS).map((hub) => hub.id),
+  );
   const [query, setQuery] = useState("");
   const [attentionOnly, setAttentionOnly] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
@@ -98,6 +102,7 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
   const visible = rows.filter((r) => {
     const p = r.s.person;
     return (
+      locations.includes(hubOf(p)) &&
       STAGES_FOR_BOARD.some(
         (stage, i) => stages[i] && matches(stage.stage, r.stage),
       ) &&
@@ -131,7 +136,8 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
   const mapFleet = layers.robots
     ? fleet.filter(
         (v) =>
-          v.status.kind === "idle" || visibleIds.has(v.status.trip.sampleId),
+          locations.includes(v.robot.hub) &&
+          (v.status.kind === "idle" || visibleIds.has(v.status.trip.sampleId)),
       )
     : [];
   const ready = readyForPickup(samples, now).filter((s) =>
@@ -147,7 +153,8 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
   const robot = mapFleet.find(
     (v) => v.robot.id === selected && v.status.kind !== "idle",
   );
-  const hub = hubId && layers.hubs ? HUBS[hubId] : null;
+  const hub =
+    hubId && locations.includes(hubId) && layers.hubs ? HUBS[hubId] : null;
   const group = intake.find((g) => g.hub === hubId);
 
   useEffect(() => {
@@ -168,6 +175,7 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
     setAttentionOnly(false);
     setStages(STAGES_FOR_BOARD.map(() => true));
     setLayers(INITIAL_LAYERS);
+    setLocations(Object.values(HUBS).map((hub) => hub.id));
   }
   function openSample(id: string) {
     returnFocus.current =
@@ -226,28 +234,20 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
       tabIndex={-1}
       className="flex h-dvh flex-col overflow-hidden"
     >
-      <AppHeader />
+      <h1 className="sr-only">Hospital map</h1>
+      <AppHeader>
+        <button
+          ref={filtersButton}
+          type="button"
+          className={BTN}
+          aria-expanded={menuOpen}
+          aria-controls="map-filters"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          <SlidersHorizontal size={16} aria-hidden /> Filters
+        </button>
+      </AppHeader>
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-rule bg-white px-4 py-2">
-          <div>
-            <h1 className="text-base font-semibold text-brand-strong">
-              Hospital map
-            </h1>
-            <p className="text-xs text-muted">
-              Select a person, robot or hub to take action.
-            </p>
-          </div>
-          <button
-            ref={filtersButton}
-            type="button"
-            className={BTN}
-            aria-expanded={menuOpen}
-            aria-controls="map-filters"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            <SlidersHorizontal size={16} aria-hidden /> Filters
-          </button>
-        </div>
         <div className="relative z-0 flex min-h-0 flex-1">
           {menuOpen && (
             <aside
@@ -269,69 +269,110 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
                   <X size={16} aria-hidden />
                 </button>
               </div>
-              <label className="block text-sm font-medium">
-                Find a person
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Name, area, language or code"
-                  className="mt-1 w-full rounded-md border border-rule px-3 text-sm font-normal"
-                />
-              </label>
-              <p className="mt-3 text-xs text-muted" aria-live="polite">
+              <p className="mb-3 text-xs text-muted" aria-live="polite">
                 {visible.length} of {rows.length} participants match
               </p>
-              <label className="my-3 flex min-h-11 items-center gap-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={attentionOnly}
-                  onChange={(e) => setAttentionOnly(e.target.checked)}
-                />
-                Needs attention only
-              </label>
-              <fieldset className="border-t border-rule pt-3">
-                <legend className="text-sm font-semibold">Map layers</legend>
-                {(Object.keys(layers) as (keyof typeof layers)[]).map((key) => (
-                  <label
-                    key={key}
-                    className="flex min-h-11 items-center gap-3 text-sm"
-                  >
+              <details className="filter-group">
+                <summary>Participants</summary>
+                <div className="pb-3">
+                  <label className="block text-sm font-medium">
+                    Find a person
+                    <input
+                      type="search"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Name, area, language or code"
+                      className="mt-1 w-full rounded-md border border-rule px-3 text-sm font-normal"
+                    />
+                  </label>
+                  <label className="mt-2 flex min-h-11 items-center gap-3 text-sm">
                     <input
                       type="checkbox"
-                      checked={layers[key]}
-                      onChange={(e) =>
-                        setLayers({ ...layers, [key]: e.target.checked })
-                      }
+                      checked={attentionOnly}
+                      onChange={(e) => setAttentionOnly(e.target.checked)}
                     />
-                    {LAYER_LABELS[key]}
+                    Needs attention only
                   </label>
-                ))}
-              </fieldset>
-              <fieldset className="mt-4 border-t border-rule pt-3">
-                <legend className="text-sm font-semibold">
-                  Screening stages
-                </legend>
-                {STAGES_FOR_BOARD.map((stage, i) => (
-                  <label
-                    key={stage.label}
-                    className="flex min-h-11 items-center gap-3 text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={stages[i]}
-                      onChange={(e) =>
-                        setStages(
-                          stages.map((on, j) =>
-                            i === j ? e.target.checked : on,
-                          ),
-                        )
-                      }
-                    />
-                    {stage.label}
-                  </label>
-                ))}
-              </fieldset>
+                </div>
+              </details>
+              <details className="filter-group">
+                <summary>
+                  Labs & locations{" "}
+                  <span className="text-xs font-normal text-muted">
+                    {locations.length} / {Object.keys(HUBS).length}
+                  </span>
+                </summary>
+                <fieldset className="pb-3">
+                  <legend className="sr-only">Labs & locations</legend>
+                  {Object.values(HUBS).map((hub) => (
+                    <label
+                      key={hub.id}
+                      className="flex min-h-11 items-center gap-3 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={locations.includes(hub.id)}
+                        onChange={(e) =>
+                          setLocations((current) =>
+                            e.target.checked
+                              ? [...current, hub.id]
+                              : current.filter((id) => id !== hub.id),
+                          )
+                        }
+                      />
+                      {hub.name}
+                    </label>
+                  ))}
+                </fieldset>
+              </details>
+              <details className="filter-group">
+                <summary>Map layers</summary>
+                <fieldset className="pb-3">
+                  <legend className="sr-only">Map layers</legend>
+                  {(Object.keys(layers) as (keyof typeof layers)[]).map(
+                    (key) => (
+                      <label
+                        key={key}
+                        className="flex min-h-11 items-center gap-3 text-sm"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={layers[key]}
+                          onChange={(e) =>
+                            setLayers({ ...layers, [key]: e.target.checked })
+                          }
+                        />
+                        {LAYER_LABELS[key]}
+                      </label>
+                    ),
+                  )}
+                </fieldset>
+              </details>
+              <details className="filter-group">
+                <summary>Screening stages</summary>
+                <fieldset className="pb-3">
+                  <legend className="sr-only">Screening stages</legend>
+                  {STAGES_FOR_BOARD.map((stage, i) => (
+                    <label
+                      key={stage.label}
+                      className="flex min-h-11 items-center gap-3 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={stages[i]}
+                        onChange={(e) =>
+                          setStages(
+                            stages.map((on, j) =>
+                              i === j ? e.target.checked : on,
+                            ),
+                          )
+                        }
+                      />
+                      {stage.label}
+                    </label>
+                  ))}
+                </fieldset>
+              </details>
               <button
                 type="button"
                 className={`${BTN} mt-4 w-full`}
@@ -405,6 +446,7 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
                 participants={layers.participants ? visible : []}
                 showRoutes={layers.routes}
                 showHubs={layers.hubs}
+                locations={locations}
                 intake={Object.fromEntries(
                   intake.map((g) => [g.hub, g.samples.length]),
                 )}

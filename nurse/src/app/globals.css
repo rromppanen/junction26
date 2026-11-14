@@ -242,3 +242,9 @@ button:disabled { cursor: not-allowed; }
 .participant-pin span { display: block; width: 100%; height: 100%; border: 2px solid var(--brand); border-radius: 50%; background: white; box-shadow: 0 1px 4px #1d252c40; }
 .participant-pin span.is-flagged { border-color: white; background: var(--behind); }
 .waiting-pin span { border-color: var(--ink); }
+
+.filter-group { border-top: 1px solid var(--rule); }
+.filter-group > summary { display: flex; min-height: 3rem; align-items: center; gap: .5rem; cursor: pointer; list-style: none; font-size: .875rem; font-weight: 600; }
+.filter-group > summary::-webkit-details-marker { display: none; }
+.filter-group > summary::after { content: "⌄"; margin-left: auto; color: var(--muted); }
+.filter-group[open] > summary::after { transform: rotate(180deg); }
