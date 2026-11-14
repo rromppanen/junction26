@@ -102,7 +102,7 @@ function AssumptionControl({
         <span className="tabular-nums">
           Range {num(a.low * m.scale, m.decimals)}–{num(a.high * m.scale, m.decimals)} · base {num(a.base * m.scale, m.decimals)}
         </span>
-        {a.status === "placeholder" ? <PlaceholderTag /> : <EvidenceTag kind="observed" />}
+        {a.key === "target_attendance" ? <span>Scenario choice</span> : a.status === "placeholder" ? <PlaceholderTag /> : <EvidenceTag kind="observed" />}
       </div>
     </div>
   );
@@ -210,7 +210,7 @@ export function ScreeningSimulator({
     <div className="grid gap-12">
       <section aria-labelledby="sim-headline">
         <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
-          <Gauge aria-hidden size={16} strokeWidth={2} /> Screening simulator · breast cancer · women aged 50–69
+          <Gauge aria-hidden size={16} strokeWidth={2} /> Breast screening simulator · women aged 50–69
         </p>
         <h1
           id="sim-headline"
@@ -219,9 +219,9 @@ export function ScreeningSimulator({
           {headline}
         </h1>
         <p className="mt-4 max-w-3xl font-serif text-lg leading-snug">
-          Screening helps by finding cancers at an earlier stage. The extra screens come from observed attendance and
-          population figures. Life-years, deaths averted and costs need stage, survival and cost figures that are not yet
-          sourced, so they are shown only on request, as an illustration.
+          Compare a target attendance rate with the published baseline. Extra screens are calculated from attendance,
+          population and the screening interval; they are a scenario, not a measured increase. Change the target below
+          and choose which counties to include.
         </p>
         {!showOutcomes && (
           <div className="mt-6 flex max-w-3xl flex-wrap items-center gap-3">
@@ -236,6 +236,10 @@ export function ScreeningSimulator({
               Built on {placeholders} placeholder assumptions; not for quoting.
             </span>
           </div>
+        )}
+        {showIllustrative && placeholders > 0 && (
+          <button type="button" onClick={() => setShowIllustrative(false)}
+            className="mt-4 rounded-[3px] border border-rule px-3 py-2 text-sm hover:bg-par-soft">Hide illustrative outcomes</button>
         )}
         {showOutcomes && (<>
         {placeholders > 0 && (
@@ -282,16 +286,27 @@ export function ScreeningSimulator({
           <p className="mt-5 flex max-w-3xl items-start gap-2 rounded-[4px] bg-par-soft px-3 py-2.5 text-sm">
             <TriangleAlert aria-hidden size={16} className="mt-0.5 shrink-0" />
             <span>
-              Attendance and population are observed Sotkanet figures. {placeholders} of the {assumptions.length} assumptions
-              are still placeholders, so treat every result here as an illustration until they are replaced with sourced values.
+              Clinical outcomes and costs depend on {placeholders} placeholder assumptions. They remain illustrative
+              until sourced values are supplied. Published attendance and calculated extra screens are shown separately.
             </span>
           </p>
         )}
       </section>
 
       <div className="grid gap-x-10 gap-y-12 lg:grid-cols-[300px_minmax(0,1fr)]">
-        <aside aria-labelledby="assumptions-h" className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:self-start lg:overflow-y-auto lg:pr-2">
-          <IconHeading icon={SlidersHorizontal} id="assumptions-h" className="text-xl">Assumptions</IconHeading>
+        <aside aria-labelledby="assumptions-h" className="rounded-[4px] border border-rule bg-surface p-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:self-start lg:overflow-y-auto">
+          <IconHeading icon={SlidersHorizontal} id="assumptions-h" className="text-xl">Scenario settings</IconHeading>
+          <div className="mt-5">
+            {assumptions.filter((a) => a.key === "target_attendance").map((a) => (
+              <AssumptionControl key={a.key} a={a} value={P[a.key]} onChange={(v) => set(a.key, v)} />
+            ))}
+          </div>
+          <details className="more group mt-5 border-t border-rule pt-3">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 py-2 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+              Advanced assumptions
+              <ChevronDown aria-hidden size={16} className="shrink-0 transition-transform group-open:rotate-180" />
+            </summary>
+            <p className="mt-1 text-sm text-muted">Population, clinical outcomes and costs. Changes update the scenario below.</p>
           <div className="mt-3 flex flex-wrap gap-2 text-sm">
             <button type="button" onClick={reset} className="inline-flex items-center gap-1.5 rounded-[3px] border border-rule px-2.5 py-1 hover:bg-par-soft">
               <RotateCcw aria-hidden size={14} /> Reset
@@ -316,7 +331,7 @@ export function ScreeningSimulator({
             those two ends; the uncertainty section draws all of them at once inside that range, peaking at your setting.
           </More>
           <div className="mt-5 grid gap-7">
-            {PARAM_GROUPS.map((g) => {
+            {PARAM_GROUPS.filter((g) => g !== "Target").map((g) => {
               const items = assumptions.filter((a) => PARAM_META[a.key].group === g);
               if (!items.length) return null;
               return (
@@ -334,6 +349,7 @@ export function ScreeningSimulator({
               );
             })}
           </div>
+          </details>
         </aside>
 
         <div className="grid min-w-0 gap-14">
@@ -355,10 +371,10 @@ export function ScreeningSimulator({
           </section>
 
           <section aria-labelledby="county-h">
-            <IconHeading icon={ListOrdered} id="county-h" className="text-xl">What closing each gap is worth</IconHeading>
+            <IconHeading icon={ListOrdered} id="county-h" className="text-xl">Compare the county scenarios</IconHeading>
             <p className="mb-4 mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
-              <EvidenceTag kind={showOutcomes ? "simulated" : "observed"} />
-              {showOutcomes ? "Per year, for one year of diagnoses." : "Extra screens a year from observed attendance and population."} Untick a county to leave it out of the totals.
+              <EvidenceTag kind="simulated" />
+              {showOutcomes ? "Per year, for one year of diagnoses." : "Calculated extra screens per year at your chosen target."} Untick a county to leave it out of the totals.
             </p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

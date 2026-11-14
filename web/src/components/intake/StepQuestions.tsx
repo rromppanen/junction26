@@ -64,7 +64,7 @@ export function StepQuestions({ datasets, table, onBack, onDone }: Props) {
       sample: table ? table.rows.slice(0, 5) : null,
     })
       .then((r) => { if (!cancelled) setLoaded(r); })
-      .catch(() => { if (!cancelled) setLoadError("Could not load the questions."); });
+      .catch(() => { if (!cancelled) setLoadError("Could not load the scope questions. Try again, or go back to change your data selection."); });
     return () => { cancelled = true; };
   }, [datasets, table, attempt]);
 
@@ -103,11 +103,11 @@ export function StepQuestions({ datasets, table, onBack, onDone }: Props) {
 
   return (
     <section aria-labelledby="step2-h" className="space-y-6">
-      <IconHeading icon={MessageCircleQuestion} as="h3" id="step2-h" className="text-lg">
-        A few questions about your data
+      <IconHeading icon={MessageCircleQuestion} as="h2" id="step2-h" className="text-lg">
+        Set the scope of your review
       </IconHeading>
 
-      {!loaded && !loadError && <p className="text-sm text-muted">Loading questions…</p>}
+      {!loaded && !loadError && <p className="text-sm text-muted" role="status">Preparing the scope questions…</p>}
       {loadError && (
         <div role="alert" className="max-w-2xl rounded-[3px] border border-rule bg-par-soft p-3 text-sm">
           <p>{loadError}</p>
@@ -172,7 +172,7 @@ export function StepQuestions({ datasets, table, onBack, onDone }: Props) {
           onClick={onBack}
           className="rounded-[3px] border border-rule px-3 py-1.5 text-sm hover:bg-par-soft disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Back
+          Back to data
         </button>
         {loaded && (
           <button
@@ -181,7 +181,7 @@ export function StepQuestions({ datasets, table, onBack, onDone }: Props) {
             onClick={() => void submit()}
             className="rounded-[3px] bg-ink px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {submitting ? "Working…" : "Continue"}
+            {submitting ? "Preparing settings…" : "Review settings"}
           </button>
         )}
       </div>

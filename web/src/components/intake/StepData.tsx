@@ -61,7 +61,7 @@ export function StepData({ datasets, table, fileName, error, onDatasets, onFile,
   return (
     <div className="space-y-8">
       <section aria-labelledby="public-h">
-        <IconHeading icon={Database} as="h3" id="public-h" className="text-lg">Public datasets</IconHeading>
+        <IconHeading icon={Database} as="h2" id="public-h" className="text-lg">Public datasets</IconHeading>
         <ul className="mt-3 grid gap-2 sm:grid-cols-2">
           {PUBLIC_DATASETS.map((d) => (
             <li key={d.id} className="rounded-[3px] border border-rule p-3">
@@ -84,7 +84,7 @@ export function StepData({ datasets, table, fileName, error, onDatasets, onFile,
       </section>
 
       <section aria-labelledby="upload-h">
-        <IconHeading icon={Upload} as="h3" id="upload-h" className="text-lg">Your own data (optional)</IconHeading>
+        <IconHeading icon={Upload} as="h2" id="upload-h" className="text-lg">Your own data (optional)</IconHeading>
         <p className="mt-2 max-w-2xl text-sm text-muted">
           Aggregate data only, no personal data. The file is read in your browser; only column names and up to 5
           sample rows are sent on.
@@ -120,6 +120,8 @@ export function StepData({ datasets, table, fileName, error, onDatasets, onFile,
               <strong>{fileName}</strong>: {table.rows.length} {table.rows.length === 1 ? "row" : "rows"},{" "}
               {table.headers.length} columns. First {Math.min(5, table.rows.length)} shown.
             </p>
+            <button type="button" onClick={() => { requestRef.current++; setFlagged([]); onFile(null, ""); }}
+              className="mt-2 rounded-[3px] border border-rule px-3 py-2 text-sm hover:bg-par-soft">Remove file</button>
             <div className="mt-2 overflow-x-auto">
               <table className="min-w-full border-collapse text-left text-sm">
                 <thead>
@@ -151,7 +153,7 @@ export function StepData({ datasets, table, fileName, error, onDatasets, onFile,
           onClick={onContinue}
           className="rounded-[3px] bg-ink px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Continue
+          Continue to scope
         </button>
         {!canContinue && <p className="mt-2 text-sm text-muted">Choose a public dataset or upload a file to continue.</p>}
       </div>

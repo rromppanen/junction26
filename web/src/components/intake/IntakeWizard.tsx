@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Table } from "@/lib/intake/csv";
 import type { AnalysisSetup, PublicDataset } from "@/lib/intake/setup";
 import { StepConfirm, SetupSummary } from "./StepConfirm";
@@ -30,8 +30,18 @@ const INITIAL: WizardState = {
 export function IntakeWizard() {
   const [state, setState] = useState<WizardState>(INITIAL);
 
+  const stepRef = useRef<HTMLDivElement>(null);
+  const previousStep = useRef(state.step);
+  useEffect(() => {
+    if (previousStep.current !== state.step) {
+      stepRef.current?.focus();
+      previousStep.current = state.step;
+    }
+  }, [state.step]);
+  let content: React.ReactNode = null;
+
   if (state.step === 1) {
-    return (
+    content = (
       <StepData
         datasets={state.datasets}
         table={state.table}
@@ -46,7 +56,7 @@ export function IntakeWizard() {
   }
 
   if (state.step === 2) {
-    return (
+    content = (
       <StepQuestions
         datasets={state.datasets}
         table={state.table}
@@ -57,7 +67,7 @@ export function IntakeWizard() {
   }
 
   if (state.step === 3 && state.result) {
-    return (
+    content = (
       <StepConfirm
         datasets={state.datasets}
         table={state.table}
@@ -83,7 +93,7 @@ export function IntakeWizard() {
         : (state.result?.questions
             .find((q) => q.kind === "county")
             ?.options.find((o) => o.value === String(state.setup!.countyId))?.label ?? null);
-    return <SetupSummary setup={state.setup} countyName={countyName} onStartOver={() => {
+    content = <SetupSummary setup={state.setup} countyName={countyName} onStartOver={() => {
       try {
         sessionStorage.removeItem("gapRadar.analysisSetup");
       } catch {
@@ -93,5 +103,21 @@ export function IntakeWizard() {
     }} />;
   }
 
-  return null;
+  const steps = ["Choose data", "Set scope", "Review settings", "Ready"];
+  return (
+    <div ref={stepRef} tabIndex={-1} className="rounded-[4px] focus-visible:outline-offset-4">
+      <nav aria-label="Analysis setup progress" className="mb-8">
+        <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {steps.map((label, index) => (
+            <li key={label} aria-current={state.step === index + 1 ? "step" : undefined}
+              className={`rounded-[4px] border px-3 py-3 text-sm ${state.step === index + 1 ? "border-ink bg-ink font-semibold text-paper" : "border-rule bg-surface text-muted"}`}>
+              <span className="mr-2 tabular-nums">{index + 1}.</span>{label}
+              {state.step > index + 1 && <span className="sr-only"> — completed</span>}
+            </li>
+          ))}
+        </ol>
+      </nav>
+      {content}
+    </div>
+  );
 }

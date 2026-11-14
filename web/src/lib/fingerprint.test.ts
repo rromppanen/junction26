@@ -50,6 +50,11 @@ describe("describeFingerprint", () => {
     const t = describeFingerprint(diagnosePathway([fact(1, "no-data"), fact(2, "no-data"), fact(3, "behind"), fact(4, "ahead")], inds));
     expect(t).toMatch(/no screening data/);
   });
+  it("does not locate a bottleneck in unmeasured stages", () => {
+    const text = describeFingerprint(diagnosePathway([fact(1, "behind"), fact(3, "behind")], inds));
+    expect(text).toContain("Separate screening and survival differences");
+    expect(text).not.toMatch(/whole pathway|after detection/);
+  });
   it("one-sided none names the missing side; ahead is not called on par", () => {
     const t = describeFingerprint(diagnosePathway([fact(1, "ahead"), fact(2, "ahead"), fact(3, "no-data"), fact(4, "no-data")], inds));
     expect(t).toMatch(/no survival data/);

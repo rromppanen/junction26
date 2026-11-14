@@ -10,7 +10,7 @@ export type Fingerprint = {
   outcomeTotal: number;
 };
 
-/** Compares detection indicators (screening) with outcome indicators (survival) to locate where the gap starts. */
+/** Compares screening and survival separately; these aggregate figures cannot locate an unmeasured bottleneck. */
 export function diagnosePathway(facts: GapFacts[], indicators: Indicator[]): Fingerprint {
   const c = { detectionBehind: 0, detectionTotal: 0, outcomeBehind: 0, outcomeTotal: 0 };
   for (const f of facts) {
@@ -44,14 +44,14 @@ export function describeFingerprint(fp: Fingerprint): string {
   switch (fp.pattern) {
     case "detection":
       return noSurvival
-        ? `Detection is the weak point: ${screening}; there is no survival data to compare.`
-        : `Detection is the weak point: ${screening}; survival is at or above the national level.`;
+        ? `Screening participation is below the comparison level: ${screening}; there is no survival data to compare.`
+        : `Screening participation is below the comparison level: ${screening}; survival is at or above the national level.`;
     case "after-detection":
       return noScreening
         ? `The gap is in outcomes: ${survival}; there is no screening data to compare.`
-        : `The gap appears after detection: ${survival}, while screening is at or above the national level.`;
+        : `Survival is below the comparison level: ${survival}, while screening is at or above the national level.`;
     case "both":
-      return `The gap runs through the whole pathway: ${screening} and ${survival}.`;
+      return `Separate screening and survival differences: ${screening} and ${survival}.`;
     case "none":
       if (noScreening) return "No gap found in survival, which is at or above the national level; there is no screening data.";
       if (noSurvival) return "No gap found in screening, which is at or above the national level; there is no survival data.";

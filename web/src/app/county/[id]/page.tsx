@@ -99,7 +99,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
   const stageNote =
     diagnosePathway(facts, INDICATORS).pattern === "none"
       ? `No stage is behind Finland; the weakest relative stage is ${stageLabel}.`
-      : `The filled stop is ${stageLabel}, where ${author} puts the main break.`;
+      : `The highlighted stop is ${stageLabel}, an interpretation from ${author}; it does not establish a measured bottleneck.`;
 
   const behindCount = facts.filter((f) => f.status === "behind").length;
   const screening = facts.filter((f) => f.target !== null && f.value !== null);
@@ -143,13 +143,15 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
     mortality,
   });
 
+  const leadBowel = pathwayView !== null && summary.some((line) => line.key === "gap" && line.href === "#funnel");
+
   // Sections in the order of the learning loop; the jump menu groups them by step.
   const parts: { id: string; icon: LucideIcon; label: string; step: string }[] = [
     { id: "path", icon: Route, label: "Pathway", step: "Understand" },
     ...(pathwayView ? [{ id: "funnel", icon: Filter, label: "Where people fall off", step: "Understand" }] : []),
     { id: "lb", icon: Users, label: "Left behind", step: "Understand" },
-    ...(pathwayView ? [{ id: "decide", icon: Scale, label: "Decide", step: "Simulate" }] : []),
-    { id: "what-if", icon: SlidersHorizontal, label: "What if", step: "Simulate" },
+    ...(pathwayView ? [{ id: "decide", icon: Scale, label: "Compare bowel options", step: "Simulate" }] : []),
+    { id: "what-if", icon: SlidersHorizontal, label: "Screening targets", step: "Simulate" },
     { id: "rec", icon: ListChecks, label: "Next steps", step: "Implement" },
     { id: "reach", icon: Megaphone, label: "Reach them", step: "Implement" },
     { id: "mk", icon: Ruler, label: "Measure", step: "Learn" },
@@ -160,24 +162,30 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
   const part = (pid: string) => parts.find((x) => x.id === pid)!;
 
   return (
-    <main className="mx-auto max-w-5xl px-4 pb-10 pt-5 sm:px-6">
+    <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-4 pb-10 pt-5 sm:px-6">
       <OpenOnHash />
       <AppHeader>
         <HeaderLink href="/" icon={ArrowLeft} label="Map" />
         <HeaderLink href={`/county/${regionId}/memo`} icon={FileText} label="Memo (FI)" title="One-page board memo in Finnish" />
         <HeaderLink href="/analyse" icon={FileUp} label="Analyse your data" title="Bring your own aggregate data" />
-        <HeaderLink href={`/simulator?county=${regionId}`} icon={Gauge} label="Simulate" title="What raising breast screening attendance here would be worth" />
+        <HeaderLink href={`/simulator?county=${regionId}`} icon={Gauge} label="Breast screening simulator" title="What raising breast screening attendance here would be worth" />
       </AppHeader>
 
       <header className="mb-8">
         <p className="text-sm text-muted">Cancer care brief</p>
         <h1 className="font-narrow mt-1 text-5xl font-bold leading-[0.92] tracking-[-0.01em] break-words sm:text-[5rem]">{name}</h1>
-        <p className="mt-6 max-w-3xl font-serif text-[1.3rem] leading-snug sm:text-[1.6rem]">{brief.headline}</p>
+        <p className="mt-6 max-w-3xl font-serif text-[1.3rem] leading-snug sm:text-[1.6rem]">{summary.find((line) => line.key === "gap")?.text ?? brief.headline}</p>
         <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:flex sm:gap-x-12">
+          {leadBowel && pathwayView ? <>
+            <Stat value={`${pathwayView.pathway.rates.examined.toFixed(1)}%`} label="positive bowel tests examined" />
+            <Stat value={`${pathwayView.pathway.bestQuarter.examined.toFixed(1)}%`} label="best-quarter comparison target" />
+          </> : <>
           <Stat value={`${behindCount}/${facts.length}`} label="measures behind Finland" tone={behindCount ? "text-behind" : ""} />
           {screening.length > 0 && (
             <Stat value={`${meets}/${screening.length}`} label={`screenings at the ${screening[0].target}% target`} />
           )}
+          </>}
+
         </div>
         <More label="Read the full finding" icon={Sparkles} className="mt-5">
           <p className="font-serif text-base leading-relaxed text-ink">{brief.finding}</p>
@@ -187,11 +195,11 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
               : `The AI analyst didn\u2019t respond, so the serif text comes from a fixed template filled in with ${name}\u2019s figures. Plain text is calculated straight from Sotkanet.`}
           </p>
         </More>
-        <TwoMinuteSummary lines={summary} />
+        <TwoMinuteSummary lines={summary.filter((line) => line.key !== "gap")} />
       </header>
 
-      <nav aria-label="Sections" className="no-print sticky top-0 z-10 -mx-4 mb-2 overflow-x-auto border-y border-rule bg-paper/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
-        <ul className="flex w-max gap-1 text-sm">
+      <nav aria-label="Sections" className="no-print mb-2 rounded-lg border-y border-rule bg-paper/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
+        <ul className="flex flex-wrap gap-1 text-sm">
           {parts.map((p, i) => (
             <li key={p.id} className="flex items-center">
               {(i === 0 || parts[i - 1].step !== p.step) && (
@@ -217,17 +225,17 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
       </Part>
 
       {pathwayView && (
-      <Part {...part("funnel")} title={`Where ${name} loses people`}>
+      <Part {...part("funnel")} title="Bowel screening: measured counts and comparison scenario">
         <PathwayFunnel view={pathwayView} name={name} />
       </Part>
       )}
 
-      <Part {...part("lb")} title={`Who is left behind inside ${name}`}>
+      <Part {...part("lb")} title={`Screening participation within ${name}`}>
         <LeftBehind equity={equity} name={name} />
       </Part>
 
       {pathwayView && (
-      <Part {...part("decide")} title={`Decide: options for ${name}`}>
+      <Part {...part("decide")} title={`Compare bowel interventions in ${name}`}>
         <DecisionBoard
           p={pathwayView.pathway}
           order={pathwayView.breaks.map((b) => b.kind)}
@@ -239,20 +247,21 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
       </Part>
       )}
 
-      <Part id="what-if" icon={SlidersHorizontal} title={`What if ${name} raised screening?`}>
+      <details className="more rounded-lg border border-rule px-4 sm:px-6"><summary className="cursor-pointer py-4 font-semibold">Other programmes · screening targets</summary>
+      <Part id="what-if" icon={SlidersHorizontal} title="Explore other screening targets">
         <ScenarioTool programmes={scenarioProgrammes} />
         <p className="mt-5 flex max-w-2xl items-start gap-2 text-sm">
           <Gauge aria-hidden size={16} className="mt-0.5 shrink-0 text-muted" />
           <span>
             For breast screening, the{" "}
-            <a href={`/simulator?county=${regionId}`} className="link font-medium">screening simulator</a> goes one step
-            further: life-years gained, deaths averted and the cost per life-year of closing {name}&rsquo;s gap, with every
-            assumption adjustable.
+            <a href={`/simulator?county=${regionId}`} className="link font-medium">screening simulator</a> lets you adjust attendance targets. Illustrative clinical and cost outcomes are available separately, with their assumptions labelled.
           </span>
         </p>
       </Part>
 
-      <Part {...part("rec")} title={`What ${name} could do next`}>
+      </details>
+
+      <Part {...part("rec")} title="Other actions to consider across programmes">
         <ol>
           {brief.recommendations.map((r, i) => (
             <li key={i} className={`print-break grid gap-x-4 py-5 sm:grid-cols-[1.75rem_minmax(0,1fr)] ${i ? "border-t border-rule" : "pt-0"}`}>
@@ -449,14 +458,14 @@ function compareToFinland(f: GapFacts, unit: string): string {
 
 /** A section of the brief: its icon and name on top, then the content. `id` is the jump-menu anchor. */
 const PART_KIND: Record<string, EvidenceKind> = {
-  funnel: "observed", decide: "simulated", path: "observed", "what-if": "simulated", lb: "inferred", peer: "observed", ind: "observed",
+  decide: "simulated", path: "inferred", "what-if": "simulated", lb: "inferred", peer: "observed", ind: "observed",
 };
 
 function Part({ id, icon: Icon, title, children }: { id: string; icon: LucideIcon; label?: string; title: string; children: React.ReactNode }) {
   const kind = PART_KIND[id];
   return (
     <section id={id} aria-labelledby={`${id}-h`} className="print-break scroll-mt-14 border-t border-ink py-8 first-of-type:border-t-0">
-      <h2 id={`${id}-h`} className="mb-5 flex items-center gap-2 text-xl font-semibold leading-tight tracking-tight">
+      <h2 id={`${id}-h`} className="mb-5 flex flex-wrap items-center gap-2 text-xl font-semibold leading-tight tracking-tight">
         <Icon aria-hidden size={20} strokeWidth={2} className="shrink-0 text-muted" />
         {title}
         {kind && <EvidenceTag kind={kind} className="ml-1" />}

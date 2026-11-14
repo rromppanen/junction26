@@ -49,7 +49,7 @@ export function StepConfirm({ datasets, table, fileName, result, onBack, onConfi
 
   return (
     <section aria-labelledby="step3-h" className="space-y-8">
-      <IconHeading icon={ClipboardCheck} as="h3" id="step3-h" className="text-lg">
+      <IconHeading icon={ClipboardCheck} as="h2" id="step3-h" className="text-lg">
         Check your setup
       </IconHeading>
 
@@ -132,9 +132,9 @@ export function StepConfirm({ datasets, table, fileName, result, onBack, onConfi
         )}
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button type="button" onClick={onBack} className="rounded-[3px] border border-rule px-3 py-1.5 text-sm hover:bg-par-soft">
-          Back
+          Back to scope
         </button>
         <button
           type="button"
@@ -193,8 +193,8 @@ export function SetupSummary({
 
   return (
     <section aria-labelledby="step4-h" className="space-y-4">
-      <IconHeading icon={CheckCircle2} as="h3" id="step4-h" className="text-lg">
-        Your setup
+      <IconHeading icon={CheckCircle2} as="h2" id="step4-h" className="text-lg">
+        Your setup is ready
       </IconHeading>
       <ul className="max-w-2xl list-disc space-y-1 pl-5 text-sm">
         <li>Public data: {names.length > 0 ? names.join("; ") : "none"}.</li>
@@ -208,8 +208,8 @@ export function SetupSummary({
           {countyName ? `, for ${countyName}` : ""}.
         </li>
       </ul>
-      <div className="flex items-center gap-4">
-        <Link href={href} className="link text-sm font-medium">{label}</Link>
+      <div className="flex flex-wrap items-center gap-4">
+        <Link href={href} className="rounded-[3px] bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-ink/85">{label}</Link>
         <button type="button" onClick={onStartOver} className="rounded-[3px] border border-rule px-3 py-1.5 text-sm hover:bg-par-soft">
           Start over
         </button>

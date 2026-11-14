@@ -248,3 +248,32 @@
     margin-top: 0.25rem;
   }
 }
+
+/* Shared interaction and reading rhythm across the application. */
+html { scroll-padding-top: 6rem; }
+main { min-width: 0; }
+button, select, input:not([type="range"]):not([type="checkbox"]):not([type="radio"]) { min-height: 2.75rem; }
+button, summary, select { touch-action: manipulation; }
+input[type="range"] { min-height: 2.75rem; cursor: pointer; }
+input[type="checkbox"], input[type="radio"] { width: 1.25rem; height: 1.25rem; }
+button:disabled { cursor: not-allowed; }
+.skip-link { position: fixed; top: 1rem; left: 1rem; z-index: 100; transform: translateY(-200%); padding: .75rem 1rem; background: var(--ink); color: var(--paper); border-radius: .375rem; }
+.skip-link:focus { transform: translateY(0); }
+.option-card { border: 1px solid var(--rule); border-radius: .5rem; background: var(--surface); padding: 1rem; }
+.option-card dl { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: .5rem 1rem; font-size: .875rem; }
+.option-card dt { color: var(--muted); }
+.option-card dd { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.primary-action { display: inline-flex; min-height: 2.75rem; align-items: center; justify-content: center; gap: .5rem; border-radius: .375rem; background: var(--ink); color: var(--paper); padding: .625rem 1rem; font-size: .875rem; font-weight: 600; }
+.primary-action:hover { background: #33454d; }
+@media (max-width: 639px) {
+  .responsive-options { min-width: 0 !important; }
+  .responsive-options thead { display: none; }
+  .responsive-options, .responsive-options tbody { display: block; }
+  .responsive-options tbody { display: grid; gap: .75rem; }
+  .responsive-options tr { display: block; border: 1px solid var(--rule); border-radius: .5rem; padding: .75rem; background: var(--surface); }
+  .responsive-options th[scope="row"] { display: block; padding: 0 0 .5rem; border-bottom: 1px solid var(--rule); }
+  .responsive-options td { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: .5rem 0 0; text-align: right; }
+  .responsive-options td[data-label]:empty { display: none; }
+  .responsive-options td[data-label]::before { content: attr(data-label); text-align: left; color: var(--muted); font-weight: 400; }
+}
+@media print { .skip-link { display: none; } .primary-action { display: none; } }

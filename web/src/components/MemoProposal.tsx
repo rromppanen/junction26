@@ -47,6 +47,7 @@ export function MemoProposal({ view, params, operator = null }: { view: PathwayV
   const prefilled = params.costs.perColonoscopy === PATHWAY_COSTS.perColonoscopy.value;
   return (
     <section aria-labelledby="m-prop" className="mb-3 border-b border-ink pb-3">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Valittu vaihtoehto · mallinnettu skenaario</p>
       <h2 id="m-prop" className="mb-1 text-base font-semibold">Esitys: {t.title}</h2>
       <p className="text-sm leading-snug">{t.what}</p>
       <table className="mt-2 w-full border-collapse text-sm">
@@ -56,7 +57,7 @@ export function MemoProposal({ view, params, operator = null }: { view: PathwayV
           <Row k="Tavoite">{fmtFi(params.target, "%")} seuraavalla seulontakierroksella</Row>
           {params.option === "access" && <Row k="Lisää osallistujia">noin {r.extraParticipants.toLocaleString("fi-FI")} vuodessa</Row>}
           <Row k="Lisää kolonoskopioita">noin {r.extraColonoscopies.toLocaleString("fi-FI")} vuodessa</Row>
-          <Row k="Löydöksiä">noin {fmtFi(r.cancers)} syöpää ja {r.advanced.toLocaleString("fi-FI")} edennyttä esiastetta vuodessa (koko maan löydösosuudella)</Row>
+          <Row k="Mallinnetut löydökset">noin {fmtFi(r.cancers)} syöpää ja {r.advanced.toLocaleString("fi-FI")} edennyttä esiastetta vuodessa (koko maan löydösosuudella)</Row>
           <Row k="Kustannus">{r.cost === null ? "täydennetään hyvinvointialueen omilla yksikkökustannuksilla" : `noin ${eur(r.cost)} vuodessa${r.costPerFinding === null ? "" : `, ${eur(r.costPerFinding)} löydöstä kohden`}`}</Row>
           <Row k="Vastuutaho">{t.owner}{operator ? ` yhdessä seulonnan järjestäjän (${operator}) kanssa` : ""}</Row>
           <Row k="Seuranta">Kuukausittain alueen omasta aineistosta (mittauspaketti); Syöpärekisterin vuositilasto vahvistaa luvun noin puolentoista vuoden viiveellä.</Row>

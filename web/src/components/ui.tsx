@@ -24,7 +24,7 @@ export function IconHeading({
 }: {
   icon: LucideIcon;
   children: React.ReactNode;
-  as?: "h2" | "h3";
+  as?: "h1" | "h2" | "h3";
   id?: string;
   className?: string;
 }) {
@@ -55,7 +55,7 @@ export function More({
 }) {
   return (
     <details open={open} className={`more group ${className}`}>
-      <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-[3px] py-1 text-sm text-muted hover:text-ink [&::-webkit-details-marker]:hidden">
+      <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-[3px] py-2 text-sm text-muted hover:text-ink [&::-webkit-details-marker]:hidden">
         <Icon aria-hidden size={15} strokeWidth={2} className="shrink-0" />
         <span>{label}</span>
         <ChevronDown aria-hidden size={14} className="shrink-0 transition-transform group-open:rotate-180" />
@@ -69,6 +69,7 @@ export function More({
 export function AppHeader({ children }: { children?: React.ReactNode }) {
   return (
     <header className="no-print mb-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-rule pb-4">
+      <a href="#main-content" className="skip-link">Skip to content</a>
       <Wordmark />
       {children && <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">{children}</div>}
     </header>
@@ -91,7 +92,7 @@ export function HeaderLink({
   title?: string;
 }) {
   const cls =
-    "inline-flex items-center gap-1.5 rounded-[3px] px-2.5 py-1.5 text-ink hover:bg-par-soft focus-visible:bg-par-soft";
+    "inline-flex min-h-11 items-center gap-1.5 rounded-md px-2.5 py-2 text-ink hover:bg-par-soft focus-visible:bg-par-soft";
   const inner = (
     <>
       <Icon aria-hidden size={16} strokeWidth={2} className="shrink-0" />

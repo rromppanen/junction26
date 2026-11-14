@@ -105,7 +105,7 @@ function Programme({ p }: { p: ScenarioProgramme }) {
       )}
 
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
+        <table className="responsive-options w-full min-w-[40rem] border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-ink align-bottom">
               <th scope="col" className="py-2 pr-3 font-semibold">Option</th>
@@ -138,11 +138,11 @@ function Programme({ p }: { p: ScenarioProgramme }) {
                     <td colSpan={5} className="py-2 text-ahead">already reached</td>
                   ) : (
                     <>
-                      <Cell>+{r.extraPer1000}</Cell>
-                      <Cell>{r.extraPerYear === null ? null : r.extraPerYear.toLocaleString("en-GB")}</Cell>
-                      <Cell>{r.extraCostPerYear === null ? null : eur(r.extraCostPerYear)}</Cell>
-                      <Cell>{r.extraCancersPerYear === null ? null : r.extraCancersPerYear.toLocaleString("en-GB")}</Cell>
-                      <Cell last none={r.extraCancersPerYear === 0 && r.extraCostPerYear !== null}>
+                      <Cell label="Extra per 1,000 invited">+{r.extraPer1000}</Cell>
+                      <Cell label="Extra people per year" missing="Add annual invitation count">{r.extraPerYear === null ? null : r.extraPerYear.toLocaleString("en-GB")}</Cell>
+                      <Cell label="Annual cost" missing="Add invitation count and cost per screen">{r.extraCostPerYear === null ? null : eur(r.extraCostPerYear)}</Cell>
+                      <Cell label="Modelled cancers per year" missing="Add invitation count and detection rate">{r.extraCancersPerYear === null ? null : r.extraCancersPerYear.toLocaleString("en-GB")}</Cell>
+                      <Cell label="Cost per modelled cancer" missing="Add cost and detection rate" last none={r.extraCancersPerYear === 0 && r.extraCostPerYear !== null}>
                         {r.costPerExtraCancer === null ? null : eur(r.costPerExtraCancer)}
                       </Cell>
                     </>
@@ -158,11 +158,11 @@ function Programme({ p }: { p: ScenarioProgramme }) {
 }
 
 /** null children = the lead has not entered the figure this needs. */
-function Cell({ children, last, none }: { children: React.ReactNode; last?: boolean; none?: boolean }) {
+function Cell({ children, last, none, label, missing = ASK }: { children: React.ReactNode; last?: boolean; none?: boolean; label: string; missing?: string }) {
   const empty = children === null;
   return (
-    <td className={`py-2 tabular-nums ${last ? "" : "pr-3"} ${empty ? "text-muted" : ""}`}>
-      {empty ? (none ? "no cancers expected" : ASK) : children}
+    <td data-label={label} className={`py-2 tabular-nums ${last ? "" : "pr-3"} ${empty ? "text-muted" : ""}`}>
+      {empty ? (none ? "No additional cancers in this scenario" : missing) : children}
     </td>
   );
 }
