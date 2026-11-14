@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Open_Sans, Poppins } from "next/font/google";
 import "./globals.css";
 
-// Inter for everything: calm, clinical and very legible in tables and figures.
-const sans = Inter({ variable: "--font-inter", subsets: ["latin", "latin-ext"] });
+// The type pairing of the Finnish public health services (HUS): Open Sans for text, Poppins for headings.
+const sans = Open_Sans({ variable: "--font-open-sans", subsets: ["latin", "latin-ext", "cyrillic"] });
+const heading = Poppins({ variable: "--font-poppins", subsets: ["latin", "latin-ext"], weight: ["500", "600"] });
 
 export const metadata: Metadata = {
   title: {
@@ -17,14 +18,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f5f8f7",
+  themeColor: "#ffffff",
   colorScheme: "light",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${sans.variable} antialiased`}>{children}</body>
+      <body className={`${sans.variable} ${heading.variable} antialiased`}>{children}</body>
     </html>
   );
 }

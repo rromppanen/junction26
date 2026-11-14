@@ -1,0 +1,136 @@
+/*
+  Step animations for the home-sample app. Each loops one movement over 3.2 s.
+  The base transform of every moving part is its end pose, so with reduced motion
+  (animations off globally) the picture still shows the finished step.
+*/
+/* Only the moving parts use their own box as the origin; static rotate() attributes keep SVG's default. */
+.kit-anim .a, .kit-anim .a-lid-open { transform-box: fill-box; }
+.kit-anim .a { animation-duration: 3.2s; animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
+
+/* Tube out of / into the bag */
+.a-unbag { transform: translateY(-8px); animation-name: k-unbag; }
+@keyframes k-unbag { 0%, 15% { transform: translateY(44px); } 55%, 88% { transform: translateY(-8px); } 100% { transform: translateY(44px); } }
+.a-rebag { transform: translateY(44px); animation-name: k-rebag; }
+@keyframes k-rebag { 0%, 15% { transform: translateY(-8px); } 55%, 100% { transform: translateY(44px); } }
+.a-seal { stroke: var(--brand); animation-name: k-seal; }
+@keyframes k-seal { 0%, 60% { stroke: var(--rule); } 70%, 100% { stroke: var(--brand); } }
+
+/* Paper laid over the toilet */
+.a-base { transform-origin: center; animation-name: k-base; }
+@keyframes k-base { 0%, 10% { transform: translateY(-50px) scale(1.15); opacity: 0; } 50%, 90% { transform: none; opacity: 1; } 100% { transform: none; opacity: 0; } }
+
+/* Cap twisted off */
+.a-twist-ridges { animation-name: k-ridges; }
+@keyframes k-ridges { 0% { transform: translateX(-3px); } 10% { transform: translateX(3px); } 20% { transform: translateX(-3px); } 30% { transform: translateX(3px); } 40%, 100% { transform: none; } }
+.a-twist-cap { transform: translateY(-40px); animation-name: k-lift; }
+@keyframes k-lift { 0%, 40% { transform: none; } 70%, 92% { transform: translateY(-40px); } 100% { transform: none; } }
+.a-twist-arrow { animation-name: k-arrow; }
+@keyframes k-arrow { 0%, 40% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+/* Stick stroked back and forth */
+.a-scrape { animation-name: k-scrape; animation-duration: 2.4s !important; }
+@keyframes k-scrape { 0%, 100% { transform: translateX(-20px); } 50% { transform: translateX(20px); } }
+
+/* Cap pressed on, with a click */
+.a-press { animation-name: k-press; }
+@keyframes k-press { 0%, 10% { transform: translateY(-36px); } 45% { transform: translateY(2px); } 52%, 92% { transform: none; } 100% { transform: translateY(-36px); } }
+.a-burst { opacity: 1; animation-name: k-burst; }
+@keyframes k-burst { 0%, 46% { opacity: 0; } 52%, 72% { opacity: 1; } 82%, 100% { opacity: 0; } }
+
+/* Shaken hard */
+.a-shake { transform-origin: center; animation-name: k-shake; }
+@keyframes k-shake {
+  0%, 60%, 100% { transform: none; }
+  7.5%, 22.5%, 37.5%, 52.5% { transform: rotate(-22deg); }
+  15%, 30%, 45% { transform: rotate(22deg); }
+}
+
+/* Sticker put on */
+.a-sticker { animation-name: k-sticker; }
+@keyframes k-sticker { 0%, 10% { transform: translate(60px, -10px) rotate(12deg); opacity: 0; } 25% { opacity: 1; } 55%, 92% { transform: none; opacity: 1; } 100% { opacity: 0; } }
+
+/* Ticks drawn on a form */
+.a-tick { stroke-dasharray: 1; stroke-dashoffset: 0; animation-name: k-tick; }
+.a-tick.d1 { animation-delay: 0.5s; }
+.a-tick.d2 { animation-delay: 1s; }
+@keyframes k-tick { 0%, 15% { stroke-dashoffset: 1; } 35%, 90% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 1; } }
+
+/* Into the envelope, flap closes */
+.a-intoenv { transform: translateY(52px); animation-name: k-intoenv; }
+@keyframes k-intoenv { 0%, 10% { transform: none; } 50%, 100% { transform: translateY(52px); } }
+.a-flap { transform-origin: 50% 100%; transform: scaleY(-1); animation-name: k-flap; }
+@keyframes k-flap { 0%, 55% { transform: none; } 75%, 95% { transform: scaleY(-1); } 100% { transform: none; } }
+
+/* Water drops */
+.a-drop { animation-name: k-drop; animation-duration: 1.2s !important; animation-timing-function: ease-in !important; }
+.a-drop.d1 { animation-delay: 0.4s; }
+.a-drop.d2 { animation-delay: 0.8s; }
+@keyframes k-drop { 0% { transform: none; opacity: 1; } 100% { transform: translateY(46px); opacity: 0; } }
+
+/* Swab out of the wrapper */
+.a-unwrap { transform: translateX(90px); animation-name: k-unwrap; }
+@keyframes k-unwrap { 0%, 12% { transform: none; } 55%, 92% { transform: translateX(90px); } 100% { transform: none; } }
+.a-notouch { animation-name: k-notouch; }
+@keyframes k-notouch { 0%, 55% { opacity: 0; } 65%, 92% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Swab in about 5 cm */
+.a-insert { transform: translateX(46px); animation-name: k-insert; }
+@keyframes k-insert { 0%, 12% { transform: none; } 60%, 92% { transform: translateX(46px); } 100% { transform: none; } }
+.a-measure { animation-name: k-notouch; }
+
+/* Turned in place */
+.a-spin { transform-origin: center; animation-name: k-spin; animation-duration: 2s !important; animation-timing-function: linear !important; }
+@keyframes k-spin { to { transform: rotate(360deg); } }
+.a-roll { animation-name: k-roll; animation-duration: 0.8s !important; animation-timing-function: linear !important; }
+@keyframes k-roll { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+
+/* Swab into the tube, cap on */
+.a-swabdown { transform: translateY(40px); animation-name: k-swabdown; }
+@keyframes k-swabdown { 0%, 8% { transform: none; } 40%, 100% { transform: translateY(40px); } }
+.a-capdown { animation-name: k-capdown; }
+@keyframes k-capdown { 0%, 45% { transform: translateY(-50px); opacity: 0; } 50% { opacity: 1; } 70%, 95% { transform: none; opacity: 1; } 100% { opacity: 0; } }
+
+/* Robot */
+.a-arrive { animation-name: k-arrive; }
+@keyframes k-arrive { 0% { transform: translateX(-150px); } 50%, 100% { transform: none; } }
+.a-blink { animation-name: k-blink; animation-duration: 1s !important; }
+@keyframes k-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+.a-tap { transform-origin: center; opacity: 0; animation-name: k-tap; }
+@keyframes k-tap { 0%, 20% { transform: scale(0.4); opacity: 0; } 30% { opacity: 0.6; } 50%, 100% { transform: scale(1.6); opacity: 0; } }
+.a-shackle { transform: translateY(-7px); animation-name: k-shackle; }
+@keyframes k-shackle { 0%, 35% { transform: none; } 50%, 92% { transform: translateY(-7px); } 100% { transform: none; } }
+.a-button { animation-name: k-button; }
+@keyframes k-button { 0%, 25% { fill: var(--brand); } 32% { fill: var(--brand-strong); } 40%, 100% { fill: var(--brand); } }
+.a-lid-open { transform-origin: 0% 100%; transform: rotate(-38deg); }
+.a-lid-close { transform-origin: 0% 100%; animation-name: k-lidclose; }
+@keyframes k-lidclose { 0%, 15% { transform: rotate(-38deg); } 50%, 100% { transform: none; } }
+.a-lock { animation-name: k-lock; }
+@keyframes k-lock { 0%, 50% { opacity: 0; transform: scale(0.6); } 60%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+.a-dropin { transform: translateY(58px); animation-name: k-dropin; }
+@keyframes k-dropin { 0%, 10% { transform: none; opacity: 0; } 20% { opacity: 1; } 60%, 92% { transform: translateY(58px); opacity: 1; } 100% { opacity: 0; transform: translateY(58px); } }
+.a-leave { animation-name: k-leave; }
+@keyframes k-leave { 0%, 20% { transform: none; opacity: 1; } 85% { transform: translateX(170px); opacity: 1; } 86%, 100% { transform: translateX(170px); opacity: 0; } }
+
+/* App chrome: the arrival banner drops in, the explainer slides up. */
+.kit-toast { animation: k-toast 0.35s ease-out both; }
+@keyframes k-toast { from { transform: translateY(-120%); } to { transform: none; } }
+.kit-sheet { animation: k-sheet 0.3s ease-out both; }
+@keyframes k-sheet { from { transform: translateY(100%); } to { transform: none; } }
+
+/* Screens: the content fades and rises in, one block after another, so a screen reads in order. */
+.kit-enter > * { animation: kit-rise 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.kit-enter > *:nth-child(2) { animation-delay: 0.12s; }
+.kit-enter > *:nth-child(3) { animation-delay: 0.24s; }
+.kit-enter > *:nth-child(4) { animation-delay: 0.36s; }
+.kit-enter > *:nth-child(5) { animation-delay: 0.48s; }
+.kit-enter > *:nth-child(n + 6) { animation-delay: 0.6s; }
+@keyframes kit-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* A window over the screen: the page dims and the card grows into place; closing reverses it. */
+.kit-backdrop { animation: kit-dim 0.25s ease-out both; }
+.kit-window { transform-origin: 50% 60%; animation: kit-open 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.kit-window-out .kit-backdrop { animation: kit-dim 0.22s ease-in reverse both; }
+.kit-window-out .kit-window { animation: kit-close 0.22s ease-in both; }
+@keyframes kit-dim { from { opacity: 0; } to { opacity: 1; } }
+@keyframes kit-open { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes kit-close { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(16px) scale(0.97); } }
