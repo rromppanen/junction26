@@ -27,6 +27,7 @@ describe("grading sources", () => {
     expect(grade("https://pubmed.ncbi.nlm.nih.gov/123", "Mailed outreach: a randomized trial", "")).toEqual({ strength: "moderate", kind: "Randomised trial" });
     expect(grade("https://thl.fi/fi/x", "Seulonnat", "")?.strength).toBe("supporting");
     expect(grade("https://someblog.example.com/post", "Systematic review", "")).toBeNull();
+    expect(grade("https://pubmed.ncbi.nlm.nih.gov/9", "Addressing the screening gap: a protocol for a systematic review", "")).toBeNull();
   });
   it("searches for the programme and the group", () => {
     expect(programmeOf("suolistoseulonta.csv").en).toBe("colorectal cancer screening");
