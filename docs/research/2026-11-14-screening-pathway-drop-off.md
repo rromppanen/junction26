@@ -1,6 +1,6 @@
 # Screening pathway drop-off: what the Finnish Cancer Registry already publishes
 
-Research note, 14.11.2026. It supports the product idea in [docs/idea.md](../idea.md).
+Research note, 14.11.2026. Written for the team's earlier direction, Läpi ([archive](../archive/lapi-idea.md)). The figures still back farmagusta's problem statement in [docs/idea.md](../idea.md).
 
 The Finnish Cancer Registry's annual screening reports contain counts for each step of the screening pathway, per wellbeing services county and per population group. For colorectal screening they also show the wait from a positive test to colonoscopy per county. This is public, measured data on steps that [docs/challenge.md](../challenge.md) lists as having no data.
 
@@ -12,7 +12,7 @@ The Finnish Cancer Registry's annual screening reports contain counts for each s
 | Breast | <https://stats.cancerregistry.fi/joukkistilastot/rinta.html> | 13.11.2026 | `736943ae3ee8d665173e52affd00dae9bf328c37962c3ae89f54504fc046380c` |
 | Cervical | <https://stats.cancerregistry.fi/joukkistilastot/kohtu.html> | 13.11.2026 | `275e967bd2c9e38455f21261fa15d88e8ea9407cc67f01d282044463ac58f5b7` |
 
-- The cervical report is the one `feat/care-equity-mvp` already parses with `web/scripts/ingest.py`; the checksum matches its manifest. The other two reports use the same HTML structure, so the same parser pattern applies.
+- The three reports share one HTML structure. The colorectal report is parsed by `web/scripts/ingest-registry.ts` into `web/src/data/registry.json`.
 - All figures below were parsed from the report tables, not typed by hand. The exception is the waiting times, which the reports publish only as charts; those values are read from the chart and marked "about".
 - The colorectal report includes findings reported to the Registry by 15.5.2026. It says the data is completed retrospectively, so the latest year can still change.
 - Bowel cancer survival is Sotkanet indicator 3627 for 2024, from the app's own snapshot.
@@ -127,7 +127,7 @@ The same groups are missed in all three programmes. These are individual-level r
 | Follow-up colonoscopy after a positive screening test should be scheduled within 31 days of referral (acceptable above 90%, desirable above 95%) | European guidelines for quality assurance in colorectal cancer screening and diagnosis, 1st edition, recommendation 3.16 (Endoscopy 2012) | Wording seen in a search snippet of the guideline. Confirm against the full text and check for a newer edition. |
 | Colonoscopy 10–12 months after a positive test was associated with more colorectal cancer (odds ratio 1.48) and more advanced-stage disease (1.97) than colonoscopy at 8–30 days; no significant increase up to 9 months | Corley et al., JAMA 2017;317(16), 70,124 patients | From summaries of the paper, not the full text. Observational: the authors do not claim cause. |
 | Patient navigators and provider reminders raise colonoscopy completion after a positive test (moderate evidence). Across all 17 comparative studies of any intervention, differences ranged from −7 to +25 percentage points | Selby et al., Annals of Internal Medicine 2017;167:565–575, systematic review of 23 studies | From summaries, not the full text. Over half the studies had a high risk of bias. |
-| Reminders for non-participants and invitations in additional languages | FICAN cervical screening quality handbook 2024, pp. 18–19 | Already in `feat/care-equity-mvp`'s `web/src/data/evidence.ts`, with page links. |
+| Reminders for non-participants and invitations in additional languages | FICAN cervical screening quality handbook 2024, pp. 18–19 | Cited with page links in the earlier Läpi code on branch `feat/care-equity-mvp` (`web/src/data/evidence.ts`). |
 
 The European guideline counts from referral and the Registry counts from the positive test, so the two are not the same clock. Say so wherever they are compared.
 

@@ -15,6 +15,8 @@ The demo runs on Vercel's free tier as two projects from this one repo: the main
 3. Under Environment Variables, add `NURSE_URL` = the nurse project's address from step 1, with no trailing slash. Without it, `/nurse` returns an error, because the main app forwards `/nurse/*` there.
 4. Deploy. If the name `farmagusta` was free, the app is at `https://farmagusta.vercel.app`. Otherwise add that domain under Settings → Domains.
 
+For a phone and a laptop to see each other's actions, connect an Upstash Redis store to this project (Vercel marketplace). It sets `KV_REST_API_URL` and `KV_REST_API_TOKEN`, which the shared log at `/api/samples` reads.
+
 Optional: `GEMINI_API_KEY`, used only by `/api/kit/ask`, which the app no longer links to.
 
 ## 3. Check it
@@ -34,7 +36,7 @@ Then open `/kit` on a phone, allow location when you book a pickup, and watch th
 | `/nurse` errors on the main address | `NURSE_URL` missing or wrong | Set it to the nurse project's address and redeploy the main app. |
 | The robot follows a straight line instead of streets | Both public routers in `/api/walk` (OSRM foot, then Valhalla) failed | Usually temporary. The demo still works. |
 | Booking waits and then says location is off | Location was refused or the page isn't on https | Allow location for the site. The Vercel address is https. |
-| The phone and the dashboard don't update each other | Demo state lives in one browser (`localStorage`) | Use two tabs in the same browser until the shared database is added. |
+| The phone and the dashboard don't update each other | The shared log at `/api/samples` has no Upstash Redis store, so each server instance keeps its own log in memory | In the main app's project, add an Upstash Redis store from the Vercel marketplace (it sets `KV_REST_API_URL` and `KV_REST_API_TOKEN`) and redeploy. Two tabs in one browser always sync. |
 
 ## Deploying from the command line instead
 

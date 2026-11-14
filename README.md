@@ -14,7 +14,7 @@ Keep this section current. On Sunday morning it becomes the submission form text
 | Name | farmagusta |
 | Punchline | farmagusta helps more people complete bowel cancer screening: a guided home test in their own language, a robot that collects the sample from the door, and a nurse board that flags everyone who falls behind. |
 | Challenge(s) | AstraZeneca: Equal Care Across Finland |
-| Technologies | Next.js, TypeScript, Tailwind CSS, Leaflet, OpenStreetMap routing (OSRM), Upstash Redis, Vercel, Vitest, GitHub Actions |
+| Technologies | Next.js, TypeScript, Tailwind CSS, MapLibre GL, Leaflet, OpenStreetMap routing (OSRM), Upstash Redis, Vercel, Vitest, GitHub Actions |
 | Demo link | https://farmagusta.vercel.app |
 | Source link | https://github.com/rromppanen/junction26 |
 | Pitch deck | [`docs/pitch/farmagusta-screening-attendance.pptx`](docs/pitch/farmagusta-screening-attendance.pptx) |
@@ -72,9 +72,18 @@ Without Upstash keys the shared event log lives in the dev server's memory. Run 
 
 _TBD: names and roles._
 
-## Plan
+## Docs
 
-Deadlines, task split and the submission checklist live in [`docs/PLAN.md`](docs/PLAN.md).
+| Document | What it holds |
+| --- | --- |
+| [docs/idea.md](docs/idea.md) | The product story: problem, causes, what we built, strategy goals, cost, pilot and limits |
+| [docs/challenge.md](docs/challenge.md) | The AstraZeneca brief and key facts from the national cancer strategy |
+| [docs/pitch/script.md](docs/pitch/script.md) | The 3:00 pitch and Q&A |
+| [docs/pitch/farmagusta/](docs/pitch/farmagusta/README.md) | Video props and the video clips |
+| [docs/PLAN.md](docs/PLAN.md) | Deadlines, decisions and the submission checklist |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | Deploying both apps to Vercel |
+| [docs/research/](docs/research/) | Mentor notes and research behind the figures |
+| [docs/archive/](docs/archive/README.md) | The team's earlier direction, Läpi, kept for history |
 
 ## License
 

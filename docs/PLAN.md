@@ -16,8 +16,10 @@ This is the team's one place for decisions, the task split and the submission ch
 
 ## Decision
 
-- Challenge(s): AstraZeneca "Equal Care Across Finland" (main), plus the Gemini API and Context.dev tech bounties. Pre-submission text is in the README's submission fields; it can be changed until Sun 10:00.
-- Why us / why this: _TBD_
+- Challenge: AstraZeneca "Equal Care Across Finland". Pre-submission text is in the README's submission fields; it can be changed until Sun 10:00. The Gemini API and Context.dev bounties were planned for Läpi. The app now uses no AI model, so decide whether they still apply before entering them.
+- Product: **farmagusta**, a guided home bowel-screening test in nine languages, robot pickup of the sample and a nurse board that flags everyone who falls behind. The story is in [idea.md](idea.md).
+- Direction change: on Sat 14.11 the team dropped the county dashboard Läpi (formerly Gap Radar) for farmagusta. Its documents are in the [archive](archive/README.md).
+- Why this: Helsinki returns 69.6% of bowel screening tests against the 80% goal, and people with another mother tongue take part least (53.4% against 74.5%, Finnish Cancer Registry 2024). The mentors said the patient can't see the next step and nobody monitors the guidelines.
 - Main judging criteria to hit: **Innovation** (unlike other projects), **Impact** (share of affected people actually helped), **Implementation** (realistic, viable, feasible). Each partner also judges its own challenge with its own criteria.
 
 ## Workshops worth attending
@@ -45,10 +47,10 @@ Mark the ones we actually go to and who goes.
 
 ## MVP scope
 
-- Must have for the demo: _TBD_
-- The "wow" moment, which has to work in a 2:00 video and a live 3:00 demo: _TBD_
-- Riskiest part, and the fallback if it fails: _TBD_
-- Out of scope: _TBD_
+- Must have for the demo: `/kit` from language choice to robot handover, and `/nurse` showing the same person move stage and the flagged people first.
+- The "wow" moment: the robot arrives on the phone's map while the nurse board on the laptop updates live.
+- Riskiest part, and the fallback if it fails: the shared log (`/api/samples`) or the public map and routing services. Fallback: two tabs in one browser, and the straight-line route the app draws when no router answers.
+- Out of scope: a real robot, lab or booking integration; measured effect on participation; regions outside the capital area.
 
 ## Submission checklist
 
@@ -59,7 +61,7 @@ Mark the ones we actually go to and who goes.
 - [ ] Technologies list
 - [ ] Demo link works in an incognito window
 - [ ] Source link
-- [ ] Pitch deck exported to PDF in [`docs/pitch/`](pitch/)
+- [ ] Pitch deck exported to PDF in [`docs/pitch/`](pitch/), from [`farmagusta-screening-attendance.pptx`](pitch/farmagusta-screening-attendance.pptx)
 - [ ] Pitch video **≤ 2:00** (check the exact length before uploading)
 - [ ] Submitted to every challenge we qualify for
 - [ ] Final submission before Sun 10:00
