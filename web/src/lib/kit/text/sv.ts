@@ -6,7 +6,6 @@ export const sv: KitText = {
     chooseLang: "Välj språk",
     langLabel: "Språk",
     invitedSub: "Den här appen guidar dig genom provtagningen steg för steg. Du kan ta provet hemma, i lugn och ro.",
-    machineNote: "Den här översättningen har ännu inte granskats av en professionell översättare.",
     aboutTitle: "Vad handlar det om?",
     why: "Varför är det här viktigt?",
     whyTitle: "Varför det är viktigt",

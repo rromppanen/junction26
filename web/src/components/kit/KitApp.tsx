@@ -250,7 +250,6 @@ export function KitApp() {
           <p className="mt-3 leading-relaxed text-muted">{t.invitedSub}</p>
           <h2 className="mt-7 text-base font-semibold">{t.chooseLang}</h2>
           <div className="mt-3"><LanguageList value={lang} onChoose={chooseLang} /></div>
-          {!info.reviewed && <p className="mt-3 text-sm text-muted">{t.machineNote}</p>}
         </Body>
       );
     }
