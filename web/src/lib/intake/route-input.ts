@@ -73,3 +73,18 @@ export function parseMappingBody(body: unknown): { input: QuestionInput; questio
   }
   return { input, questions, answers };
 }
+
+/** Validates one conversational answer: the question (column or county), the free text and an optional guess. */
+export function parseAnswerBody(
+  body: unknown,
+): { input: QuestionInput; question: { kind: "column" | "county"; text: string }; text: string; guess: string | null } | string {
+  if (!isObj(body)) return "Body must be a JSON object.";
+  const q = isObj(body.question) ? body.question : null;
+  if (!q || (q.kind !== "column" && q.kind !== "county")) return "question must be a column or county question.";
+  const checked = parseMappingBody({ input: body.input, questions: [q], answers: [] });
+  if (typeof checked === "string") return checked;
+  if (typeof body.text !== "string" || body.text.length > MAX_TEXT) return "text must be a string of at most 500 characters.";
+  if (body.guess !== undefined && body.guess !== null && (typeof body.guess !== "string" || body.guess.length > MAX_ID)) return "guess must be a short string.";
+  const question = checked.questions[0] as { kind: "column" | "county"; text: string };
+  return { input: checked.input, question: { kind: question.kind, text: question.text }, text: body.text, guess: (body.guess as string | undefined) ?? null };
+}
