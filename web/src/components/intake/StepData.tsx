@@ -8,6 +8,8 @@ import { PUBLIC_DATASETS, type PublicDataset } from "@/lib/intake/setup";
 import { FadeIn } from "./fade";
 
 const MAX_BYTES = 1_000_000;
+/** A demo export with terse Finnish column names, so the AI has something to ask about. */
+const EXAMPLE = { url: "/demo/seulonta_pkarjala_2022-2024.csv", name: "seulonta_pkarjala_2022-2024.csv" };
 export const DEFAULT_DATASETS: PublicDataset[] = ["sotkanet-screening", "registry-pathway"];
 
 type Props = {
@@ -50,6 +52,16 @@ export function StepData({ datasets, table, fileName, onDatasets, onFile, onCont
     } catch (e) {
       if (request !== requestRef.current) return;
       setProblem(e instanceof Error ? e.message : "Could not read this file.");
+    }
+  }
+
+  async function loadExample() {
+    try {
+      const res = await fetch(EXAMPLE.url);
+      if (!res.ok) throw new Error();
+      await handleFile(new File([await res.blob()], EXAMPLE.name, { type: "text/csv" }));
+    } catch {
+      setProblem("Could not load the example file.");
     }
   }
 
@@ -128,6 +140,14 @@ export function StepData({ datasets, table, fileName, onDatasets, onFile, onCont
               </button>
             );
           })}
+        </FadeIn>
+      )}
+
+      {!table && (
+        <FadeIn delay={460} className="-mt-6">
+          <button type="button" onClick={() => void loadExample()} className="text-small text-muted underline underline-offset-4 hover:text-ink">
+            No file at hand? Try an example
+          </button>
         </FadeIn>
       )}
 

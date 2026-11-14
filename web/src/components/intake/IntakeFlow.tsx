@@ -43,7 +43,7 @@ function settle(u: Understanding, resolved: Resolved[]): Settled {
 }
 
 /**
- * /analyse as a conversation: choose data, the AI reads it, asks only what it is unsure about
+ * The start page (/) as a conversation: choose data, the AI reads it, asks only what it is unsure about
  * (one question at a time), then hands over to the findings. Every screen fades in and out.
  */
 export function IntakeFlow() {
@@ -106,7 +106,7 @@ export function IntakeFlow() {
               } catch {
                 // storage unavailable: the findings still open
               }
-              leave(() => router.push(setup.countyId !== null ? `/county/${setup.countyId}` : "/"));
+              leave(() => router.push(setup.countyId !== null ? `/county/${setup.countyId}` : "/map"));
             }}
             onStartOver={() =>
               go("data", () => {

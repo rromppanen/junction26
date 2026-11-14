@@ -294,6 +294,8 @@ const FIELD_WORDS: Record<Field, RegExp> = {
   ignore: /\b(ignore|not needed|irrelevant|nothing|unused|comment|note|ei tarvita|turha|huomautus)/,
 };
 
+const MATCH_ORDER: Field[] = ["ignore", "waitDays", "examined", "positive", "attended", "invited", "group", "programme", "region", "year"];
+
 /** Name-matching fallback for a free-text answer. Returns null when it cannot tell. */
 function localMatch(q: { kind: "column" | "county" }, text: string, p: Places): string | null {
   const t = norm(text);
@@ -302,8 +304,9 @@ function localMatch(q: { kind: "column" | "county" }, text: string, p: Places): 
     const hit = findPlace(t, p);
     return hit ? String(hit.countyId) : null;
   }
-  const hits = (Object.keys(FIELD_WORDS) as Field[]).filter((f) => FIELD_WORDS[f].test(t));
-  return hits.length === 1 ? hits[0] : null;
+  // Natural answers often name two steps ("follow-ups after a positive result", "days from referral"):
+  // the more specific field wins.
+  return MATCH_ORDER.find((f) => FIELD_WORDS[f].test(t)) ?? null;
 }
 
 /**

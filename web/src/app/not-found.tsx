@@ -16,7 +16,7 @@ export default function NotFound() {
         address, check the spelling. If a link brought you here, the county may be listed under a different number.
       </p>
       <p className="mt-6 text-sm">
-        <Link href="/" className="link font-semibold">
+        <Link href="/map" className="link font-semibold">
           Find the county on the map
         </Link>
       </p>

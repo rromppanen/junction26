@@ -72,6 +72,9 @@ describe("interpretAnswer", () => {
     expect(await interpretAnswer(input, county, "Olen Tampereella", null, noAi)).toMatchObject({ result: "matched", label: "Pirkanmaa" });
     expect(await interpretAnswer(input, county, "koko maa", null, noAi)).toMatchObject({ result: "matched", value: "national" });
     expect(await interpretAnswer(input, col, "hmm", null, noAi)).toEqual({ result: "unclear" });
+    expect(await interpretAnswer(input, col, "follow-up exams done after a positive result", null, noAi)).toMatchObject({ value: "examined" });
+    expect(await interpretAnswer(input, col, "days from referral to the follow-up", null, noAi)).toMatchObject({ value: "waitDays" });
+    expect(await interpretAnswer(input, col, "how many women actually came to be screened", null, noAi)).toMatchObject({ value: "attended" });
   });
 
   it("treats yes as accepting the guess and don't know as a skip", async () => {
