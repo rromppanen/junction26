@@ -65,6 +65,11 @@ export const AREAS: Record<string, { at: LatLng; hub: HubId }> = {
   Kivenlahti: { at: [60.1530, 24.6360], hub: "matinkyla" },
 };
 
+/** The hub and the centres of the neighbourhoods it serves, for zooming the map to one hub. */
+export function hubArea(hub: HubId): LatLng[] {
+  return [HUBS[hub].at, ...Object.values(AREAS).filter((a) => a.hub === hub).map((a) => a.at)];
+}
+
 /** Where the map opens: the capital region. */
 export const MAP_CENTER: LatLng = [60.225, 24.92];
 

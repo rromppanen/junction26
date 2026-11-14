@@ -73,3 +73,7 @@ The **Speed** selector now offers Real time, Demo speed (20× faster, the defaul
 ## Look
 
 The nurse app uses the same HUS styling as the user app in `web/`: `globals.css` is a copy of `web/src/app/globals.css` (plus the map rules at the end), with Open Sans for text and Poppins for headings. The robots map follows the kit's tracking map: the road still to drive is brand blue with a white outline, the part behind is grey dots, and the destination is a house marker. When the theme changes in `web/`, copy the stylesheet again.
+
+## Reminders and the hub filter
+
+On the participant list, a "No sample after N days" flag carries a second tag: **No reminder yet** (orange) or **Reminder sent N d ago** (grey). Flagged people nobody has reminded sort first. The robots page has a **Hub** picker: one hub shows only its robots, routes, waiting samples and tasks, and the map zooms to its area. The simulation keeps running for every hub.

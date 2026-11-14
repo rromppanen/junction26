@@ -135,7 +135,16 @@ export type Flag = {
   kind: "noSample" | "positiveNoBooking" | "robotWaiting" | "awaitingIntake";
   label: string;
   days?: number;
+  /** noSample only: days since the latest reminder, or null when none has been sent. */
+  remindedDaysAgo?: number | null;
 };
+
+/** "Reminder sent 6 d ago" or "No reminder yet", for a noSample flag. */
+export function reminderNote(f: Flag): string | null {
+  if (f.kind !== "noSample") return null;
+  if (f.remindedDaysAgo === null || f.remindedDaysAgo === undefined) return "No reminder yet";
+  return f.remindedDaysAgo === 0 ? "Reminder sent today" : `Reminder sent ${f.remindedDaysAgo} d ago`;
+}
 
 export function flagsOf(s: Sample, now: number): Flag[] {
   const flags: Flag[] = [];
@@ -144,7 +153,11 @@ export function flagsOf(s: Sample, now: number): Flag[] {
   if (invited && !has(s, "sampleTaken")) {
     const days = Math.floor((now - invited.at) / DAY_MS);
     if (days >= 14) {
-      flags.push({ kind: "noSample", label: `No sample ${days} days after invitation`, days });
+      const reminded = s.events.filter((e) => e.type === "reminderSent").reduce((a, e) => Math.max(a, e.at), -Infinity);
+      flags.push({
+        kind: "noSample", label: `No sample ${days} days after invitation`, days,
+        remindedDaysAgo: Number.isFinite(reminded) ? Math.floor((now - reminded) / DAY_MS) : null,
+      });
     }
   }
 

@@ -2,10 +2,10 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { Fragment } from "react";
+import { Fragment, useEffect, useMemo } from "react";
 import { CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap } from "react-leaflet";
 import type { Sample } from "@/lib/sample/model";
-import { AREAS, HUBS, curvedRoute, homeOf, pickupCode, positionOf, routeKey, splitLine, type LatLng, type RobotView } from "@/lib/robots/fleet";
+import { AREAS, HUBS, hubArea, curvedRoute, homeOf, pickupCode, positionOf, routeKey, splitLine, type LatLng, type RobotView, type HubId } from "@/lib/robots/fleet";
 
 // The HUS palette of the user app (web/): brand blue for a robot on its way, like the kit's tracking map.
 const COLOUR = {
@@ -55,14 +55,14 @@ function langLine(p: Sample["person"]): string {
 }
 
 /** A button that zooms back out to the whole capital region. */
-function FitButton() {
+function FitButton({ bounds, label }: { bounds: L.LatLngBounds; label: string }) {
   const map = useMap();
   return (
     <div className="leaflet-top leaflet-right">
       <div className="leaflet-control">
-        <button type="button" onClick={() => map.fitBounds(BOUNDS)}
+        <button type="button" onClick={() => map.fitBounds(bounds)}
           className="min-h-9 rounded-md border border-rule bg-white px-3 text-sm font-medium shadow-sm hover:bg-brand-soft">
-          Whole region
+          {label}
         </button>
       </div>
     </div>
@@ -73,7 +73,15 @@ function FitButton() {
  * The capital region on an OpenStreetMap base map: hubs, homes waiting for a pickup,
  * robots and the street routes they follow. Rendered only in the browser.
  */
-export default function LiveMap({ fleet, ready, intake, routes, selected, onSelect }: {
+/** Zooms to the chosen hub's area, or back to the whole region, whenever the choice changes. */
+function FitToHub({ bounds }: { bounds: L.LatLngBounds }) {
+  const map = useMap();
+  useEffect(() => { map.fitBounds(bounds); }, [map, bounds]);
+  return null;
+}
+
+export default function LiveMap({ hub, fleet, ready, intake, routes, selected, onSelect }: {
+  hub: HubId | "all";
   fleet: RobotView[];
   ready: Sample[];
   /** Samples waiting for a nurse, per hub id. */
@@ -82,6 +90,7 @@ export default function LiveMap({ fleet, ready, intake, routes, selected, onSele
   selected: string | null;
   onSelect: (robotId: string) => void;
 }) {
+  const view = useMemo(() => (hub === "all" ? BOUNDS : L.latLngBounds(hubArea(hub)).pad(0.35)), [hub]);
   const lineOf = (v: RobotView): LatLng[] | undefined => {
     if (v.status.kind === "idle") return undefined;
     const t = v.status.trip;
@@ -90,7 +99,8 @@ export default function LiveMap({ fleet, ready, intake, routes, selected, onSele
 
   return (
     <MapContainer bounds={BOUNDS} zoomSnap={0.25} zoomDelta={0.5} wheelPxPerZoomLevel={90} minZoom={9} maxZoom={16} scrollWheelZoom className="h-[min(72vh,680px)] min-h-[420px] w-full rounded-xl" attributionControl>
-      <FitButton />
+      <FitButton bounds={view} label={hub === "all" ? "Whole region" : "Whole hub area"} />
+      <FitToHub bounds={view} />
       {/* Esri's light grey canvas: quiet streets so the routes and robots stand out. No API key. */}
       <TileLayer
         url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
@@ -143,7 +153,7 @@ export default function LiveMap({ fleet, ready, intake, routes, selected, onSele
       })}
 
       {/* Parked robots are counted on their hub's label rather than stacked on top of it. */}
-      {Object.values(HUBS).map((h) => {
+      {Object.values(HUBS).filter((h) => hub === "all" || h.id === hub).map((h) => {
         const parked = fleet.filter((v) => v.robot.hub === h.id && v.status.kind === "idle").length;
         return (
           <Marker key={h.id} position={h.at} icon={intake[h.id] ? hubIntakeIcon : hubIcon} zIndexOffset={-100}>

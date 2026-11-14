@@ -4,6 +4,7 @@ import {
   STAGES_FOR_BOARD,
   addEvent,
   flagsOf,
+  reminderNote,
   robotProgress,
   stageOf,
   type EventType,
@@ -121,5 +122,27 @@ describe("seedSamples", () => {
     expect(seed.some((s) => stageOf(s, now) === "done")).toBe(true);
     expect(seed.some((s) => s.person.interpreter === "Arabic")).toBe(true);
     expect(seed.length).toBeGreaterThanOrEqual(9);
+  });
+});
+
+describe("no-sample flag and reminders", () => {
+  const DAYS = 86_400_000;
+  const base = 1_800_000_000_000;
+  const p = { id: "r", name: "R", age: 60, municipality: "Helsinki", lang: "fi" as const };
+  it("says when no reminder has been sent", () => {
+    const s = { id: "r", person: p, events: [{ type: "invited" as const, at: base }] };
+    const f = flagsOf(s, base + 20 * DAYS).find((x) => x.kind === "noSample")!;
+    expect(f.remindedDaysAgo).toBeNull();
+    expect(reminderNote(f)).toBe("No reminder yet");
+  });
+  it("says how long ago the latest reminder went out", () => {
+    const s = { id: "r", person: p, events: [
+      { type: "invited" as const, at: base },
+      { type: "reminderSent" as const, at: base + 5 * DAYS },
+      { type: "reminderSent" as const, at: base + 14 * DAYS },
+    ] };
+    const f = flagsOf(s, base + 20 * DAYS).find((x) => x.kind === "noSample")!;
+    expect(f.remindedDaysAgo).toBe(6);
+    expect(reminderNote(f)).toBe("Reminder sent 6 d ago");
   });
 });
