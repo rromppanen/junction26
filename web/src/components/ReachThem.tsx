@@ -77,8 +77,7 @@ export function ReachThem({
       </ul>
 
       {drafts && (
-        <>
-          <h3 className="mt-8 font-semibold">Draft invitations</h3>
+        <details className="more mt-8 rounded-lg border border-rule p-4"><summary className="cursor-pointer font-semibold">View draft invitations and SMS templates</summary>
           <p className="mt-1 text-sm font-medium text-behind">Draft — have a native speaker check before use</p>
           {drafts.status === "fallback" && (
             <p className="mt-1 max-w-2xl text-sm text-muted">
@@ -111,7 +110,7 @@ export function ReachThem({
           <More label="About these drafts" className="mt-4">
             Gemini wrote the drafts from fixed rules: plain language, free of charge, how to book through [phone] and [link], an interpreter is welcome, no other medical claims. Replace the placeholders before sending.
           </More>
-        </>
+        </details>
       )}
     </div>
   );

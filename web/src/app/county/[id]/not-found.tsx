@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function CountyNotFound() {
   return (
-    <main className="mx-auto max-w-5xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
+    <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
       <p className="mb-10 text-sm">
         <Link href="/map" className="link">Back to the map</Link>
       </p>

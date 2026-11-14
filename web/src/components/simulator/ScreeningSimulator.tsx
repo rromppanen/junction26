@@ -228,7 +228,7 @@ export function ScreeningSimulator({
     <div className="grid gap-14">
       <section aria-labelledby="sim-headline">
         <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
-          <Gauge aria-hidden size={16} strokeWidth={2} /> Screening simulator · breast cancer · women aged 50–69
+          <Gauge aria-hidden size={16} strokeWidth={2} /> Breast screening simulator · women aged 50–69
         </p>
         <h1
           id="sim-headline"
@@ -354,7 +354,7 @@ export function ScreeningSimulator({
           </section>
 
           <section aria-labelledby="county-h">
-            <IconHeading icon={ListOrdered} id="county-h" className="text-xl">What closing each gap is worth</IconHeading>
+            <IconHeading icon={ListOrdered} id="county-h" className="text-xl">Compare the county scenarios</IconHeading>
             <p className="mb-4 mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
               <EvidenceTag kind="simulated" />
               Per year, for one year of diagnoses. Untick a county to leave it out of the totals.

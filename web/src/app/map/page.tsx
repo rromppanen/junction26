@@ -3,6 +3,8 @@ import { getDataset } from "@/lib/data";
 import { INDICATORS, indicatorBySlug } from "@/data/indicators";
 import { ON_PAR_THRESHOLD, latestYear, rankCounties } from "@/lib/gap";
 import type { GapFacts, GapStatus, Indicator, PathwayStage } from "@/lib/types";
+import { OpenOnHash } from "@/components/OpenOnHash";
+import { CountyPicker } from "@/components/CountyPicker";
 import { CountyMap } from "@/components/CountyMap";
 import { NationalView } from "@/components/NationalView";
 import { earlyWarnings, improvers, languageGaps, nationalPathway } from "@/lib/national";
@@ -115,39 +117,21 @@ export default async function RadarPage({
   const GroupIcon = (st: PathwayStage) => GROUP_ICON[st] ?? Route;
 
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-10 pt-5 sm:px-6">
+    <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-4 pb-10 pt-5 sm:px-6">
+      <OpenOnHash />
       <AppHeader>
-        <HeaderLink href="/" icon={FileUp} label="Analyse your data" title="Start a new analysis: public data or your own file" />
-        <HeaderLink href="/simulator" icon={Gauge} label="Simulator" title="What closing the breast screening gap would be worth" />
+        <HeaderLink href="/" icon={FileUp} label="Analyse your data" title="Bring your own aggregate data" />
+        <HeaderLink href="/simulator" icon={Gauge} label="Breast screening simulator" title="What closing the breast screening gap would be worth" />
         <DataBadge ds={ds} />
       </AppHeader>
 
-      <section className="mb-8" aria-labelledby="headline">
-        <h1 id="headline" className="max-w-4xl text-[1.85rem] font-semibold leading-[1.1] tracking-[-0.02em] sm:text-[2.75rem]">
-          {behind === 0 ? "No county" : `${behind} of ${withData} counties`}{" "}
-          {behind <= 1 ? "is" : "are"} behind Finland on {phrase.inSentence} in {year}.
-        </h1>
-        <div className="mt-6 grid grid-cols-3 gap-x-4 gap-y-5 sm:flex sm:gap-x-12">
-          <Stat value={fmt(national, ind.unit)} label="Finland as a whole" />
-          <Stat value={behind} label={behind === 1 ? "county behind" : "counties behind"} tone={behind ? "text-behind" : ""} />
-          {ind.target && meetsTarget !== null && (
-            <Stat value={`${meetsTarget}/${withData}`} label={`reach the ${ind.target.value}% target`} />
-          )}
+      <section className="mb-6 rounded-lg border border-rule bg-surface p-4 sm:p-5" aria-label="Open a county brief">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div><p className="font-semibold">From a county gap to a practical action</p>
+          <p className="mt-1 text-sm text-muted">Choose your county to review evidence, compare interventions and prepare a board memo.</p></div>
+          <CountyPicker counties={countyList} />
         </div>
       </section>
-
-      <NationalView
-        n={nationalPath}
-        languages={languageGaps(REGISTRY.groups)}
-        warnings={warnings}
-        rising={rising}
-        countyName={(id) => shortName(regionName.get(id) ?? String(id))}
-        indicatorName={indName}
-        example={example}
-        counties={countyList}
-        registryUrl={COLORECTAL_SOURCE.url}
-      />
-
       <div className="mb-10 flex flex-col gap-3 rounded-[4px] bg-surface px-3 py-3 text-sm sm:px-4">
         <nav aria-label="Measure" className="flex flex-wrap gap-x-8 gap-y-2">
           {measureGroups().map((g) => {
@@ -195,6 +179,20 @@ export default async function RadarPage({
           </nav>
         )}
       </div>
+
+      <section className="mb-8" aria-labelledby="headline">
+        <h1 id="headline" className="max-w-4xl text-[1.85rem] font-semibold leading-[1.1] tracking-[-0.02em] sm:text-[2.75rem]">
+          {behind === 0 ? "No county" : `${behind} of ${withData} counties`}{" "}
+          {behind <= 1 ? "is" : "are"} behind Finland on {phrase.inSentence} in {year}.
+        </h1>
+        <div className="mt-6 grid grid-cols-3 gap-x-4 gap-y-5 sm:flex sm:gap-x-12">
+          <Stat value={fmt(national, ind.unit)} label="Finland as a whole" />
+          <Stat value={behind} label={behind === 1 ? "county behind" : "counties behind"} tone={behind ? "text-behind" : ""} />
+          {ind.target && meetsTarget !== null && (
+            <Stat value={`${meetsTarget}/${withData}`} label={`reach the ${ind.target.value}% target`} />
+          )}
+        </div>
+      </section>
 
       <div className="grid gap-x-12 gap-y-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
         <section aria-labelledby="map-h">
@@ -305,6 +303,23 @@ export default async function RadarPage({
           )}
         </section>
       </div>
+
+      <details className="more mt-12 rounded-lg border border-rule bg-surface p-4 sm:p-6">
+        <summary className="cursor-pointer text-lg font-semibold">National context · bowel screening and participation trends</summary>
+        <p className="mt-2 mb-5 text-sm text-muted">Separate context across programmes, using the latest available figures. This panel does not change with the measure above.</p>
+      <NationalView
+        n={nationalPath}
+        languages={languageGaps(REGISTRY.groups)}
+        warnings={warnings}
+        rising={rising}
+        countyName={(id) => shortName(regionName.get(id) ?? String(id))}
+        indicatorName={indName}
+        example={example}
+        counties={countyList}
+        registryUrl={COLORECTAL_SOURCE.url}
+      />
+
+      </details>
 
       <section className="mt-14 border-t border-rule pt-6" aria-labelledby="pathway-h">
         <IconHeading icon={Route} id="pathway-h" className="mb-4 text-lg">

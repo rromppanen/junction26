@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { QuestionInput } from "@/lib/intake/clarify";
 import type { Table } from "@/lib/intake/csv";
 import { validateMapping, type Field, type Mapping } from "@/lib/intake/fields";
-import { PUBLIC_DATASETS, type AnalysisSetup, type Level, type PublicDataset } from "@/lib/intake/setup";
+import { PUBLIC_DATASETS, ROWS_KEY, SETUP_KEY, type AnalysisSetup, type Level, type PublicDataset } from "@/lib/intake/setup";
 import type { Understanding } from "@/lib/intake/understand";
 import { FadeIn, useLeave } from "./fade";
 import { StepConversation, type Resolved } from "./StepConversation";
@@ -14,7 +14,6 @@ import { StepReading } from "./StepReading";
 
 /** Same value as NATIONAL in lib/intake/understand (a server module, so not imported here). */
 const NATIONAL = "national";
-export const SETUP_KEY = "gapRadar.analysisSetup";
 
 type Phase = "data" | "reading" | "ask" | "done";
 
@@ -49,6 +48,14 @@ function settle(u: Understanding, resolved: Resolved[]): Settled {
 export function IntakeFlow() {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("data");
+  const phaseRef = useRef<HTMLDivElement>(null);
+  const previousPhase = useRef(phase);
+  useEffect(() => {
+    if (previousPhase.current !== phase) {
+      phaseRef.current?.focus();
+      previousPhase.current = phase;
+    }
+  }, [phase]);
   const [datasets, setDatasets] = useState<PublicDataset[]>(DEFAULT_DATASETS);
   const [table, setTable] = useState<Table | null>(null);
   const [fileName, setFileName] = useState("");
@@ -64,7 +71,15 @@ export function IntakeFlow() {
 
   return (
     <div className={leaving ? "fade-out" : ""}>
-      <div key={phase}>
+      <nav aria-label="Analysis setup progress" className="mb-8">
+        <ol className="flex flex-wrap gap-2 text-sm">
+          {([['data', 'Choose data'], ['reading', 'Review data'], ['ask', 'Clarify scope'], ['done', 'Ready']] as const).map(([step, label], i) => (
+            <li key={step} aria-current={phase === step ? "step" : undefined}
+              className={`rounded-md border px-3 py-2 ${phase === step ? "border-ink bg-ink text-paper" : "border-rule text-muted"}`}>{i + 1}. {label}</li>
+          ))}
+        </ol>
+      </nav>
+      <div key={phase} ref={phaseRef} tabIndex={-1}>
         {phase === "data" && (
           <StepData
             datasets={datasets}
@@ -103,10 +118,14 @@ export function IntakeFlow() {
             onFindings={(setup) => {
               try {
                 sessionStorage.setItem(SETUP_KEY, JSON.stringify(setup));
+                if (setup.upload && table) sessionStorage.setItem(ROWS_KEY, JSON.stringify(table.rows));
+                else sessionStorage.removeItem(ROWS_KEY);
               } catch {
-                // storage unavailable: the findings still open
+                // storage unavailable: the findings page says so
               }
-              leave(() => router.push(setup.countyId !== null ? `/county/${setup.countyId}` : "/map"));
+              // With a file, the findings are the gaps in it; otherwise the public-data brief.
+              const href = setup.upload ? "/findings" : setup.countyId !== null ? `/county/${setup.countyId}` : "/map";
+              leave(() => router.push(href));
             }}
             onStartOver={() =>
               go("data", () => {
@@ -156,7 +175,7 @@ function StepDone({
   const setup = (withFile: boolean): AnalysisSetup => ({
     datasets,
     upload: withFile && table && settled.mapping
-      ? { fileName, headers: table.headers, rowCount: table.rows.length, mapping: settled.mapping }
+      ? { fileName, headers: table.headers, rowCount: table.rows.length, mapping: settled.mapping, groupKinds: understanding.groupKinds }
       : null,
     audience: settled.level === "national" ? "national" : "county-board",
     level: settled.level,

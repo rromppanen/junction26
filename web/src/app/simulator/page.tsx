@@ -16,7 +16,7 @@ import WOMEN from "@/data/women5069.json";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Screening simulator" };
+export const metadata: Metadata = { title: "Breast screening simulator" };
 
 function slope(points: { year: number; value: number }[]): number | null {
   if (points.length < 2) return null;
@@ -69,7 +69,7 @@ export default async function SimulatorPage({ searchParams }: { searchParams: Pr
   const initialFocus = counties.some((c) => c.id === reqFocus) ? reqFocus : null;
 
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-10 pt-5 sm:px-6">
+    <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-4 pb-10 pt-5 sm:px-6">
       <AppHeader>
         <HeaderLink href={initialFocus !== null ? `/county/${initialFocus}` : "/"} icon={ArrowLeft} label={initialFocus !== null ? "County brief" : "Map"} />
         <DataBadge ds={ds} />

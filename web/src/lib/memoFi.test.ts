@@ -8,7 +8,7 @@ describe("memoFi", () => {
   });
   it("describes the fingerprint in Finnish", () => {
     const s = describeFingerprintFi({ pattern: "detection", detectionBehind: 2, detectionTotal: 3, outcomeBehind: 0, outcomeTotal: 1 });
-    expect(s).toMatch(/Havaitseminen/);
+    expect(s).toMatch(/Seulontaosallistumisessa/);
     expect(s).toMatch(/2\/3/);
   });
   it("phrases what it takes", () => {

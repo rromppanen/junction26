@@ -2,7 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { shortName } from "@/components/format";
 import { getDataset } from "@/lib/data";
 import { trimSample, type Question, type QuestionInput } from "./clarify";
-import { FIELDS, suggestMapping, type Field, type Mapping } from "./fields";
+import { FIELDS, GROUP_KINDS, groupKindOf, parseCount, suggestMapping, type Field, type GroupKind, type Mapping } from "./fields";
 import { personalDataHeaders } from "./privacy";
 import type { Level } from "./setup";
 
@@ -19,12 +19,11 @@ export const CONFIDENT = 0.75;
 const MAX_QUESTIONS = 6;
 const MAX_TEXT = 300;
 export const NATIONAL = "national";
-/**
- * Every figure in the findings is computed from these columns, so a guess the AI made on its own (not from a
- * known column name) is always confirmed with the user, however sure the AI says it is.
- */
-const COUNT_FIELDS: Field[] = ["invited", "attended", "positive", "examined"];
-const UNCONFIRMED = 0.7;
+/** Count columns that must add up along the pathway: each step is at most the step before it. */
+const STEPS: [Field, Field][] = [["attended", "invited"], ["positive", "attended"], ["examined", "positive"]];
+const COUNTS: Field[] = ["invited", "attended", "positive", "examined"];
+/** A confident guess the sample rows contradict drops to this, so it is asked about. */
+const DOUBTED = 0.5;
 
 export type Guess = { value: string; label: string };
 /** A question the AI asks because its own confidence is below {@link CONFIDENT}. */
@@ -41,12 +40,16 @@ export type ColumnGuess = {
   meaning: string;
   confidence: number;
   source: "name" | "ai" | "none";
+  /** Set for population-group columns: what the groups are (language, sex, age…). */
+  groupKind?: GroupKind;
 };
 export type PlaceGuess = { countyId: number | null; level: Level; confidence: number; reason: string };
 export type Understanding = {
   status: "ai" | "fallback";
   columns: ColumnGuess[];
   mapping: Mapping | null;
+  /** Population-group column -> its kind, for every column that may end up as a group. */
+  groupKinds: Record<string, GroupKind>;
   place: PlaceGuess;
   questions: ConvQuestion[];
   /** County options (and "the whole country"), so the client can name the place it ends up with. */
@@ -91,7 +94,7 @@ ${fieldList()}
 
 ${data}
 
-For each column return: the field, a short plain-English meaning (max 12 words), your confidence from 0 to 1 that the field is right, and one short friendly question you would ask the user if you were unsure (plain English, no jargon, mention an example value from the sample). Be honest: use a confidence below 0.75 when the header is abbreviated, ambiguous or could fit more than one field. Use each field other than "ignore" for at most one column. Do not invent data.`;
+Several columns may be population groups (language, sex, age group, nationality, country of birth, migrant background, education, income…); for each of those also give groupKind. For each column return: the field, a short plain-English meaning (max 12 words), your confidence from 0 to 1 that the field is right, and one short friendly question you would ask the user if you were unsure (plain English, no jargon, mention an example value from the sample). Be honest: use a confidence below 0.75 when the header is abbreviated, ambiguous or could fit more than one field. Use each field other than "ignore" and "group" for at most one column. Do not invent data.`;
     schema = {
       type: Type.OBJECT,
       properties: {
@@ -105,6 +108,7 @@ For each column return: the field, a short plain-English meaning (max 12 words),
               meaning: { type: Type.STRING },
               confidence: { type: Type.NUMBER },
               question: { type: Type.STRING },
+              groupKind: { type: Type.STRING, enum: [...GROUP_KINDS.map((g) => g.id), "other"] },
             },
             required: ["column", "field", "meaning", "confidence", "question"],
           },
@@ -204,6 +208,35 @@ function examples(sample: string[][], col: number): string {
   return vals.length ? ` For example: ${vals.map((v) => `"${v}"`).join(", ")}.` : "";
 }
 
+/**
+ * Columns whose confident reading the sample rows contradict, with the reason in plain words: a count that is not a
+ * whole number, or a pathway step larger than the step before it. Only guesses the AI made are doubted; a column
+ * matched by its name is taken as given, and when both sides are AI guesses both are asked about.
+ */
+function doubts(headers: string[], sample: string[][], columns: ColumnGuess[]): Map<string, string> {
+  const out = new Map<string, string>();
+  const sure = (f: Field) => columns.find((c) => c.field === f && c.confidence >= CONFIDENT);
+  const at = (c: ColumnGuess, r: string[]) => r[headers.indexOf(c.header)];
+  for (const f of COUNTS) {
+    const c = sure(f);
+    if (c?.source === "ai" && sample.some((r) => at(c, r)?.trim() && parseCount(at(c, r)) === undefined))
+      out.set(c.header, `its values are not all whole numbers of people`);
+  }
+  for (const [step, before] of STEPS) {
+    const a = sure(step), b = sure(before);
+    if (!a || !b) continue;
+    const bad = sample.some((r) => {
+      const x = parseCount(at(a, r) ?? ""), y = parseCount(at(b, r) ?? "");
+      return x !== undefined && y !== undefined && x > y;
+    });
+    if (!bad) continue;
+    const why = `in some rows "${a.header}" is larger than "${b.header}"`;
+    if (a.source === "ai") out.set(a.header, why);
+    if (b.source === "ai") out.set(b.header, why);
+  }
+  return out;
+}
+
 /** Throws if headers look like personal data. Never throws for Gemini problems (falls back to name matching). */
 export async function understandData(input: QuestionInput, generate: UnderstandGenerator = geminiGenerator): Promise<Understanding> {
   assertNoPersonalData(input.headers);
@@ -213,10 +246,11 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
   let status: Understanding["status"] = "fallback";
   const columns: ColumnGuess[] = [];
   const askText = new Map<string, string>();
+  const reasons = new Map<string, string>();
 
   if (headers && headers.length) {
     const byName = suggestMapping(headers);
-    const ai = new Map<string, { field: Field; meaning: string; confidence: number }>();
+    const ai = new Map<string, { field: Field; meaning: string; confidence: number; groupKind?: GroupKind }>();
     try {
       const raw = (await withTimeout(generate({ kind: "columns", headers, sample }), TIMEOUT_MS)) as { columns?: unknown };
       if (!raw || !Array.isArray(raw.columns)) throw new Error("unusable answer");
@@ -227,6 +261,7 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
           field: c.field as Field,
           meaning: typeof c.meaning === "string" ? c.meaning.trim().slice(0, MAX_TEXT) : "",
           confidence: clamp01(c.confidence),
+          groupKind: typeof c.groupKind === "string" && [...GROUP_KINDS.map((g) => g.id as string), "other"].includes(c.groupKind) ? (c.groupKind as GroupKind) : undefined,
         });
         if (typeof c.question === "string" && c.question.trim()) askText.set(c.column, c.question.trim().slice(0, MAX_TEXT));
       }
@@ -241,18 +276,28 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
         const desc = FIELDS.find((f) => f.id === named)!.description;
         columns.push({ header: h, field: named, meaning: a && a.field === named && a.meaning ? a.meaning : desc, confidence: 0.95, source: "name" });
       } else if (a) {
-        const confidence = COUNT_FIELDS.includes(a.field) ? Math.min(a.confidence, UNCONFIRMED) : a.confidence;
-        columns.push({ header: h, field: a.field, meaning: a.meaning || fieldLabel(a.field), confidence, source: "ai" });
+        columns.push({ header: h, field: a.field, meaning: a.meaning || fieldLabel(a.field), confidence: a.confidence, source: "ai" });
       } else {
         columns.push({ header: h, field: "ignore", meaning: "Not sure yet.", confidence: 0.2, source: "none" });
       }
     });
-    // Each field may hold only one column: the most confident one keeps it; the others become questions.
+    for (const c of columns) {
+      if (c.field !== "group") continue;
+      const byHeader = groupKindOf(c.header);
+      c.groupKind = byHeader !== "other" ? byHeader : (ai.get(c.header)?.groupKind ?? "other");
+    }
+    // Each field may hold only one column (groups excepted): the most confident one keeps it; the others become questions.
     const owner = new Map<Field, ColumnGuess>();
     for (const c of [...columns].sort((x, y) => y.confidence - x.confidence)) {
-      if (c.field === "ignore") continue;
-      if (owner.has(c.field)) c.confidence = Math.min(c.confidence, 0.5);
+      if (c.field === "ignore" || c.field === "group") continue;
+      if (owner.has(c.field)) c.confidence = Math.min(c.confidence, DOUBTED);
       else owner.set(c.field, c);
+    }
+    // The model is trusted when it is sure, but its reading must also make sense of the numbers.
+    for (const [header, why] of doubts(headers, sample, columns)) {
+      const c = columns.find((x) => x.header === header)!;
+      c.confidence = Math.min(c.confidence, DOUBTED);
+      reasons.set(header, why);
     }
   }
 
@@ -261,19 +306,26 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
     ? (Object.fromEntries(columns.map((c) => [c.header, c.confidence >= CONFIDENT ? c.field : "ignore"])) as Mapping)
     : null;
   const place = guessPlace(headers, sample, mapping, p);
+  // Kinds for every column, so a column the user later calls a group still gets a sensible label.
+  const groupKinds: Record<string, GroupKind> = Object.fromEntries(
+    (headers ?? []).map((h) => [h, columns.find((c) => c.header === h)?.groupKind ?? groupKindOf(h)]),
+  );
 
   const questions: ConvQuestion[] = [];
   for (const c of columns) {
     if (c.confidence >= CONFIDENT) continue;
     const col = headers!.indexOf(c.header);
-    const confirm = c.source === "ai" && COUNT_FIELDS.includes(c.field);
+    const confirm = c.source === "ai" && c.field !== "ignore";
     const meaning = c.meaning.replace(/\.$/, "");
+    const why = reasons.get(c.header);
     questions.push({
       id: `col:${c.header}`,
       kind: "column",
       column: c.header,
       text: confirm
-        ? `I read "${c.header}" as: ${meaning.charAt(0).toLowerCase()}${meaning.slice(1)}.${examples(sample, col)} Is that right?`
+        ? why
+          ? `I read "${c.header}" as: ${meaning.charAt(0).toLowerCase()}${meaning.slice(1)}. But ${why}, so I may be wrong. What does it contain?`
+          : `I read "${c.header}" as: ${meaning.charAt(0).toLowerCase()}${meaning.slice(1)}.${examples(sample, col)} Is that right?`
         : (askText.get(c.header) ?? `What does the column "${c.header}" contain?${examples(sample, col)}`),
       options: FIELD_OPTIONS,
       guess: c.field === "ignore" && c.source === "none" ? null : { value: c.field, label: fieldLabel(c.field) },
@@ -293,7 +345,7 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
   }
   // The place question always survives the cap: findings cannot open without it.
   const capped = questions.length > MAX_QUESTIONS ? [...questions.slice(0, MAX_QUESTIONS - 1), questions.at(-1)!] : questions;
-  return { status, columns, mapping, place, questions: capped, places: p.options };
+  return { status, columns, mapping, groupKinds, place, questions: capped, places: p.options };
 }
 
 const SKIP = /^(skip|pass|no idea|not sure|i don'?t know|dunno|en tiedä|ei aavistusta|ohita)\b/;
