@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { addEvent, type Sample, type SampleEvent } from "./model";
 import { seedSamples } from "./seed";
 
-const KEY = "lapi.demo.v1";
+const KEY = "lapi.demo.v2";
 const CHANNEL = "lapi-demo";
 
 const EMPTY: Sample[] = [];
@@ -120,7 +120,7 @@ export function useSamples(): {
   const add = useCallback((id: string, e: Omit<SampleEvent, "at">) => {
     const at = Date.now();
     let next = addEvent(getSnapshot(), id, { ...e, at });
-    if (e.type === "pickedUp") {
+    if (e.type === "pickedUp" || e.type === "clinicVisited") {
       next = addEvent(next, id, { type: "atLab", at: at + 1 });
     }
     persist(next);
