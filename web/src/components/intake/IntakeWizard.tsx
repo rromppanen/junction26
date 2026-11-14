@@ -2,15 +2,19 @@
 
 import { useState } from "react";
 import type { Table } from "@/lib/intake/csv";
-import type { PublicDataset } from "@/lib/intake/setup";
+import type { AnalysisSetup, PublicDataset } from "@/lib/intake/setup";
+import { StepConfirm, SetupSummary } from "./StepConfirm";
 import { StepData } from "./StepData";
+import { StepQuestions, type QuestionsDone } from "./StepQuestions";
 
 type WizardState = {
-  step: 1 | 2 | 3;
+  step: 1 | 2 | 3 | 4;
   datasets: PublicDataset[];
   table: Table | null;
   fileName: string;
   error: string | null;
+  result: QuestionsDone | null;
+  setup: AnalysisSetup | null;
 };
 
 const INITIAL: WizardState = {
@@ -19,6 +23,8 @@ const INITIAL: WizardState = {
   table: null,
   fileName: "",
   error: null,
+  result: null,
+  setup: null,
 };
 
 export function IntakeWizard() {
@@ -39,16 +45,46 @@ export function IntakeWizard() {
     );
   }
 
-  return (
-    <section aria-labelledby="step2-h">
-      <h3 id="step2-h" className="font-semibold">Next: a few questions about your data</h3>
-      <button
-        type="button"
-        onClick={() => setState((s) => ({ ...s, step: 1 }))}
-        className="mt-3 rounded-[3px] border border-rule px-3 py-1.5 text-sm hover:bg-par-soft"
-      >
-        Back
-      </button>
-    </section>
-  );
+  if (state.step === 2) {
+    return (
+      <StepQuestions
+        datasets={state.datasets}
+        table={state.table}
+        onBack={() => setState((s) => ({ ...s, step: 1 }))}
+        onDone={(result) => setState((s) => ({ ...s, step: 3, result }))}
+      />
+    );
+  }
+
+  if (state.step === 3 && state.result) {
+    return (
+      <StepConfirm
+        datasets={state.datasets}
+        table={state.table}
+        fileName={state.fileName}
+        result={state.result}
+        onBack={() => setState((s) => ({ ...s, step: 2 }))}
+        onConfirm={(setup) => {
+          try {
+            sessionStorage.setItem("gapRadar.analysisSetup", JSON.stringify(setup));
+          } catch {
+            // storage unavailable: the summary still works
+          }
+          setState((s) => ({ ...s, step: 4, setup }));
+        }}
+      />
+    );
+  }
+
+  if (state.step === 4 && state.setup) {
+    const countyName =
+      state.setup.countyId === null
+        ? null
+        : (state.result?.questions
+            .find((q) => q.kind === "county")
+            ?.options.find((o) => o.value === String(state.setup!.countyId))?.label ?? null);
+    return <SetupSummary setup={state.setup} countyName={countyName} onStartOver={() => setState(INITIAL)} />;
+  }
+
+  return null;
 }
