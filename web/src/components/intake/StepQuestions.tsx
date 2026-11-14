@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MessageCircleQuestion, Sparkles } from "lucide-react";
 import type { Answer, Question, QuestionInput } from "@/lib/intake/clarify";
 import { suggestMapping, type Mapping } from "@/lib/intake/fields";
@@ -42,6 +42,11 @@ export function StepQuestions({ datasets, table, onBack, onDone }: Props) {
   const [attempt, setAttempt] = useState(0);
   const [answers, setAnswers] = useState<Record<string, { option?: string; text?: string }>>({});
   const [submitting, setSubmitting] = useState(false);
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => { alive.current = false; };
+  }, []);
 
   const input: QuestionInput = {
     datasets,
@@ -83,9 +88,9 @@ export function StepQuestions({ datasets, table, onBack, onDone }: Props) {
       const r = await postJson<{
         mapping: Mapping | null; audience: Audience; level: Level; countyId: number | null; notes: string[];
       }>("/api/intake/mapping", { input, questions: loaded.questions, answers: list });
-      onDone({ questions: loaded.questions, ...r });
+      if (alive.current) onDone({ questions: loaded.questions, ...r });
     } catch {
-      onDone({
+      if (alive.current) onDone({
         questions: loaded.questions,
         mapping: table ? (loaded.suggested ?? suggestMapping(table.headers)) : null,
         audience: "county-board",
@@ -163,8 +168,9 @@ export function StepQuestions({ datasets, table, onBack, onDone }: Props) {
       <div className="flex gap-3">
         <button
           type="button"
+          disabled={submitting}
           onClick={onBack}
-          className="rounded-[3px] border border-rule px-3 py-1.5 text-sm hover:bg-par-soft"
+          className="rounded-[3px] border border-rule px-3 py-1.5 text-sm hover:bg-par-soft disabled:cursor-not-allowed disabled:opacity-40"
         >
           Back
         </button>

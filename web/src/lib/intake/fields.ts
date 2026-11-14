@@ -40,6 +40,14 @@ export function suggestMapping(headers: string[]): Mapping {
   return Object.fromEntries(entries) as Mapping; // fromEntries defines own props, safe for "__proto__"
 }
 
+/** Whole count; Finnish exports may group thousands with a space, NBSP or narrow NBSP (groups of exactly 3). */
+export function parseCount(v: string): number | undefined {
+  const t = v.trim();
+  if (/^\d+$/.test(t)) return Number(t);
+  if (/^\d{1,3}([ \u00a0\u202f]\d{3})+$/.test(t)) return Number(t.replace(/[ \u00a0\u202f]/g, ""));
+  return undefined;
+}
+
 const COUNTS: Field[] = ["invited", "attended", "positive", "examined"];
 
 export function validateMapping(table: Table, m: Mapping): string[] {
@@ -63,13 +71,13 @@ export function validateMapping(table: Table, m: Mapping): string[] {
   const bad = new Set<string>();
   const num = (r: string[], f: Field) => {
     const v = val(r, f);
-    return v !== undefined && /^\d+$/.test(v) ? Number(v) : undefined;
+    return v === undefined ? undefined : parseCount(v);
   };
   table.rows.forEach((r, i) => {
     const line = i + 2;
     for (const f of COUNTS) {
       const v = val(r, f);
-      if (v !== undefined && !/^\d+$/.test(v)) bad.add(`Row ${line}: ${f} must be a whole non-negative number.`);
+      if (v !== undefined && parseCount(v) === undefined) bad.add(`Row ${line}: ${f} must be a whole non-negative number.`);
     }
     const y = val(r, "year");
     if (y !== undefined && (!/^\d+$/.test(y) || Number(y) < 2000 || Number(y) > 2100)) bad.add(`Row ${line}: year must be between 2000 and 2100.`);

@@ -26,7 +26,7 @@ export type Answer = { questionId: string; option?: string; text?: string };
 
 export type GenTask =
   | { kind: "questions"; headers: string[]; sample: string[][] }
-  | { kind: "answers"; headers: string[]; sample: string[][]; items: { questionId: string; question: string; text: string; allowed: string[] }[] };
+  | { kind: "answers"; headers: string[]; sample: string[][]; items: { questionId: string; question: string; text: string; allowed: string[]; options: { value: string; label: string }[] }[] };
 /** Returns Gemini's parsed JSON (unvalidated); injected in tests. */
 export type Generator = (task: GenTask) => Promise<unknown>;
 
@@ -78,13 +78,16 @@ Ask about columns whose meaning is unclear (at most 2). Write each question in p
       required: ["questions"],
     };
   } else {
-    prompt = `A user answered clarifying questions about an uploaded screening-statistics CSV, in free text (English or Finnish). For each answer choose the single allowed value that best matches what the user said. If none clearly matches, choose "unclear".
+    prompt = `A user answered clarifying questions about an uploaded screening-statistics CSV, in free text (English or Finnish). For each answer choose the single allowed value that best matches what the user said. If none clearly matches, choose "unclear". Finnish municipality names may be given; map a municipality to the wellbeing services county that contains it.
 Fields:
 ${fieldList()}
 
 ${data}
 
-Answers: ${JSON.stringify(task.items)}`;
+Answers: ${JSON.stringify(task.items.map((i) => ({ questionId: i.questionId, question: i.question, text: i.text })))}
+
+Allowed values per question (value: label):
+${task.items.map((i) => `${i.questionId}:\n${i.options.map((o) => `- ${o.value}: ${o.label}`).join("\n")}`).join("\n")}`;
     const values = [...new Set([...task.items.flatMap((i) => i.allowed), "unclear"])];
     schema = {
       type: Type.OBJECT,
@@ -207,7 +210,7 @@ export async function answersToSetup(
     try {
       const raw = (await withTimeout(generate({
         kind: "answers", headers: headers ?? [], sample,
-        items: pending.map(({ q, text }) => ({ questionId: q.id, question: q.text, text, allowed: allowedOf(q).map((o) => o.value) })),
+        items: pending.map(({ q, text }) => ({ questionId: q.id, question: q.text, text, allowed: allowedOf(q).map((o) => o.value), options: allowedOf(q) })),
       }), TIMEOUT_MS)) as { answers?: unknown };
       if (!raw || !Array.isArray(raw.answers)) throw new Error("unusable answer");
       const resolved = new Set<string>();

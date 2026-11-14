@@ -83,7 +83,14 @@ export function IntakeWizard() {
         : (state.result?.questions
             .find((q) => q.kind === "county")
             ?.options.find((o) => o.value === String(state.setup!.countyId))?.label ?? null);
-    return <SetupSummary setup={state.setup} countyName={countyName} onStartOver={() => setState(INITIAL)} />;
+    return <SetupSummary setup={state.setup} countyName={countyName} onStartOver={() => {
+      try {
+        sessionStorage.removeItem("gapRadar.analysisSetup");
+      } catch {
+        // storage unavailable
+      }
+      setState(INITIAL);
+    }} />;
   }
 
   return null;

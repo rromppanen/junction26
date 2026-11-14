@@ -75,6 +75,14 @@ describe("validateMapping", () => {
     expect(validateMapping(t([["2024", "10", "5"]]), { y: "year", i: "invited", a: "invited" }))
       .toEqual(["Invited is mapped to more than one column (i, a).", "Map a column to Attended."]);
   });
+  it("accepts Finnish thousands separators", () => {
+    for (const v of ["1 200", "1\u00a0200", "1\u202f200"])
+      expect(validateMapping(t([["2024", v, "5"]]), good)).toEqual([]);
+  });
+  it("rejects malformed thousands groups", () => {
+    for (const v of ["1 2", "12 34"])
+      expect(validateMapping(t([["2024", v, "5"]]), good)).toEqual(["Row 2: invited must be a whole non-negative number."]);
+  });
   it("catches non-integer count", () => {
     expect(validateMapping(t([["2024", "10", "5.5"]]), good)).toEqual(["Row 2: attended must be a whole non-negative number."]);
   });

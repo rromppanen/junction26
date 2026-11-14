@@ -45,6 +45,7 @@ export function StepConfirm({ datasets, table, fileName, result, onBack, onConfi
   const counties = countyQuestion?.options ?? [];
   const errors = useMemo(() => (table ? validateMapping(table, mapping) : []), [table, mapping]);
   const effectiveCounty = level === "national" ? null : countyId;
+  const needsCounty = level === "county" && countyId === null;
 
   return (
     <section aria-labelledby="step3-h" className="space-y-8">
@@ -137,7 +138,7 @@ export function StepConfirm({ datasets, table, fileName, result, onBack, onConfi
         </button>
         <button
           type="button"
-          disabled={errors.length > 0}
+          disabled={errors.length > 0 || needsCounty}
           onClick={() =>
             onConfirm({
               datasets,
@@ -153,6 +154,7 @@ export function StepConfirm({ datasets, table, fileName, result, onBack, onConfi
         >
           Confirm setup
         </button>
+        {needsCounty && <p className="self-center text-sm text-muted">Choose a county, or set the level to Whole country</p>}
       </div>
     </section>
   );

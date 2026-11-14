@@ -83,6 +83,13 @@ describe("answersToSetup", () => {
     expect(r.mapping!.kutsutut).toBe("invited"); // suggested, not overwritten
     expect(r.notes.join(" ")).toMatch(/kutsutut/);
   });
+  it("gives the generator the option labels for a county question", async () => {
+    const qs: Question[] = [{ id: "county", kind: "county", text: "Which county?", options: [{ value: "7", label: "Länsi-Uusimaa" }] }];
+    const gen = vi.fn<Generator>(async () => ({ answers: [] }));
+    await answersToSetup(inp, qs, [{ questionId: "county", text: "Espoo" }], gen);
+    const task = gen.mock.calls[0][0];
+    expect(JSON.stringify(task)).toContain("Länsi-Uusimaa");
+  });
   it("maps free text via the generator and reports ai", async () => {
     const gen: Generator = async () => ({ answers: [{ questionId: "col:foo", value: "positive" }] });
     const r = await answersToSetup({ ...inp, headers: ["vuosi", "kutsutut", "osallistuneet", "foo"], sample: [["2024", "10", "5", "2"]] }, questions,
