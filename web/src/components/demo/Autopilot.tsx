@@ -28,10 +28,9 @@ function colonoscopySlot(): string {
   const d = new Date();
   d.setDate(d.getDate() + 3);
   while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
-  const wd = d.toLocaleDateString("en-GB", { weekday: "short" });
-  const day = d.toLocaleDateString("en-GB", { day: "numeric" });
-  const mon = d.toLocaleDateString("en-GB", { month: "short" });
-  return `${wd} ${day} ${mon} 9:00`;
+  // Aino's phone is in Finnish: format the slot the way the kit formats its own Finnish slots.
+  const fmt = new Intl.DateTimeFormat("fi-FI", { weekday: "short", day: "numeric", month: "short" });
+  return `${fmt.format(d)} 9:00`;
 }
 
 function isTypingTarget(t: EventTarget | null): boolean {
