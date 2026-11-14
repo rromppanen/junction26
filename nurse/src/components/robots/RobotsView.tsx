@@ -30,7 +30,11 @@ function doing(v: RobotView): string {
   const s = v.status;
   if (s.kind === "outbound") return `Arrives in ${ago(s.etaMs)}`;
   if (s.kind === "atDoor") return `At the door for ${ago(s.waitedMs)}`;
-  if (s.kind === "returning") return `${s.trip.handedOver ? "Bringing the sample back" : "Coming back empty"}, ${ago(s.etaMs)}`;
+  if (s.kind === "returning") {
+    const n = v.run.filter((t) => t.handedOver).length;
+    const what = n === 0 ? "Coming back empty" : n === 1 ? "Bringing the sample back" : `Bringing ${n} samples back`;
+    return `${what}, ${ago(s.etaMs)}`;
+  }
   return "Free";
 }
 
@@ -185,7 +189,10 @@ export function RobotsView() {
                             className={`flex min-h-14 w-full flex-wrap items-center justify-between gap-3 px-3 py-2 text-left hover:bg-paper ${on ? "bg-brand-soft" : ""}`}>
                             <span className="min-w-0">
                               <span className="block font-semibold">{v.robot.name}{t.sampleId === ME ? " · phone demo" : ""}</span>
-                              <span className="block truncate text-sm text-muted">{pickupCode(t.sampleId)}, {t.route ? "the phone's location" : t.person.area}</span>
+                              <span className="block truncate text-sm text-muted">
+                                {pickupCode(t.sampleId)}, {t.route ? "the phone's location" : t.person.area}
+                                {t.stops > 1 ? ` · stop ${t.compartment} of ${t.stops}` : ""}
+                              </span>
                             </span>
                             <span className="shrink-0 text-right text-sm">{doing(v)}</span>
                           </button>

@@ -40,8 +40,8 @@ export const sv: KitText = {
     mapError: "Kartan kunde inte laddas. Roboten är ändå på väg.",
     arrived: "Roboten är framme",
     arrivedBody: "Den väntar utanför din dörr.",
-    openLid: "Öppna locket",
-    lidClosed: "Locket är stängt",
+    openLid: "Öppna mitt fack",
+    lidClosed: "Facket är stängt",
     thanksTitle: "Tack. Provet är på väg till laboratoriet",
     readMore: "Läs mer",
     restartDemo: "Börja om demon",
@@ -84,8 +84,8 @@ export const sv: KitText = {
   },
   robot: [
     { title: "Gå ut till roboten.", body: "Den väntar utanför din dörr. Ta med svarskuvertet." },
-    { title: "Öppna locket i appen.", body: "Locket öppnas bara med din telefon, när du står vid roboten." },
+    { title: "Öppna ditt fack i appen.", body: "Roboten har flera fack. Bara ditt öppnas, och bara från din telefon när du står vid roboten." },
     { title: "Lägg kuvertet i roboten.", body: "Lägg det plant i facket." },
-    { title: "Stäng locket.", body: "Tryck ner locket tills det låses. Sedan åker roboten till laboratoriet." },
+    { title: "Stäng facket.", body: "Tryck ner locket tills det låses. Roboten hämtar sedan prover hos andra i närheten och åker tillbaka till laboratoriet." },
   ],
 };

@@ -33,6 +33,12 @@ export type SampleEvent = {
    * door last (rounded to about 10 m), so the nurse map drives the same trip to the same place.
    */
   route?: [number, number][];
+  /** for pickupBooked: the robot run this pickup belongs to; runs collect from several nearby homes. */
+  run?: string;
+  /** for pickupBooked: the robot compartment this person uses (1 is the run's first stop). */
+  compartment?: number;
+  /** for pickupBooked: the sample collected just before this one; the robot comes here only after leaving that door. */
+  after?: string;
 };
 
 export type Person = {
@@ -118,6 +124,8 @@ export function departureOf(s: Sample, booking: SampleEvent): number {
   const next = Math.min(...later.filter((e) => e.type === "pickupBooked").map((e) => e.at), Infinity);
   const sent = Math.min(...later.filter((e) => e.type === "robotDispatched" && e.at < next).map((e) => e.at), Infinity);
   if (Number.isFinite(sent)) return sent;
+  // A later stop of a run waits until the robot is sent on from the previous door.
+  if (booking.after) return Infinity;
   return Math.max(booking.at, booking.slotAt ?? booking.at);
 }
 
