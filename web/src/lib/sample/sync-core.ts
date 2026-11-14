@@ -22,6 +22,8 @@ export type LogEntry = { uid: string; id: string; event: LogEvent };
 export type LogPage = { seedAt: number; from: number; entries: LogEntry[]; durable: boolean };
 
 export const MAX_ENTRIES_PER_POST = 50;
+/** Largest event, as JSON: room for a pickup's shared route (at most SHARED_ROUTE_POINTS points). */
+export const MAX_EVENT_CHARS = 4_000;
 export const MAX_LOG_LENGTH = 20_000;
 
 export function applyEntry(samples: Sample[], e: Omit<LogEntry, "uid">): Sample[] {
@@ -53,7 +55,7 @@ export function parseEntries(v: unknown): LogEntry[] | null {
     const r = raw as Record<string, unknown>;
     if (typeof r.uid !== "string" || r.uid.length === 0 || r.uid.length > 64) return null;
     if (typeof r.id !== "string" || r.id.length === 0 || r.id.length > 64) return null;
-    if (!isEvent(r.event) || JSON.stringify(r.event).length > 1_000) return null;
+    if (!isEvent(r.event) || JSON.stringify(r.event).length > MAX_EVENT_CHARS) return null;
     out.push({ uid: r.uid, id: r.id, event: r.event });
   }
   return out;

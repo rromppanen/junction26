@@ -59,7 +59,7 @@ describe("parseEntries", () => {
     ["empty", []],
     ["missing uid", [{ ...ok, uid: "" }]],
     ["bad time", [{ ...ok, event: { type: "sampleTaken", at: "now" } }]],
-    ["huge event", [{ ...ok, event: { type: "sampleTaken", at: 1, note: "x".repeat(2_000) } }]],
+    ["huge event", [{ ...ok, event: { type: "sampleTaken", at: 1, note: "x".repeat(5_000) } }]],
     ["too many", Array.from({ length: MAX_ENTRIES_PER_POST + 1 }, () => ok)],
   ])("rejects %s", (_, input) => {
     expect(parseEntries(input)).toBeNull();

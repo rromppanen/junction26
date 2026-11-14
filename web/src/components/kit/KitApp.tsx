@@ -13,7 +13,7 @@ import { pickupWindows, type Window } from "@/lib/kit/slots";
 import { StepAnimation } from "./StepAnimation";
 import { TrackingMap } from "./TrackingMap";
 import { ROBOT_ROUTE } from "@/data/robotRoute";
-import type { LngLat } from "@/lib/kit/route";
+import { shareableRoute, type LngLat } from "@/lib/kit/route";
 import { forgetRobotRoute, locateAndRoute, storedRoute } from "./useRobotRoute";
 import "./animations.css";
 
@@ -143,8 +143,9 @@ export function KitApp() {
     }
     setRoute(r);
     setLocating("idle");
-    // travelMs lets the nurse app's fleet drive the same robot on the same clock as this phone.
-    act({ type: "pickupBooked", slot: label, travelMs: ROBOT_TRAVEL_MS, ...(at !== undefined ? { slotAt: at } : {}) });
+    // travelMs and route let the nurse app's fleet drive the same robot, on the same clock and the
+    // same streets, to the same door as this phone.
+    act({ type: "pickupBooked", slot: label, travelMs: ROBOT_TRAVEL_MS, route: shareableRoute(r), ...(at !== undefined ? { slotAt: at } : {}) });
     act({ type: "robotDispatched" });
   }
 

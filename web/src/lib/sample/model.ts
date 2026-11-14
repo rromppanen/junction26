@@ -27,6 +27,11 @@ export type SampleEvent = {
   slotAt?: number;
   /** for pickupBooked: how long the robot drives one way, in ms. The nurse app times its fleet from this. */
   travelMs?: number;
+  /**
+   * for pickupBooked from the phone: the robot's street route as [lng, lat] points, hub first and the
+   * door last (rounded to about 10 m), so the nurse map drives the same trip to the same place.
+   */
+  route?: [number, number][];
 };
 
 export type Person = {

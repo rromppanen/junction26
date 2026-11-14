@@ -85,7 +85,7 @@ export default function LiveMap({ fleet, ready, intake, routes, selected, onSele
   const lineOf = (v: RobotView): LatLng[] | undefined => {
     if (v.status.kind === "idle") return undefined;
     const t = v.status.trip;
-    return routes.get(routeKey(t)) ?? curvedRoute(HUBS[t.hub].at, t.home, routeKey(t));
+    return t.route ?? routes.get(routeKey(t)) ?? curvedRoute(HUBS[t.hub].at, t.home, routeKey(t));
   };
 
   return (

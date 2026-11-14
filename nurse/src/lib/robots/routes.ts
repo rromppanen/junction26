@@ -51,7 +51,8 @@ export function useRoutes(trips: Trip[]): Map<string, LatLng[]> {
   const [, setVersion] = useState(0);
   load();
 
-  const wanted = trips.map((t) => ({ key: routeKey(t), from: HUBS[t.hub].at, to: t.home }));
+  // Trips booked on the phone bring their own route; only the simulated ones need a router.
+  const wanted = trips.filter((t) => !t.route).map((t) => ({ key: routeKey(t), from: HUBS[t.hub].at, to: t.home }));
   const missing = wanted.filter((w) => !cache.has(w.key) && !failed.has(w.key) && !inflight.has(w.key));
   const signature = missing.map((m) => m.key).join("|");
 

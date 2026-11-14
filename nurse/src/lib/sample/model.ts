@@ -26,6 +26,11 @@ export type SampleEvent = {
   slot?: string;
   /** for pickupBooked: how long the robot drives one way, in ms. Absent means ROBOT_TRAVEL_MS (the phone demo). */
   travelMs?: number;
+  /**
+   * for pickupBooked from the phone: the robot's street route as [lng, lat] points, hub first and the
+   * door last (rounded to about 10 m), so the nurse map drives the same trip to the same place.
+   */
+  route?: [number, number][];
 };
 
 export type Person = {

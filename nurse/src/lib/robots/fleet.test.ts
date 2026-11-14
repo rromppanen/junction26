@@ -3,7 +3,7 @@ import { ROBOT_TRAVEL_MS, stageOf, type Sample } from "@/lib/sample/model";
 import { seedSamples } from "@/lib/sample/seed";
 import {
   AREAS, DISPATCH_GAP_MS, awaitingIntake, FLEET, HUBS, NO_ANSWER_ID, finishedTrips, fleetAt, homeOf, hubOf, pointAlong, positionOf,
-  pickupCode, readyForPickup, simStep, travelMsFor, tripsOf,
+  pickupCode, readyForPickup, sharedRoute, simStep, travelMsFor, tripsOf,
 } from "./fleet";
 
 const T0 = 1_800_000_000_000;
@@ -198,5 +198,33 @@ describe("anonymous destinations", () => {
     const codes = seed.map((s) => pickupCode(s.id));
     expect(new Set(codes).size).toBe(seed.length);
     for (const c of codes) expect(c).toMatch(/^Pickup \d{4}$/);
+  });
+});
+
+describe("a pickup booked on the phone", () => {
+  const route: [number, number][] = [[24.83, 60.19], [24.832, 60.188], [24.8301, 60.1866]];
+  const booked: Sample = {
+    id: "me",
+    person: { id: "me", name: "Aino K.", age: 62, municipality: "Helsinki", area: "Kallio", lang: "fi" },
+    events: [{ type: "invited", at: T0 }, { type: "pickupBooked", at: T0 + 1000, travelMs: 15_000, route }],
+  };
+
+  it("drives the phone's route to the phone's door, not the made-up home", () => {
+    const [trip] = tripsOf([booked]);
+    expect(trip.route).toEqual(route.map(([lng, lat]) => [lat, lng]));
+    expect(trip.home).toEqual([60.1866, 24.8301]);
+    expect(trip.home).not.toEqual(homeOf(booked.person));
+    const v = viewOf([booked], T0 + 1000 + 15_000 / 2, trip.robotId);
+    const at = positionOf(v, undefined, 0);
+    expect(at[0]).toBeGreaterThan(60.18);
+    expect(at[1]).toBeLessThan(24.84);
+  });
+
+  it("ignores a malformed route", () => {
+    expect(sharedRoute([[24.8, "x"], [24.9, 60.2]])).toBeUndefined();
+    expect(sharedRoute([[24.8, 60.2]])).toBeUndefined();
+    expect(sharedRoute("nope")).toBeUndefined();
+    const bad = { ...booked, events: [booked.events[0], { type: "pickupBooked" as const, at: T0 + 1000, route: [[1, 2, 3]] as unknown as [number, number][] }] };
+    expect(tripsOf([bad])[0].home).toEqual(homeOf(booked.person));
   });
 });
