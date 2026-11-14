@@ -11,8 +11,13 @@ const NON_PERSON_STEMS = [
   "yksikk", "yksikö", "ohjelm", "seulon",
 ];
 
-/** A header with a person qualifier is never exempted by a place/organisation qualifier. */
-const PERSON_STEMS = ["patient", "potilas", "asiakas", "henkilö", "client", "customer", "person"];
+/**
+ * A header with a person qualifier is never exempted by a place/organisation qualifier.
+ * Finnish stems are cut before consonant gradation so inflected forms match:
+ * asiakas/asiakkaan -> "asiak", potilas/potilaan -> "potila", asukas/asukkaan -> "asuk",
+ * henkilö/henkilön/henkilo -> "henkil" (also over-flags henkilöstön nimi, staff: deliberately conservative).
+ */
+const PERSON_STEMS = ["patient", "potila", "asiak", "asuk", "henkil", "client", "customer", "person", "resident"];
 
 export function personalDataHeaders(headers: string[]): string[] {
   return headers.filter(h => {

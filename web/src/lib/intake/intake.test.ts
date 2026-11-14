@@ -109,6 +109,7 @@ describe("personalDataHeaders", () => {
     "asiakkaan nimi", "henkilön nimi", "etunimi", "syntymäaika", "Birth date", "address", "osoite", "Phone", "puhelin",
     "email", "Sähköposti", "personal id", "henkilotunnus",
     "hospital_patient_name", "county_patient_name", "unit_patient_name", "alue_patient_name", "kunta_asiakas_nimi", "ohjelma_henkilön_nimi",
+    "kunta_asiakkaan_nimi", "alue_potilaan_nimi", "sairaala_potilaan_nimi", "asukkaan nimi", "kunnan_asukkaan_nimi",
   ])("flags %s", h => expect(personalDataHeaders([h])).toEqual([h]));
   it("flags NFD-encoded Finnish headers", () => {
     const h = "henkilo\u0308tunnus";
