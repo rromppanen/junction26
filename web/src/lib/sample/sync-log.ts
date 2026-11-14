@@ -1,0 +1,117 @@
+import { MAX_LOG_LENGTH, type LogEntry, type LogPage } from "./sync-core";
+
+/**
+ * Server side of the shared demo log.
+ * With Upstash Redis credentials (the Vercel marketplace sets KV_REST_API_URL and KV_REST_API_TOKEN)
+ * every server instance shares one log. Without them the log lives in this process's memory,
+ * which is enough for local development but is not shared between serverless instances.
+ */
+const SEED_KEY = "lapi:demo:seedAt";
+const LOG_KEY = "lapi:demo:log";
+
+type Redis = { url: string; token: string };
+
+function redis(): Redis | null {
+  const url = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
+  return url && token ? { url: url.replace(/\/$/, ""), token } : null;
+}
+
+async function call<T>(r: Redis, path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${r.url}${path}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${r.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    cache: "no-store",
+    signal: AbortSignal.timeout(5_000),
+  });
+  if (!res.ok) throw new Error(`Redis ${path} failed: ${res.status}`);
+  return (await res.json()) as T;
+}
+
+type Reply = { result?: unknown; error?: string };
+
+function results(replies: Reply[]): unknown[] {
+  return replies.map((r) => {
+    if (r.error) throw new Error(`Redis error: ${r.error}`);
+    return r.result;
+  });
+}
+
+// In-memory fallback, kept on globalThis so dev-server reloads keep it.
+const mem = ((globalThis as { __lapiLog?: { seedAt: number; log: LogEntry[] } }).__lapiLog ??= {
+  seedAt: Date.now(),
+  log: [],
+});
+
+/** Entries from index `since`; from 0 when the caller's seed is out of date. */
+export async function readLog(since: number, clientSeedAt: number | null): Promise<LogPage> {
+  const r = redis();
+  if (!r) {
+    const from = clientSeedAt === mem.seedAt ? Math.min(since, mem.log.length) : 0;
+    return { seedAt: mem.seedAt, from, entries: mem.log.slice(from), durable: false };
+  }
+  const [, seedRaw, page] = results(
+    await call<Reply[]>(r, "/pipeline", [
+      ["SET", SEED_KEY, String(Date.now()), "NX"],
+      ["GET", SEED_KEY],
+      ["LRANGE", LOG_KEY, String(since), "-1"],
+    ]),
+  );
+  const seedAt = Number(seedRaw);
+  let from = since;
+  let raw = page as string[];
+  if (clientSeedAt !== seedAt && since > 0) {
+    from = 0;
+    raw = (await call<Reply>(r, "", ["LRANGE", LOG_KEY, "0", "-1"])).result as string[];
+  }
+  return { seedAt, from, entries: raw.map((s) => JSON.parse(s) as LogEntry), durable: true };
+}
+
+// Appends only if the log still belongs to the caller's seed, so writes made before a reset are dropped.
+const APPEND = `
+if redis.call('GET', KEYS[1]) ~= ARGV[1] then return -1 end
+if redis.call('LLEN', KEYS[2]) >= tonumber(ARGV[2]) then return -2 end
+for i = 3, #ARGV do redis.call('RPUSH', KEYS[2], ARGV[i]) end
+return 1`;
+
+/** "ok", or "stale" when the log was reset since the caller read it, or "full". */
+export async function appendLog(seedAt: number, entries: LogEntry[]): Promise<"ok" | "stale" | "full"> {
+  const r = redis();
+  if (!r) {
+    if (seedAt !== mem.seedAt) return "stale";
+    if (mem.log.length >= MAX_LOG_LENGTH) return "full";
+    mem.log.push(...entries);
+    return "ok";
+  }
+  const out = await call<Reply>(r, "", [
+    "EVAL",
+    APPEND,
+    "2",
+    SEED_KEY,
+    LOG_KEY,
+    String(seedAt),
+    String(MAX_LOG_LENGTH),
+    ...entries.map((e) => JSON.stringify(e)),
+  ]);
+  if (out.error) throw new Error(`Redis error: ${out.error}`);
+  return out.result === 1 ? "ok" : out.result === -1 ? "stale" : "full";
+}
+
+/** Starts a new, empty log seeded at the current time. */
+export async function resetLog(): Promise<number> {
+  const seedAt = Date.now();
+  const r = redis();
+  if (!r) {
+    mem.seedAt = seedAt;
+    mem.log = [];
+    return seedAt;
+  }
+  results(
+    await call<Reply[]>(r, "/multi-exec", [
+      ["SET", SEED_KEY, String(seedAt)],
+      ["DEL", LOG_KEY],
+    ]),
+  );
+  return seedAt;
+}
