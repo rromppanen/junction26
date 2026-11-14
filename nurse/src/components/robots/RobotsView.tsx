@@ -8,7 +8,7 @@ import { Wordmark } from "@/components/Wordmark";
 import { BTN, DEMO_NOTE, ME } from "@/components/staff/boardShared";
 import type { Person } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
-import { FLEET, HUBS, awaitingIntake, finishedTrips, fleetAt, readyForPickup, simStep, tripsOf, type RobotView } from "@/lib/robots/fleet";
+import { FLEET, HUBS, ROBOT_SPEED_KMH, awaitingIntake, finishedTrips, fleetAt, readyForPickup, simStep, tripsOf, type RobotView, type SimSpeed } from "@/lib/robots/fleet";
 import { useRoutes } from "@/lib/robots/routes";
 
 // Leaflet needs the browser's window, so the map renders on the client only.
@@ -71,6 +71,7 @@ export function RobotsView() {
   const [mounted, setMounted] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [simulate, setSimulate] = useState(true);
+  const [speed, setSpeed] = useState<SimSpeed>(1);
   const lastTick = useRef(0);
   useEffect(() => setMounted(true), []);
 
@@ -85,8 +86,8 @@ export function RobotsView() {
   useEffect(() => {
     if (!mounted || !simulate || now === lastTick.current) return;
     lastTick.current = now;
-    for (const a of simStep(samples, now, ME, `Now, ${clock.format(now)}`)) add(a.sampleId, a.event);
-  }, [mounted, simulate, now, samples, add]);
+    for (const a of simStep(samples, now, ME, `Now, ${clock.format(now)}`, speed)) add(a.sampleId, a.event);
+  }, [mounted, simulate, speed, now, samples, add]);
 
   const active = fleet.filter((v) => v.status.kind !== "idle");
   const parked = fleet.filter((v) => v.status.kind === "idle");
@@ -115,11 +116,25 @@ export function RobotsView() {
         <p className="text-xs text-muted">{DEMO_NOTE}</p>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-[length:var(--step-1)] font-semibold">Pickup robots, Helsinki capital region</h1>
-          <label className="inline-flex min-h-11 items-center gap-2 text-sm">
-            <input type="checkbox" checked={simulate} onChange={(e) => setSimulate(e.target.checked)} className="size-5 accent-[var(--brand)]" />
-            Simulate other households
-          </label>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+            <label className="inline-flex min-h-11 items-center gap-2 text-sm">
+              <input type="checkbox" checked={simulate} onChange={(e) => setSimulate(e.target.checked)} className="size-5 accent-[var(--brand)]" />
+              Simulate other households
+            </label>
+            <label className="inline-flex min-h-11 items-center gap-2 text-sm">
+              Speed
+              <select value={speed} onChange={(e) => setSpeed(Number(e.target.value) as SimSpeed)}
+                className="min-h-9 rounded-lg border border-rule bg-white px-2 text-sm">
+                <option value={1}>Real time ({ROBOT_SPEED_KMH} km/h)</option>
+                <option value={10}>10× faster</option>
+                <option value={60}>60× faster</option>
+              </select>
+            </label>
+          </div>
         </div>
+        <p className="text-xs text-muted">
+          Robots drive at about {ROBOT_SPEED_KMH} km/h, so a trip takes 5 to 40 minutes each way. A faster speed applies to robots sent after you change it.
+        </p>
 
         {!mounted ? (
           <p className="mt-6 text-muted">Loading the robots…</p>

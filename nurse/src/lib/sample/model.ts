@@ -21,6 +21,8 @@ export type SampleEvent = {
   note?: string;
   /** for pickupBooked and colonoscopyBooked */
   slot?: string;
+  /** for pickupBooked: how long the robot drives one way, in ms. Absent means ROBOT_TRAVEL_MS (the phone demo). */
+  travelMs?: number;
 };
 
 export type Person = {
@@ -52,6 +54,11 @@ export type Stage =
   | "done";
 
 export const ROBOT_TRAVEL_MS = 20_000;
+
+/** One-way driving time of the sample's latest robot booking. */
+export function travelOf(s: Sample): number {
+  return s.events.findLast((e) => e.type === "pickupBooked")?.travelMs ?? ROBOT_TRAVEL_MS;
+}
 const DAY_MS = 86_400_000;
 export const ROBOT_WAIT_FLAG_MS = 60_000;
 
@@ -98,7 +105,7 @@ export function stageOf(s: Sample, now: number): Stage {
     case "sampleTaken":
       return "sampleTaken";
     case "pickupBooked":
-      return now < m.at + ROBOT_TRAVEL_MS ? "robotEnRoute" : "robotAtDoor";
+      return now < m.at + travelOf(s) ? "robotEnRoute" : "robotAtDoor";
     case "pickedUp":
       return "pickedUp";
     case "atLab":
@@ -120,7 +127,7 @@ export function stageOf(s: Sample, now: number): Stage {
 export function robotProgress(s: Sample, now: number): number | null {
   const m = latestMilestone(s);
   if (!m || m.type !== "pickupBooked") return null;
-  const p = (now - m.at) / ROBOT_TRAVEL_MS;
+  const p = (now - m.at) / travelOf(s);
   return Math.min(1, Math.max(0, p));
 }
 
@@ -151,14 +158,14 @@ export function flagsOf(s: Sample, now: number): Flag[] {
 
   const m = latestMilestone(s);
   if (m && m.type === "pickupBooked") {
-    const waited = now - (m.at + ROBOT_TRAVEL_MS);
+    const waited = now - (m.at + travelOf(s));
     if (waited > ROBOT_WAIT_FLAG_MS) {
       flags.push({ kind: "robotWaiting", label: `Robot has waited ${Math.floor(waited / 1000)} s at the door` });
     }
   }
 
   // The robot is back with the sample: a nurse has to take it out and register it at the lab.
-  if (m && m.type === "pickedUp" && now >= m.at + ROBOT_TRAVEL_MS) {
+  if (m && m.type === "pickedUp" && now >= m.at + travelOf(s)) {
     flags.push({ kind: "awaitingIntake", label: "Sample has arrived: collect it from the robot and register it at the lab" });
   }
 

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { ROBOT_TRAVEL_MS, type Sample } from "@/lib/sample/model";
+import { ROBOT_TRAVEL_MS, stageOf, type Sample } from "@/lib/sample/model";
 import { seedSamples } from "@/lib/sample/seed";
 import {
   AREAS, DISPATCH_GAP_MS, awaitingIntake, FLEET, HUBS, NO_ANSWER_ID, finishedTrips, fleetAt, homeOf, hubOf, pointAlong, positionOf,
-  readyForPickup, simStep, tripsOf,
+  readyForPickup, simStep, travelMsFor, tripsOf,
 } from "./fleet";
 
 const T0 = 1_800_000_000_000;
@@ -102,44 +102,6 @@ describe("robot fleet", () => {
   });
 });
 
-describe("simulated households", () => {
-  const slot = "Now";
-
-  it("sends one robot from every hub when the map is quiet, longest wait first, never for the phone user", () => {
-    const me = sample("me", "Kallio", [["sampleTaken", T0 - 10 * 3_600_000]]);
-    const older = sample("old", "Kontula", [["sampleTaken", T0 - 5 * 3_600_000]]);
-    const newer = sample("new", "Malmi", [["sampleTaken", T0 - 3_600_000]]);
-    const sameHub = sample("later", "Vuosaari", [["sampleTaken", T0 - 60_000]]);
-    expect(simStep([me, older, newer, sameHub], T0, "me", slot).map((a) => a.sampleId)).toEqual(["old", "new"]);
-  });
-
-  it("waits between bookings", () => {
-    const booked = sample("a", "Kontula", [["sampleTaken", T0 - 1000], ["pickupBooked", T0]]);
-    const waiting = sample("b", "Malmi", [["sampleTaken", T0 - 1000]]);
-    expect(simStep([booked, waiting], T0 + 1000, "me", slot)).toEqual([]);
-    expect(simStep([booked, waiting], T0 + DISPATCH_GAP_MS, "me", slot).map((a) => a.sampleId)).toEqual(["b"]);
-  });
-
-  it("hands the sample over a few seconds after the robot arrives", () => {
-    const booked = sample("a", "Kontula", [["sampleTaken", T0 - 1000], ["pickupBooked", T0]]);
-    expect(simStep([booked], T0 + ROBOT_TRAVEL_MS, "me", slot)).toEqual([]);
-    expect(simStep([booked], T0 + ROBOT_TRAVEL_MS + 11_000, "me", slot)).toEqual([{ sampleId: "a", event: { type: "pickedUp" } }]);
-  });
-
-  it("leaves one household unanswered long enough to raise the flag", () => {
-    const booked = sample(NO_ANSWER_ID, "Malmi", [["sampleTaken", T0 - 1000], ["pickupBooked", T0]]);
-    const flaggedAt = T0 + ROBOT_TRAVEL_MS + 61_000;
-    expect(simStep([booked], flaggedAt, "me", slot)).toEqual([]);
-    expect(viewOf([booked], flaggedAt, firstAt("malmi")).status).toMatchObject({ kind: "atDoor", flagged: true });
-    expect(simStep([booked], T0 + ROBOT_TRAVEL_MS + 76_000, "me", slot)).toEqual([{ sampleId: NO_ANSWER_ID, event: { type: "pickedUp" } }]);
-  });
-
-  it("only books when the hub has a robot free", () => {
-    const busy = FLEET.filter((r) => r.hub === "malmi").map((r, i) => sample(`busy${i}`, "Malmi", [["pickupBooked", T0 + i]]));
-    const waiting = sample("w", "Pihlajamäki", [["sampleTaken", T0 - 1000]]);
-    expect(simStep([...busy, waiting], T0 + DISPATCH_GAP_MS + 10, "me", slot).filter((a) => a.event.type === "pickupBooked")).toEqual([]);
-  });
-});
 
 describe("samples waiting for a nurse", () => {
   it("flags a sample once the robot is back, until a nurse registers it at the lab", () => {
@@ -159,5 +121,72 @@ describe("samples waiting for a nurse", () => {
 
     const now = Date.now();
     expect(awaitingIntake(seedSamples(now), now).flatMap((g) => g.samples.map((s) => s.id))).toEqual(["p6"]);
+  });
+});
+
+describe("simulated households", () => {
+  const slot = "Now";
+
+  it("starts a quiet map with robots already part-way, never for the phone user", () => {
+    const me = sample("me", "Kallio", [["sampleTaken", T0 - 10 * 3_600_000]]);
+    const older = sample("old", "Kontula", [["sampleTaken", T0 - 5 * 3_600_000]]);
+    const newer = sample("new", "Malmi", [["sampleTaken", T0 - 3_600_000]]);
+    const sameHub = sample("later", "Vuosaari", [["sampleTaken", T0 - 60_000]]);
+    const actions = simStep([me, older, newer, sameHub], T0, "me", slot);
+    expect(actions.map((a) => a.sampleId)).toEqual(["old", "new", "later"]);
+    for (const a of actions) {
+      if (a.event.type !== "pickupBooked") throw new Error("expected a booking");
+      const elapsed = T0 - (a.event.at ?? T0);
+      expect(elapsed).toBeGreaterThan(0);
+      expect(elapsed).toBeLessThan(a.event.travelMs); // still on the way
+    }
+  });
+
+  it("sends at most three robots per hub at the start", () => {
+    const many = ["Kontula", "Vuosaari", "Myllypuro", "Puotila", "Itäkeskus"].map((area, i) => sample(`s${i}`, area, [["sampleTaken", T0 - (i + 1) * 60_000]]));
+    expect(simStep(many, T0, "me", slot)).toHaveLength(3);
+  });
+
+  it("drives at about 6 km/h in real time and faster when sped up", () => {
+    const p = sample("x", "Vuosaari", []).person; // about 3 km from the Itäkeskus hub
+    const real = travelMsFor(p, 1);
+    expect(real).toBeGreaterThan(20 * 60_000);
+    expect(real).toBeLessThan(60 * 60_000);
+    expect(travelMsFor(p, 60)).toBeCloseTo(real / 60, -2);
+  });
+
+  it("waits between bookings, longer at slower speeds", () => {
+    const booked = sample("a", "Kontula", [["sampleTaken", T0 - 1000], ["pickupBooked", T0]]);
+    const waiting = sample("b", "Malmi", [["sampleTaken", T0 - 1000]]);
+    expect(simStep([booked, waiting], T0 + 1000, "me", slot, 60)).toEqual([]);
+    expect(simStep([booked, waiting], T0 + DISPATCH_GAP_MS, "me", slot, 60).map((a) => a.sampleId)).toEqual(["b"]);
+    expect(simStep([booked, waiting], T0 + DISPATCH_GAP_MS, "me", slot, 1)).toEqual([]);
+  });
+
+  it("hands the sample over within a minute of the robot arriving", () => {
+    const booked = sample("a", "Kontula", [["sampleTaken", T0 - 1000], ["pickupBooked", T0]]);
+    expect(simStep([booked], T0 + ROBOT_TRAVEL_MS + 14_000, "me", slot)).toEqual([]);
+    expect(simStep([booked], T0 + ROBOT_TRAVEL_MS + 51_000, "me", slot)).toEqual([{ sampleId: "a", event: { type: "pickedUp" } }]);
+  });
+
+  it("leaves one household unanswered long enough to raise the flag", () => {
+    const booked = sample(NO_ANSWER_ID, "Malmi", [["sampleTaken", T0 - 1000], ["pickupBooked", T0]]);
+    const flaggedAt = T0 + ROBOT_TRAVEL_MS + 61_000;
+    expect(simStep([booked], flaggedAt, "me", slot)).toEqual([]);
+    expect(viewOf([booked], flaggedAt, firstAt("malmi")).status).toMatchObject({ kind: "atDoor", flagged: true });
+    expect(simStep([booked], T0 + ROBOT_TRAVEL_MS + 76_000, "me", slot)).toEqual([{ sampleId: NO_ANSWER_ID, event: { type: "pickedUp" } }]);
+  });
+
+  it("only books when the hub has a robot free", () => {
+    const busy = FLEET.filter((r) => r.hub === "malmi").map((r, i) => sample(`busy${i}`, "Malmi", [["pickupBooked", T0 + i]]));
+    const waiting = sample("w", "Pihlajamäki", [["sampleTaken", T0 - 1000]]);
+    expect(simStep([...busy, waiting], T0 + DISPATCH_GAP_MS + 10, "me", slot, 60).filter((a) => a.event.type === "pickupBooked")).toEqual([]);
+  });
+
+  it("uses the booking's own travel time for the trip and the board stage", () => {
+    const slow = { ...sample("a", "Kontula", []), events: [{ type: "pickupBooked" as const, at: T0, travelMs: 600_000 }] };
+    expect(viewOf([slow], T0 + 300_000, firstAt("itakeskus")).status).toMatchObject({ kind: "outbound" });
+    expect(stageOf(slow, T0 + 300_000)).toBe("robotEnRoute");
+    expect(stageOf(slow, T0 + 600_000)).toBe("robotAtDoor");
   });
 });
