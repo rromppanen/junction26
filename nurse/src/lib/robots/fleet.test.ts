@@ -30,9 +30,10 @@ describe("demo data", () => {
     for (const s of seed) expect(AREAS[s.person.area ?? ""], s.person.area).toBeDefined();
   });
 
-  it("is mostly people whose mother tongue is neither Finnish nor Swedish", () => {
+  it("is about half Finnish or Swedish speakers and half minority-language speakers", () => {
     const minority = seed.filter((s) => s.person.homeLanguage && !["Finnish", "Swedish"].includes(s.person.homeLanguage));
-    expect(minority.length / seed.length).toBeGreaterThan(0.6);
+    expect(minority.length / seed.length).toBeGreaterThan(0.45);
+    expect(minority.length / seed.length).toBeLessThan(0.55);
     expect(new Set(minority.map((s) => s.person.homeLanguage)).size).toBeGreaterThanOrEqual(10);
   });
 
