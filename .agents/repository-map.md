@@ -5,7 +5,7 @@ Only facts that are already confirmed go here. Mark everything else _TBD_, and n
 ## Purpose and boundaries
 
 - Product or artifact: Junction 2026 hackathon project. The challenge and users are _TBD_. See [`docs/PLAN.md`](../docs/PLAN.md).
-- Main components: _TBD once the stack is chosen._
+- Main components: a Next.js app in `web/`. `/kit` is the phone flow for the home bowel-screening test and robot pickup, `/staff` the nurse board, `/demo` both side by side. Sample logic and the robot simulation are in `web/src/lib/sample/`; demo state lives in the browser (`localStorage`), with no server state.
 - Generated artifacts: pitch deck PDF in `docs/pitch/` (exported, not generated from source).
 - Existing instructions: [`AGENTS.md`](../AGENTS.md) (agent working agreement), `.agents/instructions/` (principles, workflow, writing), `.claude/skills/` (change procedures).
 
@@ -13,11 +13,11 @@ Only facts that are already confirmed go here. Mark everything else _TBD_, and n
 
 | Operation | Verified command or owning document | Expected evidence |
 | --- | --- | --- |
-| Prepare local environment | `cd web && npm ci`, then API keys in `web/.env.local` (`GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_CRITIC_MODEL` for the recommendation reviewer, `CONTEXT_DEV_API_KEY`, `DATABASE_URL`; all optional) | Install finishes |
+| Prepare local environment | `cd web && npm ci`, then optionally `GEMINI_API_KEY` and `GEMINI_MODEL` in `web/.env.local` for the kit question box | Install finishes |
 | Run affected tests | `npm test` in `web/` (Vitest) | All tests pass |
 | Check static constraints | `npm run check` in `web/`: lint, tests and production build, the same as CI | Exit 0 |
-| Build or render | `npm run build` in `web/` (also type-checks); `npm run dev` serves http://localhost:3000 | Build lists the `/` and `/county/[id]` routes |
-| Reproduce user behavior | _TBD_: the demo flow | Demo works end to end |
+| Build or render | `npm run build` in `web/` (also type-checks); `npm run dev` serves http://localhost:3000 | Build lists the `/`, `/demo`, `/kit`, `/staff` and `/api/kit/ask` routes |
+| Reproduce user behavior | `npm run dev`, open `/demo` and press "Play the story"; `npm run smoke -- <base url>` loads every page | Demo works end to end |
 
 ## Delivery and operation
 

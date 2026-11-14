@@ -29,10 +29,7 @@ export default function StartPage() {
           ))}
         </div>
         <div className="mt-8"><ImpactStrip /></div>
-        <p className="mt-6 text-sm">
-          <Link href="/map" className="text-muted underline">County data explorer</Link>
-        </p>
-        <p className="mt-4 text-xs text-muted">Demo: invented people; the robot, lab and bookings are simulated.</p>
+        <p className="mt-6 text-xs text-muted">Demo: invented people; the robot, lab and bookings are simulated.</p>
       </div>
     </main>
   );

@@ -12,12 +12,11 @@ export default function NotFound() {
       </p>
       <h1 className="text-heading font-semibold tracking-[-0.015em] sm:text-display">There&rsquo;s no page at this address</h1>
       <p className="mt-4 max-w-xl text-muted">
-        This address doesn&rsquo;t match a page in Läpi. Check the address or return to the national view
-        to choose a county, compare screening figures or open the simulator.
+        This address doesn&rsquo;t match a page in Läpi. Check the address or go back to the start page.
       </p>
       <p className="mt-6 text-sm">
-        <Link href="/map" className="link font-semibold">
-          Return to national view
+        <Link href="/" className="link font-semibold">
+          Back to the start page
         </Link>
       </p>
     </main>

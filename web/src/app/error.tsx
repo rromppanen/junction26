@@ -11,7 +11,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
       </p>
       <h1 className="text-heading font-semibold tracking-[-0.015em] sm:text-display">This page didn&rsquo;t load</h1>
       <p className="mt-4 max-w-xl text-muted">
-        We couldn&rsquo;t finish loading this page. Try again, or return to the national view to choose another county.
+        We couldn&rsquo;t finish loading this page. Try again, or go back to the start page.
         If the problem continues, share the reference below with the team.
       </p>
       <p className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
@@ -22,8 +22,8 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
         >
           Try again
         </button>
-        <Link href="/map" className="link">
-          Return to national view
+        <Link href="/" className="link">
+          Back to the start page
         </Link>
       </p>
       {error.digest && (

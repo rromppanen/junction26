@@ -7,12 +7,12 @@ const sans = Inter({ variable: "--font-inter", subsets: ["latin", "latin-ext"] }
 
 export const metadata: Metadata = {
   title: {
-    default: "Läpi: every patient through the cancer pathway",
-    // A page sets only its own name ("Lappi", "Page not found"); the product name follows.
+    default: "Läpi: every bowel screening sample, from home to care",
+    // A page sets only its own name ("Nurse board", "Page not found"); the product name follows.
     template: "%s | Läpi",
   },
   description:
-    "Which wellbeing services counties fall behind the rest of Finland on cancer care, at which step of the pathway, and what each one could do next.",
+    "A home bowel screening test, a robot pickup and a nurse board that follows every sample until a positive result reaches a colonoscopy.",
   applicationName: "Läpi",
 };
 
