@@ -69,3 +69,7 @@ The phone user's own robot still takes the fixed 20 seconds from `web/`, so the 
 The robots page and map never show a person's name. Each pickup has a code such as "Pickup 4821" (`pickupCode` in `fleet.ts`), and the page shows the code, the neighbourhood and the language. The board shows the same code next to the person for samples in the pickup steps, so a nurse can match them.
 
 The **Speed** selector now offers Real time, Demo speed (20× faster, the default) and 60×. At demo speed a trip takes under two minutes each way and a new booking is made every 9 seconds.
+
+## Look
+
+The nurse app uses the same HUS styling as the user app in `web/`: `globals.css` is a copy of `web/src/app/globals.css` (plus the map rules at the end), with Open Sans for text and Poppins for headings. The robots map follows the kit's tracking map: the road still to drive is brand blue with a white outline, the part behind is grey dots, and the destination is a house marker. When the theme changes in `web/`, copy the stylesheet again.

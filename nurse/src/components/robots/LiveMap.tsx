@@ -2,19 +2,26 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { Fragment } from "react";
 import { CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap } from "react-leaflet";
 import type { Sample } from "@/lib/sample/model";
-import { AREAS, HUBS, curvedRoute, homeOf, pickupCode, positionOf, routeKey, type LatLng, type RobotView } from "@/lib/robots/fleet";
+import { AREAS, HUBS, curvedRoute, homeOf, pickupCode, positionOf, routeKey, splitLine, type LatLng, type RobotView } from "@/lib/robots/fleet";
 
+// The HUS palette of the user app (web/): brand blue for a robot on its way, like the kit's tracking map.
 const COLOUR = {
-  outbound: "#0f6e56",
-  atDoor: "#245f88",
+  outbound: "#004b87",
+  atDoor: "#00797c",
   flagged: "#a34a08",
   returning: "#6d8582",
   idle: "#ffffff",
-  ink: "#12272e",
-  hub: "#085041",
+  ink: "#1d252c",
+  hub: "#003c6c",
+  behind: "#9aa9b6",
 };
+
+const HOUSE = '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z" fill="#fff"/></svg>';
+const homeIcon = L.divIcon({ className: "home-pin", iconSize: [22, 22], iconAnchor: [11, 11], html: `<span>${HOUSE}</span>` });
+const homeFlaggedIcon = L.divIcon({ className: "home-pin is-flagged", iconSize: [26, 26], iconAnchor: [13, 13], html: `<span>${HOUSE}</span>` });
 
 function colourOf(v: RobotView): string {
   const s = v.status;
@@ -99,13 +106,21 @@ export default function LiveMap({ fleet, ready, intake, routes, selected, onSele
         const line = lineOf(v);
         if (!line) return null;
         const on = selected === v.robot.id;
-        const returning = v.status.kind === "returning";
+        const dim = selected && !on ? 0.3 : 1;
+        // As on the kit's tracking map: the road still to drive is solid with a white outline, the rest is grey dots.
+        const s = v.status;
+        const ahead = s.kind === "outbound" ? splitLine(line, s.progress).ahead
+          : s.kind === "returning" ? splitLine(line, 1 - s.progress).done : [];
         return (
-          <Polyline key={`route-${v.robot.id}`} positions={line}
-            pathOptions={{
-              color: colourOf(v), weight: on ? 6 : 4, opacity: selected && !on ? 0.35 : 0.9,
-              dashArray: returning ? "4 8" : undefined, lineCap: "round",
-            }} />
+          <Fragment key={`route-${v.robot.id}`}>
+            <Polyline positions={line} pathOptions={{ color: COLOUR.behind, weight: 4, opacity: dim, dashArray: "1 9", lineCap: "round" }} />
+            {ahead.length > 1 && (
+              <>
+                <Polyline positions={ahead} pathOptions={{ color: "#ffffff", weight: on ? 10 : 8, opacity: dim, lineCap: "round" }} />
+                <Polyline positions={ahead} pathOptions={{ color: colourOf(v), weight: on ? 6 : 4, opacity: dim, lineCap: "round" }} />
+              </>
+            )}
+          </Fragment>
         );
       })}
 
@@ -121,10 +136,9 @@ export default function LiveMap({ fleet, ready, intake, routes, selected, onSele
         const t = v.status.trip;
         const flagged = v.status.kind === "atDoor" && v.status.flagged;
         return (
-          <CircleMarker key={`home-${v.robot.id}`} center={t.home} radius={flagged ? 11 : 7}
-            pathOptions={{ color: flagged ? COLOUR.flagged : COLOUR.ink, weight: 2, fillColor: flagged ? COLOUR.flagged : COLOUR.ink, fillOpacity: flagged ? 0.35 : 1 }}>
+          <Marker key={`home-${v.robot.id}`} position={t.home} icon={flagged ? homeFlaggedIcon : homeIcon} keyboard={false}>
             <Tooltip permanent direction="right" offset={[10, 0]} className="home-label">{pickupCode(t.sampleId)}</Tooltip>
-          </CircleMarker>
+          </Marker>
         );
       })}
 

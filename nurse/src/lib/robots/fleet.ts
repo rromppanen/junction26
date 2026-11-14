@@ -167,6 +167,24 @@ export function pointAlong(line: LatLng[], t: number): LatLng {
   return line[line.length - 1];
 }
 
+/** The line cut at fraction t (0..1) of its length: the part behind and the part still ahead. */
+export function splitLine(line: LatLng[], t: number): { done: LatLng[]; ahead: LatLng[] } {
+  if (line.length < 2) return { done: line, ahead: line };
+  const u = Math.min(1, Math.max(0, t));
+  const seg = line.slice(1).map((p, i) => dist(line[i], p));
+  let left = seg.reduce((s, x) => s + x, 0) * u;
+  for (let i = 0; i < seg.length; i++) {
+    if (left <= seg[i] || i === seg.length - 1) {
+      const f = seg[i] === 0 ? 0 : Math.min(1, left / seg[i]);
+      const [a, b] = [line[i], line[i + 1]];
+      const at: LatLng = [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+      return { done: [...line.slice(0, i + 1), at], ahead: [at, ...line.slice(i + 1)] };
+    }
+    left -= seg[i];
+  }
+  return { done: line, ahead: [line[line.length - 1]] };
+}
+
 export function routeKey(t: Pick<Trip, "hub" | "sampleId">): string {
   return `${t.hub}:${t.sampleId}`;
 }

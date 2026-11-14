@@ -61,7 +61,7 @@ function detail(v: RobotView): string {
 function pillClass(v: RobotView): string {
   const s = v.status;
   if (s.kind === "atDoor" && s.flagged) return "bg-behind-soft text-behind";
-  if (s.kind === "atDoor") return "bg-ahead-soft text-ahead";
+  if (s.kind === "atDoor") return "bg-[#d9f0f0] text-[#00595c]";
   if (s.kind === "outbound") return "bg-brand-soft text-brand";
   return "bg-par-soft text-ink";
 }
@@ -101,7 +101,8 @@ export function RobotsView() {
 
   return (
     <main id="main-content" tabIndex={-1} className="min-h-dvh px-4 pb-12 sm:px-6">
-      <header className="mx-auto flex w-full max-w-[96rem] flex-wrap items-center justify-between gap-3 pt-5">
+      <header className="-mx-4 border-b border-rule bg-surface px-4 sm:-mx-6 sm:px-6">
+        <div className="mx-auto flex min-h-14 w-full max-w-[96rem] flex-wrap items-center justify-between gap-3 py-2">
         <div className="flex flex-wrap items-center gap-3">
           <Wordmark />
           <span className="text-sm text-muted">Screening nurse</span>
@@ -110,12 +111,13 @@ export function RobotsView() {
         <button type="button" className={BTN} onClick={() => { reset(); setSelected(null); }}>
           <RotateCcw size={16} aria-hidden /> Reset demo
         </button>
+      </div>
       </header>
 
       <div className="mx-auto w-full max-w-[96rem] pt-3">
         <p className="text-xs text-muted">{DEMO_NOTE}</p>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-[length:var(--step-1)] font-semibold">Pickup robots, Helsinki capital region</h1>
+          <h1 className="text-[length:var(--step-2)] font-semibold leading-tight text-brand-strong">Pickup robots, Helsinki capital region</h1>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
             <label className="inline-flex min-h-11 items-center gap-2 text-sm">
               <input type="checkbox" checked={simulate} onChange={(e) => setSimulate(e.target.checked)} className="size-5 accent-[var(--brand)]" />
@@ -164,7 +166,7 @@ export function RobotsView() {
                   <li className="flex items-center gap-1.5"><span className="size-3 rounded-sm bg-brand-strong" aria-hidden /> Hub</li>
                   <li className="flex items-center gap-1.5"><span className="size-3 rounded-sm bg-behind" aria-hidden /> Hub with samples to collect</li>
                   <li className="flex items-center gap-1.5"><span className="size-3 rounded-full bg-brand" aria-hidden /> On the way</li>
-                  <li className="flex items-center gap-1.5"><span className="size-3 rounded-full bg-ahead" aria-hidden /> At the door</li>
+                  <li className="flex items-center gap-1.5"><span className="size-3 rounded-full bg-[#00797c]" aria-hidden /> At the door</li>
                   <li className="flex items-center gap-1.5"><span className="size-3 rounded-full bg-behind" aria-hidden /> Waiting too long</li>
                   <li className="flex items-center gap-1.5"><span className="size-3 rounded-full bg-par" aria-hidden /> Returning</li>
                   <li className="flex items-center gap-1.5"><span className="size-3 rounded-full border-2 border-ink bg-white" aria-hidden /> Sample ready, no pickup booked</li>

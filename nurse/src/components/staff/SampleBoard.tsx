@@ -89,7 +89,8 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
 
   return (
     <main id="main-content" tabIndex={-1} className="min-h-dvh px-4 pb-12 sm:px-6">
-      <header className="mx-auto flex w-full max-w-[96rem] flex-wrap items-center justify-between gap-3 pt-5">
+      <header className="-mx-4 border-b border-rule bg-surface px-4 sm:-mx-6 sm:px-6">
+        <div className="mx-auto flex min-h-14 w-full max-w-[96rem] flex-wrap items-center justify-between gap-3 py-2">
         <div className="flex items-center gap-3">
           <Wordmark />
           <span className="text-sm text-muted">Screening nurse</span>
@@ -98,6 +99,7 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
         <button type="button" className={BTN} onClick={() => { reset(); setSelected(null); clearBusy(); setStatus("Demo reset"); }}>
           <RotateCcw size={16} aria-hidden /> Reset demo
         </button>
+      </div>
       </header>
       <div className="mx-auto w-full max-w-[96rem] pt-3">
         {!embed && <p className="text-xs text-muted">{DEMO_NOTE}</p>}
