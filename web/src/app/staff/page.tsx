@@ -1,8 +1,18 @@
-import type { Metadata } from "next";
+"use client";
+
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { SampleBoard } from "@/components/staff/SampleBoard";
 
-export const metadata: Metadata = { title: "Nurse board · Läpi" };
+function Board() {
+  const embed = useSearchParams().get("embed") === "1";
+  return <SampleBoard embed={embed} />;
+}
 
 export default function StaffPage() {
-  return <SampleBoard />;
+  return (
+    <Suspense fallback={null}>
+      <Board />
+    </Suspense>
+  );
 }

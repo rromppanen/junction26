@@ -209,3 +209,147 @@ The functions:
   - the demo disclaimer line.
 - [ ] **Step 5:** Verify that `/`, `/staff` and `/demo` return 200 and that tsc, eslint and vitest are clean.
 - [ ] **Step 6:** Commit `feat: nurse board, side-by-side demo and new start page`.
+
+---
+
+## UI round (agreed Sat 14.11 evening)
+
+Tasks 4 and 5 touch disjoint files and may run in parallel. When committing, if git reports `index.lock`, wait two seconds and retry; never delete the lock file.
+
+### Task 4: Demo stage and phone polish
+
+**Files:**
+- Modify `web/src/app/demo/page.tsx`.
+- Modify `web/src/components/kit/KitApp.tsx`, `RobotMap.tsx` and `strings.ts`.
+- Create `web/src/components/kit/Illustrations.tsx`.
+
+**Interfaces:** It consumes Task 1's store and model unchanged. Don't edit `web/src/lib/sample/*` or `web/src/components/staff/*`.
+
+- [ ] **Step 1: `/demo` is a stage.**
+  - **One header:** the Wordmark and "Act on the phone; the board updates live." appear once. The disclaimer appears once, under the stage.
+  - **The page passes `?embed=1`** to both iframes (`/kit?embed=1`, `/staff?embed=1`).
+    - `KitApp` reads it with `useSearchParams` (wrap the kit page in `<Suspense>`). In embed mode it hides its footer disclaimer, but keeps the restart button.
+    - The board's embed handling belongs to Task 5. Task 4 only passes the parameter.
+  - **The phone is drawn as a device:**
+    - `rounded-[2.75rem]`, a 10px dark frame (`bg-ink`) and a small notch bar;
+    - a soft shadow (`shadow-[0_24px_60px_-20px_rgba(18,39,46,0.35)]`);
+    - the iframe sits inside at 375×760.
+  - **The stage background** is `bg-brand-soft` with `rounded-3xl` and padding.
+  - **Captions** under each side, small and muted: "The person (phone)" and "The screening nurse".
+  - **Wrapping:** below 1100px the board wraps under the phone.
+- [ ] **Step 2: Phone polish.**
+  - **Illustrations.tsx:** inline SVG line drawings with `stroke=currentColor` and a `brand` accent, about 72px tall, `aria-hidden`:
+    - one per sample step: the leaflet, a tube with a date label, a tube in a bag;
+    - a small friendly robot (rounded box on wheels with a lid);
+    - a check mark.
+  - **Take-sample screen:** each step is a card with its picture.
+  - **RobotMap** uses the robot drawing as the moving marker, in place of the dot.
+  - **Picked-up moment:** a large check that draws in (`stroke-dashoffset` animation, skipped under `prefers-reduced-motion`), then the at-lab text.
+  - **Progress bar:** 6px tall bars, 12px labels, the current step in `font-semibold text-brand`, and done steps showing a small check.
+  - **Countdown:** `text-4xl tabular-nums`.
+  - **Result headings:** `text-2xl`.
+- [ ] **Step 3:** Run tsc and eslint. `/demo` and `/kit` return 200. The 375px kit has no sideways scroll.
+- [ ] **Step 4:** Commit `feat: demo stage with a phone frame, illustrated kit steps and robot marker`.
+
+### Task 5: Board overview bar, filtered list, drawer
+
+**Files:**
+- Modify `web/src/components/staff/SampleBoard.tsx` (split it into files under `web/src/components/staff/` if it grows past about 350 lines).
+- Modify `web/src/app/staff/page.tsx`.
+
+**Interfaces:** It consumes Task 1's store and model (`STAGES_FOR_BOARD`, `stageOf`, `flagsOf`) unchanged. Don't edit `web/src/lib/sample/*`, `web/src/components/kit/*` or `web/src/app/demo/*`.
+
+- [ ] **Step 1: Overview bar.** It replaces the 7 columns: a horizontal row of the 7 board steps as connected segments (chevrons or line-joined pills).
+  - Each segment shows its label and count. A segment holding flagged samples shows a small amber dot and the flagged count.
+  - Clicking a segment filters the list. An "All" segment comes first and is the default.
+  - The bar wraps to two rows on narrow widths. It never scrolls the page.
+- [ ] **Step 2: One list below.** A list of sample rows replaces the columns.
+  - **Sorting:** the live "me" row first, then flagged rows, then by days in stage, longest first.
+  - **Row contents:** name, age, municipality, language, interpreter, step label, time in step, flag chip, and a mini timeline of 7 dots for the board steps (filled up to the current step, an amber ring on a flagged step).
+  - **Selecting a row** opens a drawer from the right on desktop (a full-width sheet on phones). The drawer holds the history and the actions. It has a close button, closes on Esc, and moves focus into the drawer.
+  - **Without a selection** there is no side panel, and the list uses the full width.
+- [ ] **Step 3: Compact live strip.**
+  - Actions sit in one wrapping row of small buttons (`min-h-11`, auto width).
+  - "Call" opens a small inline note field with Save/Cancel. Only Save records `nurseCalled` with the note.
+  - The strip shows the mini timeline too.
+- [ ] **Step 4: Embed mode.** `/staff?embed=1` (read via `useSearchParams` inside `<Suspense>`) hides the page header's demo line and makes the tiles more compact. The Reset button stays.
+- [ ] **Step 5:**
+  - Run tsc and eslint.
+  - `/staff` and `/staff?embed=1` return 200.
+  - There is no page-level sideways scroll at 375px.
+- [ ] **Step 6:** Commit `feat: board overview bar, single sorted list with drawer, compact live strip`.
+
+## Hackathon features (agreed Sat 14.11 evening)
+
+Tasks 6 and 7 touch disjoint files and may run in parallel with each other and with Task 5. If git reports `index.lock`, wait two seconds and retry.
+
+### Task 6: Demo autopilot
+
+**Files:**
+- Create `web/src/components/demo/Autopilot.tsx` ("use client").
+- Modify `web/src/app/demo/page.tsx` (mount it in the header).
+
+**Interfaces:** It consumes `useSamples()` (`add`, `reset`, `samples`, `now`) and `stageOf` from Task 1. The phone and board iframes on `/demo` follow automatically through the shared store.
+
+- [ ] **Step 1: The "Play the story" button.** It sits in the `/demo` header. The button and the caption both live in `/demo`; never inside the iframes.
+  - **The script** runs on sample `"me"`:
+    1. Reset the demo.
+    2. Wait 2 s, then `kitOpened`.
+    3. Wait 3 s, then `sampleTaken`.
+    4. Wait 3 s, then `pickupBooked` with slot "Now (demo)".
+    5. Wait for `stageOf` to reach `robotAtDoor` (about 20 s), plus 2 s, then `pickedUp`.
+    6. Wait 4 s, then `resultPositive`, recorded with the note "Lab result (demo)".
+    7. Wait 4 s, then `colonoscopyBooked`, with the first weekday slot 3 days out (same format as the kit, e.g. "Tue 17 Nov 9:00") and the note "Interpreter needed".
+    8. Wait 3 s, then stop.
+  - **Step captions:** each step shows a one-line caption beside the button (e.g. "Aino takes the sample at home") in `aria-live="polite"`.
+  - **Controls:**
+    - while it runs, the button becomes "Stop";
+    - Stop cancels the remaining timers, and unmounting cancels them too;
+    - after the last step the button reads "Play again".
+- [ ] **Step 2: Keyboard shortcut.** On `/demo` only, the space bar starts the story when no input is focused (for the video).
+- [ ] **Step 3:** Run tsc and eslint. `/demo` returns 200.
+- [ ] **Step 4:** Commit `feat: demo autopilot that plays the whole story`.
+
+### Task 7: Ask in your own language (Gemini)
+
+**Files:**
+- Create `web/src/lib/kitAsk.ts`.
+- Create `web/src/lib/kitAsk.test.ts`.
+- Create `web/src/app/api/kit/ask/route.ts`.
+- Create `web/src/components/kit/AskBox.tsx`.
+- Modify `web/src/components/kit/KitApp.tsx` (mount AskBox) and `strings.ts`.
+
+**Interfaces:**
+- `KIT_FACTS: { id: string; en: string }[]` holds the HUS facts from the plan's Global Constraints, plus:
+  - "the sample tube is returned via the robot in this demo";
+  - "results come by post and in the app".
+- `type AskResult = { status: "ai" | "fallback"; answer: string; factIds: string[] }`.
+- `askKit(question: string, generate?: (prompt: string) => Promise<unknown>): Promise<AskResult>`:
+  - Gemini (same model, `withTimeout` pattern and 12 s timeout as `web/src/lib/reachDrafts.ts`) answers in the language of the question, using only `KIT_FACTS`.
+  - It uses a JSON schema of `{ answer: string, factIds: string[], answerable: boolean }`.
+- **Validation:**
+  - `answer` is at most 600 characters;
+  - every `factId` must be known and at least one must be given;
+  - the answer contains no digits that aren't in the cited facts;
+  - otherwise the result is a fallback.
+- **Fallback:** when there's no key, on error, or when the question isn't answerable, return a fixed message in English, Finnish and Swedish: "I can only answer questions about this screening kit. For other questions, call the screening unit." and `factIds: []`.
+- **`POST /api/kit/ask`:**
+  - body `{ question: string }`, at most 300 characters;
+  - returns 400 for an empty or too-long question, and 200 with `AskResult` otherwise.
+
+- [ ] **Step 1:** Write failing tests with an injected generator:
+  - valid answer gives "ai";
+  - an unknown factId gives "fallback";
+  - an invented number ("take 3 samples") gives "fallback";
+  - `answerable: false` gives "fallback";
+  - the generator throws gives "fallback";
+  - no generator and no key gives "fallback".
+- [ ] **Step 2:** Implement `kitAsk.ts` and the route.
+- [ ] **Step 3: AskBox on the kit.**
+  - It is collapsible: "Ask a question in your own language" (fi/sv/en strings).
+  - It has a text field (placeholder in the UI language, e.g. "Esim. Saako näytteen ottaa kuukautisten aikana?" for Finnish, and the same kind of example in Swedish and English) and a Send button.
+  - The answer shows with a badge, "Answered by AI from the screening facts" or "Standard answer". Below it: "For anything else, call the screening unit."
+  - It appears on the invited and take-sample screens only.
+  - It uses `dir="auto"` so Arabic and other right-to-left text displays correctly.
+- [ ] **Step 4:** tsc, eslint and vitest are clean. Curl `/api/kit/ask` with a Finnish question and an Arabic question; both return 200. Report the answers.
+- [ ] **Step 5:** Commit `feat: ask about the kit in your own language, answered only from the screening facts`.

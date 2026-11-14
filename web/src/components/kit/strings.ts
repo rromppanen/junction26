@@ -45,6 +45,7 @@ export type KitStrings = {
   doneBody: string;
   demoLine: string;
   restart: string;
+  ask: { toggle: string; placeholder: string; send: string; badgeAi: string; badgeStandard: string; else: string };
 };
 
 const en: KitStrings = {
@@ -98,10 +99,18 @@ const en: KitStrings = {
   doneBody: "Colonoscopy done. The unit will tell you the findings.",
   demoLine: "Demo: invented people; the robot, lab and bookings are simulated.",
   restart: "Restart the demo",
+  ask: {
+    toggle: "Ask a question in your own language",
+    placeholder: "E.g. Can I take the sample during my period?",
+    send: "Send",
+    badgeAi: "Answered by AI from the screening facts",
+    badgeStandard: "Standard answer",
+    else: "For anything else, call the screening unit.",
+  },
 };
 
 const fi: KitStrings = {
-  steps: ["Pakkaus", "Näyte", "Nouto", "Laboratorio", "Tulos"],
+  steps: ["Pakkaus", "Näyte", "Nouto", "Labra", "Tulos"],
   progress: "Eteneminen",
   greeting: (n) => `Hei ${n}`,
   langLabel: "Kieli",
@@ -151,6 +160,14 @@ const fi: KitStrings = {
   doneBody: "Tähystys on tehty. Yksikkö kertoo löydökset.",
   demoLine: "Demo: kuvitellut henkilöt; robotti, laboratorio ja varaukset ovat simuloituja.",
   restart: "Aloita demo alusta",
+  ask: {
+    toggle: "Kysy omalla kielellä",
+    placeholder: "Esim. Saako näytteen ottaa kuukautisten aikana?",
+    send: "Lähetä",
+    badgeAi: "Tekoälyn vastaus seulonnan tietojen pohjalta",
+    badgeStandard: "Vakiovastaus",
+    else: "Muissa asioissa soita seulontayksikköön.",
+  },
 };
 
 const sv: KitStrings = {
@@ -204,6 +221,14 @@ const sv: KitStrings = {
   doneBody: "Koloskopin är gjord. Enheten berättar vad som hittades.",
   demoLine: "Demo: påhittade personer; roboten, labbet och bokningarna är simulerade.",
   restart: "Starta om demon",
+  ask: {
+    toggle: "Ställ en fråga på ditt eget språk",
+    placeholder: "T.ex. Får jag ta provet under mensen?",
+    send: "Skicka",
+    badgeAi: "Svar från AI utifrån screeningfakta",
+    badgeStandard: "Standardsvar",
+    else: "För allt annat, ring screeningenheten.",
+  },
 };
 
 export const STRINGS: Record<Lang, KitStrings> = { fi, sv, en };

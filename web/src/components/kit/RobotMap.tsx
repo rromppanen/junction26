@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { RobotIllustration } from "./Illustrations";
 
 const ROUTE = "M34 156 C 100 156, 70 66, 140 82 S 236 148, 288 96 S 318 52, 326 44";
 
@@ -32,8 +33,8 @@ export function RobotMap({ progress, labLabel, homeLabel, to }: { progress: numb
           className="motion-safe:transition-transform motion-safe:duration-1000 motion-safe:ease-linear"
           style={{ transform: `translate(${pt.x}px, ${pt.y}px)` }}
         >
-          <circle r="13" fill="var(--brand)" opacity="0.2" />
-          <circle r="8" fill="var(--brand)" stroke="#fff" strokeWidth="2.5" />
+          <circle r="18" fill="var(--brand)" opacity="0.18" />
+          <RobotIllustration x={-14} y={-14} width={28} height={28} className="text-ink" />
         </g>
       )}
     </svg>
