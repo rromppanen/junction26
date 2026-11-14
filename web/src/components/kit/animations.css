@@ -118,3 +118,12 @@
 @keyframes kit-dim { from { opacity: 0; } to { opacity: 1; } }
 @keyframes kit-open { from { opacity: 0; transform: translateY(18px) scale(0.97); } to { opacity: 1; transform: none; } }
 @keyframes kit-close { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(12px) scale(0.98); } }
+
+/* The robot is here: the map blurs softly, the card settles in and the check draws; then it all fades away. */
+.kit-arrived-veil { animation: kit-veil 0.6s ease-out both; }
+.kit-arrived-card { animation: kit-settle 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both; }
+.kit-arrived-tick { stroke-dasharray: 1; stroke-dashoffset: 0; animation: k-done-tick 0.5s ease-out 0.45s both; }
+.kit-arrived-out { animation: kit-fade-out 0.5s ease-in both; }
+@keyframes kit-veil { from { opacity: 0; } to { opacity: 1; } }
+@keyframes kit-settle { from { opacity: 0; transform: translateY(10px) scale(0.94); } to { opacity: 1; transform: none; } }
+@keyframes kit-fade-out { from { opacity: 1; } to { opacity: 0; } }
