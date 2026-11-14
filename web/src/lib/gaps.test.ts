@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { findGaps } from "./gaps";
+import { findGaps, gapDetail, gapId } from "./gaps";
 import { parseCSV } from "./intake/csv";
 import { suggestMapping, validateMapping, type Mapping } from "./intake/fields";
 
@@ -25,8 +25,8 @@ describe("findGaps", () => {
     expect(ru.gap).toBeCloseTo(-30);
     expect(ru.status).toBe("behind");
     expect(ru.missing).toBe(30); // 100 people x (75% - 45%)
-    // Largest gap first, one per way of grouping: Russian speakers (-30 points) before men (-10).
-    expect(r.findings.map((f) => [f.group.value, f.group.missing])).toEqual([["ru", 30], ["m", 55]]);
+    // Ranked by what closing the gap is worth: men (550 x 10 points = 55 people) before Russian speakers (30).
+    expect(r.findings.map((f) => [f.group.value, f.group.missing])).toEqual([["m", 55], ["ru", 30]]);
     // One area only: nothing to compare, so no area dimension.
     expect(r.dimensions.map((d) => d.header)).toEqual(["lang", "sex"]);
     expect(r.absent).toEqual(expect.arrayContaining(["age", "migrantBackground"]));
@@ -96,7 +96,29 @@ describe("findGaps", () => {
     for (const v of ["mies", "venäjä", "muu", "ulkomaalaistaustainen", "Lieksa", "56–59"]) expect(behind).toContain(v);
     expect(behind).not.toContain("nainen");
     expect(r.absent).toEqual(["education", "income"]);
-    // The top of the list covers different ways of grouping, not one family of overlapping columns.
-    expect(new Set(r.findings.slice(0, 5).map((f) => f.dimension.kind)).size).toBe(5);
+    // Rate gaps by people missed, then wait gaps by extra days of waiting.
+    const rates = r.findings.filter((f) => f.metric !== "wait").map((f) => f.group.missing);
+    expect(rates).toEqual([...rates].sort((a, b) => b - a));
+    expect(r.findings.findIndex((f) => f.metric === "wait")).toBeGreaterThanOrEqual(rates.length);
+  });
+
+  it("gives a gap's detail: both sides along the pathway, the trend by year and the knock-on positives", () => {
+    const h = ["year", "lang", "invited", "attended", "positive"];
+    const m: Mapping = { year: "year", lang: "group", invited: "invited", attended: "attended", positive: "positive" };
+    const rows = [
+      ["2023", "fi", "1000", "700", "35"],
+      ["2023", "ru", "100", "60", "3"],
+      ["2024", "fi", "1000", "700", "35"],
+      ["2024", "ru", "100", "40", "2"],
+    ];
+    const t = { headers: h, rows };
+    const f = findGaps(t, m, { lang: "language" }).findings[0];
+    const d = gapDetail(t, m, { lang: "language" }, gapId(f))!;
+    expect(d.span).toBe("2024");
+    expect(d.group).toMatchObject({ invited: 100, attended: 40, positive: 2 });
+    expect(d.rest).toMatchObject({ invited: 1000, attended: 700, positive: 35 });
+    expect(d.series.map((s) => [s.year, Math.round(s.group!), Math.round(s.rest!)])).toEqual([[2023, 60, 70], [2024, 40, 70]]);
+    expect(d.extraPositives).toBe(2); // 30 people missed x 5% positive among everyone else
+    expect(gapDetail(t, m, {}, "participation|lang|nope")).toBeNull();
   });
 });

@@ -2,7 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { shortName } from "@/components/format";
 import { getDataset } from "@/lib/data";
 import { trimSample, type Question, type QuestionInput } from "./clarify";
-import { FIELDS, GROUP_KINDS, groupKindOf, suggestMapping, type Field, type GroupKind, type Mapping } from "./fields";
+import { FIELDS, GROUP_KINDS, groupKindOf, parseCount, suggestMapping, type Field, type GroupKind, type Mapping } from "./fields";
 import { personalDataHeaders } from "./privacy";
 import type { Level } from "./setup";
 
@@ -19,12 +19,11 @@ export const CONFIDENT = 0.75;
 const MAX_QUESTIONS = 6;
 const MAX_TEXT = 300;
 export const NATIONAL = "national";
-/**
- * Every figure in the findings is computed from these columns, so a guess the AI made on its own (not from a
- * known column name) is always confirmed with the user, however sure the AI says it is.
- */
-const COUNT_FIELDS: Field[] = ["invited", "attended", "positive", "examined"];
-const UNCONFIRMED = 0.7;
+/** Count columns that must add up along the pathway: each step is at most the step before it. */
+const STEPS: [Field, Field][] = [["attended", "invited"], ["positive", "attended"], ["examined", "positive"]];
+const COUNTS: Field[] = ["invited", "attended", "positive", "examined"];
+/** A confident guess the sample rows contradict drops to this, so it is asked about. */
+const DOUBTED = 0.5;
 
 export type Guess = { value: string; label: string };
 /** A question the AI asks because its own confidence is below {@link CONFIDENT}. */
@@ -209,6 +208,35 @@ function examples(sample: string[][], col: number): string {
   return vals.length ? ` For example: ${vals.map((v) => `"${v}"`).join(", ")}.` : "";
 }
 
+/**
+ * Columns whose confident reading the sample rows contradict, with the reason in plain words: a count that is not a
+ * whole number, or a pathway step larger than the step before it. Only guesses the AI made are doubted; a column
+ * matched by its name is taken as given, and when both sides are AI guesses both are asked about.
+ */
+function doubts(headers: string[], sample: string[][], columns: ColumnGuess[]): Map<string, string> {
+  const out = new Map<string, string>();
+  const sure = (f: Field) => columns.find((c) => c.field === f && c.confidence >= CONFIDENT);
+  const at = (c: ColumnGuess, r: string[]) => r[headers.indexOf(c.header)];
+  for (const f of COUNTS) {
+    const c = sure(f);
+    if (c?.source === "ai" && sample.some((r) => at(c, r)?.trim() && parseCount(at(c, r)) === undefined))
+      out.set(c.header, `its values are not all whole numbers of people`);
+  }
+  for (const [step, before] of STEPS) {
+    const a = sure(step), b = sure(before);
+    if (!a || !b) continue;
+    const bad = sample.some((r) => {
+      const x = parseCount(at(a, r) ?? ""), y = parseCount(at(b, r) ?? "");
+      return x !== undefined && y !== undefined && x > y;
+    });
+    if (!bad) continue;
+    const why = `in some rows "${a.header}" is larger than "${b.header}"`;
+    if (a.source === "ai") out.set(a.header, why);
+    if (b.source === "ai") out.set(b.header, why);
+  }
+  return out;
+}
+
 /** Throws if headers look like personal data. Never throws for Gemini problems (falls back to name matching). */
 export async function understandData(input: QuestionInput, generate: UnderstandGenerator = geminiGenerator): Promise<Understanding> {
   assertNoPersonalData(input.headers);
@@ -218,6 +246,7 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
   let status: Understanding["status"] = "fallback";
   const columns: ColumnGuess[] = [];
   const askText = new Map<string, string>();
+  const reasons = new Map<string, string>();
 
   if (headers && headers.length) {
     const byName = suggestMapping(headers);
@@ -247,8 +276,7 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
         const desc = FIELDS.find((f) => f.id === named)!.description;
         columns.push({ header: h, field: named, meaning: a && a.field === named && a.meaning ? a.meaning : desc, confidence: 0.95, source: "name" });
       } else if (a) {
-        const confidence = COUNT_FIELDS.includes(a.field) ? Math.min(a.confidence, UNCONFIRMED) : a.confidence;
-        columns.push({ header: h, field: a.field, meaning: a.meaning || fieldLabel(a.field), confidence, source: "ai" });
+        columns.push({ header: h, field: a.field, meaning: a.meaning || fieldLabel(a.field), confidence: a.confidence, source: "ai" });
       } else {
         columns.push({ header: h, field: "ignore", meaning: "Not sure yet.", confidence: 0.2, source: "none" });
       }
@@ -262,8 +290,14 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
     const owner = new Map<Field, ColumnGuess>();
     for (const c of [...columns].sort((x, y) => y.confidence - x.confidence)) {
       if (c.field === "ignore" || c.field === "group") continue;
-      if (owner.has(c.field)) c.confidence = Math.min(c.confidence, 0.5);
+      if (owner.has(c.field)) c.confidence = Math.min(c.confidence, DOUBTED);
       else owner.set(c.field, c);
+    }
+    // The model is trusted when it is sure, but its reading must also make sense of the numbers.
+    for (const [header, why] of doubts(headers, sample, columns)) {
+      const c = columns.find((x) => x.header === header)!;
+      c.confidence = Math.min(c.confidence, DOUBTED);
+      reasons.set(header, why);
     }
   }
 
@@ -281,14 +315,17 @@ export async function understandData(input: QuestionInput, generate: UnderstandG
   for (const c of columns) {
     if (c.confidence >= CONFIDENT) continue;
     const col = headers!.indexOf(c.header);
-    const confirm = c.source === "ai" && COUNT_FIELDS.includes(c.field);
+    const confirm = c.source === "ai" && c.field !== "ignore";
     const meaning = c.meaning.replace(/\.$/, "");
+    const why = reasons.get(c.header);
     questions.push({
       id: `col:${c.header}`,
       kind: "column",
       column: c.header,
       text: confirm
-        ? `I read "${c.header}" as: ${meaning.charAt(0).toLowerCase()}${meaning.slice(1)}.${examples(sample, col)} Is that right?`
+        ? why
+          ? `I read "${c.header}" as: ${meaning.charAt(0).toLowerCase()}${meaning.slice(1)}. But ${why}, so I may be wrong. What does it contain?`
+          : `I read "${c.header}" as: ${meaning.charAt(0).toLowerCase()}${meaning.slice(1)}.${examples(sample, col)} Is that right?`
         : (askText.get(c.header) ?? `What does the column "${c.header}" contain?${examples(sample, col)}`),
       options: FIELD_OPTIONS,
       guess: c.field === "ignore" && c.source === "none" ? null : { value: c.field, label: fieldLabel(c.field) },
