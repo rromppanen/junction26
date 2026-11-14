@@ -22,6 +22,11 @@ import { DecisionBoard } from "@/components/DecisionBoard";
 import { loadPathway } from "@/lib/pathwayData";
 import { PATHWAY_COSTS } from "@/data/pathwayCosts";
 import { PathwayStrip } from "@/components/PathwayStrip";
+import { TwoMinuteSummary } from "@/components/TwoMinuteSummary";
+import { countySummary } from "@/lib/summary";
+import { MortalityPanel } from "@/components/MortalityPanel";
+import { countyMortality, type MortalityRow } from "@/lib/mortality";
+import MORTALITY_ROWS from "@/data/mortality.json";
 import { DataBadge } from "@/components/DataBadge";
 import { Colophon } from "@/components/Colophon";
 import { AppHeader, HeaderLink, More, Stat, StatusIcon } from "@/components/ui";
@@ -121,6 +126,18 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
   const reachDrafts = reach && reachInd ? await getReachDrafts(reach, reachInd) : null;
 
   const pathwayView = loadPathway(regionId);
+  const mortality = countyMortality(MORTALITY_ROWS as MortalityRow[], region.name);
+
+  const summary = countySummary({
+    name,
+    facts,
+    indicators: INDICATORS,
+    pathway: pathwayView,
+    reach: reach && reachInd ? { plan: reach, indicator: reachInd } : null,
+    firstAction: brief.recommendations[0],
+    costs: { perColonoscopy: PATHWAY_COSTS.perColonoscopy.value, perContact: PATHWAY_COSTS.perContact.value, perTest: PATHWAY_COSTS.perTest?.value ?? null },
+    mortality,
+  });
 
   const parts: { id: string; icon: LucideIcon; label: string }[] = [
     ...(pathwayView ? [{ id: "funnel", icon: Filter, label: "Where people fall off" }, { id: "decide", icon: Scale, label: "Decide" }] : []),
@@ -163,6 +180,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
               : `The AI analyst didn\u2019t respond, so the serif text comes from a fixed template filled in with ${name}\u2019s figures. Plain text is calculated straight from Sotkanet.`}
           </p>
         </More>
+        <TwoMinuteSummary lines={summary} />
       </header>
 
       <nav aria-label="Sections" className="no-print sticky top-0 z-10 -mx-4 mb-2 overflow-x-auto border-y border-rule bg-paper/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
@@ -284,7 +302,8 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         <MeasureKit regionId={regionId} sourceNo={sourceIndex.get(MEASURES[0].evidenceId)} />
       </Part>
 
-      <Part {...part("ind")} title={`The ${INDICATORS.length} measures`}>
+      <Part {...part("ind")} title={`The ${INDICATORS.length + (mortality ? 1 : 0)} measures`}>
+        {mortality && <MortalityPanel m={mortality} name={name} />}
         {INDICATORS.map((ind, i) => {
           const f = facts[i];
           return (

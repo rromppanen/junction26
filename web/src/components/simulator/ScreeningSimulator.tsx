@@ -232,6 +232,11 @@ export function ScreeningSimulator({
             Programme {eurShort(t.programme)}, treatment {eurShort(t.treatment)}.
           </span>
         </p>
+        <p className="mt-3 max-w-3xl text-sm text-muted">
+          Screening attendance is a Goal 2 target (80% in every county). Its payoff counts towards Goal 3, whose headline
+          target is 10% fewer cancer deaths: about 1,330 a year from today&rsquo;s 13,300 (strategy p. 5). Closing these
+          gaps would avert about {num(t.deaths, 1)} of them each year.
+        </p>
         <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
           <span className="text-muted">
             {focusCounty ? `Showing ${focusCounty.name}.` : `${scope.length} ${scope.length === 1 ? "county" : "counties"} counted.`}{" "}
