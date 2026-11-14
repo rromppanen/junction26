@@ -83,7 +83,9 @@ export function grade(url: string, title: string, excerpt: string): { strength: 
   const text = `${title} ${excerpt}`.toLowerCase();
   const review = /systematic review|meta-analys|umbrella review|cochrane/.test(text);
   const guideline = /guideline|recommendation statement|käypä hoito|suositus/.test(text);
-  const trial = /randomi[sz]ed|controlled trial|rct\b/.test(text);
+  const trial = /randomi[sz]ed|controlled trial|rct\b/.test(`${title}`.toLowerCase()) || /randomi[sz]ed|controlled trial/.test(text);
+  // A protocol announces a study; it has no results to rest an action on.
+  if (/\bprotocol\b/i.test(title)) return null;
   if (within(h, STRONG)) return { strength: "strong", kind: review ? "Systematic review" : guideline ? "Guideline" : "Guideline body" };
   if (within(h, PEER)) {
     if (review) return { strength: "strong", kind: "Systematic review" };
@@ -117,6 +119,11 @@ const WHO_EN: Partial<Record<GroupKind, string>> = {
   income: "low-income populations",
 };
 
+const KIND_FI: Record<GroupKind, string> = {
+  language: "kieliryhmät maahanmuuttajat", nationality: "maahanmuuttajat", birthCountry: "maahanmuuttajat", migrantBackground: "maahanmuuttajat",
+  sex: "miehet naiset", age: "ikäryhmät", region: "alueelliset erot", education: "koulutus sosioekonominen", income: "tulotaso sosioekonominen", other: "väestöryhmät",
+};
+
 /** English queries go to reviews and journals; one Finnish query goes to Finnish agencies. */
 export function queriesFor(b: GapBrief): { query: string; domains: string[] }[] {
   const prog = programmeOf(b.source);
@@ -139,7 +146,7 @@ export function queriesFor(b: GapBrief): { query: string; domains: string[] }[] 
   return [
     { query: `interventions to increase ${prog.en} participation among ${who} systematic review`, domains: international },
     { query: `${prog.en} participation ${who} randomized trial invitation reminder outreach`, domains: international },
-    { query: `${prog.fi} osallistuminen ${b.kind === "region" ? "alueelliset erot" : b.kindLabel.toLowerCase()} keinot`, domains: AGENCY },
+    { query: `${prog.fi} osallistuminen ${KIND_FI[b.kind]} keinot`, domains: AGENCY },
   ];
 }
 
@@ -181,11 +188,12 @@ export async function findSources(b: GapBrief, apiKey: string | undefined): Prom
   if (!apiKey) return { sources: [], searched: [], configured: false };
   const qs = queriesFor(b);
   const results = await Promise.all(qs.map((q) => search(q.query, q.domains, apiKey)));
+  // The same paper is often found on PubMed, PMC and the publisher's site: keep it once.
   const seen = new Set<string>();
   const graded: Omit<Source, "id">[] = [];
   results.forEach((rs) => {
     for (const r of rs) {
-      const key = r.url.replace(/[#?].*$/, "");
+      const key = r.title.toLowerCase().replace(/[^a-z0-9äöå]+/g, " ").trim().slice(0, 80) || r.url;
       if (seen.has(key)) continue;
       const g = grade(r.url, r.title, r.excerpt);
       if (!g) continue;
