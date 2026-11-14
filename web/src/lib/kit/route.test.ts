@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hubNear, metresBetween, splitRoute, type LngLat } from "./route";
+import { decodePolyline6, hubNear, metresBetween, splitRoute, type LngLat } from "./route";
 import { ROBOT_ROUTE, ROUTE_METRES } from "@/data/robotRoute";
 
 const line: LngLat[] = [[24.8, 60.17], [24.81, 60.17], [24.82, 60.17]];
@@ -34,5 +34,21 @@ describe("hubNear", () => {
     const m = metresBetween(home, hubNear(home));
     expect(m).toBeGreaterThan(500);
     expect(m).toBeLessThan(1500);
+  });
+});
+
+describe("decodePolyline6", () => {
+  it("decodes points at six-digit precision", () => {
+    // Encoded with precision 6: (60.1749, 24.9464) then (60.1699, 24.9384).
+    const enc = (n: number) => { let v = n < 0 ? ~(n << 1) : n << 1; let s = ""; while (v >= 0x20) { s += String.fromCharCode((0x20 | (v & 0x1f)) + 63); v >>= 5; } return s + String.fromCharCode(v + 63); };
+    const a = [60174900, 24946400], b = [60169900, 24938400];
+    const s = enc(a[0]) + enc(a[1]) + enc(b[0] - a[0]) + enc(b[1] - a[1]);
+    const pts = decodePolyline6(s);
+    expect(pts).toHaveLength(2);
+    expect(pts[0][0]).toBeCloseTo(24.9464, 6);
+    expect(pts[1][1]).toBeCloseTo(60.1699, 6);
+  });
+  it("rejects a truncated string", () => {
+    expect(() => decodePolyline6("_")).toThrow();
   });
 });

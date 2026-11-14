@@ -40,18 +40,72 @@ export function hubNear(home: LngLat): LngLat {
   return [home[0] + 0.008, home[1] + 0.005];
 }
 
-/** The public OSRM walking router run by FOSSGIS on OpenStreetMap data. */
-const FOOT_ROUTER = "https://routing.openstreetmap.de/routed-foot/route/v1/foot";
-
-/** A walking route between two points along real streets and paths. Throws if the router fails or answers oddly. */
-export async function fetchWalkingRoute(from: LngLat, to: LngLat, signal?: AbortSignal): Promise<LngLat[]> {
-  const pts = [from, to].map(([lng, lat]) => `${lng.toFixed(6)},${lat.toFixed(6)}`).join(";");
-  const res = await fetch(`${FOOT_ROUTER}/${pts}?overview=full&geometries=geojson`, { signal });
-  if (!res.ok) throw new Error(`router answered ${res.status}`);
-  const body = (await res.json()) as { routes?: { geometry?: { coordinates?: unknown } }[] };
-  const coords = body.routes?.[0]?.geometry?.coordinates;
-  if (!Array.isArray(coords) || coords.length < 2 || !coords.every((c) => Array.isArray(c) && c.length >= 2 && c.every(Number.isFinite))) {
-    throw new Error("router returned no usable route");
+/** Decodes a Google-style encoded polyline with 6-digit precision (Valhalla's format) into [lng, lat] points. */
+export function decodePolyline6(encoded: string): LngLat[] {
+  const out: LngLat[] = [];
+  let i = 0, lat = 0, lng = 0;
+  const next = () => {
+    let shift = 0, result = 0, byte: number;
+    do {
+      if (i >= encoded.length) throw new Error("truncated polyline");
+      byte = encoded.charCodeAt(i++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+    return result & 1 ? ~(result >> 1) : result >> 1;
+  };
+  while (i < encoded.length) {
+    lat += next();
+    lng += next();
+    out.push([lng / 1e6, lat / 1e6]);
   }
-  return (coords as number[][]).map((c) => [c[0], c[1]]);
+  return out;
+}
+
+/** Two free routers on OpenStreetMap data, both run by FOSSGIS; the second is used when the first is down. */
+const OSRM_FOOT = "https://routing.openstreetmap.de/routed-foot/route/v1/foot";
+const VALHALLA = "https://valhalla1.openstreetmap.de/route";
+
+function usable(coords: unknown): coords is LngLat[] {
+  return Array.isArray(coords) && coords.length >= 2 && coords.every((c) => Array.isArray(c) && c.length >= 2 && c.every(Number.isFinite));
+}
+
+async function osrm(from: LngLat, to: LngLat, signal?: AbortSignal): Promise<LngLat[]> {
+  const pts = [from, to].map(([lng, lat]) => `${lng.toFixed(6)},${lat.toFixed(6)}`).join(";");
+  const res = await fetch(`${OSRM_FOOT}/${pts}?overview=full&geometries=geojson`, { signal });
+  if (!res.ok) throw new Error(`OSRM answered ${res.status}`);
+  const coords = ((await res.json()) as { routes?: { geometry?: { coordinates?: unknown } }[] }).routes?.[0]?.geometry?.coordinates;
+  if (!usable(coords)) throw new Error("OSRM returned no usable route");
+  return coords.map((c) => [c[0], c[1]]);
+}
+
+async function valhalla(from: LngLat, to: LngLat, signal?: AbortSignal): Promise<LngLat[]> {
+  const res = await fetch(VALHALLA, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ locations: [from, to].map(([lon, lat]) => ({ lat, lon })), costing: "pedestrian", directions_type: "none" }),
+    signal,
+  });
+  if (!res.ok) throw new Error(`Valhalla answered ${res.status}`);
+  const shape = ((await res.json()) as { trip?: { legs?: { shape?: unknown }[] } }).trip?.legs?.[0]?.shape;
+  if (typeof shape !== "string") throw new Error("Valhalla returned no shape");
+  const coords = decodePolyline6(shape);
+  if (!usable(coords)) throw new Error("Valhalla returned no usable route");
+  return coords;
+}
+
+/**
+ * A walking route between two points along real streets and paths: the OSRM foot router first,
+ * Valhalla if that fails. Throws only when both fail. Runs on the server (see /api/walk).
+ */
+export async function walkingRoute(from: LngLat, to: LngLat, signal?: AbortSignal): Promise<LngLat[]> {
+  try {
+    return await osrm(from, to, signal);
+  } catch (first) {
+    try {
+      return await valhalla(from, to, signal);
+    } catch (second) {
+      throw new Error(`no router answered: ${(first as Error).message}; ${(second as Error).message}`);
+    }
+  }
 }

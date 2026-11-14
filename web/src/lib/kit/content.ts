@@ -94,10 +94,12 @@ export type Ui = {
   tryAgain: string;
   pickTime: string;
   onTheWay: string;
-  arrivesIn: (min: number) => string;
+  /** Seconds until the robot reaches the door. */
+  arrivesIn: (seconds: number) => string;
   almostThere: string;
   from: string;
-  skip: string;
+  /** Says the demo robot is faster than a real one. */
+  spedUp: string;
   mapError: string;
   arrived: string;
   arrivedBody: string;

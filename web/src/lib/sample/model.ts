@@ -55,8 +55,8 @@ export type Stage =
   | "colonoscopyBooked"
   | "done";
 
-/** How long the robot drives from the hub to the door: the demo route (about 1.2 km) at walking pace. */
-export const ROBOT_TRAVEL_MS = 12 * 60_000;
+/** How long the robot takes from the hub to the door. Sped up for the demo (a real trip is 10–15 minutes); the app says so. */
+export const ROBOT_TRAVEL_MS = 10_000;
 const DAY_MS = 86_400_000;
 const ROBOT_WAIT_FLAG_MS = 60_000;
 

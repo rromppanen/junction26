@@ -1,10 +1,20 @@
 "use client";
 
 import { ROBOT_ROUTE } from "@/data/robotRoute";
-import { fetchWalkingRoute, hubNear, type LngLat } from "@/lib/kit/route";
+import { hubNear, type LngLat } from "@/lib/kit/route";
 
 const ROUTE_KEY = "lapi.kit.route";
 const LOCATE_TIMEOUT_MS = 15_000;
+
+/** Asks the app's own /api/walk for a street route; throws when it has none. */
+async function fetchRoute(from: LngLat, to: LngLat): Promise<LngLat[]> {
+  const q = (p: LngLat) => `${p[0].toFixed(6)},${p[1].toFixed(6)}`;
+  const res = await fetch(`/api/walk?from=${q(from)}&to=${q(to)}`);
+  if (!res.ok) throw new Error(`/api/walk answered ${res.status}`);
+  const { route } = (await res.json()) as { route?: LngLat[] };
+  if (!Array.isArray(route) || route.length < 2) throw new Error("/api/walk returned no route");
+  return route;
+}
 
 /** The route saved when the robot was sent, so a reload shows the same one. */
 export function storedRoute(): LngLat[] | null {
@@ -36,7 +46,7 @@ export function forgetRobotRoute() {
  * Asks the browser for the person's location and plans the robot's walking route to it from a hub
  * nearby. Resolves to the route once it is saved, or to "denied" when the person refuses or no
  * position comes (the robot is not sent then). A browser without geolocation gets the demo route in
- * Tapiola; a router failure gets a straight line from the hub.
+ * Tapiola; if no router answers, a straight line from the hub.
  */
 export function locateAndRoute(): Promise<LngLat[] | "denied"> {
   return new Promise((resolve) => {
@@ -51,7 +61,7 @@ export function locateAndRoute(): Promise<LngLat[] | "denied"> {
         const hub = hubNear(home);
         let route: LngLat[];
         try {
-          route = await fetchWalkingRoute(hub, home);
+          route = await fetchRoute(hub, home);
         } catch (e) {
           console.warn("walking route unavailable, using a straight line", e);
           route = [hub, home];
