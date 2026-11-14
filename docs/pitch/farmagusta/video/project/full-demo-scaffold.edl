@@ -1,0 +1,58 @@
+TITLE: FARMAGUSTA DEMO SCAFFOLD V01
+FCM: NON-DROP FRAME
+
+001  AX       V     C        00:00:00:00 00:00:02:20 00:00:00:00 00:00:02:20
+* FROM CLIP NAME: opening-hook.mp4
+* SOURCE FILE: selects/opening-hook.mp4
+
+002  AX       V     C        00:00:00:00 00:00:03:04 00:00:02:20 00:00:06:00
+* FROM CLIP NAME: brand.mp4
+* SOURCE FILE: project/graphics/brand.mp4
+
+003  AX       V     C        00:00:00:00 00:00:08:00 00:00:06:00 00:00:14:00
+* FROM CLIP NAME: problem.mp4
+* SOURCE FILE: project/graphics/problem.mp4
+
+004  AX       V     C        00:00:00:00 00:00:08:00 00:00:14:00 00:00:22:00
+* FROM CLIP NAME: invitation.mp4
+* SOURCE FILE: project/graphics/invitation.mp4
+
+005  AX       V     C        00:00:00:00 00:00:12:00 00:00:22:00 00:00:34:00
+* FROM CLIP NAME: scan.mp4
+* SOURCE FILE: project/graphics/scan.mp4
+
+006  AX       V     C        00:00:00:00 00:00:16:00 00:00:34:00 00:00:50:00
+* FROM CLIP NAME: home-test.mp4
+* SOURCE FILE: project/graphics/home-test.mp4
+
+007  AX       V     C        00:00:00:00 00:00:14:00 00:00:50:00 00:01:04:00
+* FROM CLIP NAME: booking.mp4
+* SOURCE FILE: project/graphics/booking.mp4
+
+008  AX       V     C        00:00:00:00 00:00:14:00 00:01:04:00 00:01:18:00
+* FROM CLIP NAME: tracking.mp4
+* SOURCE FILE: project/graphics/tracking.mp4
+
+009  AX       V     C        00:00:00:00 00:00:20:00 00:01:18:00 00:01:38:00
+* FROM CLIP NAME: hospital.mp4
+* SOURCE FILE: project/graphics/hospital.mp4
+
+010  AX       V     C        00:00:00:00 00:00:04:00 00:01:38:00 00:01:42:00
+* FROM CLIP NAME: robot-approach.mp4
+* SOURCE FILE: selects/robot-approach.mp4
+
+011  AX       V     C        00:00:00:00 00:00:05:05 00:01:42:00 00:01:47:05
+* FROM CLIP NAME: handoff.mp4
+* SOURCE FILE: selects/handoff.mp4
+
+012  AX       V     C        00:00:00:00 00:00:04:05 00:01:47:05 00:01:51:10
+* FROM CLIP NAME: departure.mp4
+* SOURCE FILE: selects/departure.mp4
+
+013  AX       V     C        00:00:00:00 00:00:04:00 00:01:51:10 00:01:55:10
+* FROM CLIP NAME: final-departure.mp4
+* SOURCE FILE: selects/final-departure.mp4
+
+014  AX       V     C        00:00:00:00 00:00:04:14 00:01:55:10 00:02:00:00
+* FROM CLIP NAME: closing.mp4
+* SOURCE FILE: project/graphics/closing.mp4

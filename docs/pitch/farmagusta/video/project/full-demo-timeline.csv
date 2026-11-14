@@ -1,0 +1,15 @@
+section,timeline_in,timeline_out,duration_seconds,asset,placeholder
+opening-hook,00:00:00:00,00:00:02:20,2.8333333333333335,selects/opening-hook.mp4,False
+brand,00:00:02:20,00:00:06:00,3.1666666666666665,project/graphics/brand.mp4,False
+problem,00:00:06:00,00:00:14:00,8.0,project/graphics/problem.mp4,False
+invitation,00:00:14:00,00:00:22:00,8.0,project/graphics/invitation.mp4,False
+scan,00:00:22:00,00:00:34:00,12.0,project/graphics/scan.mp4,True
+home-test,00:00:34:00,00:00:50:00,16.0,project/graphics/home-test.mp4,True
+booking,00:00:50:00,00:01:04:00,14.0,project/graphics/booking.mp4,True
+tracking,00:01:04:00,00:01:18:00,14.0,project/graphics/tracking.mp4,True
+hospital,00:01:18:00,00:01:38:00,20.0,project/graphics/hospital.mp4,True
+robot-approach,00:01:38:00,00:01:42:00,4.0,selects/robot-approach.mp4,False
+handoff,00:01:42:00,00:01:47:05,5.208333333333333,selects/handoff.mp4,False
+departure,00:01:47:05,00:01:51:10,4.208333333333333,selects/departure.mp4,False
+final-departure,00:01:51:10,00:01:55:10,4.0,selects/final-departure.mp4,False
+closing,00:01:55:10,00:02:00:00,4.583333333333333,project/graphics/closing.mp4,False

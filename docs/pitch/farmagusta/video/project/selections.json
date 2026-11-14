@@ -1,0 +1,43 @@
+{
+  "fps": 24,
+  "size": [
+    1920,
+    1080
+  ],
+  "url": "https://farmagusta.vercel.app/kit",
+  "selections": [
+    {
+      "name": "opening-hook",
+      "source": "IMG_0205.MOV",
+      "start_seconds": 8.8,
+      "duration_seconds": 2.8
+    },
+    {
+      "name": "handoff",
+      "source": "IMG_0207.MOV",
+      "start_seconds": 1.2,
+      "duration_seconds": 5.2
+    },
+    {
+      "name": "departure",
+      "source": "IMG_0208.MOV",
+      "start_seconds": 14.4,
+      "duration_seconds": 4.2
+    },
+    {
+      "name": "final-departure",
+      "source": "IMG_0210.MOV",
+      "start_seconds": 15.8,
+      "duration_seconds": 4.0
+    },
+    {
+      "name": "robot-approach",
+      "source": "IMG_0209.MOV",
+      "start_seconds": 2.0,
+      "duration_seconds": 4.0
+    }
+  ],
+  "audio": "Muted rough cut; raw source audio remains in originals.",
+  "middle_slate_seconds": 6,
+  "note": "Insert forthcoming demo clips between opening and ending; the six-second slate is not the planned duration of the final middle."
+}
