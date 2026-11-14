@@ -8,10 +8,19 @@ import { PeerTwin } from "@/components/PeerTwin";
 import { TrendChart } from "@/components/TrendChart";
 import { diagnosePathway } from "@/lib/fingerprint";
 import { PathwayFingerprint } from "@/components/PathwayFingerprint";
-import { WhatItTakes } from "@/components/WhatItTakes";
+import { ScenarioTool, type ScenarioProgramme } from "@/components/ScenarioTool";
+import { SCENARIO_DEFAULTS } from "@/data/scenarioDefaults";
 import { LeftBehind } from "@/components/LeftBehind";
+import { ReachThem } from "@/components/ReachThem";
+import { reachPlan } from "@/lib/reach";
+import { getReachDrafts } from "@/lib/reachDrafts";
+import { peoplePer1000ToReach } from "@/lib/impact";
 import { MEASURES } from "@/data/measureKit";
 import { MeasureKit } from "@/components/MeasureKit";
+import { PathwayFunnel } from "@/components/PathwayFunnel";
+import { DecisionBoard } from "@/components/DecisionBoard";
+import { loadPathway } from "@/lib/pathwayData";
+import { PATHWAY_COSTS } from "@/data/pathwayCosts";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
 import { Colophon } from "@/components/Colophon";
@@ -20,8 +29,8 @@ import { OpenOnHash } from "@/components/OpenOnHash";
 import { STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, host } from "@/components/format";
 import type { GapFacts, PathwayStage } from "@/lib/types";
 import {
-  ArrowLeft, BookOpen, CalendarClock, FileText, Gauge, Globe, Handshake, LineChart, Link2, ListChecks, Route, Ruler,
-  Sparkles, Target, TriangleAlert, UserRound, Users, type LucideIcon,
+  ArrowLeft, BookOpen, Filter, Megaphone, Scale, CalendarClock, FileText, Gauge, Globe, Handshake, LineChart, Link2, ListChecks, Route, Ruler,
+  SlidersHorizontal, Sparkles, Target, TriangleAlert, UserRound, Users, type LucideIcon,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -87,10 +96,39 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
   const screening = facts.filter((f) => f.target !== null && f.value !== null);
   const meets = screening.filter((f) => (f.gapToTarget ?? -1) >= 0).length;
 
+  const scenarioProgrammes: ScenarioProgramme[] = INDICATORS.flatMap((ind) => {
+    const f = facts.find((x) => x.indicatorId === ind.id);
+    if (!ind.target || !f || f.value === null) return [];
+    const d = SCENARIO_DEFAULTS[ind.id];
+    return [{
+      indicatorId: ind.id,
+      name: ind.nameEn.match(/^(\w+) cancer screening/i)?.[1] ?? ind.nameEn,
+      today: f.value,
+      national: f.national,
+      target: ind.target.value,
+      bestQuartile: f.bestQuartile,
+      costPerScreen: d?.costPerScreen ?? null,
+      cancersPer1000Screened: d?.cancersPer1000Screened ?? null,
+    }];
+  });
+
+  // The screening furthest below its target is where the reach kit starts.
+  const reachFact = screening
+    .filter((f) => (f.gapToTarget ?? 0) < 0)
+    .sort((a, b) => (a.gapToTarget as number) - (b.gapToTarget as number))[0];
+  const reachInd = reachFact ? INDICATORS.find((i) => i.id === reachFact.indicatorId) : undefined;
+  const reach = reachInd ? reachPlan(ds, regionId, reachInd, equity) : null;
+  const reachDrafts = reach && reachInd ? await getReachDrafts(reach, reachInd) : null;
+
+  const pathwayView = loadPathway(regionId);
+
   const parts: { id: string; icon: LucideIcon; label: string }[] = [
+    ...(pathwayView ? [{ id: "funnel", icon: Filter, label: "Where people fall off" }, { id: "decide", icon: Scale, label: "Decide" }] : []),
     { id: "path", icon: Route, label: "Pathway" },
+    { id: "what-if", icon: SlidersHorizontal, label: "What if" },
     { id: "rec", icon: ListChecks, label: "Next steps" },
     { id: "lb", icon: Users, label: "Left behind" },
+    { id: "reach", icon: Megaphone, label: "Reach them" },
     ...(peer && practices ? [{ id: "peer", icon: Handshake, label: "Learn from" }] : []),
     { id: "mk", icon: Ruler, label: "Measure" },
     { id: "ind", icon: LineChart, label: "Figures" },
@@ -140,6 +178,23 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         </ul>
       </nav>
 
+      {pathwayView && (
+        <>
+          <Part {...part("funnel")} title={`Where ${name} loses people`}>
+            <PathwayFunnel view={pathwayView} name={name} />
+          </Part>
+          <Part {...part("decide")} title={`Decide: options for ${name}`}>
+            <DecisionBoard
+              p={pathwayView.pathway}
+              order={pathwayView.breaks.map((b) => b.kind)}
+              defaults={PATHWAY_COSTS}
+              regionId={regionId}
+              name={name}
+            />
+          </Part>
+        </>
+      )}
+
       <Part {...part("path")} title="Where along the pathway">
         <PathwayFingerprint facts={facts} indicators={INDICATORS} />
         <div className="mt-6 max-w-2xl">
@@ -148,9 +203,19 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         <More label="What the pathway shows" className="mt-3">
           {stageNote} Referral and diagnosis have no public county figures, so nobody can see a gap there yet.
         </More>
-        <div className="mt-8">
-          <WhatItTakes facts={facts} indicators={INDICATORS} />
-        </div>
+      </Part>
+
+      <Part id="what-if" icon={SlidersHorizontal} title={`What if ${name} raised screening?`}>
+        <ScenarioTool programmes={scenarioProgrammes} />
+        <p className="mt-5 flex max-w-2xl items-start gap-2 text-sm">
+          <Gauge aria-hidden size={16} className="mt-0.5 shrink-0 text-muted" />
+          <span>
+            For breast screening, the{" "}
+            <a href={`/simulator?county=${regionId}`} className="link font-medium">screening simulator</a> goes one step
+            further: life-years gained, deaths averted and the cost per life-year of closing {name}&rsquo;s gap, with every
+            assumption adjustable.
+          </span>
+        </p>
       </Part>
 
       <Part {...part("rec")} title={`What ${name} could do next`}>
@@ -187,6 +252,21 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         <LeftBehind equity={equity} name={name} />
       </Part>
 
+      <Part {...part("reach")} title={`Reach them: ${name}`}>
+        {reachInd && reachFact ? (
+          <ReachThem
+            plan={reach}
+            drafts={reachDrafts}
+            programme={reachInd.nameEn.match(/^(\w+) cancer screening/i)?.[1] ?? reachInd.nameEn}
+            target={reachFact.target}
+            toTarget={peoplePer1000ToReach(reachFact.value, reachFact.target)}
+            name={name}
+          />
+        ) : (
+          <p className="max-w-2xl text-sm text-muted">Every screening with a published figure is at its target, so there is no group to reach first.</p>
+        )}
+      </Part>
+
       {peer && practices && (
         <Part {...part("peer")} title="A county to learn from">
           <PeerTwin
@@ -204,7 +284,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
         <MeasureKit regionId={regionId} sourceNo={sourceIndex.get(MEASURES[0].evidenceId)} />
       </Part>
 
-      <Part {...part("ind")} title="The five measures">
+      <Part {...part("ind")} title={`The ${INDICATORS.length} measures`}>
         {INDICATORS.map((ind, i) => {
           const f = facts[i];
           return (

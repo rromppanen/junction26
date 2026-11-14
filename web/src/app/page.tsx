@@ -21,6 +21,7 @@ const PHRASE: Record<string, { tab: string; inSentence: string }> = {
   "cervical-screening": { tab: "Cervical", inSentence: "cervical cancer screening attendance" },
   "breast-survival": { tab: "Breast cancer", inSentence: "five-year breast cancer survival" },
   "bowel-survival": { tab: "Bowel cancer", inSentence: "five-year bowel cancer survival" },
+  "cervical-survival": { tab: "Cervical cancer", inSentence: "five-year cervical cancer survival" },
 };
 
 // Measure tabs are grouped by pathway stage; these are the group names a reader sees.
