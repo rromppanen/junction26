@@ -5,7 +5,7 @@ import { ON_PAR_THRESHOLD, latestYear, rankCounties } from "@/lib/gap";
 import type { GapFacts, GapStatus, Indicator, PathwayStage } from "@/lib/types";
 import { CountyMap } from "@/components/CountyMap";
 import { NationalView } from "@/components/NationalView";
-import { earlyWarnings, languageGaps, nationalPathway } from "@/lib/national";
+import { earlyWarnings, improvers, languageGaps, nationalPathway } from "@/lib/national";
 import { COLORECTAL_SOURCE, REGISTRY, loadPathway } from "@/lib/pathwayData";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { DataBadge } from "@/components/DataBadge";
@@ -67,9 +67,9 @@ export default async function RadarPage({
 
   // National layer: Registry counts, plus early warnings across every screening programme at its latest year.
   const nationalPath = nationalPathway(REGISTRY.colorectal);
-  const warnings = earlyWarnings(
-    INDICATORS.filter((i) => i.target).flatMap((i) => rankCounties(ds, i, latestYear(ds, i))),
-  );
+  const screeningFacts = INDICATORS.filter((i) => i.target).flatMap((i) => rankCounties(ds, i, latestYear(ds, i)));
+  const warnings = earlyWarnings(screeningFacts);
+  const rising = improvers(screeningFacts);
   const countyList = ds.regions
     .filter((r) => r.kind === "county")
     .map((r) => ({ id: r.id, name: shortName(r.name) }))
@@ -139,6 +139,7 @@ export default async function RadarPage({
         n={nationalPath}
         languages={languageGaps(REGISTRY.groups)}
         warnings={warnings}
+        rising={rising}
         countyName={(id) => shortName(regionName.get(id) ?? String(id))}
         indicatorName={indName}
         example={example}

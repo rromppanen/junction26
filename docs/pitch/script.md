@@ -12,6 +12,8 @@ Finland's cancer strategy promises equal care in every county, but nobody can se
 
 ## 2:00 video
 
+The recording script is [video-script.md](video-script.md). It follows the deck's look and has a word budget and sources. The older table below is kept for reference.
+
 | Time | Screen | Voice-over |
 | --- | --- | --- |
 | 0:00–0:15 | Start page, national view | "One in five people with a positive bowel-screening test in Finland never gets the colonoscopy: 3,536 of 16,501 in 2023. Over a quarter of one cohort's bowel cancers were in people the programme lost." |
