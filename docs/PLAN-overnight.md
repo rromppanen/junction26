@@ -117,13 +117,27 @@ Reuse `EvidenceTag` so a reader can tell measured from modelled at a glance:
 
 | Item | Status | PR |
 | --- | --- | --- |
-| 1. National view, early warning, loop | planned | |
-| 1b. Capacity stress test | planned | |
-| 2. Memo with Goal 3 and option | planned | |
-| 3. Evidence labels | planned | |
-| 4. Women 50–69 from Statistics Finland | planned | |
-| 5. Smoke test | planned | |
-| 6. Deploy guide | planned | |
-| 7. Pitch script and Q&A | planned | |
-| 8. Simulator clarity | planned | |
-| 9. Re-score and hand-over | planned | |
+| 1. National view, early warning, loop | Done | #16 |
+| 1b. Capacity stress test | Done | #16 |
+| 2. Memo with Goal 3 and option | Done | #17 |
+| 3. Evidence labels | Done | #17 |
+| 4. Women 50–69 from Statistics Finland | Done: one simulator placeholder replaced with county data | #18 |
+| 5. Smoke test | Done: 71/71 pages pass locally | #17 |
+| 6. Deploy guide | Done: `docs/DEPLOY.md` | #17 |
+| 7. Pitch script and Q&A | Done: `docs/pitch/script.md` | #17 |
+| 8. Simulator clarity | Done | #17 |
+| 9. Re-score and hand-over | Done: `docs/research/2026-11-14-overnight-score.md` (3.2 → 3.8 for AstraZeneca) | #19 |
+
+Not done, and why:
+
+- **Sourced stage mix and mammography cost for the simulator.** No Finnish source found: Pohde's price list has no screening mammography price, and stage by attendance is published only for Sweden, Norway and Italy. Ask the mentors.
+- **Shortening the county page below the summary.** It would reorder teammates' sections; better done together.
+
+## Morning to-do for the team (needs a person)
+
+1. **Deploy** with `docs/DEPLOY.md` (Vercel login, `GEMINI_API_KEY`), then `npm run smoke -- <url>` and put the link in the README.
+2. **New Context.dev key** (the current one returns 401).
+3. **Decide the name**: Gap Radar, NULLPATH or ONCO-NATION. Change the README, app wordmark and pitch together.
+4. **Decide about Care Equity Lab (#6)**: keep out of the submission or name it clearly. Close #8 (the old standalone simulator).
+5. **Ask the mentors** for stage at diagnosis by screening attendance and the cost of a screening mammogram.
+6. **Rehearse** with `docs/pitch/script.md`; record the 2:00 video; build the deck PDF into `docs/pitch/`.
