@@ -105,11 +105,12 @@ describe("robot fleet", () => {
 describe("simulated households", () => {
   const slot = "Now";
 
-  it("books the longest-waiting sample first and never touches the phone user", () => {
+  it("sends one robot from every hub when the map is quiet, longest wait first, never for the phone user", () => {
     const me = sample("me", "Kallio", [["sampleTaken", T0 - 10 * 3_600_000]]);
     const older = sample("old", "Kontula", [["sampleTaken", T0 - 5 * 3_600_000]]);
     const newer = sample("new", "Malmi", [["sampleTaken", T0 - 3_600_000]]);
-    expect(simStep([me, older, newer], T0, "me", slot)).toEqual([{ sampleId: "old", event: { type: "pickupBooked", slot } }]);
+    const sameHub = sample("later", "Vuosaari", [["sampleTaken", T0 - 60_000]]);
+    expect(simStep([me, older, newer, sameHub], T0, "me", slot).map((a) => a.sampleId)).toEqual(["old", "new"]);
   });
 
   it("waits between bookings", () => {

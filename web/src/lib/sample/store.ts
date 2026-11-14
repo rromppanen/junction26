@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { addEvent, type Sample, type SampleEvent } from "./model";
 import { seedSamples } from "./seed";
 
-// v2: Helsinki-area demo data. A new key makes open browsers reseed instead of keeping the old people.
-const KEY = "lapi.demo.v2";
+// v3: larger Helsinki-area demo data. A new key makes open browsers reseed instead of keeping the old people.
+const KEY = "lapi.demo.v3";
 const CHANNEL = "lapi-demo";
 
 const EMPTY: Sample[] = [];

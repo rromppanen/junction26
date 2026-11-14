@@ -1,7 +1,7 @@
 import type { EventType, Lang, Sample } from "./model";
 
 /**
- * Invented demo people in the Helsinki capital region (Helsinki, Espoo, Vantaa).
+ * Invented demo people (about 100) in the Helsinki capital region (Helsinki, Espoo, Vantaa).
  * Most speak neither Finnish nor Swedish as their mother tongue: screening reaches
  * minority-language speakers least, so the demo shows how the nurse follows them.
  * The languages are among the largest foreign-language groups in the region.
@@ -111,8 +111,128 @@ const SPECS: Spec[] = [
       ["colonoscopyBooked", d(45), "Tue 09:00"], ["colonoscopyDone", d(30)]] },
 ];
 
+/**
+ * More households, written compactly: [name, age, municipality, area, mother tongue, interpreter?, state].
+ * An empty mother tongue means Finnish. Ids are x1, x2, … in this order; do not reorder.
+ */
+type Kind = "ready" | "invited" | "late" | "lab" | "positive" | "positiveLate" | "booked" | "negative";
+type Muni = "H" | "E" | "V";
+const MUNI = { H: "Helsinki", E: "Espoo", V: "Vantaa" } as const;
+
+const MORE: [string, number, Muni, string, string, boolean, Kind][] = [
+  // East Helsinki
+  ["Khadra M.", 61, "H", "Kontula", "Somali", true, "ready"],
+  ["Sergei N.", 68, "H", "Kontula", "Russian", false, "ready"],
+  ["Zahra H.", 57, "H", "Mellunmäki", "Dari", true, "ready"],
+  ["Ilir K.", 64, "H", "Mellunmäki", "Albanian", false, "ready"],
+  ["Mohamed I.", 70, "H", "Vuosaari", "Somali", true, "ready"],
+  ["Tatiana L.", 59, "H", "Meri-Rastila", "Russian", false, "ready"],
+  ["Nasrin F.", 62, "H", "Meri-Rastila", "Persian", false, "ready"],
+  ["Jamal S.", 66, "H", "Puotila", "Arabic", true, "ready"],
+  ["Sirje T.", 60, "H", "Herttoniemi", "Estonian", false, "ready"],
+  ["Tesfay G.", 58, "H", "Roihuvuori", "Tigrinya", true, "ready"],
+  ["Maria S.", 63, "H", "Laajasalo", "Tagalog", false, "ready"],
+  ["Ayaan W.", 65, "H", "Itäkeskus", "Somali", true, "late"],
+  ["Farid N.", 72, "H", "Myllypuro", "Dari", true, "positiveLate"],
+  ["Galina R.", 69, "H", "Vuosaari", "Russian", false, "lab"],
+  ["Abdi Y.", 60, "V", "Länsimäki", "Somali", false, "invited"],
+  // Central and west Helsinki
+  ["Chen L.", 62, "H", "Pasila", "Chinese", false, "ready"],
+  ["Ivan D.", 67, "H", "Kallio", "Russian", false, "ready"],
+  ["Sunita R.", 58, "H", "Sörnäinen", "Nepali", false, "ready"],
+  ["Paulo C.", 61, "H", "Lauttasaari", "Portuguese", false, "ready"],
+  ["Anh T.", 66, "H", "Munkkiniemi", "Vietnamese", true, "ready"],
+  ["Rashid K.", 59, "H", "Pitäjänmäki", "Bengali", false, "ready"],
+  ["Malee S.", 63, "H", "Pasila", "Thai", true, "ready"],
+  ["Seppo V.", 70, "H", "Munkkiniemi", "", false, "negative"],
+  ["Halima D.", 64, "H", "Kallio", "Somali", true, "booked"],
+  // North-east Helsinki
+  ["Omar B.", 68, "H", "Malmi", "Arabic", true, "ready"],
+  ["Lyudmila P.", 71, "H", "Malmi", "Russian", false, "ready"],
+  ["Dilnoza A.", 57, "H", "Pihlajamäki", "Uzbek", false, "ready"],
+  ["Hussein J.", 62, "H", "Jakomäki", "Arabic", true, "ready"],
+  ["Sahra G.", 60, "H", "Jakomäki", "Somali", true, "ready"],
+  ["Priit M.", 65, "H", "Tapanila", "Estonian", false, "ready"],
+  ["Rajesh P.", 59, "H", "Oulunkylä", "Hindi", false, "ready"],
+  ["Mulugeta T.", 66, "H", "Puistola", "Amharic", true, "ready"],
+  ["Azad R.", 63, "H", "Puistola", "Kurdish", false, "late"],
+  ["Ritva H.", 68, "H", "Oulunkylä", "", false, "invited"],
+  // Vantaa
+  ["Natalia V.", 61, "V", "Hakunila", "Russian", false, "ready"],
+  ["Shukri A.", 58, "V", "Hakunila", "Somali", true, "ready"],
+  ["Besnik H.", 67, "V", "Koivukylä", "Albanian", true, "ready"],
+  ["Kristiina O.", 64, "V", "Koivukylä", "Estonian", false, "ready"],
+  ["Tran V. M.", 70, "V", "Tikkurila", "Vietnamese", true, "ready"],
+  ["Imran S.", 60, "V", "Tikkurila", "Urdu", false, "ready"],
+  ["Grace N.", 59, "V", "Korso", "Swahili", false, "ready"],
+  ["Andrei C.", 66, "V", "Korso", "Romanian", false, "ready"],
+  ["Maryam K.", 62, "V", "Hakunila", "Persian", true, "positive"],
+  ["Ibrahim E.", 71, "V", "Tikkurila", "Arabic", true, "late"],
+  ["Oksana H.", 57, "V", "Myyrmäki", "Ukrainian", false, "ready"],
+  ["Deniz A.", 63, "V", "Myyrmäki", "Turkish", false, "ready"],
+  ["Wei Z.", 68, "V", "Martinlaakso", "Chinese", true, "ready"],
+  ["Samuel O.", 60, "V", "Martinlaakso", "Yoruba", false, "ready"],
+  ["Jelena M.", 65, "V", "Kivistö", "Serbian", false, "ready"],
+  ["Mustafa C.", 69, "V", "Myyrmäki", "Kurdish", true, "booked"],
+  // North-west Helsinki and Leppävaara
+  ["Hawa B.", 61, "H", "Malminkartano", "Somali", true, "ready"],
+  ["Pavel K.", 64, "H", "Kannelmäki", "Russian", false, "ready"],
+  ["Lakshmi N.", 58, "E", "Leppävaara", "Tamil", false, "ready"],
+  ["Amir T.", 67, "H", "Kannelmäki", "Persian", false, "lab"],
+  // Espoo
+  ["Zhang M.", 60, "E", "Matinkylä", "Chinese", false, "ready"],
+  ["Fatima E.", 63, "E", "Matinkylä", "Arabic", true, "ready"],
+  ["Svetlana G.", 66, "E", "Espoonlahti", "Russian", false, "ready"],
+  ["Bashir A.", 59, "E", "Kivenlahti", "Dari", true, "ready"],
+  ["Jaan P.", 70, "E", "Kivenlahti", "Estonian", false, "ready"],
+  ["Anil K.", 62, "E", "Olari", "Hindi", false, "ready"],
+  ["Sofia R.", 57, "E", "Tapiola", "Spanish", false, "ready"],
+  ["Nimo H.", 64, "E", "Espoon keskus", "Somali", true, "ready"],
+  ["Petrit D.", 68, "E", "Espoon keskus", "Albanian", true, "positiveLate"],
+  ["Yuki T.", 61, "E", "Tapiola", "Japanese", false, "negative"],
+  ["Björn S.", 69, "E", "Olari", "Swedish", false, "invited"],
+];
+
+function moreEvents(kind: Kind, i: number): [EventType, number, string?][] {
+  const j = i % 5; // spreads dates a little so rows do not all read the same
+  switch (kind) {
+    case "ready":
+      return [["invited", d(7 + j)], ["sampleTaken", 0.5 + ((i * 37) % 70) / 10]];
+    case "invited":
+      return [["invited", d(2 + j)]];
+    case "late":
+      return [["invited", d(17 + j * 3)], ["reminderSent", d(5 + j)]];
+    case "lab":
+      return [["invited", d(12 + j)], ["sampleTaken", d(3)], ["pickedUp", d(2)], ["atLab", d(2)]];
+    case "positive":
+      return [["invited", d(28 + j)], ["sampleTaken", d(16)], ["pickedUp", d(15)], ["atLab", d(15)], ["resultPositive", d(2 + (j % 3))]];
+    case "positiveLate":
+      return [["invited", d(36 + j)], ["sampleTaken", d(26)], ["pickedUp", d(24)], ["atLab", d(24)], ["resultPositive", d(8 + j)]];
+    case "booked":
+      return [["invited", d(40 + j)], ["sampleTaken", d(30)], ["pickedUp", d(28)], ["atLab", d(28)], ["resultPositive", d(13)],
+        ["colonoscopyBooked", d(11), "Wed 25 Nov 10:30"]];
+    case "negative":
+      return [["invited", d(44 + j)], ["sampleTaken", d(36)], ["pickedUp", d(34)], ["atLab", d(34)], ["resultNegative", d(19)]];
+  }
+}
+
+const ALL: Spec[] = [
+  ...SPECS,
+  ...MORE.map(([name, age, muni, area, tongue, interp, kind], i): Spec => ({
+    id: `x${i + 1}`,
+    name,
+    age,
+    municipality: MUNI[muni],
+    area,
+    lang: tongue === "" || tongue === "Estonian" ? "fi" : tongue === "Swedish" ? "sv" : "en",
+    ...(tongue && tongue !== "Swedish" ? { homeLanguage: tongue } : {}),
+    ...(interp ? { interpreter: tongue } : {}),
+    events: moreEvents(kind, i),
+  })),
+];
+
 export function seedSamples(now: number): Sample[] {
-  return SPECS.map((p) => ({
+  return ALL.map((p) => ({
     id: p.id,
     person: {
       id: p.id,

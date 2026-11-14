@@ -13,7 +13,7 @@ import { seedSamples } from "./seed";
 
 const DAY = 86_400_000;
 const T0 = 1_000_000_000_000;
-const person = { id: "p", name: "Test T.", age: 60, municipality: "Lahti", lang: "fi" as const };
+const person = { id: "p", name: "Test T.", age: 60, municipality: "Helsinki", lang: "fi" as const };
 const mk = (...events: [EventType, number, string?][]): Sample => ({
   id: "p",
   person,

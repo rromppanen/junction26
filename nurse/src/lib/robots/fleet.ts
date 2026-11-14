@@ -43,13 +43,33 @@ export const AREAS: Record<string, { at: LatLng; hub: HubId }> = {
   "Matinkylä": { at: [60.1596, 24.7380], hub: "matinkyla" },
   Espoonlahti: { at: [60.1480, 24.6580], hub: "matinkyla" },
   "Espoon keskus": { at: [60.2050, 24.6560], hub: "matinkyla" },
+  Pasila: { at: [60.1990, 24.9330], hub: "meilahti" },
+  Munkkiniemi: { at: [60.1990, 24.8760], hub: "meilahti" },
+  Lauttasaari: { at: [60.1600, 24.8800], hub: "meilahti" },
+  "Pitäjänmäki": { at: [60.2230, 24.8600], hub: "meilahti" },
+  Puotila: { at: [60.2150, 25.0950], hub: "itakeskus" },
+  Herttoniemi: { at: [60.1950, 25.0300], hub: "itakeskus" },
+  Roihuvuori: { at: [60.1980, 25.0530], hub: "itakeskus" },
+  Laajasalo: { at: [60.1720, 25.0450], hub: "itakeskus" },
+  "Meri-Rastila": { at: [60.2040, 25.1200], hub: "itakeskus" },
+  "Jakomäki": { at: [60.2610, 25.0760], hub: "malmi" },
+  Tapanila: { at: [60.2640, 25.0300], hub: "malmi" },
+  "Oulunkylä": { at: [60.2290, 24.9640], hub: "malmi" },
+  Puistola: { at: [60.2740, 25.0400], hub: "malmi" },
+  Korso: { at: [60.3510, 25.0770], hub: "tikkurila" },
+  Martinlaakso: { at: [60.2780, 24.8500], hub: "myyrmaki" },
+  Malminkartano: { at: [60.2480, 24.8610], hub: "myyrmaki" },
+  "Kivistö": { at: [60.3150, 24.8440], hub: "myyrmaki" },
+  Tapiola: { at: [60.1760, 24.8050], hub: "matinkyla" },
+  Olari: { at: [60.1770, 24.7370], hub: "matinkyla" },
+  Kivenlahti: { at: [60.1530, 24.6360], hub: "matinkyla" },
 };
 
 /** Where the map opens: the capital region. */
 export const MAP_CENTER: LatLng = [60.225, 24.92];
 
 export type Robot = { id: string; name: string; hub: HubId };
-const PER_HUB: [HubId, number][] = [["meilahti", 2], ["itakeskus", 3], ["malmi", 2], ["tikkurila", 2], ["myyrmaki", 2], ["matinkyla", 2]];
+const PER_HUB: [HubId, number][] = [["meilahti", 4], ["itakeskus", 6], ["malmi", 5], ["tikkurila", 5], ["myyrmaki", 5], ["matinkyla", 5]];
 export const FLEET: Robot[] = PER_HUB.flatMap(([hub, n]) => Array.from({ length: n }, () => hub)).map((hub, i) => ({
   id: `r${i + 1}`,
   name: `Robot ${i + 1}`,
@@ -232,11 +252,12 @@ export function readyForPickup(samples: Sample[], now: number): Sample[] {
 
 // ---- Simulated other households -------------------------------------------------------------
 
-/** One household that does not come to the door, so the "waiting too long" flag shows. */
-export const NO_ANSWER_ID = "p24";
+/** Households that are slow to come to the door, so the "waiting too long" flag shows. */
+export const NO_ANSWER_IDS = ["p24", "x5", "x36", "x56"];
+export const NO_ANSWER_ID = NO_ANSWER_IDS[0];
 const NO_ANSWER_MS = 75_000;
-/** Gap between simulated bookings, so robots leave one at a time. */
-export const DISPATCH_GAP_MS = 9_000;
+/** Gap between simulated bookings, so robots leave one at a time. About 16 are out at once. */
+export const DISPATCH_GAP_MS = 3_000;
 
 export type SimAction = { sampleId: string; event: { type: "pickupBooked"; slot: string } | { type: "pickedUp" } };
 
@@ -251,15 +272,25 @@ export function simStep(samples: Sample[], now: number, me: string, slotLabel: s
 
   for (const t of trips) {
     if (t.sampleId === me || t.leftAt !== undefined) continue;
-    const delay = t.sampleId === NO_ANSWER_ID ? NO_ANSWER_MS : 3_000 + (hash(t.sampleId) % 8) * 1_000;
+    const delay = NO_ANSWER_IDS.includes(t.sampleId) ? NO_ANSWER_MS : 3_000 + (hash(t.sampleId) % 8) * 1_000;
     if (now >= t.bookedAt + ROBOT_TRAVEL_MS + delay) actions.push({ sampleId: t.sampleId, event: { type: "pickedUp" } });
   }
 
   const lastBooking = Math.max(-Infinity, ...trips.filter((t) => t.sampleId !== me).map((t) => t.bookedAt));
-  if (now - lastBooking >= DISPATCH_GAP_MS) {
-    const idle = new Set(fleetAt(trips, now).filter((v) => v.status.kind === "idle").map((v) => v.robot.hub));
-    const next = readyForPickup(samples, now).find((s) => s.id !== me && idle.has(hubOf(s.person)));
-    if (next) actions.push({ sampleId: next.id, event: { type: "pickupBooked", slot: slotLabel } });
+  const fleet = fleetAt(trips, now);
+  const idle = new Set(fleet.filter((v) => v.status.kind === "idle").map((v) => v.robot.hub));
+  const waiting = readyForPickup(samples, now).filter((s) => s.id !== me && idle.has(hubOf(s.person)));
+  if (fleet.every((v) => v.status.kind === "idle" || v.status.trip.sampleId === me) && now - lastBooking >= DISPATCH_GAP_MS) {
+    // Quiet map (page just opened or demo reset): send one robot from every hub at once.
+    const seen = new Set<HubId>();
+    for (const s of waiting) {
+      const hub = hubOf(s.person);
+      if (seen.has(hub)) continue;
+      seen.add(hub);
+      actions.push({ sampleId: s.id, event: { type: "pickupBooked", slot: slotLabel } });
+    }
+  } else if (now - lastBooking >= DISPATCH_GAP_MS && waiting[0]) {
+    actions.push({ sampleId: waiting[0].id, event: { type: "pickupBooked", slot: slotLabel } });
   }
   return actions;
 }
