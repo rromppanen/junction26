@@ -91,3 +91,14 @@ export function CheckIllustration({ animate, ...props }: P & { animate?: boolean
     </Base>
   );
 }
+
+/** A clinic building with a cross. */
+export function ClinicIllustration(props: P) {
+  return (
+    <Base {...props}>
+      <path d="M12 62V24l24-12 24 12v38z" />
+      <path d="M36 28v14M29 35h14" />
+      <path d="M30 62V52h12v10" />
+    </Base>
+  );
+}
