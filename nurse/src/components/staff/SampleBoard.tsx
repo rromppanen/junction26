@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, RotateCcw } from "lucide-react";
+import { NurseNav } from "@/components/NurseNav";
 import { Wordmark } from "@/components/Wordmark";
 import { flagsOf, stageOf, STAGES_FOR_BOARD, type EventType } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
@@ -88,6 +89,7 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
         <div className="flex items-center gap-3">
           <Wordmark />
           <span className="text-sm text-muted">Screening nurse</span>
+          <NurseNav />
         </div>
         <button type="button" className={BTN} onClick={() => { reset(); setSelected(null); clearBusy(); setStatus("Demo reset"); }}>
           <RotateCcw size={16} aria-hidden /> Reset demo

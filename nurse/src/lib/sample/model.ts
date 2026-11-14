@@ -49,7 +49,7 @@ export type Stage =
 
 export const ROBOT_TRAVEL_MS = 20_000;
 const DAY_MS = 86_400_000;
-const ROBOT_WAIT_FLAG_MS = 60_000;
+export const ROBOT_WAIT_FLAG_MS = 60_000;
 
 /** Milestone events, in order; later wins. Reminders and nurse calls are not milestones. */
 const MILESTONE_RANK: Partial<Record<EventType, number>> = {

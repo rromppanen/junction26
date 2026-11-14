@@ -25,3 +25,10 @@ npm run smoke -- http://localhost:3000   # loads /nurse through the main app
 ## Relation to web/
 
 The board components (`src/components/staff/`) and the sample model and store (`src/lib/sample/`) are copies from `web/`. The old `/staff` page there still works, so for now a fix to the shared logic goes into both places. Keep the storage key `lapi.demo.v1` and the channel name `lapi-demo` identical in both apps, or the live sync stops.
+
+## Pages
+
+- `/nurse`: the board, with every sample and the stuck ones flagged.
+- `/nurse/robots`: the pickup robots on a map of Päijät-Häme, with a Helsinki inset. Each robot shows where it is, its route, and whether it is on the way, at the door, waiting too long or returning. The page also lists samples taken with no pickup booked, and recent trips.
+
+The samples hold no robots. `src/lib/robots/fleet.ts` builds the fleet from the sample events: six robots, four at the Lahti lab and two at the Helsinki hub. Each pickup booking goes to a free robot from the person's depot, so every tab shows the same assignment.
