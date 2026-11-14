@@ -47,3 +47,29 @@ The map loads from the internet when the page opens. Only map tile coordinates a
 - Street routes: the FOSSGIS OSRM walking router at routing.openstreetmap.de, using OpenStreetMap data. Routes are cached in `localStorage`. If the router is unreachable, the map draws a curve instead.
 
 Both services are fine for a demo, but not for production volume. Before a real deployment, pick a provider with terms that fit.
+
+## Samples waiting for a nurse
+
+When a robot is back at its hub with a sample, the sample gets the flag "Sample has arrived: collect it from the robot and register it at the lab". The board shows the flag and a **Collected and registered at the lab** button. The robots page lists the waiting samples per hub, with one button per hub, and turns the hub orange on the map.
+
+This is where `nurse/` differs from `web/` on purpose: in `web/`, putting the sample in the robot registers it at the lab at once (`store.ts`). So the phone user's own sample skips this step, and the flag exists only in the nurse app's copy of `model.ts`.
+
+The map zooms with the scroll wheel, a pinch or the + and − buttons. **Whole region** zooms back out.
+
+## Robot speed
+
+Simulated robots drive at about 6 km/h, a typical speed for sidewalk delivery robots, so a trip takes 5 to 40 minutes each way depending on the distance. Each booking stores its own driving time (`travelMs` on the `pickupBooked` event), and the board's "on the way" and "at the door" stages use it. The **Speed** selector on the robots page runs new trips 10 or 60 times faster for a demo.
+
+When the page opens on a quiet map, up to three robots per hub are booked as if they had left earlier, so the fleet is already part-way to its homes. After that, one new booking is made every 3 minutes in real time (every 3 seconds at 60×).
+
+The phone user's own robot still takes the fixed 20 seconds from `web/`, so the phone demo stays short. The earlier figures in this file (a robot every 3 seconds, about three minutes of samples) describe the 60× speed.
+
+## Anonymous destinations and demo speed
+
+The robots page and map never show a person's name. Each pickup has a code such as "Pickup 4821" (`pickupCode` in `fleet.ts`), and the page shows the code, the neighbourhood and the language. The board shows the same code next to the person for samples in the pickup steps, so a nurse can match them.
+
+The **Speed** selector now offers Real time, Demo speed (20× faster, the default) and 60×. At demo speed a trip takes under two minutes each way and a new booking is made every 9 seconds.
+
+## Look
+
+The nurse app uses the same HUS styling as the user app in `web/`: `globals.css` is a copy of `web/src/app/globals.css` (plus the map rules at the end), with Open Sans for text and Poppins for headings. The robots map follows the kit's tracking map: the road still to drive is brand blue with a white outline, the part behind is grey dots, and the destination is a house marker. When the theme changes in `web/`, copy the stylesheet again.
