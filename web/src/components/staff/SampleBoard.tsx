@@ -62,6 +62,83 @@ function colonoscopySlots(now: number): string[] {
 
 const timeFmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
+type Row = { s: Sample; stage: Stage; flags: ReturnType<typeof flagsOf> };
+
+const STAGE_LABEL: Record<Stage, string> = {
+  invited: "Invited",
+  sampleTaken: "Sample taken",
+  pickupBooked: "Pickup booked",
+  robotEnRoute: "Robot on the way",
+  robotAtDoor: "Robot at the door",
+  pickedUp: "Picked up",
+  atLab: "At lab",
+  negative: "Negative",
+  positive: "Positive",
+  colonoscopyBooked: "Colonoscopy booked",
+  done: "Done",
+};
+
+const BTN = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-rule bg-white px-3 py-2 text-sm font-medium hover:bg-surface disabled:opacity-50";
+
+function SampleActions({ row, now, busy, note, setNote, act }: {
+  row: Row;
+  now: number;
+  busy: boolean;
+  note: string;
+  setNote: (v: string) => void;
+  act: (row: Row, type: EventType, extra?: { note?: string; slot?: string }) => void;
+}) {
+  const open = row.stage !== "done" && row.stage !== "negative";
+  const btn = BTN;
+  const sel = row;
+  return (
+    <div className="mt-4 flex flex-col gap-2">
+      {open && (
+        <button type="button" className={btn} disabled={busy} onClick={() => act(row, "reminderSent")}>
+          <Send size={16} aria-hidden /> Send reminder
+        </button>
+      )}
+      {open && (
+        <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
+          <label className="sr-only" htmlFor={`call-note-${row.s.id}`}>Call note</label>
+          <input id={`call-note-${row.s.id}`} value={note} onChange={(e) => setNote(e.target.value)}
+            className="min-h-11 min-w-0 flex-1 rounded-lg border border-rule px-3 text-sm" />
+          <button type="button" className={btn} disabled={busy} onClick={() => act(row, "nurseCalled", { note })}>
+            <Phone size={16} aria-hidden /> Call
+          </button>
+        </div>
+      )}
+      {sel.stage === "atLab" && (
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium">Record lab result</p>
+          <button type="button" className={btn} disabled={busy} onClick={() => act(row, "resultNegative")}>
+            <FlaskConical size={16} aria-hidden /> No blood
+          </button>
+          <button type="button" className={btn} disabled={busy} onClick={() => act(row, "resultPositive")}>
+            <FlaskConical size={16} aria-hidden /> Blood found
+          </button>
+        </div>
+      )}
+      {sel.stage === "positive" && (
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium">Book colonoscopy</p>
+          {colonoscopySlots(now).map((slot) => (
+            <button key={slot} type="button" className={btn} disabled={busy}
+              onClick={() => act(row, "colonoscopyBooked", { slot })}>
+              <CalendarCheck size={16} aria-hidden /> {slot}
+            </button>
+          ))}
+        </div>
+      )}
+      {sel.stage === "colonoscopyBooked" && (
+        <button type="button" className={btn} disabled={busy} onClick={() => act(row, "colonoscopyDone")}>
+          <CheckCircle2 size={16} aria-hidden /> Mark colonoscopy done
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function SampleBoard() {
   const { samples, now, add, reset } = useSamples();
   const [mounted, setMounted] = useState(false);
@@ -85,19 +162,27 @@ export function SampleBoard() {
 
   const inProgress = rows.filter((r) => r.stage !== "negative" && r.stage !== "done").length;
   const flagged = rows.filter((r) => r.flags.length > 0).length;
-  const awaiting = rows.filter((r) => r.stage === "positive" || r.stage === "colonoscopyBooked").length;
+  const awaiting = rows.filter((r) => r.stage === "positive").length;
 
+  const live = rows.find((r) => r.s.id === ME) ?? null;
+  const latest = live ? [...live.s.events].sort((a, b) => b.at - a.at)[0] : undefined;
   const sel = rows.find((r) => r.s.id === selected) ?? null;
 
-  function act(type: EventType, extra: { note?: string; slot?: string } = {}) {
-    if (!sel || busy) return;
-    add(sel.s.id, { type, ...extra });
-    setStatus(`${EVENT_LABEL[type]}: ${sel.s.person.name}`);
+  function act(row: Row, type: EventType, extra: { note?: string; slot?: string } = {}) {
+    if (busy) return;
+    add(row.s.id, { type, ...extra });
+    setStatus(`${EVENT_LABEL[type]}: ${row.s.person.name}`);
     setBusy(true);
+    if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setBusy(false), 800);
   }
 
-  const btn = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-rule bg-white px-3 py-2 text-sm font-medium hover:bg-surface disabled:opacity-50";
+  function clearBusy() {
+    if (timer.current) clearTimeout(timer.current);
+    setBusy(false);
+  }
+
+  const btn = BTN;
 
   return (
     <main id="main-content" tabIndex={-1} className="min-h-dvh px-4 pb-12 sm:px-6">
@@ -106,7 +191,7 @@ export function SampleBoard() {
           <Wordmark />
           <span className="text-sm text-muted">Screening nurse</span>
         </div>
-        <button type="button" className={btn} onClick={() => { reset(); setSelected(null); setStatus("Demo reset"); }}>
+        <button type="button" className={btn} onClick={() => { reset(); setSelected(null); clearBusy(); setStatus("Demo reset"); }}>
           <RotateCcw size={16} aria-hidden /> Reset demo
         </button>
       </header>
@@ -130,6 +215,23 @@ export function SampleBoard() {
             </dl>
             <p className="sr-only" aria-live="polite">{status}</p>
 
+            {live && (
+              <section aria-label="Live sample (phone)" className="mt-4 rounded-xl border-2 border-brand bg-white p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand">Live sample (phone)</span>
+                  <h2 className="text-base font-semibold">{live.s.person.name}</h2>
+                  <span className="text-sm text-muted">Stage: {STAGE_LABEL[live.stage]}</span>
+                </div>
+                {latest && (
+                  <p className="mt-1 text-sm text-muted">Latest: {EVENT_LABEL[latest.type]}, {timeFmt.format(latest.at)}</p>
+                )}
+                {live.flags.map((f) => (
+                  <p key={f.kind} className="mt-2 rounded-md bg-behind-soft px-2 py-1 text-sm font-medium text-behind">{f.label}</p>
+                ))}
+                <SampleActions row={live} now={now} busy={busy} note={note} setNote={setNote} act={act} />
+              </section>
+            )}
+
             <div className="mt-5 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
               <div className="min-w-0 lg:overflow-x-auto lg:pb-2">
                 <div className="grid gap-4 lg:min-w-[70rem] lg:grid-cols-7 lg:gap-3">
@@ -150,7 +252,7 @@ export function SampleBoard() {
                                 <button
                                   type="button"
                                   aria-pressed={isSel}
-                                  onClick={() => setSelected(s.id)}
+                                  onClick={() => { if (s.id !== selected) clearBusy(); setSelected(s.id); }}
                                   className={`block w-full rounded-xl border bg-white p-3 text-left text-sm hover:bg-paper ${
                                     flags.length ? "border-behind" : "border-rule"
                                   } ${isSel ? "ring-2 ring-brand" : ""}`}
@@ -195,48 +297,7 @@ export function SampleBoard() {
                       <p key={f.kind} className="mt-2 rounded-md bg-behind-soft px-2 py-1 text-sm font-medium text-behind">{f.label}</p>
                     ))}
 
-                    <div className="mt-4 flex flex-col gap-2">
-                      {sel.stage !== "done" && sel.stage !== "negative" && (
-                        <button type="button" className={btn} disabled={busy} onClick={() => act("reminderSent")}>
-                          <Send size={16} aria-hidden /> Send reminder
-                        </button>
-                      )}
-                      <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
-                        <label className="sr-only" htmlFor="call-note">Call note</label>
-                        <input id="call-note" value={note} onChange={(e) => setNote(e.target.value)}
-                          className="min-h-11 min-w-0 flex-1 rounded-lg border border-rule px-3 text-sm" />
-                        <button type="button" className={btn} disabled={busy} onClick={() => act("nurseCalled", { note })}>
-                          <Phone size={16} aria-hidden /> Call
-                        </button>
-                      </div>
-                      {sel.stage === "atLab" && (
-                        <div className="flex flex-col gap-2">
-                          <p className="text-sm font-medium">Record lab result</p>
-                          <button type="button" className={btn} disabled={busy} onClick={() => act("resultNegative")}>
-                            <FlaskConical size={16} aria-hidden /> No blood
-                          </button>
-                          <button type="button" className={btn} disabled={busy} onClick={() => act("resultPositive")}>
-                            <FlaskConical size={16} aria-hidden /> Blood found
-                          </button>
-                        </div>
-                      )}
-                      {sel.stage === "positive" && (
-                        <div className="flex flex-col gap-2">
-                          <p className="text-sm font-medium">Book colonoscopy</p>
-                          {colonoscopySlots(now).map((slot) => (
-                            <button key={slot} type="button" className={btn} disabled={busy}
-                              onClick={() => act("colonoscopyBooked", { slot })}>
-                              <CalendarCheck size={16} aria-hidden /> {slot}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                      {sel.stage === "colonoscopyBooked" && (
-                        <button type="button" className={btn} disabled={busy} onClick={() => act("colonoscopyDone")}>
-                          <CheckCircle2 size={16} aria-hidden /> Mark colonoscopy done
-                        </button>
-                      )}
-                    </div>
+                    <SampleActions row={sel} now={now} busy={busy} note={note} setNote={setNote} act={act} />
 
                     <h3 className="mt-5 text-sm font-semibold">History</h3>
                     <ol className="mt-2 space-y-2 text-sm">
