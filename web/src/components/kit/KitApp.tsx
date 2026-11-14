@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Bell, Check, ChevronLeft, ChevronRight, Clock, ExternalLink, Globe, Loader2, MapPin, RotateCcw, X } from "lucide-react";
-import { ROBOT_TRAVEL_MS, robotProgress, stageOf, type SampleEvent } from "@/lib/sample/model";
+import { ROBOT_TRAVEL_MS, stageOf, type SampleEvent } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
 import {
   isKitLang, KIT_LANGS, langInfo, READ_MORE, ROBOT_ANIMS, SOURCES, STEP_ANIMS, TEXT,
@@ -24,6 +24,9 @@ const STEP_KEY = "lapi.kit.progress.v3";
 const CLICK_GUARD_MS = 350;
 /** Matches the window's closing animation in animations.css. */
 const WINDOW_CLOSE_MS = 380;
+/** How long the arrival check stays (time to read it), and its fade out; the fade matches animations.css. */
+const ARRIVAL_SHOW_MS = 2600;
+const ARRIVAL_FADE_MS = 500;
 
 /** The opening screens come before the sampling steps: -3 invitation and language, -2 what this is, -1 how it works. */
 const INVITE = -3;
@@ -47,6 +50,11 @@ function writeStored(key: string, value: string | null) {
   }
 }
 
+function lastOf(s: { events: SampleEvent[] }, type: SampleEvent["type"]): SampleEvent | undefined {
+  for (let i = s.events.length - 1; i >= 0; i--) if (s.events[i].type === type) return s.events[i];
+  return undefined;
+}
+
 /** The home-sample app a person opens from the QR code on their kit envelope. */
 export function KitApp() {
   const params = useSearchParams();
@@ -62,6 +70,8 @@ export function KitApp() {
   const [robotStep, setRobotStep] = useState(0);
   const [panel, setPanel] = useState<"why" | "lang" | null>(null);
   const [route, setRoute] = useState<LngLat[]>(ROBOT_ROUTE);
+  /** The moment the robot arrives: a check over the blurred map, long enough to read, then the hand-over steps. */
+  const [arrival, setArrival] = useState<"showing" | "leaving" | "done">("done");
   /** Booking waits for location: the robot is only sent once the person has allowed it. */
   const [locating, setLocating] = useState<"idle" | "asking" | "denied">("idle");
   const pending = useRef<{ label: string; at?: number } | null>(null);
@@ -103,6 +113,7 @@ export function KitApp() {
     setRobotStep(0);
     setPanel(null);
     setLocating("idle");
+    setArrival("done");
     pending.current = null;
     setRoute(ROBOT_ROUTE);
     setStoredLang(null);
@@ -140,6 +151,7 @@ export function KitApp() {
   useEffect(() => {
     if (stage === "robotAtDoor" && prevStage.current === "robotEnRoute") {
       setRobotStep(0);
+      setArrival("showing");
       try {
         navigator.vibrate?.([200, 100, 200]);
       } catch {
@@ -149,8 +161,14 @@ export function KitApp() {
     prevStage.current = stage;
   }, [stage]);
 
+  useEffect(() => {
+    if (arrival === "done") return;
+    const t = setTimeout(() => setArrival(arrival === "showing" ? "leaving" : "done"), arrival === "showing" ? ARRIVAL_SHOW_MS : ARRIVAL_FADE_MS);
+    return () => clearTimeout(t);
+  }, [arrival]);
+
   // Ignore taps right after a screen change, so a double tap cannot act on the next screen.
-  const screenKey = `${stage}:${step}:${robotStep}`;
+  const screenKey = `${stage}:${step}:${robotStep}:${arrival}`;
   const shownAt = useRef(0);
   useEffect(() => {
     shownAt.current = Date.now();
@@ -232,7 +250,6 @@ export function KitApp() {
           <p className="mt-3 leading-relaxed text-muted">{t.invitedSub}</p>
           <h2 className="mt-7 text-base font-semibold">{t.chooseLang}</h2>
           <div className="mt-3"><LanguageList value={lang} onChoose={chooseLang} /></div>
-          {!info.reviewed && <p className="mt-3 text-sm text-muted">{t.machineNote}</p>}
         </Body>
       );
     }
@@ -291,23 +308,13 @@ export function KitApp() {
         onRetry={() => pending.current && void book(pending.current.label, pending.current.at)} />;
     }
 
-    if (stage === "robotEnRoute") {
-      const p = robotProgress(me, now) ?? 0;
-      const mins = Math.ceil(((1 - p) * ROBOT_TRAVEL_MS) / 60_000);
+    // On the way, and for a moment after arriving: the map, with the arrival check over it once the robot is there.
+    if (stage === "robotEnRoute" || (stage === "robotAtDoor" && arrival !== "done")) {
+      const dispatchedAt = lastOf(me, "robotDispatched")?.at ?? now;
       return (
         <div className="relative flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1" dir="ltr">
-            <TrackingMap route={route} progress={p} labels={{ robot: t.onTheWay, home: t.home, hub: t.hub, error: t.mapError }} />
-          </div>
-          <section className="relative z-10 -mt-5 rounded-t-3xl bg-surface px-5 pb-5 pt-5 shadow-[0_-8px_24px_-12px_rgba(0,60,108,0.3)]" aria-live="polite">
-            <p className="text-sm font-semibold text-muted">{t.onTheWay}</p>
-            <h1 className="mt-1 text-2xl font-semibold text-brand-strong">{mins <= 1 ? t.almostThere : t.arrivesIn(mins)}</h1>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-rule" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(p * 100)}>
-              <div className="h-full rounded-full bg-brand transition-[width] duration-1000 ease-linear" style={{ width: `${p * 100}%` }} />
-            </div>
-            <p className="mt-2 text-sm text-muted">{t.from}</p>
-            <div className="mt-4"><Secondary onClick={guarded(() => act({ type: "robotArrived" }))}>{t.skip}</Secondary></div>
-          </section>
+          <LiveTracking route={route} dispatchedAt={dispatchedAt} t={t} />
+          {stage === "robotAtDoor" && <ArrivedMoment t={t} leaving={arrival === "leaving"} />}
         </div>
       );
     }
@@ -449,6 +456,58 @@ function InfoWindow({ title, closeLabel, onClose, children }: { title: string; c
   );
 }
 
+/**
+ * The robot on its way. Progress is computed every animation frame from the dispatch time, so the
+ * robot glides along the map and the bar fills smoothly instead of stepping once a second.
+ */
+function LiveTracking({ route, dispatchedAt, t }: { route: LngLat[]; dispatchedAt: number; t: Ui }) {
+  const [p, setP] = useState(() => Math.min(1, Math.max(0, (Date.now() - dispatchedAt) / ROBOT_TRAVEL_MS)));
+  useEffect(() => {
+    let raf = 0;
+    const frame = () => {
+      const next = Math.min(1, Math.max(0, (Date.now() - dispatchedAt) / ROBOT_TRAVEL_MS));
+      setP(next);
+      if (next < 1) raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, [dispatchedAt]);
+  const secs = Math.ceil(((1 - p) * ROBOT_TRAVEL_MS) / 1000);
+  return (
+    <>
+      <div className="min-h-0 flex-1" dir="ltr">
+        <TrackingMap route={route} progress={p} labels={{ robot: t.onTheWay, home: t.home, hub: t.hub, error: t.mapError }} />
+      </div>
+      <section className="relative z-10 -mt-5 rounded-t-3xl bg-surface px-5 pb-6 pt-5 shadow-[0_-8px_24px_-12px_rgba(0,60,108,0.3)]">
+        <p className="text-sm font-semibold text-muted">{t.onTheWay}</p>
+        <h1 className="mt-1 text-2xl font-semibold tabular-nums text-brand-strong" aria-live="polite">{secs <= 1 ? t.almostThere : t.arrivesIn(secs)}</h1>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-rule" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(p * 100)}>
+          <div className="h-full rounded-full bg-brand" style={{ width: `${p * 100}%` }} />
+        </div>
+        <p className="mt-2 text-sm text-muted">{t.from}</p>
+        <p className="mt-3 text-xs text-muted">{t.spedUp}</p>
+      </section>
+    </>
+  );
+}
+
+/** The robot is here: the map softens behind a check and a few words, then the app moves on by itself. */
+function ArrivedMoment({ t, leaving }: { t: Ui; leaving: boolean }) {
+  return (
+    <div role="status" className={`kit-arrived absolute inset-0 z-20 flex items-center justify-center ${leaving ? "kit-arrived-out" : ""}`}>
+      <div className="kit-arrived-veil absolute inset-0 bg-white/40 backdrop-blur-[6px]" aria-hidden />
+      <div className="kit-arrived-card relative mx-8 flex flex-col items-center gap-4 rounded-3xl bg-surface/90 px-8 py-8 text-center shadow-2xl">
+        <svg viewBox="0 0 64 64" className="size-20" aria-hidden>
+          <circle cx={32} cy={32} r={30} fill="var(--brand)" />
+          <path d="M19 33 l9 9 l17 -19" fill="none" stroke="#fff" strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" pathLength={1} className="kit-arrived-tick" />
+        </svg>
+        <p className="text-2xl font-semibold text-brand-strong">{t.arrived}</p>
+        <p className="text-muted">{t.arrivedBody}</p>
+      </div>
+    </div>
+  );
+}
+
 function Booking({ lang, t, now, locating, onBook, onRetry }: {
   lang: KitLang; t: Ui; now: number; locating: "idle" | "asking" | "denied"; onBook: (label: string, at?: number) => void; onRetry: () => void;
 }) {
@@ -517,8 +576,4 @@ function Booking({ lang, t, now, locating, onBook, onRetry }: {
 
 function Primary({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return <button type="button" onClick={onClick} className="primary-action !min-h-14 w-full !rounded-xl !text-base">{children}</button>;
-}
-
-function Secondary({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
-  return <button type="button" onClick={onClick} className="min-h-12 w-full rounded-xl border border-rule text-sm font-semibold text-muted hover:bg-brand-soft">{children}</button>;
 }
