@@ -30,22 +30,30 @@ const ALIASES: Record<Exclude<Field, "ignore">, string[]> = {
 
 export function suggestMapping(headers: string[]): Mapping {
   const used = new Set<Field>();
-  const m: Mapping = {};
+  const entries: [string, Field][] = [];
   for (const h of headers) {
-    const key = h.trim().toLowerCase();
+    const key = h.normalize("NFC").trim().toLowerCase();
     const hit = (Object.keys(ALIASES) as Exclude<Field, "ignore">[]).find(f => !used.has(f) && ALIASES[f].includes(key));
-    if (hit) { used.add(hit); m[h] = hit; } else m[h] = "ignore";
+    if (hit) used.add(hit);
+    entries.push([h, hit ?? "ignore"]);
   }
-  return m;
+  return Object.fromEntries(entries) as Mapping; // fromEntries defines own props, safe for "__proto__"
 }
 
 const COUNTS: Field[] = ["invited", "attended", "positive", "examined"];
 
 export function validateMapping(table: Table, m: Mapping): string[] {
   const errors: string[] = [];
+  const validIds = new Set<string>([...FIELDS.map(f => f.id), "ignore"]);
+  for (const key of Object.keys(m)) {
+    if (!table.headers.includes(key)) errors.push(`Mapping refers to unknown column "${key}".`);
+    if (!validIds.has(m[key])) errors.push(`Column "${key}" is mapped to an invalid field.`);
+  }
+  if (errors.length) return errors;
+  const fieldOf = (h: string): Field => (Object.hasOwn(m, h) ? m[h] : "ignore");
   const colOf = new Map<Field, number>();
   for (const f of FIELDS) {
-    const heads = table.headers.filter(h => m[h] === f.id);
+    const heads = table.headers.filter(h => fieldOf(h) === f.id);
     if (heads.length > 1) errors.push(`${f.labelEn} is mapped to more than one column (${heads.join(", ")}).`);
     else if (!heads.length && f.required) errors.push(`Map a column to ${f.labelEn}.`);
     if (heads.length === 1) colOf.set(f.id, table.headers.indexOf(heads[0]));
