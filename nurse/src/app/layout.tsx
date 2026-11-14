@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     default: "Nurse board | Läpi",
     template: "%s | Läpi nurse board",
   },
-  description: "Every bowel screening sample on one board, with stuck ones flagged, so no positive result is left waiting for a colonoscopy.",
+  description: "Track screening participation, help people return their samples, and coordinate collection with the laboratory.",
   applicationName: "Läpi nurse board",
 };
 

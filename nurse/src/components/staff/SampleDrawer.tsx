@@ -6,13 +6,15 @@ import { MiniTimeline } from "./MiniTimeline";
 import { SampleActions } from "./SampleActions";
 import { EVENT_LABEL, STAGE_LABEL, stepIndex, timeFmt, type ActFn, type Row } from "./boardShared";
 
-export function SampleDrawer({ row, now, busy, act, onClose }: {
+export function SampleDrawer({ row, now, busy, act, status, onClose }: {
   row: Row;
   now: number;
   busy: boolean;
   act: ActFn;
+  status: string;
   onClose: () => void;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const closeFn = useRef(onClose);
   closeFn.current = onClose;
@@ -20,21 +22,33 @@ export function SampleDrawer({ row, now, busy, act, onClose }: {
 
   useEffect(() => {
     closeRef.current?.focus();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") closeFn.current();
+      if (e.key === "Escape") { e.preventDefault(); closeFn.current(); }
+      if (e.key !== "Tab") return;
+      const elements = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex="0"]',
+      ) ?? []);
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (!dialogRef.current?.contains(document.activeElement)) { e.preventDefault(); first?.focus(); }
+      else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
     }
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = previousOverflow; };
   }, []);
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end">
       <div className="absolute inset-0 hidden bg-ink/30 md:block" onClick={onClose} aria-hidden />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="drawer-title"
-        className="relative flex h-full w-full flex-col overflow-y-auto bg-white p-4 shadow-xl md:w-[28rem] md:max-w-full"
+        className="relative flex h-full w-full flex-col overflow-y-auto bg-white p-4 shadow-xl md:w-[32rem] md:max-w-full"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -58,6 +72,7 @@ export function SampleDrawer({ row, now, busy, act, onClose }: {
           </p>
         ))}
 
+        <p role="status" aria-live="polite" className={status ? "mt-3 text-sm font-medium text-brand-strong" : "sr-only"}>{status}</p>
         <SampleActions key={row.s.id} row={row} now={now} busy={busy} act={act} />
 
         <h3 className="mt-5 text-sm font-semibold">History</h3>
