@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronRight } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { Wordmark } from "@/components/Wordmark";
 import { ROBOT_TRAVEL_MS, robotProgress, stageOf, type Lang, type Stage } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
+import { BagIllustration, CheckIllustration, LeafletIllustration, TubeIllustration } from "./Illustrations";
 import { RobotMap } from "./RobotMap";
 import { LOCALES, STRINGS, type KitStrings } from "./strings";
 
@@ -52,7 +54,11 @@ function mmss(ms: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
+const TAKE_PICTURES = [LeafletIllustration, TubeIllustration, BagIllustration];
+const CHECK_FRESH_MS = 3000;
+
 export function KitApp() {
+  const embed = useSearchParams().get("embed") === "1";
   const { samples, now, add, reset } = useSamples();
   const [mounted, setMounted] = useState(false);
   const [stored, setStored] = useState<Lang | null>(null);
@@ -130,6 +136,8 @@ export function KitApp() {
     const progress = robotProgress(me, now);
     const booked = [...me.events].reverse().find((e) => e.type === "pickupBooked");
     const colo = [...me.events].reverse().find((e) => e.type === "colonoscopyBooked");
+    const pickedAt = [...me.events].reverse().find((e) => e.type === "pickedUp")?.at;
+    const freshPickup = pickedAt !== undefined && now - pickedAt >= 0 && now - pickedAt < CHECK_FRESH_MS;
     const remaining = progress === null ? 0 : (1 - progress) * ROBOT_TRAVEL_MS;
 
     return (
@@ -158,7 +166,10 @@ export function KitApp() {
               return (
                 <li key={label} aria-current={current ? "step" : undefined} className="min-w-0 flex-1">
                   <div className={`h-1.5 rounded-full ${done || current ? "bg-brand" : "bg-rule"} ${current ? "opacity-60" : ""}`} />
-                  <span className={`mt-1 block truncate text-[11px] ${current ? "font-semibold text-brand" : "text-muted"}`}>{label}</span>
+                  <span className={`mt-1 flex items-center gap-0.5 text-xs ${current ? "font-semibold text-brand" : "text-muted"}`}>
+                    {done && <Check aria-hidden size={12} className="shrink-0 text-brand" />}
+                    <span className="truncate">{label}</span>
+                  </span>
                 </li>
               );
             })}
@@ -189,9 +200,15 @@ export function KitApp() {
               <h1 className="text-2xl font-semibold">{t.takeTitle}</h1>
               <ol className="space-y-3">
                 {t.takeSteps.map((s, i) => (
-                  <li key={s} className="flex gap-3 rounded-xl border border-rule bg-surface p-4 text-sm">
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand">{i + 1}</span>
-                    <span>{s}</span>
+                  <li key={s} className="flex items-center gap-4 rounded-xl border border-rule bg-surface p-4 text-sm">
+                    {(() => {
+                      const Pic = TAKE_PICTURES[i];
+                      return Pic ? <Pic className="text-ink" /> : null;
+                    })()}
+                    <span className="flex min-w-0 items-start gap-2">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand">{i + 1}</span>
+                      <span>{s}</span>
+                    </span>
                   </li>
                 ))}
               </ol>
@@ -226,7 +243,7 @@ export function KitApp() {
               <p className="text-sm">{t.robotLeft}</p>
               {booked?.slot && !NOW_LABELS.includes(booked.slot) && <p className="text-xs text-muted">{t.laterNote}</p>}
               <p aria-hidden className="text-center text-sm text-muted">
-                <span className="text-2xl font-semibold tabular-nums text-brand">{t.arrivesIn(mmss(remaining))}</span>
+                <span className="text-4xl font-semibold tabular-nums text-brand">{t.arrivesIn(mmss(remaining))}</span>
               </p>
             </>
           )}
@@ -245,7 +262,10 @@ export function KitApp() {
           )}
 
           {(stage === "pickedUp" || stage === "atLab") && (
-            <Message title={t.labTitle} body={t.labBody} />
+            <div className="space-y-4">
+              <div className="flex justify-center"><CheckIllustration animate={freshPickup} className="size-24 text-ink" /></div>
+              <Message title={t.labTitle} body={t.labBody} />
+            </div>
           )}
 
           {stage === "negative" && <Message title={t.negTitle} body={t.negBody} tone="ok" />}
@@ -287,7 +307,7 @@ export function KitApp() {
         </div>
 
         <footer className="space-y-2 border-t border-rule px-5 py-4 text-xs text-muted">
-          <p>{t.demoLine}</p>
+          {!embed && <p>{t.demoLine}</p>}
           <button type="button" onClick={reset} className="inline-flex min-h-11 items-center underline">{t.restart}</button>
         </footer>
       </>
@@ -307,7 +327,7 @@ function Message({ title, body, tone }: { title: string; body: string; tone?: "o
   return (
     <section className="space-y-3 rounded-xl border border-rule bg-surface p-5">
       {tone === "ok" && <Check aria-hidden className="text-brand" />}
-      <h1 className="text-xl font-semibold">{title}</h1>
+      <h1 className="text-2xl font-semibold">{title}</h1>
       <p className="text-sm leading-relaxed">{body}</p>
     </section>
   );
