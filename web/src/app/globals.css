@@ -9,15 +9,18 @@
   Contrast on paper: ink 14.5:1, muted 6.1:1, behind 5.6:1 (5.0:1 on its soft tint), ahead 6.4:1, brand 5.8:1, par 3.7:1 (outlines only, not text).
 */
 :root {
-  --paper: #f5f8f7;
+  /* HUS palette (hus.fi stylesheet): blue #004b87, navy #003c6c, pale blue #dbe8f2, grey lines and text. */
+  --paper: #f2f5f7;
   --surface: #ffffff;
-  --ink: #12272e;
-  --muted: #4c6168;
-  --rule: #d5e0dd;
+  --ink: #1d252c;
+  --muted: #545a61;
+  --rule: #ccd7e0;
   --nordic: #12272e; /* kept as an alias for older class names; now ink */
-  --brand: #0f6e56;
-  --brand-strong: #085041;
-  --brand-soft: #e1f5ee;
+  --brand: #004b87;
+  --brand-strong: #003c6c;
+  --brand-soft: #dbe8f2;
+  /* HUS turquoise, for small accents only (fails contrast as text on white). */
+  --accent: #009fa3;
   --behind: #a34a08;
   --behind-soft: #fbead3;
   --ahead: #245f88;
@@ -25,7 +28,7 @@
   --par: #6d8582;
   --par-soft: #e6eeec;
   /* Text selection and the focus ring: a pale teal wash, never a status colour. */
-  --highlight: #cdeee2;
+  --highlight: #cfe2f1;
 
   /*
     Type scale: a major third (1.25) on a 16px body, rounded to whole pixels.
@@ -66,9 +69,12 @@
   --color-brand: var(--brand);
   --color-brand-strong: var(--brand-strong);
   --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
   /* One calm sans for everything; prose that used the serif now reads in Inter too. */
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-inter);
+  /* HUS type: Open Sans for text, Poppins for headings. */
+  --font-sans: var(--font-open-sans);
+  --font-serif: var(--font-open-sans);
+  --font-heading: var(--font-poppins);
 
   /* The scale as Tailwind sizes: text-caption, text-small, text-lede, text-title, text-heading, text-display, text-hero. */
   --text-caption: var(--step--2);
@@ -96,7 +102,7 @@
   body {
     background: var(--paper);
     color: var(--ink);
-    font-family: var(--font-inter), system-ui, sans-serif;
+    font-family: var(--font-open-sans), system-ui, sans-serif;
     font-size: var(--step-0);
     line-height: 1.5;
     font-feature-settings: "tnum" 0;
@@ -107,6 +113,8 @@
   h2,
   h3 {
     text-wrap: balance;
+    /* Poppins has no Cyrillic or Arabic; those letters fall through to Open Sans or the system font. */
+    font-family: var(--font-poppins), var(--font-open-sans), system-ui, sans-serif;
   }
   p,
   li,
