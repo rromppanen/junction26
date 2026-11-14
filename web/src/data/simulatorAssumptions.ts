@@ -5,7 +5,7 @@ import type { Assumption, ParamKey } from "@/lib/simulator";
  * Every "placeholder" row is illustrative and must be replaced with a sourced value before a result is quoted.
  */
 export const DEFAULT_ASSUMPTIONS: Assumption[] = [
-  { key: "women_50_69_share", base: 0.124, low: 0.11, high: 0.135, status: "placeholder", note: "Replace with Statistics Finland women aged 50–69 per wellbeing services county (the capital region is younger, so likely lower)." },
+  { key: "women_50_69_share", base: 0.124, low: 0.11, high: 0.135, status: "from-data", note: "Fallback only. Each county uses its own count of women aged 50–69 from Statistics Finland table 11re (2024): 11.0% of the population in Vantaa–Kerava up to 14.7% in Etelä-Savo." },
   { key: "incidence_50_69", base: 0.0033, low: 0.0028, high: 0.0038, status: "placeholder", note: "Replace with Finnish Cancer Registry / NORDCAN age-specific incidence for ages 50–69 (invasive + in situ)." },
   { key: "target_attendance", base: 85, low: 83, high: 86, status: "from-data", note: "What the best-performing counties already reach: Pohjois-Pohjanmaa 85.6% in 2024 (Sotkanet 3621)." },
   { key: "att_regional", base: 0.27, low: 0.22, high: 0.32, status: "placeholder", note: "Stage mix of cancers in women who attend: regional / node-positive." },
@@ -41,7 +41,7 @@ export type ParamMeta = {
 
 export const PARAM_META: Record<ParamKey, ParamMeta> = {
   target_attendance: { group: "Target", label: "Target attendance", scale: 1, unit: "%", decimals: 1, min: 75, max: 90 },
-  women_50_69_share: { group: "Population", label: "Women aged 50–69", scale: 100, unit: "% of population", decimals: 1 },
+  women_50_69_share: { group: "Population", label: "Women aged 50–69 (fallback)", scale: 100, unit: "% of population", decimals: 1 },
   incidence_50_69: { group: "Population", label: "Breast cancer incidence", scale: 1000, unit: "per 1,000 women a year", decimals: 2 },
   att_regional: { group: "Stage at diagnosis", label: "Women who attend: regional", scale: 100, unit: "% of cases", decimals: 1 },
   att_distant: { group: "Stage at diagnosis", label: "Women who attend: distant", scale: 100, unit: "% of cases", decimals: 1 },
