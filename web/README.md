@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# web: the farmagusta main app
 
-## Getting Started
+The person's phone app and the shared demo log. The nurse board is a separate app in [`../nurse`](../nurse/README.md); this app forwards `/nurse/*` to it, so both run on one address. What the project is and why: [the root README](../README.md) and [docs/idea.md](../docs/idea.md).
 
-First, run the development server:
+## Run and check
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```sh
+npm ci
+npm run dev                  # http://localhost:3000
+npm run check                # lint, tests and production build, as in CI
+npm run smoke -- <base url>  # loads every page once; fails on any error
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Start the nurse app as well (`cd ../nurse && npm run dev`, port 3100) to use `/nurse`. Set `NURSE_URL` when it runs elsewhere.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Optional settings in `.env.local`, which is never committed:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Used for |
+| --- | --- |
+| `NURSE_URL` | Where `/nurse` is forwarded. Default `http://localhost:3100` |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`) | The shared event log behind `/api/samples`. Without them, the log lives in the dev server's memory |
+| `GEMINI_API_KEY`, `GEMINI_MODEL` | Only the unlinked question box at `/api/kit/ask` |
 
-## Learn More
+## Pages and routes
 
-To learn more about Next.js, take a look at the following resources:
+| Path | What it is |
+| --- | --- |
+| `/` | Demo start page: choose the phone app or the nurse board |
+| `/kit` | The phone app: language choice, what the test is, the sampling steps, robot pickup booking, live tracking and handover |
+| `/staff` | Redirects to `/nurse` |
+| `/api/samples` | The shared demo event log, so a phone and a laptop see each other's actions |
+| `/api/walk` | Walking routes for the robot, from the public OSRM router with Valhalla as fallback |
+| `/api/kit/ask` | A Gemini question box limited to fixed HUS kit facts. No page links to it |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Code
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Where | What |
+| --- | --- |
+| `src/lib/sample/` | The sample model: an event log per person, the stage derived from it, the flag rules, the robot simulation and the sync between tabs and devices. Copied in `../nurse`; keep both in step |
+| `src/lib/kit/` | Kit content and the nine translations (`text/`), pickup slots and robot routes |
+| `src/components/kit/` | The phone app's screens, step animations and tracking map |
+| `src/components/staff/` | The first nurse board, now replaced by `../nurse` |
+| `src/data/` | Finnish Cancer Registry figures (`registry.json`, from `npm run ingest:registry`) and the wait to colonoscopy read from the Registry's chart (`registryWaits.ts`) |
