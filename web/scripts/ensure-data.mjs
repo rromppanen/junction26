@@ -15,4 +15,5 @@ if (existsSync(snapshot) && !process.argv.includes("--force")) {
 }
 
 console.log("Fetching the data snapshot from Sotkanet (scripts/ingest.ts)…");
-execFileSync("npx", ["tsx", "scripts/ingest.ts"], { cwd: root, stdio: "inherit" });
+// On Windows npx is npx.cmd, which Node can only start through a shell.
+execFileSync("npx", ["tsx", "scripts/ingest.ts"], { cwd: root, stdio: "inherit", shell: process.platform === "win32" });
