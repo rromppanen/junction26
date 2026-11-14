@@ -32,8 +32,12 @@ export type Person = {
   name: string;
   age: number;
   municipality: string;
+  /** Neighbourhood, used to place the home on the map. */
+  area?: string;
   lang: Lang;
   interpreter?: string;
+  /** Mother tongue when it is not the app language, e.g. "Somali". */
+  homeLanguage?: string;
 };
 
 export type Sample = { id: string; person: Person; events: SampleEvent[] };

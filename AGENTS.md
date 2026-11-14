@@ -24,7 +24,7 @@ Several people push to the same branches, so:
 - Run `git pull` before starting work and again before pushing. Integrate other people's commits; never discard them.
 - Work on a branch and deliver through a pull request into `main`. Push to `main` directly only when the team has agreed to it.
 - Before pushing app changes, run `npm run check` in `web/`. It runs the same lint, tests and build as CI.
-- Merge a pull request only when both CI checks, *Web* and *Secret scan*, are green. GitHub does not enforce this on our plan, so it is on us.
+- Merge a pull request only when all CI checks, *Web*, *Nurse* and *Secret scan*, are green. GitHub does not enforce this on our plan, so it is on us.
 - Never commit API keys. They live in `web/.env.local`. If the secret scan finds one, tell the user to revoke it with the provider; removing it from the code is not enough.
 
 CI details and verified commands are in `.agents/repository-map.md`.
