@@ -74,9 +74,14 @@ export function analyse(rows: Observation[], year: number, dimension: string, co
 export type Action = { id: string; title: string; owner: string; timeframe: string; steps: string[]; measure: string; evidenceIds: string[] };
 /** Process actions for the finding, plus a Goal 3 outcome review when the county's survival is well below the national level. */
 export function recommend(finding: Finding, outcome: Goal3Outcome | null = null): Action[] {
-  const actions = processActions(finding);
-  if (outcome && outcome.gap <= -OUTCOME_REVIEW_GAP) actions.push({ id: "outcome", title: "Review why cervical cancer survival is below the national level", owner: "County cancer-care lead + gynaecological oncology unit", timeframe: "Proposed: initial review within three months", steps: ["From the county's own records, check stage at diagnosis and time from diagnosis to treatment start; neither is published per county.", "Check whether the screening or follow-up gaps found here concern the same areas or groups as the late-stage diagnoses.", "Take the findings to the county's cancer-care steering group for comparison with better-performing counties."], measure: "Cervical cancer 5-year relative survival (Goal 3), plus stage at diagnosis and diagnosis-to-treatment time from local records", evidenceIds: ["survival", "strategy"] });
-  return actions;
+  const review = outcomeAction(outcome);
+  return review ? [...processActions(finding), review] : processActions(finding);
+}
+
+/** The Goal 3 outcome review, or null when the county is near or above the national level or has no data. */
+export function outcomeAction(outcome: Goal3Outcome | null | undefined): Action | null {
+  if (!outcome || outcome.gap > -OUTCOME_REVIEW_GAP) return null;
+  return { id: "outcome", title: "Review why cervical cancer survival is below the national level", owner: "County cancer-care lead + gynaecological oncology unit", timeframe: "Proposed: initial review within three months", steps: ["From the county's own records, check stage at diagnosis and time from diagnosis to treatment start; neither is published per county.", "Check whether the screening or follow-up gaps found here concern the same areas or groups as the late-stage diagnoses.", "Take the findings to the county's cancer-care steering group for comparison with better-performing counties."], measure: "Cervical cancer 5-year relative survival (Goal 3), plus stage at diagnosis and diagnosis-to-treatment time from local records", evidenceIds: ["survival", "strategy"] };
 }
 
 function processActions(finding: Finding): Action[] {

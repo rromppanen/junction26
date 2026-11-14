@@ -17,7 +17,7 @@ This is the team's one place for decisions, the task split and the submission ch
 ## Decision
 
 - Product vision: [adaptive cancer equity analyst](idea.md). The [earlier design](design/2026-11-13-cancer-equity-agent.md) is a proposal; the implemented MVP now uses the Registry's cervical-screening tables rather than lung-cancer outcomes. Current scope and run instructions are in [the app README](../web/README.md).
-- Next checkpoint: expert review of findings and recommendation applicability; select an additional validated Goal 3 measure before claiming full challenge coverage. The current prototype does not infer root causes or treatment delays.
+- Next checkpoint: expert review of findings and recommendation applicability; Goal 3 is now measured as county cervical cancer 5-year survival (Sotkanet 3626); waiting times and the headline lung, pancreatic and liver targets still have no county data. The current prototype does not infer root causes or treatment delays.
 - Challenge(s): AstraZeneca — Equal Care Across Finland.
 - Why us / why this: demonstrate the whole reusable workflow with public counts, explicit evidence limits and traceable proposed actions.
 - Main judging criteria to hit: **Innovation** (unlike other projects), **Impact** (share of affected people actually helped), **Implementation** (realistic, viable, feasible). Each partner also judges its own challenge with its own criteria.
@@ -43,11 +43,11 @@ Mark the ones we actually go to and who goes.
 
 | Person | Area | Current task | Status |
 | --- | --- | --- | --- |
-| Unassigned | Upload | Improve parsing, supported formats and provenance in `UploadStep.tsx` | Step implemented; ready for owner |
-| Unassigned | Prepare | Improve semantic mapping and validation in `PrepareStep.tsx` | Step implemented; ready for owner |
-| Unassigned | Analyse | Improve methods and uncertainty in `AnalyseStep.tsx` and the calculation engine | Step implemented; ready for owner |
-| Unassigned | Recommend | Improve evidence appraisal and applicability in `RecommendStep.tsx` and the evidence/brief pipeline | Step implemented; ready for owner |
-| Unassigned | Integration | Own shared contracts, shell and integrated checks | Coordinate shared-file edits |
+| Unassigned | Standardise & clean | Improve `web/src/lib/pipeline/prepare.ts`: semantic mapping, formats, missingness and validation | Automatic stage implemented; ready for owner |
+| Unassigned | Find disparities | Improve `web/src/lib/pipeline/analyse.ts` and the calculation engine | Automatic stage implemented; ready for owner |
+| Unassigned | Find evidence | Improve `web/src/lib/pipeline/research.ts` and the Context.dev adapter | Automatic stage implemented; ready for owner |
+| Unassigned | Recommend | Improve `web/src/lib/pipeline/recommend.ts`: grounding, applicability and evaluation | Automatic stage implemented; ready for owner |
+| Unassigned | Integration | Own pipeline types/orchestration, streamed route and focused UI | Coordinate shared-file edits |
 
 See [workflow ownership](../web/src/components/workflow/README.md) for file boundaries, contracts and acceptance concerns. Assign names here before concurrent changes to shared libraries.
 
@@ -55,14 +55,16 @@ See [workflow ownership](../web/src/components/workflow/README.md) for file boun
 
 - Active implementation: a local Next.js/TypeScript prototype in `web/`, using the existing available JavaScript toolchain. This replaces the proposed Python UI for this increment; the product workflow in `idea.md` remains the authority for behavior.
 - First source: Finnish Cancer Registry cervical-screening report. Public aggregate screening-chain counts for 2020–2024 with distinct cohort/dimension metadata.
-- Current flow: Upload → Prepare → Analyse → Recommend. No dashboard, sidebar, action register or monitoring screen. Separate components let one teammate own each step; the shell passes typed outputs between them.
-- Acceptance: source-backed demo data, confirmed CSV mapping, explicit analysis execution, invalidation when comparison settings change, no invented causes, sourced recommendations and JSON download. The optional model interpretation returns a labelled template when unavailable; uploaded records stay in the browser.
-- Scope limit: screening/process measures are not survival outcomes or measured treatment-start times. Goal 3 context must be distinguished from a directly measured Goal 3 outcome. No confidential records, causal guarantees, or general-purpose dataset support.
-- Must have for the demo: complete all four steps with either the public demo or a valid mapped CSV. Reject invalid input before analysis and abstain when a comparison is unsupported.
-- Demo focus: follow one real population disparity from confirmed data through calculated findings to a sourced proposed action.
-- Riskiest part: overclaiming from incomplete follow-up or AI prose. The app labels descriptive results and unresolved causes; optional model failure returns a labelled deterministic template. Recommendation actions use reviewed guideline summaries.
+- Current flow: one upload automatically runs standardisation/cleaning → all available latest-period group comparisons → Context.dev evidence retrieval → Gemini interpretation and recommendations. Progress stages are not user-operated screens. Only unresolved column meanings request clarification.
+- Acceptance: upload alone starts the entire server pipeline; progress reflects actual work; valid recognised inputs need no additional clicks; results prioritise insights and link actions to evidence. Invalid counts fail visibly, ambiguous mappings ask focused questions, cancellation cannot overwrite a new run, and missing provider settings never masquerade as live AI.
+- Scope limit: screening/process measures are not survival outcomes or measured treatment-start times. County survival is shown next to screening findings as an outcome, not as proof of cause. No confidential records, causal guarantees, or general-purpose dataset support.
+- Must have for the demo: one upload or one public-demo click produces insights and evidence-linked proposals automatically. The Gemini and Context.dev adapters use Gap Radar's environment variable names and structured-output/search patterns.
+- Demo focus: watch actual progress, then see the highest-priority insight and its next action together, with supporting passages and original source links.
+- Riskiest part: overclaiming from incomplete follow-up or model prose. Values remain deterministic; generated actions require reviewed guideline references. Live excerpts are not automatically appraised evidence. Rejected or unavailable model output produces explicitly labelled templates.
 - Out of scope for this simplified prototype: monitoring, action persistence, confidential/patient-level data, arbitrary study formats, autonomous causal identification, live systematic reviews, shared cloud storage and deployment. Live provider generation needs credentials and remains separate from mocked integration verification.
-- Simplified-flow verification: 19 unit/integration tests and 6 browser tests pass, including manual mapping retention, stale-result prevention, insufficient-data abstention, provider failure and mobile layout. TypeScript and production build pass; desktop/mobile screens were inspected. Browser checks reuse the existing local dev server without replacing it. Live provider responses remain unverified with credentials.
+- Data handling: uploads are processed in server memory; Gemini may receive bounded column examples and aggregate findings. Context.dev receives only a topic query. This supersedes the earlier browser-only upload implementation; public aggregate data only remains the constraint.
+- Runtime configuration check: the local app reported both Gemini and Context.dev unconfigured. Tests mock provider responses; a live public-data HTTP smoke test ran the complete fallback pipeline and returned 86 comparisons. Never claim live-provider verification until keys are configured and a real run succeeds.
+- Automatic-flow verification: 31 unit/integration tests and 6 browser tests pass. Tests exercise the real server orchestration with mocked Gemini mapping/recommendations and Context.dev retrieval, failure fallback, invalid input, ambiguity/resume, cancellation and mobile layout. TypeScript and production build pass. Actual public-demo desktop/mobile screens were inspected.
 
 ## Submission checklist
 

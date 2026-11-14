@@ -1,4 +1,4 @@
-import goal3 from "@/data/goal3.json";
+import goal3 from "@/data/goal3.json" with { type: "json" };
 
 /** Goal 3 of the national cancer strategy 2026–2035 ("equal and effective cancer care"), measured as a regional outcome. */
 export const GOAL3_LABEL = "Goal 3 · Cervical cancer 5-year relative survival";

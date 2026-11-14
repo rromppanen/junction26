@@ -1,9 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import snapshot from "../data/screening.json";
 import goal3 from "../data/goal3.json";
 import { analyse, recommend } from "./analysis";
 import { goal3Outcome } from "./goal3";
 import { evidenceIds } from "../data/evidence";
+import { fields } from "./csv";
+import { analyseDataset } from "./pipeline/analyse";
+import { generateRecommendations, outcomeReviews } from "./pipeline/recommend";
+import { reviewedSources } from "./pipeline/research";
+import type { PreparedData } from "./pipeline/types";
 
 const regions = [...new Set(snapshot.rows.filter(r => r.dimension === "Region" && r.group !== "All groups").map(r => r.group))];
 
@@ -35,5 +40,28 @@ describe("Goal 3 recommendations", () => {
     expect(recommend(finding("Varsinais-Suomi"), goal3Outcome("Varsinais-Suomi", 2024)).some(a => a.id === "outcome")).toBe(false);
     expect(recommend(finding("Kainuu"), goal3Outcome("Kainuu", 2024)).some(a => a.id === "outcome")).toBe(false);
     expect(recommend(finding("Etelä-Karjala")).some(a => a.id === "outcome")).toBe(false);
+  });
+});
+
+describe("Goal 3 in the automatic pipeline", () => {
+  const dataset: PreparedData = { name: "test", sha256: "x", rows: snapshot.rows, mapping: Object.fromEntries(fields.map(f => [f, f])) as PreparedData["mapping"],
+    official: true, mappingMode: "known-schema", cleaning: [], warnings: [] };
+  const findings = analyseDataset(dataset);
+  it("attaches survival to Region findings only", () => {
+    expect(findings.all.filter(f => f.row.dimension === "Region").every(f => f.outcome?.region === f.row.group)).toBe(true);
+    expect(findings.all.filter(f => f.row.dimension !== "Region").every(f => f.outcome === undefined)).toBe(true);
+  });
+  it("adds a deterministic outcome review for a low-survival focus county, and none otherwise", () => {
+    const low = findings.all.find(f => f.row.group === "Etelä-Karjala")!;
+    const high = findings.all.find(f => f.row.group === "Varsinais-Suomi")!;
+    expect(outcomeReviews({ ...findings, focus: [low, high] })).toEqual([expect.objectContaining({ findingId: low.id, evidenceIds: ["survival", "strategy"] })]);
+    expect(reviewedSources.find(s => s.id === "survival")?.kind).toBe("data");
+  });
+  afterEach(() => vi.unstubAllEnvs());
+  it("appends the outcome review to template recommendations", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "");
+    const low = findings.all.find(f => f.row.group === "Etelä-Karjala")!;
+    const result = await generateRecommendations({ ...findings, focus: [low] }, reviewedSources);
+    expect(result.recommendations.map(a => a.id)).toEqual([`${low.id}:template`, `${low.id}:outcome`]);
   });
 });
