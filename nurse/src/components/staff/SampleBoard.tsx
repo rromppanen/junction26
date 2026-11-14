@@ -130,7 +130,7 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
 
             <form role="search" className="mt-5 flex flex-wrap items-end gap-4" onSubmit={(e) => e.preventDefault()}>
               <label className="flex min-w-0 flex-1 basis-64 flex-col gap-1 text-sm font-medium">
-                Find a person
+                Find a participant
                 <input ref={searchRef} type="search" value={query} onChange={(e) => setQuery(e.target.value)}
                   placeholder="Name, area, language or pickup code"
                   className="w-full rounded-md border border-rule bg-white px-3 py-2 font-normal" />
@@ -151,10 +151,13 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
             </form>
             <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
               <p aria-live="polite">{visible.length} of {rows.length} people</p>
-              <p>Open a person to review their history or record an action.</p>
+              <p>People who need attention are listed first.</p>
             </div>
 
-            <ul aria-label="Screening participants" className="mt-2 divide-y divide-rule border-y border-rule bg-white">
+            <div aria-hidden="true" className="mt-3 hidden grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_12rem] gap-4 border-t border-rule bg-paper px-4 py-3 text-xs font-semibold text-muted lg:grid">
+              <span>Participant</span><span>Attention needed</span><span>Screening stage</span>
+            </div>
+            <ul aria-label="Screening participants" className="mt-2 divide-y divide-rule border-y border-rule bg-white lg:mt-0">
               {visible.map((r) => {
                 const { s, flags } = r;
                 const p = s.person;
@@ -165,7 +168,7 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
                       ref={(el) => { if (el) rowRefs.current.set(s.id, el); else rowRefs.current.delete(s.id); }}
                       onClick={() => select(s.id)}
                       aria-haspopup="dialog"
-                      className={`flex min-h-14 w-full flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-4 text-left text-sm hover:bg-brand-soft ${selected === s.id ? "bg-brand-soft" : ""}`}
+                      className={`grid min-h-14 w-full grid-cols-1 items-center gap-x-4 gap-y-2 px-4 py-4 text-left text-sm hover:bg-brand-soft lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_12rem] ${selected === s.id ? "bg-brand-soft" : ""}`}
                     >
                       <span className="min-w-0">
                         <span className="flex flex-wrap items-center gap-2">
@@ -173,19 +176,23 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
                             <span className="text-xs font-medium text-brand">Phone demo</span>
                           )}
                           <span className="font-semibold">{p.name}, {p.age}</span>
-                          {flags.length > 0 && (
-                            <span className="inline-flex items-center gap-1 text-sm font-medium text-behind">
-                              <AlertTriangle size={12} aria-hidden /> {flags[0].label}
-                            </span>
-                          )}
-                          {flags[0] && reminderNote(flags[0]) && <ReminderTag flag={flags[0]} />}
                         </span>
                         <span className="block text-muted">
                           {p.area ? `${p.area}, ` : ""}{p.municipality} · {p.homeLanguage ? `${p.homeLanguage} · app ` : ""}{p.lang.toUpperCase()}{p.interpreter ? ` · interpreter: ${p.interpreter}` : ""}
                           {IN_PICKUP.includes(r.stage) ? ` · ${pickupCode(s.id)}` : ""}
                         </span>
                       </span>
-                      <span className="flex flex-col items-start gap-1 sm:items-end">
+                      <span className={`min-w-0 flex-col items-start gap-1 ${flags.length ? "flex" : "hidden lg:flex"}`}>
+                        {flags.length > 0 ? (
+                          <>
+                            <span className="inline-flex items-start gap-1 font-medium text-behind">
+                              <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden /> {flags[0].label}
+                            </span>
+                            {reminderNote(flags[0]) && <ReminderTag flag={flags[0]} />}
+                          </>
+                        ) : <span className="hidden text-muted lg:inline">No flags</span>}
+                      </span>
+                      <span className="flex flex-col items-start gap-1">
                         <span className="inline-flex items-center gap-2 font-medium">{STAGE_LABEL[r.stage]} <ChevronRight size={16} aria-hidden /></span>
                         <span className="text-xs text-muted">{inStage(s, now)}</span>
                       </span>
@@ -198,7 +205,7 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
           </>
         )}
       </div>
-      {!embed && <DemoBar onReset={() => { if (!window.confirm("Start the demo again? This removes all recorded actions.")) return; reset(); setSelected(null); clearBusy(); setStatus("Demo started again."); }} />}
+      {!embed && <DemoBar onReset={() => { if (!window.confirm("Reset the demo? This removes all recorded actions in both the nurse and participant apps.")) return; reset(); setSelected(null); clearBusy(); setStatus("Demo started again."); }} />}
       {sel && <SampleDrawer row={sel} now={now} busy={busy} act={act} status={status} onClose={closeDrawer} />}
     </main>
   );

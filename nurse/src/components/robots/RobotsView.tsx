@@ -34,7 +34,7 @@ function doing(v: RobotView): string {
   return "Free";
 }
 
-const card = "rounded-xl border bg-surface";
+const panel = "rounded-md border bg-surface";
 
 export function RobotsView() {
   const { samples, now, add, reset } = useSamples();
@@ -42,6 +42,8 @@ export function RobotsView() {
   const [selected, setSelected] = useState<string | null>(null);
   const [simulate, setSimulate] = useState(true);
   const [speed, setSpeed] = useState<SimSpeed>(20);
+  const [showAllReady, setShowAllReady] = useState(false);
+  const [status, setStatus] = useState("");
   const lastTick = useRef(0);
   useEffect(() => setMounted(true), []);
 
@@ -65,6 +67,21 @@ export function RobotsView() {
   const intakeCount = intake.reduce((n, g) => n + g.samples.length, 0);
   const toggle = (id: string) => setSelected((cur) => (cur === id ? null : id));
 
+  function resetDemo() {
+    if (!window.confirm("Reset the demo? This removes all recorded actions in both the nurse and participant apps.")) return;
+    reset();
+    setSelected(null);
+    setStatus("Demo reset. All recorded actions cleared.");
+  }
+
+  function registerAtLab(group: (typeof intake)[number]) {
+    const count = group.samples.length;
+    const hub = HUBS[group.hub].name;
+    if (!window.confirm(`Confirm you have collected ${count} ${count === 1 ? "sample" : "samples"} at ${hub} and registered them at the lab?`)) return;
+    group.samples.forEach((sample) => add(sample.id, { type: "atLab" }));
+    setStatus(`${count} ${count === 1 ? "sample" : "samples"} registered at the lab from ${hub}.`);
+  }
+
   return (
     <main id="main-content" tabIndex={-1} className="min-h-dvh px-4 pb-8 sm:px-6">
       <AppHeader />
@@ -72,27 +89,11 @@ export function RobotsView() {
       <div className="mx-auto w-full max-w-[96rem] pt-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-[length:var(--step-2)] font-semibold leading-tight text-brand-strong">Robots</h1>
+            <h1 className="text-[length:var(--step-2)] font-semibold leading-tight text-brand-strong">Robot pickups</h1>
             <p className="mt-1 text-muted">Helsinki, Espoo and Vantaa</p>
-          </div>
-          {/* Demo controls, next to the map so they are easy to find. */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-            <label className="inline-flex min-h-11 items-center gap-2 font-medium">
-              Speed
-              <select value={speed} onChange={(e) => setSpeed(Number(e.target.value) as SimSpeed)} className="min-h-11 rounded-lg border border-rule bg-white px-2 font-normal">
-                <option value={1}>Real (6 km/h)</option>
-                <option value={20}>20× faster</option>
-                <option value={60}>60× faster</option>
-              </select>
-            </label>
-            <label className="inline-flex min-h-11 items-center gap-2">
-              <input type="checkbox" checked={simulate} onChange={(e) => setSimulate(e.target.checked)} className="size-5 accent-[var(--brand)]" />
-              Robots running
-            </label>
-            <button type="button" onClick={() => { reset(); setSelected(null); }}
-              className="min-h-11 rounded-lg border border-rule bg-white px-3 font-semibold text-brand hover:bg-brand-soft">
-              Start again
-            </button>
+            <p className="mt-1 text-sm text-muted">
+              {simulate ? `Demo: new trips run at ${speed}× speed.` : "Demo: automatic bookings paused. Trips underway continue."}
+            </p>
           </div>
         </div>
 
@@ -100,29 +101,30 @@ export function RobotsView() {
           <p className="mt-6 text-muted">Loading…</p>
         ) : (
           <>
-            <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <p role="status" className={status ? "mt-4 text-sm font-medium text-brand-strong" : "sr-only"}>{status}</p>
+            <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3 border-y border-rule py-4 sm:flex sm:flex-wrap sm:gap-x-10">
               {([
                 ["Samples to collect", intakeCount, intakeCount > 0],
                 ["Waiting too long at a door", stuck.length, stuck.length > 0],
                 ["On a trip", active.length, false],
-                ["Free", free, false],
+                ["Available robots", free, false],
               ] as const).map(([label, n, warn]) => (
-                <div key={label} className={`${card} p-4 ${warn ? "border-behind" : "border-rule"}`}>
-                  <dd className={`text-3xl font-semibold ${warn ? "text-behind" : "text-brand-strong"}`}>{n}</dd>
-                  <dt className="mt-1 text-sm text-muted">{label}</dt>
+                <div key={label} className="flex flex-col gap-1">
+                  <dt className="text-sm text-muted">{label}</dt>
+                  <dd className={`text-xl font-semibold tabular-nums ${warn ? "text-behind" : "text-ink"}`}>{n}</dd>
                 </div>
               ))}
             </dl>
 
             <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_23rem]">
               <section aria-label="Map" className="min-w-0">
-                <div className={`${card} relative overflow-hidden border-rule`}>
+                <div className={`${panel} relative overflow-hidden border-rule`}>
                   {active.length === 0 && ready.length === 0 && (
                     <div className="absolute inset-x-3 top-3 z-[1000] flex flex-wrap items-center justify-between gap-3 rounded-lg bg-white/95 p-3 shadow">
-                      <p className="text-sm">Every sample has been collected, so no robot is moving.</p>
-                      <button type="button" onClick={() => { reset(); setSelected(null); }}
+                      <p className="text-sm">No pickups in progress or waiting. Check below for samples awaiting lab registration.</p>
+                      <button type="button" onClick={resetDemo}
                         className="min-h-11 rounded-lg bg-brand px-3 text-sm font-semibold text-white hover:bg-brand-strong">
-                        Start the robots again
+                        Reset demo
                       </button>
                     </div>
                   )}
@@ -130,7 +132,7 @@ export function RobotsView() {
                 </div>
                 <ul aria-label="Map key" className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
                   <li className="flex items-center gap-2"><span className="size-3 rounded-full bg-brand" aria-hidden />Robot</li>
-                  <li className="flex items-center gap-2"><span className="size-3 rounded-full bg-behind" aria-hidden />Needs you</li>
+                  <li className="flex items-center gap-2"><span className="size-3 rounded-full bg-behind" aria-hidden />Needs attention</li>
                   <li className="flex items-center gap-2"><span className="size-3 rounded-sm bg-brand-strong" aria-hidden />Hub</li>
                   <li className="flex items-center gap-2"><span className="size-3 rounded-full border-2 border-ink bg-white" aria-hidden />Waiting for a robot</li>
                 </ul>
@@ -138,18 +140,18 @@ export function RobotsView() {
 
               <div className="flex min-w-0 flex-col gap-6">
                 <section aria-labelledby="needs-h">
-                  <h2 id="needs-h" className="text-lg font-semibold">Needs you</h2>
-                  {intake.length === 0 && stuck.length === 0 && <p className="mt-1 text-muted">Nothing right now.</p>}
+                  <h2 id="needs-h" className="text-lg font-semibold">Needs attention</h2>
+                  {intake.length === 0 && stuck.length === 0 && <p className="mt-1 text-muted">No samples to collect or delayed pickups.</p>}
                   <ul className="mt-2 space-y-2">
                     {intake.map((g) => (
-                      <li key={g.hub} className={`${card} border-behind p-3`}>
+                      <li key={g.hub} className={`${panel} border-behind p-3`}>
                         <p className="font-semibold">Collect at {HUBS[g.hub].name}</p>
                         <p className="text-sm text-muted">
                           {g.samples.length} {g.samples.length === 1 ? "sample" : "samples"}, oldest {ago(now - (g.samples[0].events.findLast((e) => e.type === "pickedUp")?.at ?? now))} ago
                         </p>
-                        <button type="button" onClick={() => g.samples.forEach((s) => add(s.id, { type: "atLab" }))}
+                        <button type="button" onClick={() => registerAtLab(g)}
                           className="mt-2 min-h-11 w-full rounded-lg bg-brand px-3 font-semibold text-white hover:bg-brand-strong">
-                          Register {g.samples.length} at the lab
+                          Register {g.samples.length} {g.samples.length === 1 ? "sample" : "samples"} at lab
                         </button>
                       </li>
                     ))}
@@ -157,8 +159,8 @@ export function RobotsView() {
                       if (v.status.kind !== "atDoor") return null;
                       const p = v.status.trip.person;
                       return (
-                        <li key={v.robot.id} className={`${card} border-behind p-3`}>
-                          <p className="font-semibold">No one at the door, {p.area}</p>
+                        <li key={v.robot.id} className={`${panel} border-behind p-3`}>
+                          <p className="font-semibold">Pickup delayed · {p.area}</p>
                           <p className="text-sm text-muted">
                             {v.robot.name} has waited {ago(v.status.waitedMs)} at {pickupCode(v.status.trip.sampleId)}.
                             {" "}Call{p.interpreter ? ` with a ${p.interpreter} interpreter` : p.homeLanguage ? ` (${p.homeLanguage})` : ""}.
@@ -172,7 +174,7 @@ export function RobotsView() {
                 <section aria-labelledby="trips-h">
                   <h2 id="trips-h" className="text-lg font-semibold">On a trip ({active.length})</h2>
                   {active.length === 0 && <p className="mt-1 text-muted">All robots are at their hubs.</p>}
-                  <ul className={`${card} mt-2 divide-y divide-rule border-rule`}>
+                  <ul className={`${panel} mt-2 divide-y divide-rule border-rule`}>
                     {active.map((v) => {
                       if (v.status.kind === "idle") return null;
                       const t = v.status.trip;
@@ -180,7 +182,7 @@ export function RobotsView() {
                       return (
                         <li key={v.robot.id}>
                           <button type="button" aria-pressed={on} onClick={() => toggle(v.robot.id)}
-                            className={`flex min-h-14 w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-paper ${on ? "bg-brand-soft" : ""}`}>
+                            className={`flex min-h-14 w-full flex-wrap items-center justify-between gap-3 px-3 py-2 text-left hover:bg-paper ${on ? "bg-brand-soft" : ""}`}>
                             <span className="min-w-0">
                               <span className="block font-semibold">{v.robot.name}{t.sampleId === ME ? " · phone demo" : ""}</span>
                               <span className="block truncate text-sm text-muted">{pickupCode(t.sampleId)}, {t.route ? "the phone's location" : t.person.area}</span>
@@ -198,14 +200,20 @@ export function RobotsView() {
                   {ready.length === 0 ? (
                     <p className="mt-1 text-muted">None.</p>
                   ) : (
-                    <ul className={`${card} mt-2 divide-y divide-rule border-rule text-sm`}>
-                      {ready.slice(0, SHOWN).map((s) => (
+                    <ul id="waiting-pickups" className={`${panel} mt-2 divide-y divide-rule border-rule text-sm`}>
+                      {(showAllReady ? ready : ready.slice(0, SHOWN)).map((s) => (
                         <li key={s.id} className="flex justify-between gap-3 px-3 py-2">
                           <span>{pickupCode(s.id)}, {s.person.area}</span>
                           <span className="text-muted">{ago(now - (s.events.find((e) => e.type === "sampleTaken")?.at ?? now))}</span>
                         </li>
                       ))}
-                      {ready.length > SHOWN && <li className="px-3 py-2 text-muted">and {ready.length - SHOWN} more</li>}
+                      {ready.length > SHOWN && <li>
+                        <button type="button" aria-expanded={showAllReady} aria-controls="waiting-pickups"
+                          onClick={() => setShowAllReady((value) => !value)}
+                          className="min-h-11 w-full px-3 py-2 text-left font-medium text-brand hover:bg-brand-soft">
+                          {showAllReady ? "Show fewer pickups" : `Show all ${ready.length} pickups`}
+                        </button>
+                      </li>}
                     </ul>
                   )}
                 </section>
@@ -215,7 +223,26 @@ export function RobotsView() {
         )}
       </div>
 
-      <DemoBar onReset={() => { reset(); setSelected(null); }} />
+      <DemoBar onReset={resetDemo}>
+        <details className="basis-full">
+          <summary className="w-fit cursor-pointer py-2 font-medium text-brand">Simulation settings</summary>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 py-2">
+            <label className="inline-flex min-h-11 items-center gap-2">
+              Simulation speed
+              <select value={speed} onChange={(e) => setSpeed(Number(e.target.value) as SimSpeed)} className="rounded-md border border-rule bg-white px-2">
+                <option value={1}>Real time (6 km/h)</option>
+                <option value={20}>20× faster</option>
+                <option value={60}>60× faster</option>
+              </select>
+            </label>
+            <label className="inline-flex min-h-11 items-center gap-2">
+              <input type="checkbox" checked={simulate} onChange={(e) => setSimulate(e.target.checked)} className="accent-[var(--brand)]" />
+              Simulate other households
+            </label>
+            <span>Speed applies to new trips. Existing trips keep their speed.</span>
+          </div>
+        </details>
+      </DemoBar>
     </main>
   );
 }
