@@ -6,7 +6,6 @@ export const et: KitText = {
     chooseLang: "Vali keel",
     langLabel: "Keel",
     invitedSub: "See rakendus juhendab sind proovi võtmisel samm-sammult. Saad proovi võtta kodus, rahulikult.",
-    machineNote: "Seda tõlget ei ole veel professionaalne tõlkija üle vaadanud.",
     aboutTitle: "Millega on tegu?",
     why: "Miks see on oluline?",
     whyTitle: "Miks see on oluline",

@@ -6,7 +6,6 @@ export const so: KitText = {
     chooseLang: "Dooro luqadda",
     langLabel: "Luqadda",
     invitedSub: "Barnaamijkan wuxuu kuu hagayaa qaadista muunadda tallaabo tallaabo. Waxaad ku qaadan kartaa guriga, adigoo deggan.",
-    machineNote: "Turjumaankan weli ma hubin turjubaan xirfad leh.",
     aboutTitle: "Waa maxay tani?",
     why: "Maxay tani muhiim u tahay?",
     whyTitle: "Sababta ay muhiim u tahay",

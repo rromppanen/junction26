@@ -6,7 +6,6 @@ export const ar: KitText = {
     chooseLang: "اختر اللغة",
     langLabel: "اللغة",
     invitedSub: "يرشدك هذا التطبيق خطوة بخطوة خلال أخذ العينة. يمكنك أخذها في المنزل، على مهل.",
-    machineNote: "لم يراجع مترجم محترف هذه الترجمة بعد.",
     aboutTitle: "ما الأمر؟",
     why: "لماذا هذا مهم؟",
     whyTitle: "لماذا هذا مهم",

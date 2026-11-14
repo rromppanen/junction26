@@ -64,8 +64,6 @@ export type Ui = {
   chooseLang: string;
   langLabel: string;
   invitedSub: string;
-  /** Shown for languages a professional translator has not yet checked. */
-  machineNote: string;
   aboutTitle: string;
   why: string;
   whyTitle: string;
@@ -121,19 +119,19 @@ export type KitLang = "fi" | "sv" | "en" | "ru" | "et" | "ar" | "uk" | "so" | "f
 
 /**
  * The national languages and English, then the largest foreign-language groups in Finland
- * (Statistics Finland). `reviewed` is false until a professional translator has checked the file;
- * the app then shows that language's own `machineNote`.
+ * (Statistics Finland). Apart from Fimlab's Finnish steps, the translations have not been checked
+ * by a professional translator yet; see the note at the top of each text file.
  */
-export const KIT_LANGS: { code: KitLang; native: string; dir: "ltr" | "rtl"; locale: string; reviewed: boolean }[] = [
-  { code: "fi", native: "Suomi", dir: "ltr", locale: "fi-FI", reviewed: true },
-  { code: "sv", native: "Svenska", dir: "ltr", locale: "sv-FI", reviewed: false },
-  { code: "en", native: "English", dir: "ltr", locale: "en-GB", reviewed: true },
-  { code: "ru", native: "Русский", dir: "ltr", locale: "ru-RU", reviewed: false },
-  { code: "et", native: "Eesti", dir: "ltr", locale: "et-EE", reviewed: false },
-  { code: "ar", native: "العربية", dir: "rtl", locale: "ar", reviewed: false },
-  { code: "uk", native: "Українська", dir: "ltr", locale: "uk-UA", reviewed: false },
-  { code: "so", native: "Soomaali", dir: "ltr", locale: "so-SO", reviewed: false },
-  { code: "fa", native: "فارسی", dir: "rtl", locale: "fa-IR", reviewed: false },
+export const KIT_LANGS: { code: KitLang; native: string; dir: "ltr" | "rtl"; locale: string }[] = [
+  { code: "fi", native: "Suomi", dir: "ltr", locale: "fi-FI" },
+  { code: "sv", native: "Svenska", dir: "ltr", locale: "sv-FI" },
+  { code: "en", native: "English", dir: "ltr", locale: "en-GB" },
+  { code: "ru", native: "Русский", dir: "ltr", locale: "ru-RU" },
+  { code: "et", native: "Eesti", dir: "ltr", locale: "et-EE" },
+  { code: "ar", native: "العربية", dir: "rtl", locale: "ar" },
+  { code: "uk", native: "Українська", dir: "ltr", locale: "uk-UA" },
+  { code: "so", native: "Soomaali", dir: "ltr", locale: "so-SO" },
+  { code: "fa", native: "فارسی", dir: "rtl", locale: "fa-IR" },
 ];
 
 export const TEXT: Record<KitLang, KitText> = { fi, sv, en, ru, et, ar, uk, so, fa };

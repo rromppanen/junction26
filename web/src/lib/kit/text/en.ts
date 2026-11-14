@@ -6,7 +6,6 @@ export const en: KitText = {
     chooseLang: "Choose your language",
     langLabel: "Language",
     invitedSub: "This app takes you through the sample step by step. You can take it at home, in your own time.",
-    machineNote: "A professional translator has not yet checked this translation.",
     aboutTitle: "What is this?",
     why: "Why does this matter?",
     whyTitle: "Why this matters",

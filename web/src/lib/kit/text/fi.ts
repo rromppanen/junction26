@@ -6,7 +6,6 @@ export const fi: KitText = {
     chooseLang: "Valitse kieli",
     langLabel: "Kieli",
     invitedSub: "Tämä sovellus opastaa sinut näytteenoton läpi vaihe vaiheelta. Voit ottaa näytteen kotona, omassa rauhassa.",
-    machineNote: "Ammattikääntäjä ei ole vielä tarkistanut tätä käännöstä.",
     aboutTitle: "Mistä on kyse?",
     why: "Miksi tämä on tärkeää?",
     whyTitle: "Miksi tämä on tärkeää",
