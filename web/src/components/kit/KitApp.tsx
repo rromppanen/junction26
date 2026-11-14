@@ -61,7 +61,7 @@ export function KitApp() {
   const router = useRouter();
   /** The demo's start page links here with start=1: begin a fresh run from the invitation. */
   const fresh = params.get("start") === "1";
-  const { samples, now, add, reset } = useSamples();
+  const { samples, now, add, restart: restartPerson } = useSamples();
   const me = samples.find((s) => s.id === ME);
 
   const [mounted, setMounted] = useState(false);
@@ -79,7 +79,8 @@ export function KitApp() {
   const stepKey = STEP_KEY;
   useEffect(() => {
     if (fresh) {
-      reset();
+      // Only this phone's person starts again; the nurse board and other people keep their progress.
+      restartPerson(ME);
       clearLocal();
       router.replace("/kit");
       setMounted(true);
@@ -93,7 +94,7 @@ export function KitApp() {
     const raw = readStored(stepKey);
     const s = Number(raw);
     if (raw !== null && Number.isInteger(s) && s >= INVITE) setStepState(s);
-    // Runs once on load; reset, clearLocal and router are stable for that purpose.
+    // Runs once on load; restartPerson, clearLocal and router are stable for that purpose.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepKey]);
 
@@ -238,7 +239,7 @@ export function KitApp() {
   function renderScreen() {
     if (!me) return null;
     const restart = (
-      <button type="button" onClick={() => { reset(); clearLocal(); }}
+      <button type="button" onClick={() => { restartPerson(ME); clearLocal(); }}
         className="mx-auto mt-4 inline-flex min-h-12 items-center gap-2 rounded-xl border border-rule px-5 text-sm font-semibold text-muted hover:bg-brand-soft">
         <RotateCcw aria-hidden size={16} />{t.restartDemo}
       </button>

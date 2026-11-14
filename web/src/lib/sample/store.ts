@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { addEvent, type Sample, type SampleEvent } from "./model";
 import { seedSamples } from "./seed";
-import { buildSamples, MAX_ENTRIES_PER_POST, type LogEntry, type LogPage } from "./sync-core";
+import { applyEntry, buildSamples, MAX_ENTRIES_PER_POST, RESTART, type LogEntry, type LogPage } from "./sync-core";
 
 // v4: Helsinki-area demo data, half Finnish or Swedish speakers. A new key makes open browsers reseed instead of keeping the old people.
 const KEY = "lapi.demo.v4";
@@ -225,7 +225,10 @@ export function useSamples(): {
   samples: Sample[];
   now: number;
   add(id: string, e: Omit<SampleEvent, "at">): void;
+  /** Starts the whole shared demo again, for everyone. */
   reset(): void;
+  /** Starts one person again (the phone app's own person) and leaves everyone else as they are. */
+  restart(id: string): void;
 } {
   const samples = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [now, setNow] = useState(() => Date.now());
@@ -249,5 +252,11 @@ export function useSamples(): {
     });
   }, []);
 
-  return { samples, now, add, reset };
+  const restart = useCallback((id: string) => {
+    const entry = { id, event: { type: RESTART, at: Date.now() } } as const;
+    persist(applyEntry(getSnapshot(), entry));
+    share([entry]);
+  }, []);
+
+  return { samples, now, add, reset, restart };
 }

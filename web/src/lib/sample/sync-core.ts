@@ -5,11 +5,18 @@ import { seedSamples } from "./seed";
  * Shared demo state, kept as an append-only log so that the phone, the nurse board and the
  * robot simulation can all write at once without overwriting each other.
  * The state is always `seedSamples(seedAt)` with the log's entries applied in order.
- * A reset starts a new log with a new `seedAt`.
+ * A reset starts a new log with a new `seedAt`; a RESTART entry starts one person again.
  *
  * Keep this file identical in web/ and nurse/.
  */
-export type LogEntry = { uid: string; id: string; event: SampleEvent };
+
+/**
+ * Log-only event: puts one person back to their seed state, timed from `at`. The phone app writes
+ * it to start its person again without wiping everyone else's progress on the shared demo.
+ */
+export const RESTART = "restarted";
+export type LogEvent = SampleEvent | { type: typeof RESTART; at: number };
+export type LogEntry = { uid: string; id: string; event: LogEvent };
 
 /** What GET /api/samples returns: the entries from index `from` onwards. */
 export type LogPage = { seedAt: number; from: number; entries: LogEntry[]; durable: boolean };
@@ -17,9 +24,17 @@ export type LogPage = { seedAt: number; from: number; entries: LogEntry[]; durab
 export const MAX_ENTRIES_PER_POST = 50;
 export const MAX_LOG_LENGTH = 20_000;
 
+export function applyEntry(samples: Sample[], e: Omit<LogEntry, "uid">): Sample[] {
+  if (e.event.type === RESTART) {
+    const fresh = seedSamples(e.event.at).find((s) => s.id === e.id);
+    return fresh ? samples.map((s) => (s.id === e.id ? fresh : s)) : samples;
+  }
+  return addEvent(samples, e.id, e.event);
+}
+
 export function buildSamples(seedAt: number, entries: readonly LogEntry[]): Sample[] {
   let samples = seedSamples(seedAt);
-  for (const e of entries) samples = addEvent(samples, e.id, e.event);
+  for (const e of entries) samples = applyEntry(samples, e);
   return samples;
 }
 
