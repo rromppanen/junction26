@@ -23,7 +23,7 @@ const LANG_KEY = "lapi.kit.language";
 const STEP_KEY = "lapi.kit.progress.v3";
 const CLICK_GUARD_MS = 350;
 /** Matches the window's closing animation in animations.css. */
-const WINDOW_CLOSE_MS = 320;
+const WINDOW_CLOSE_MS = 380;
 
 /** The opening screens come before the sampling steps: -3 invitation and language, -2 what this is, -1 how it works. */
 const INVITE = -3;
