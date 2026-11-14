@@ -1,4 +1,4 @@
-import { fallbackDraft, recommend } from "../analysis";
+import { fallbackDraft, outcomeAction, recommend } from "../analysis";
 import { validateDraft } from "../brief";
 import { askGemini } from "../gemini";
 import type { Findings, PipelineReport, ProposedAction, Source } from "./types";
@@ -41,7 +41,20 @@ export function validateRecommendations(value: unknown, findings: Findings, sour
   return { interpretation, recommendations };
 }
 
+/** Deterministic Goal 3 outcome reviews for focus counties with low survival. Added to every result, generated or template. */
+export function outcomeReviews(findings: Findings): ProposedAction[] {
+  return findings.focus.flatMap(finding => {
+    const action = outcomeAction(finding.outcome);
+    return action ? [{ ...action, id: `${finding.id}:outcome`, findingId: finding.id }] : [];
+  });
+}
+
 export async function generateRecommendations(findings: Findings, sources: Source[], signal?: AbortSignal) {
+  const result = await generate(findings, sources, signal);
+  return { ...result, recommendations: [...result.recommendations, ...outcomeReviews(findings)] };
+}
+
+async function generate(findings: Findings, sources: Source[], signal?: AbortSignal) {
   const primary = findings.focus[0];
   if (!primary) throw new Error("No comparable population groups were found.");
   const fallback = () => ({ interpretation: fallbackDraft(primary),
@@ -56,7 +69,7 @@ export async function generateRecommendations(findings: Findings, sources: Sourc
       Return an interpretation of the primary finding and one to three actionable, evidence-based service proposals. Each proposal must identify its findingId, owner, short implementation steps, proposed timeframe, evaluation measure and evidenceIds. Include at least one reviewed guideline for every action. Cite live: excerpts only where they actually support the proposal; these are retrieved context, not appraised trials. Do not assert local implementation status.
       For follow-up gaps, first investigate reporting completeness and ongoing follow-up before recommending capacity changes. For insufficient or within-threshold findings, propose data clarification or monitoring, not a corrective service intervention.
       Use no digits or quantitative claims in prose; the UI renders all numbers from calculations. Do not quote numeric group labels in prose. Never claim a root cause, statistical significance, lives saved or a guaranteed fix. Avoid patient-treatment prescriptions. The interpretation evidenceIds must include report and quality.`,
-      input: { primaryFindingId: primary.id, findings: findings.focus, sources, strategyLimit: "Screening-process prototype; no direct Goal 3 outcome is measured." },
+      input: { primaryFindingId: primary.id, findings: findings.focus, sources, strategyLimit: "Screening-process data. Region findings may carry outcome: county cervical cancer five-year survival (Goal 3), with the national value. Survival does not show where in the pathway a difference arises; a screening gap next to a survival gap is not proof of cause. Outcome reviews are added separately; do not propose one." },
     });
     return { ...result, mode: "gemini" as const, status: "ok" as const };
   } catch {

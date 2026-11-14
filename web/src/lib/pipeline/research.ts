@@ -3,7 +3,7 @@ import { getLiveEvidence } from "../context";
 import type { Findings, Source } from "./types";
 
 export const reviewedSources: Source[] = evidence.map(source => ({ id: source.id, title: source.title, url: source.url,
-  text: source.summary, locator: source.locator, kind: source.id === "report" ? "data" : source.id === "strategy" ? "policy" : "guideline", limitation: source.limitation }));
+  text: source.summary, locator: source.locator, kind: source.id === "report" || source.id === "survival" ? "data" : source.id === "strategy" ? "policy" : "guideline", limitation: source.limitation }));
 
 export function evidenceQuery(findings: Findings): string {
   const followup = findings.focus.some(finding => finding.metric === "followup" && finding.status === "review");

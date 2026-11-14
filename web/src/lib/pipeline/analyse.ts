@@ -1,4 +1,5 @@
 import { analyse as compare, Metric } from "../analysis";
+import { goal3Outcome } from "../goal3";
 import type { Findings, LocatedFinding, PreparedData } from "./types";
 
 export function analyseDataset(dataset: PreparedData): Findings {
@@ -12,7 +13,8 @@ export function analyseDataset(dataset: PreparedData): Findings {
     const paired = dataset.rows.some(row => row.year === slice.year && row.dimension === slice.dimension && row.cohort === slice.cohort && row.referred !== null);
     const metrics: Metric[] = paired ? ["participation", "followup"] : ["participation"];
     for (const metric of metrics) for (const finding of compare(dataset.rows, slice.year, slice.dimension, slice.cohort, metric)) {
-      all.push({ ...finding, id: `finding:${all.length + 1}`, stage: metric === "participation" ? "Invitation → screening" : "Referral → recorded examination" });
+      all.push({ ...finding, id: `finding:${all.length + 1}`, stage: metric === "participation" ? "Invitation → screening" : "Referral → recorded examination",
+        ...(slice.dimension === "Region" ? { outcome: goal3Outcome(finding.row.group, slice.year) } : {}) });
     }
   }
   all.sort((a, b) => (a.status === "review" ? 0 : a.status === "within" ? 1 : 2) - (b.status === "review" ? 0 : b.status === "within" ? 1 : 2) || (a.gap ?? Infinity) - (b.gap ?? Infinity));

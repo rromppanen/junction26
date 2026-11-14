@@ -83,7 +83,18 @@ npm test
 
 Review source definitions and reuse terms before redistributing a new extract. Original HTML and PDFs are not included in the repo.
 
-**Challenge limit:** screening participation mainly relates to Goal 2. Direct Goal 3 survival, mortality or treatment-start timeliness are not measured by this dataset.
+## Goal 3 outcome
+
+Screening participation primarily relates to Goal 2. Goal 3 (equal and effective cancer care) is covered by an outcome measure: cervical cancer 5-year relative survival per wellbeing services county ([THL Sotkanet indicator 3626](https://sotkanet.fi/sotkanet/en/taulukko?indicator=3626), 2019–2024). Region findings carry it: each Region insight shows an outcome panel, and the full findings table has a survival column. A focus county 5 or more percentage points below the national value gets an extra, deterministic outcome-review action, with or without Gemini. Each statistical year pools patients diagnosed over 15 years, values are whole percentages without intervals, and small counties vary by chance. Survival does not show where in the pathway a difference arises, and a screening gap next to a survival gap does not prove cause. The strategy's headline survival targets (lung, pancreatic, liver cancer) and waiting times have no public county data.
+
+The Goal 3 snapshot `src/data/goal3.json` is owned by `scripts/ingest_goal3.py`, which validates that every screening region and year is present. To regenerate deliberately:
+
+```bash
+curl -fL "https://sotkanet.fi/rest/1.1/json?indicator=3626&years=2019&years=2020&years=2021&years=2022&years=2023&years=2024&genders=total" -o /tmp/sotkanet-3626.json
+curl -fL https://sotkanet.fi/rest/1.1/regions -o /tmp/sotkanet-regions.json
+npm run ingest:goal3 -- /tmp/sotkanet-3626.json /tmp/sotkanet-regions.json
+npm test
+```
 
 ## Verification
 

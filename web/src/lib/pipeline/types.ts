@@ -1,5 +1,6 @@
 import type { Action, Draft, Finding, Observation } from "../analysis";
 import type { Field, Mapping } from "../csv";
+import type { Goal3Outcome } from "../goal3";
 
 export type Stage = "prepare" | "analyse" | "research" | "recommend";
 export const stages: { id: Stage; label: string }[] = [
@@ -19,7 +20,8 @@ export type PreparedData = {
   official: boolean; mappingMode: "known-schema" | "gemini" | "user-corrected";
   cleaning: string[]; warnings: string[];
 };
-export type LocatedFinding = Finding & { id: string; stage: string };
+/** `outcome` is the county's Goal 3 survival, set only for Region findings (null when the group is not a county with data). */
+export type LocatedFinding = Finding & { id: string; stage: string; outcome?: Goal3Outcome | null };
 export type Findings = { all: LocatedFinding[]; focus: LocatedFinding[]; periods: string[] };
 export type ProposedAction = Action & { findingId: string };
 export type PipelineReport = {

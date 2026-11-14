@@ -93,3 +93,15 @@ test("upload and results remain readable on mobile", async ({ page }) => {
   await upload(page); await expect(page.getByRole("heading", { name: "Key insights" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test("region insights show the Goal 3 survival outcome next to the screening finding", async ({ page }) => {
+  await mockPipeline(page, route => route.fulfill({ contentType: "application/x-ndjson", body: resultStream() }));
+  await page.goto("/"); await upload(page);
+  const region = page.getByRole("region", { name: "Key insights" }).getByRole("article").filter({ has: page.getByRole("heading", { name: "Varsinais-Suomi", exact: true }) });
+  await expect(region.getByRole("heading", { name: "Outcome at the end of the pathway" })).toBeVisible();
+  await expect(region.getByText("+13.0 pp, statistical year 2024", { exact: false })).toBeVisible();
+  await expect(region.getByRole("link", { name: "THL Sotkanet, indicator 3626 ↗" })).toHaveAttribute("href", /indicator=3626$/);
+  await expect(page.getByRole("heading", { name: "Outcome at the end of the pathway" })).toHaveCount(1);
+  await page.getByText("All findings and analysis method", { exact: true }).click();
+  await expect(page.getByRole("row").filter({ hasText: "Etelä-Karjala" }).first()).toContainText("56% (Finland 73%, 2024)");
+});

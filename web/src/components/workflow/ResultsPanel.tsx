@@ -1,9 +1,21 @@
 "use client";
 
 import { count, metricLabel, pct, pp } from "@/lib/analysis";
-import type { PipelineReport, Source } from "@/lib/pipeline/types";
+import { GOAL3_LABEL, goal3Note } from "@/lib/goal3";
+import type { LocatedFinding, PipelineReport, Source } from "@/lib/pipeline/types";
 
 function SourceLink({ source }: { source: Source }) { return <a href={source.url} target="_blank" rel="noreferrer">{source.title} ↗</a>; }
+/** The Goal 3 outcome for a Region finding: the end of the same pathway. */
+function Outcome({ outcome }: { outcome: NonNullable<LocatedFinding["outcome"]> }) {
+  return <div className="outcome">
+    <h4>Outcome at the end of the pathway</h4>
+    <p className="muted small">{GOAL3_LABEL}</p>
+    <p><strong>{outcome.value}%</strong> of cervical cancer patients in {outcome.region} are alive five years after diagnosis, compared with <strong>{outcome.national}%</strong> in Finland as a whole ({pp(outcome.gap)}, statistical year {outcome.year}).</p>
+    <p className="muted small">Screening and follow-up show where the pathway may be leaking; survival shows the result. A gap in both is a reason to look further, not proof that one causes the other. {goal3Note}</p>
+    <p className="source-links"><span>Source:</span><a href={outcome.sourceUrl} target="_blank" rel="noreferrer">THL Sotkanet, indicator 3626 ↗</a></p>
+  </div>;
+}
+function survival(finding: LocatedFinding) { return finding.outcome ? `${finding.outcome.value}% (Finland ${finding.outcome.national}%, ${finding.outcome.year})` : "—"; }
 function assessment(status: string) { return status === "review" ? "Review signal" : status === "within" ? "Within threshold" : "Insufficient data"; }
 
 export default function ResultsPanel({ report, onRestart }: { report: PipelineReport; onRestart: () => void }) {
@@ -26,6 +38,7 @@ export default function ResultsPanel({ report, onRestart }: { report: PipelineRe
         <p>{metricLabel(finding.metric)}: <strong>{finding.denominator ? pct(finding.rate) : "no data"}</strong>{finding.benchmark !== null && <> vs <strong>{pct(finding.benchmark)}</strong> in the remaining groups</>}. <span className={`status ${finding.status}`}>{assessment(finding.status)}</span></p>
         <p className="small"><strong>Measured step:</strong> {finding.status === "insufficient" ? "Not established" : finding.stage}.</p>
         {finding.metric === "followup" && <p className="muted small">Verify reporting completeness before interpreting this as an access problem. These counts do not measure waiting times.</p>}
+        {finding.outcome && <Outcome outcome={finding.outcome}/>}
         {index === 0 && <div className="interpretation"><p>{report.interpretation.interpretation}</p><p><strong>Next question:</strong> {report.interpretation.nextQuestion}</p></div>}
         <div className="linked-actions"><h4>Recommended next action</h4>
           {report.recommendations.filter(action => action.findingId === finding.id).map(action => <section className="recommendation" key={action.id}>
@@ -43,7 +56,7 @@ export default function ResultsPanel({ report, onRestart }: { report: PipelineRe
         </div>
       </article>)}
     </section>
-    <p className="limits">Causes remain unresolved. Recommendations need a service lead’s review; local benefits are not established. This screening dataset does not measure survival or treatment-start timeliness.</p>
+    <p className="limits">Causes remain unresolved. Recommendations need a service lead’s review; local benefits are not established. Survival (Goal 3) is shown per wellbeing services county only, for Region findings. Treatment-start timeliness is not measured.</p>
     <details><summary>How your data were standardised and cleaned</summary>
       <ul>{report.dataset.cleaning.map(change => <li key={change}>{change}</li>)}</ul>
       {report.dataset.warnings.map(warning => <p key={warning}>{warning}</p>)}
@@ -52,7 +65,8 @@ export default function ResultsPanel({ report, onRestart }: { report: PipelineRe
     </details>
     <details><summary>All findings and analysis method</summary>
       <p>Every available dimension is analysed in its latest period, separately by cohort. Groups are compared with their disjoint remainder. Review signals use a descriptive five-percentage-point threshold and at least thirty observations in both denominators. No significance tests, confounder adjustment or causal identification are performed.</p>
-      <div className="table-wrap"><table><thead><tr><th>Group / period</th><th>Measure</th><th>Rate</th><th>Difference</th><th>Assessment</th></tr></thead><tbody>{findings.all.map(finding => <tr key={finding.id}><th scope="row">{finding.row.group}<span className="row-note">{finding.row.dimension} · {finding.row.year} · {finding.row.cohort}</span></th><td>{metricLabel(finding.metric)}</td><td>{finding.denominator ? pct(finding.rate) : "No data"}</td><td>{finding.gap === null ? "—" : pp(finding.gap)}</td><td>{assessment(finding.status)}</td></tr>)}</tbody></table></div>
+      <p>The survival column is the strategy’s Goal 3 outcome: 5-year relative survival of cervical cancer patients in each wellbeing services county (<a href="https://sotkanet.fi/sotkanet/en/taulukko?indicator=3626" target="_blank" rel="noreferrer">THL Sotkanet 3626 ↗</a>). It appears for Region rows only. {goal3Note}</p>
+      <div className="table-wrap"><table><thead><tr><th>Group / period</th><th>Measure</th><th>Rate</th><th>Difference</th><th>Assessment</th><th>Survival (Goal 3)</th></tr></thead><tbody>{findings.all.map(finding => <tr key={finding.id}><th scope="row">{finding.row.group}<span className="row-note">{finding.row.dimension} · {finding.row.year} · {finding.row.cohort}</span></th><td>{metricLabel(finding.metric)}</td><td>{finding.denominator ? pct(finding.rate) : "No data"}</td><td>{finding.gap === null ? "—" : pp(finding.gap)}</td><td>{assessment(finding.status)}</td><td>{survival(finding)}</td></tr>)}</tbody></table></div>
     </details>
     <details><summary>Evidence library and Context.dev results</summary>{report.sources.map(source => <div className="source" key={source.id}><SourceLink source={source}/><p>{source.text}</p><p className="small muted">{source.kind} · {source.locator}{source.retrievedAt ? ` · Retrieved ${source.retrievedAt}` : ""}</p><p className="small muted">{source.limitation}</p></div>)}</details>
     <div className="step-actions"><button className="secondary" onClick={onRestart}>Analyse another dataset</button><button onClick={download}>Download results</button></div>

@@ -67,6 +67,9 @@ select { background: white; border: 1px solid #cfd6e3; border-radius: 6px; paddi
 .status { display: inline-block; border-radius: 4px; background: #f0f2f6; color: #6c7482; padding: 2px 6px; font-size: 10px; white-space: nowrap; }
 .status.review { background: #fff3e1; color: #93692e; }
 .status.within { background: #edf5ef; color: #4d7c62; }
+.outcome { margin-top: 18px; padding: 15px 19px; border-left: 3px solid var(--border); font-size: 13px; }
+.outcome h4 { margin: 0 0 4px; }
+.outcome p { margin: 6px 0; }
 .interpretation { margin-top: 20px; padding: 17px 19px; border-radius: 6px; background: #f7f8fc; font-size: 13px; color: #637086; }
 .linked-actions { border-top: 1px solid var(--border); margin-top: 23px; padding-top: 21px; }
 .recommendation { font-size: 14px; }
