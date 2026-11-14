@@ -18,7 +18,10 @@ export type KitStrings = {
   tomorrow: string;
   enRouteTitle: string;
   robotLeft: string;
-  arrivesIn: string;
+  arrivesIn: (time: string) => string;
+  mapTo: string;
+  nowDemo: string;
+  laterNote: string;
   lab: string;
   home: string;
   pickupAt: (slot: string) => string;
@@ -34,7 +37,6 @@ export type KitStrings = {
   posBody: string;
   posChoose: string;
   interpreter: string;
-  interpreterNote: string;
   bookedTitle: string;
   bookedBody: (slot: string) => string;
   reminder: string;
@@ -52,7 +54,7 @@ const en: KitStrings = {
   langLabel: "Language",
   welcomeTitle: "Your bowel screening kit",
   welcomeBody:
-    "Bowel cancer screening finds blood in a stool sample before there are any symptoms. It is the best way to catch problems early.",
+    "Screening looks for hidden blood in a stool sample. It is offered every two years to people aged 56–74.",
   facts: ["Free of charge", "No preparation or fasting needed", "Results within about a month"],
   ready: "I'm ready",
   takeTitle: "Take the sample at home",
@@ -68,7 +70,10 @@ const en: KitStrings = {
   tomorrow: "Tomorrow",
   enRouteTitle: "The robot is on its way",
   robotLeft: "The robot left the lab.",
-  arrivesIn: "Arrives in",
+  arrivesIn: (t) => `Arrives in ${t}`,
+  mapTo: "to",
+  nowDemo: "Now (demo)",
+  laterNote: "Demo: the robot comes right away.",
   lab: "Lab",
   home: "Home",
   pickupAt: (s) => `Pickup window: ${s}`,
@@ -85,10 +90,9 @@ const en: KitStrings = {
     "Blood was found. This is common, about 4 in 100 samples, and usually not cancer, but it needs a colonoscopy.",
   posChoose: "Choose a time for the colonoscopy",
   interpreter: "I need an interpreter",
-  interpreterNote: "Interpreter needed",
   bookedTitle: "Colonoscopy booked",
   bookedBody: (s) => `Your colonoscopy: ${s}`,
-  reminder: "Bring a list of your medicines and someone to go home with if you can. The unit will send preparation instructions.",
+  reminder: "The unit will contact you with the details of your visit.",
   remind: "Läpi will remind you the day before.",
   doneTitle: "Colonoscopy done",
   doneBody: "Colonoscopy done. The unit will tell you the findings.",
@@ -101,9 +105,9 @@ const fi: KitStrings = {
   progress: "Eteneminen",
   greeting: (n) => `Hei ${n}`,
   langLabel: "Kieli",
-  welcomeTitle: "Suoliston seulontapakkauksesi",
+  welcomeTitle: "Suolistosyövän seulontapakkauksesi",
   welcomeBody:
-    "Suolistosyövän seulonta etsii ulostenäytteestä verta ennen kuin oireita on. Se on paras tapa löytää ongelmat ajoissa.",
+    "Seulonnassa etsitään ulostenäytteestä piilevää verta. Seulontaan kutsutaan joka toinen vuosi 56–74-vuotiaat.",
   facts: ["Maksuton", "Ei valmisteluja eikä paastoa", "Tulos noin kuukaudessa"],
   ready: "Olen valmis",
   takeTitle: "Ota näyte kotona",
@@ -119,7 +123,10 @@ const fi: KitStrings = {
   tomorrow: "Huomenna",
   enRouteTitle: "Robotti on matkalla",
   robotLeft: "Robotti lähti laboratoriosta.",
-  arrivesIn: "Perillä",
+  arrivesIn: (t) => `Saapuu ${t} kuluttua`,
+  mapTo: "–",
+  nowDemo: "Nyt (demo)",
+  laterNote: "Demo: robotti tulee heti.",
   lab: "Laboratorio",
   home: "Koti",
   pickupAt: (s) => `Noutoaika: ${s}`,
@@ -136,10 +143,9 @@ const fi: KitStrings = {
     "Verta löytyi. Se on tavallista, noin 4 näytteessä sadasta, eikä yleensä tarkoita syöpää, mutta tarvitset paksunsuolen tähystyksen.",
   posChoose: "Valitse aika tähystykseen",
   interpreter: "Tarvitsen tulkin",
-  interpreterNote: "Tulkin tarve",
   bookedTitle: "Tähystys varattu",
   bookedBody: (s) => `Tähystyksesi: ${s}`,
-  reminder: "Ota mukaan lista lääkkeistäsi ja mahdollisuuksien mukaan joku kotiin mukaan. Yksikkö lähettää valmisteluohjeet.",
+  reminder: "Yksikkö ottaa sinuun yhteyttä käyntisi tiedoilla.",
   remind: "Läpi muistuttaa sinua edellisenä päivänä.",
   doneTitle: "Tähystys tehty",
   doneBody: "Tähystys on tehty. Yksikkö kertoo löydökset.",
@@ -154,7 +160,7 @@ const sv: KitStrings = {
   langLabel: "Språk",
   welcomeTitle: "Ditt kit för tarmscreening",
   welcomeBody:
-    "Screening för tarmcancer letar efter blod i ett avföringsprov innan symtom uppstår. Det är bästa sättet att hitta problem i tid.",
+    "Screeningen letar efter dolt blod i ett avföringsprov. Den erbjuds vartannat år till personer i åldern 56–74.",
   facts: ["Kostnadsfritt", "Ingen förberedelse eller fasta", "Svar inom ungefär en månad"],
   ready: "Jag är redo",
   takeTitle: "Ta provet hemma",
@@ -170,7 +176,10 @@ const sv: KitStrings = {
   tomorrow: "I morgon",
   enRouteTitle: "Roboten är på väg",
   robotLeft: "Roboten lämnade labbet.",
-  arrivesIn: "Framme om",
+  arrivesIn: (t) => `Framme om ${t}`,
+  mapTo: "till",
+  nowDemo: "Nu (demo)",
+  laterNote: "Demo: roboten kommer direkt.",
   lab: "Labb",
   home: "Hem",
   pickupAt: (s) => `Hämtningstid: ${s}`,
@@ -187,10 +196,9 @@ const sv: KitStrings = {
     "Blod hittades. Det är vanligt, i ungefär 4 prov av 100, och betyder oftast inte cancer, men du behöver en koloskopi.",
   posChoose: "Välj tid för koloskopin",
   interpreter: "Jag behöver tolk",
-  interpreterNote: "Tolk behövs",
   bookedTitle: "Koloskopi bokad",
   bookedBody: (s) => `Din koloskopi: ${s}`,
-  reminder: "Ta med en lista på dina läkemedel och om möjligt någon som följer dig hem. Enheten skickar anvisningar för förberedelse.",
+  reminder: "Enheten kontaktar dig med uppgifter om ditt besök.",
   remind: "Läpi påminner dig dagen före.",
   doneTitle: "Koloskopin är gjord",
   doneBody: "Koloskopin är gjord. Enheten berättar vad som hittades.",

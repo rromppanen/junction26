@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronRight } from "lucide-react";
 import { Wordmark } from "@/components/Wordmark";
 import { ROBOT_TRAVEL_MS, robotProgress, stageOf, type Lang, type Stage } from "@/lib/sample/model";
@@ -12,6 +12,9 @@ import { LOCALES, STRINGS, type KitStrings } from "./strings";
 const ME = "me";
 const LANG_KEY = "lapi.kit.lang";
 const LANGS: Lang[] = ["fi", "sv", "en"];
+const NOW_LABELS = LANGS.map((l) => STRINGS[l].nowDemo);
+const INTERPRETER_NOTE = "Interpreter needed";
+const CLICK_GUARD_MS = 400;
 
 function stepOf(stage: Stage): number {
   switch (stage) {
@@ -22,11 +25,11 @@ function stepOf(stage: Stage): number {
   }
 }
 
-/** Pickup windows relative to the demo clock: today if there is time, otherwise tomorrow. */
+/** First option sends the robot now (demo); two later windows follow, today if there is time, otherwise tomorrow. */
 function pickupSlots(now: number, t: KitStrings): string[] {
   const h = new Date(now).getHours();
-  if (h <= 17) return [2, 4, 6].map((d) => `${t.today} ${h + d}–${h + d + 1}`);
-  return ["8–9", "10–11", "12–13"].map((w) => `${t.tomorrow} ${w}`);
+  if (h <= 17) return [t.nowDemo, ...[2, 4].map((d) => `${t.today} ${h + d}–${h + d + 1}`)];
+  return [t.nowDemo, ...["8–9", "10–11"].map((w) => `${t.tomorrow} ${w}`)];
 }
 
 /** Three colonoscopy times on upcoming weekdays, starting three days out. */
@@ -53,21 +56,21 @@ function mmss(ms: number): string {
 export function KitApp() {
   const { samples, now, add } = useSamples();
   const [mounted, setMounted] = useState(false);
-  const [lang, setLang] = useState<Lang>("fi");
+  const [stored, setStored] = useState<Lang | null>(null);
   const [interpreter, setInterpreter] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     try {
       const v = window.localStorage.getItem(LANG_KEY);
-      if (v === "fi" || v === "sv" || v === "en") setLang(v);
+      if (v === "fi" || v === "sv" || v === "en") setStored(v);
     } catch {
       /* storage blocked: keep default */
     }
   }, []);
 
   function chooseLang(l: Lang) {
-    setLang(l);
+    setStored(l);
     try {
       window.localStorage.setItem(LANG_KEY, l);
     } catch {
@@ -76,6 +79,17 @@ export function KitApp() {
   }
 
   const me = samples.find((s) => s.id === ME);
+  const lang: Lang = stored ?? me?.person.lang ?? "fi";
+  const screenKey = me ? `${stageOf(me, now)}:${me.events.some((e) => e.type === "kitOpened")}` : "";
+  const shownAt = useRef(0);
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, [screenKey]);
+  /** Ignore clicks right after a screen change so a double click cannot act on the next screen. */
+  const act = (e: Parameters<typeof add>[1]) => {
+    if (Date.now() - shownAt.current < CLICK_GUARD_MS) return;
+    add(ME, e);
+  };
   const t = STRINGS[lang];
   const pSlots = useMemo(() => pickupSlots(now, t), [Math.floor(now / 3_600_000), t]); // eslint-disable-line react-hooks/exhaustive-deps
   const cSlots = useMemo(() => colonoscopySlots(now, lang), [Math.floor(now / 86_400_000), lang]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -152,7 +166,7 @@ export function KitApp() {
                   ))}
                 </ul>
               </section>
-              <Primary onClick={() => add(ME, { type: "kitOpened" })}>{t.ready}</Primary>
+              <Primary onClick={() => act({ type: "kitOpened" })}>{t.ready}</Primary>
             </>
           )}
 
@@ -167,7 +181,7 @@ export function KitApp() {
                   </li>
                 ))}
               </ol>
-              <Primary onClick={() => add(ME, { type: "sampleTaken" })}>{t.taken}</Primary>
+              <Primary onClick={() => act({ type: "sampleTaken" })}>{t.taken}</Primary>
             </>
           )}
 
@@ -180,7 +194,7 @@ export function KitApp() {
                   <button
                     key={s}
                     type="button"
-                    onClick={() => add(ME, { type: "pickupBooked", slot: s })}
+                    onClick={() => act({ type: "pickupBooked", slot: s })}
                     className="flex min-h-14 w-full items-center justify-between rounded-xl border border-rule bg-surface px-4 text-left font-medium hover:border-brand hover:bg-brand-soft"
                   >
                     {s}<ChevronRight aria-hidden size={18} className="text-muted" />
@@ -194,10 +208,11 @@ export function KitApp() {
             <>
               <h1 className="text-2xl font-semibold">{t.enRouteTitle}</h1>
               {booked?.slot && <p className="text-sm text-muted">{t.pickupAt(booked.slot)}</p>}
-              <RobotMap progress={progress ?? 0} labLabel={t.lab} homeLabel={t.home} />
+              <RobotMap progress={progress ?? 0} labLabel={t.lab} homeLabel={t.home} to={t.mapTo} />
               <p className="text-sm">{t.robotLeft}</p>
+              {booked?.slot && !NOW_LABELS.includes(booked.slot) && <p className="text-xs text-muted">{t.laterNote}</p>}
               <p aria-hidden className="text-center text-sm text-muted">
-                {t.arrivesIn} <span className="text-2xl font-semibold tabular-nums text-brand">{mmss(remaining)}</span>
+                <span className="text-2xl font-semibold tabular-nums text-brand">{t.arrivesIn(mmss(remaining))}</span>
               </p>
             </>
           )}
@@ -205,13 +220,13 @@ export function KitApp() {
           {stage === "robotAtDoor" && (
             <>
               <h1 className="text-2xl font-semibold">{t.doorTitle}</h1>
-              <RobotMap progress={1} labLabel={t.lab} homeLabel={t.home} />
+              <RobotMap progress={1} labLabel={t.lab} homeLabel={t.home} to={t.mapTo} />
               <p className="text-sm leading-relaxed">{t.doorBody}</p>
               <p className="rounded-xl border border-rule bg-brand-soft p-4 text-center">
                 <span className="block text-xs text-muted">{t.codeLabel}</span>
                 <span className="text-3xl font-semibold tracking-[0.4em] text-brand">4812</span>
               </p>
-              <Primary onClick={() => add(ME, { type: "pickedUp" })}>{t.putIn}</Primary>
+              <Primary onClick={() => act({ type: "pickedUp" })}>{t.putIn}</Primary>
             </>
           )}
 
@@ -235,7 +250,7 @@ export function KitApp() {
                   <button
                     key={s}
                     type="button"
-                    onClick={() => add(ME, { type: "colonoscopyBooked", slot: s, ...(interpreter ? { note: t.interpreterNote } : {}) })}
+                    onClick={() => act({ type: "colonoscopyBooked", slot: s, ...(interpreter ? { note: INTERPRETER_NOTE } : {}) })}
                     className="flex min-h-14 w-full items-center justify-between rounded-xl border border-rule bg-surface px-4 text-left font-medium hover:border-brand hover:bg-brand-soft"
                   >
                     {s}<ChevronRight aria-hidden size={18} className="text-muted" />
