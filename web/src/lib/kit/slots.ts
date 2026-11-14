@@ -1,4 +1,4 @@
-/** Robot pickup windows: one hour each, 8:00 to 20:00, today and tomorrow only (the sample must be sent within a day). */
+/** Robot pickup windows: one hour each, 8:00 to 20:00, today and tomorrow only (HUS: the sample is returned by the next working day). */
 export const FIRST_HOUR = 8;
 export const LAST_HOUR = 20;
 

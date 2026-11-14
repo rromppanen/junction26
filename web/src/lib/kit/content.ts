@@ -4,8 +4,11 @@
  * translator can own and review one file. The QR code on the envelope opens /kit.
  *
  * Sources:
- * - Stool test steps: Fimlab, "Ulostenäytteen otto-ohje, suolistosyövän seulonta" (2026),
- *   https://fimlab.fi/suolistoseulonta. The robot replaces the post; the 24-hour rule is Fimlab's.
+ * - Stool test steps: HUS, "Ohje näytteen ottamiseen, esitietojen täyttämiseen ja palautukseen"
+ *   (10.12.2025), https://www.hus.fi/sites/default/files/2025-12/ohje-suolistosyovan-seulonnan-naytteen-ottamiseen-ja-esitietojen-tayttamiseen-ja-palautukseen.pdf
+ *   Every step follows the leaflet's instructions in order, in our own words. Storage at room
+ *   temperature and return by the next working day: HUS's bowel screening page (READ_MORE.fi).
+ *   The robot replaces the HUS laboratory return box or the post.
  * - "Why this matters": the sources listed below.
  */
 import { ar } from "./text/ar";
@@ -34,7 +37,7 @@ export const SOURCES: Source[] = [
   { label: "Cochrane review of stool-test screening trials (Hewitson et al., 2007)", url: "https://doi.org/10.1002/14651858.CD001216.pub2" },
   { label: "American Cancer Society: colorectal cancer survival by stage", url: "https://www.cancer.org/cancer/types/colon-rectal-cancer/detection-diagnosis-staging/survival-rates.html" },
   { label: "HUS: colorectal cancer screening", url: "https://www.hus.fi/en/newsroom/first-invitations-colorectal-cancer-screening-2026-will-be-mailed-february" },
-  { label: "Fimlab: sampling instructions", url: "https://fimlab.fi/suolistoseulonta" },
+  { label: "HUS: sampling, background information and return instructions (PDF)", url: "https://www.hus.fi/sites/default/files/2025-12/ohje-suolistosyovan-seulonnan-naytteen-ottamiseen-ja-esitietojen-tayttamiseen-ja-palautukseen.pdf" },
 ];
 
 /** HUS's own page on bowel cancer screening and what happens after the sample, in the languages HUS publishes it in. */
@@ -119,8 +122,8 @@ export type KitLang = "fi" | "sv" | "en" | "ru" | "et" | "ar" | "uk" | "so" | "f
 
 /**
  * The national languages and English, then the largest foreign-language groups in Finland
- * (Statistics Finland). Apart from Fimlab's Finnish steps, the translations have not been checked
- * by a professional translator yet; see the note at the top of each text file.
+ * (Statistics Finland). HUS publishes its sampling leaflet in Finnish, Swedish and English; the other
+ * translations have not been checked by a professional translator yet (see each text file's note).
  */
 export const KIT_LANGS: { code: KitLang; native: string; dir: "ltr" | "rtl"; locale: string }[] = [
   { code: "fi", native: "Suomi", dir: "ltr", locale: "fi-FI" },
