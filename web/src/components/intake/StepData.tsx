@@ -1,42 +1,41 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { Database, Upload } from "lucide-react";
+import { Check, Database, FileUp } from "lucide-react";
 import { parseCSV, type Table } from "@/lib/intake/csv";
 import { personalDataHeaders } from "@/lib/intake/privacy";
 import { PUBLIC_DATASETS, type PublicDataset } from "@/lib/intake/setup";
-import { IconHeading } from "@/components/ui";
+import { FadeIn } from "./fade";
 
 const MAX_BYTES = 1_000_000;
+/** A demo export with terse Finnish column names, so the AI has something to ask about. */
+const EXAMPLE = { url: "/demo/suolistoseulonta_pkarjala_2022-2024.csv", name: "suolistoseulonta_pkarjala_2022-2024.csv" };
+export const DEFAULT_DATASETS: PublicDataset[] = ["sotkanet-screening", "registry-pathway"];
 
 type Props = {
   datasets: PublicDataset[];
   table: Table | null;
   fileName: string;
-  error: string | null;
   onDatasets: (datasets: PublicDataset[]) => void;
   onFile: (table: Table | null, fileName: string) => void;
-  onError: (message: string) => void;
   onContinue: () => void;
 };
 
-export function StepData({ datasets, table, fileName, error, onDatasets, onFile, onError, onContinue }: Props) {
-  const fileId = useId();
-  const [flagged, setFlagged] = useState<string[]>([]);
-  const requestRef = useRef(0);
+const tile = "flex w-full items-start gap-3 rounded-[6px] border p-4 text-left transition-colors";
 
-  const toggle = (id: PublicDataset) =>
-    onDatasets(datasets.includes(id) ? datasets.filter((d) => d !== id) : [...datasets, id]);
+/** The first screen: a title, one instruction and two choices. Nothing else. */
+export function StepData({ datasets, table, fileName, onDatasets, onFile, onContinue }: Props) {
+  const fileId = useId();
+  const [problem, setProblem] = useState<string | null>(null);
+  const requestRef = useRef(0);
+  const usePublic = datasets.length > 0;
 
   async function handleFile(file: File | undefined) {
     const request = ++requestRef.current;
-    setFlagged([]);
-    if (!file) {
-      onFile(null, "");
-      return;
-    }
+    setProblem(null);
+    if (!file) return;
     if (file.size > MAX_BYTES) {
-      onError("Use a CSV under 1 MB with aggregate data only.");
+      setProblem("That file is over 1 MB. Use an aggregate CSV under 1 MB.");
       return;
     }
     try {
@@ -45,118 +44,132 @@ export function StepData({ datasets, table, fileName, error, onDatasets, onFile,
       const parsed = parseCSV(text);
       const bad = personalDataHeaders(parsed.headers);
       if (bad.length > 0) {
-        setFlagged(bad);
+        setProblem(`I can't use this file: ${bad.join(", ")} look like personal data. Please use aggregate figures only.`);
         onFile(null, "");
         return;
       }
       onFile(parsed, file.name);
     } catch (e) {
       if (request !== requestRef.current) return;
-      onError(e instanceof Error ? e.message : "Could not read this file.");
+      setProblem(e instanceof Error ? e.message : "Could not read this file.");
     }
   }
 
-  const canContinue = datasets.length > 0 || table !== null;
+  async function loadExample() {
+    try {
+      const res = await fetch(EXAMPLE.url);
+      if (!res.ok) throw new Error();
+      await handleFile(new File([await res.blob()], EXAMPLE.name, { type: "text/csv" }));
+    } catch {
+      setProblem("Could not load the example file.");
+    }
+  }
+
+  const toggleDataset = (id: PublicDataset) =>
+    onDatasets(datasets.includes(id) ? datasets.filter((d) => d !== id) : [...datasets, id]);
+  const canContinue = usePublic || table !== null;
 
   return (
-    <div className="space-y-8">
-      <section aria-labelledby="public-h">
-        <IconHeading icon={Database} as="h2" id="public-h" className="text-lg">Public datasets</IconHeading>
-        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-          {PUBLIC_DATASETS.map((d) => (
-            <li key={d.id} className="rounded-[3px] border border-rule p-3">
-              <label className="flex cursor-pointer items-start gap-3">
-                <input
-                  type="checkbox"
-                  className="mt-1 h-4 w-4 shrink-0"
-                  checked={datasets.includes(d.id)}
-                  onChange={() => toggle(d.id)}
-                />
-                <span>
-                  <span className="block font-medium">{d.nameEn}</span>
-                  <span className="block text-xs text-muted">{d.source}</span>
-                  <span className="mt-1 block text-sm">{d.description}</span>
-                </span>
-              </label>
-            </li>
-          ))}
-        </ul>
-      </section>
+    <div className="space-y-10">
+      <div className="space-y-4">
+        <FadeIn>
+          <h1 className="text-display font-semibold tracking-[-0.02em]">What should we look at?</h1>
+        </FadeIn>
+        <FadeIn delay={180}>
+          <p className="text-lede text-muted">Pick public data, add a file of your own, or both.</p>
+        </FadeIn>
+      </div>
 
-      <section aria-labelledby="upload-h">
-        <IconHeading icon={Upload} as="h2" id="upload-h" className="text-lg">Your own data (optional)</IconHeading>
-        <p className="mt-2 max-w-2xl text-sm text-muted">
-          Aggregate data only, no personal data. The file is read in your browser; only column names and up to 5
-          sample rows are sent on.
-        </p>
-        <label htmlFor={fileId} className="mt-3 block text-sm font-medium">CSV file (up to 1 MB)</label>
-        <input
-          id={fileId}
-          type="file"
-          accept=".csv,text/csv"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            e.target.value = "";
-            void handleFile(file);
-          }}
-          className="mt-1 block w-full max-w-md text-sm"
-        />
+      <FadeIn delay={360} className="grid gap-3 sm:grid-cols-2">
+        <button
+          type="button"
+          aria-pressed={usePublic}
+          onClick={() => onDatasets(usePublic ? [] : DEFAULT_DATASETS)}
+          className={`${tile} ${usePublic ? "border-ink bg-surface" : "border-rule hover:border-par"}`}
+        >
+          <Database aria-hidden size={22} className="mt-0.5 shrink-0" />
+          <span className="flex-1">
+            <span className="block font-semibold">Public data</span>
+            <span className="block text-small text-muted">Finnish registers, ready to use</span>
+          </span>
+          {usePublic && <Check aria-hidden size={18} className="shrink-0" />}
+        </button>
 
-        {flagged.length > 0 && (
-          <div role="alert" className="mt-3 max-w-2xl rounded-[3px] border border-rule bg-par-soft p-3 text-sm">
-            This file was not loaded because these columns look like personal data: <strong>{flagged.join(", ")}</strong>.
-            Please upload an aggregate file without personal data.
-          </div>
-        )}
-        {error && (
-          <div role="alert" className="mt-3 max-w-2xl rounded-[3px] border border-rule bg-par-soft p-3 text-sm">
-            {error}
-          </div>
-        )}
+        <label
+          htmlFor={fileId}
+          className={`${tile} cursor-pointer focus-within:ring-2 focus-within:ring-highlight ${table ? "border-ink bg-surface" : "border-rule hover:border-par"}`}
+        >
+          <FileUp aria-hidden size={22} className="mt-0.5 shrink-0" />
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold">Your own file</span>
+            <span className="block truncate text-small text-muted">
+              {table
+                ? `${fileName} · ${table.rows.length} rows · ${table.headers.length} columns`
+                : "An aggregate CSV, read in your browser"}
+            </span>
+          </span>
+          {table && <Check aria-hidden size={18} className="shrink-0" />}
+          <input
+            id={fileId}
+            type="file"
+            accept=".csv,text/csv"
+            className="sr-only"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              void handleFile(file);
+            }}
+          />
+        </label>
+      </FadeIn>
 
-        {table && (
-          <div className="mt-4">
-            <p className="text-sm">
-              <strong>{fileName}</strong>: {table.rows.length} {table.rows.length === 1 ? "row" : "rows"},{" "}
-              {table.headers.length} columns. First {Math.min(5, table.rows.length)} shown.
-            </p>
-            <button type="button" onClick={() => { requestRef.current++; setFlagged([]); onFile(null, ""); }}
-              className="mt-2 rounded-[3px] border border-rule px-3 py-2 text-sm hover:bg-par-soft">Remove file</button>
-            <div className="mt-2 overflow-x-auto">
-              <table className="min-w-full border-collapse text-left text-sm">
-                <thead>
-                  <tr>
-                    {table.headers.map((h, i) => (
-                      <th key={i} scope="col" className="whitespace-nowrap border-b border-rule px-2 py-1 font-semibold">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {table.rows.slice(0, 5).map((r, i) => (
-                    <tr key={i}>
-                      {table.headers.map((_, j) => (
-                        <td key={j} className="whitespace-nowrap border-b border-rule px-2 py-1">{r[j] ?? ""}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </section>
+      {usePublic && (
+        <FadeIn className="-mt-6 flex flex-wrap gap-2">
+          {PUBLIC_DATASETS.map((d) => {
+            const on = datasets.includes(d.id);
+            return (
+              <button
+                key={d.id}
+                type="button"
+                aria-pressed={on}
+                title={`${d.description} (${d.source})`}
+                onClick={() => toggleDataset(d.id)}
+                className={`rounded-full border px-3 py-1 text-small ${on ? "border-ink bg-ink text-white" : "border-rule text-muted hover:border-par"}`}
+              >
+                {d.nameEn}
+              </button>
+            );
+          })}
+        </FadeIn>
+      )}
 
-      <div>
+      {table && <button type="button" onClick={() => { requestRef.current++; setProblem(null); onFile(null, ""); }}
+        className="rounded-md border border-rule px-3 py-2 text-sm">Remove file</button>}
+
+      {!table && (
+        <FadeIn delay={460} className="-mt-6">
+          <button type="button" onClick={() => void loadExample()} className="text-small text-muted underline underline-offset-4 hover:text-ink">
+            No file at hand? Try an example
+          </button>
+        </FadeIn>
+      )}
+
+      {problem && (
+        <FadeIn key={problem}>
+          <p role="alert" className="text-small text-behind">{problem}</p>
+        </FadeIn>
+      )}
+
+      <FadeIn delay={540}>
         <button
           type="button"
           disabled={!canContinue}
           onClick={onContinue}
-          className="rounded-[3px] bg-ink px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-[6px] bg-ink px-6 py-3 font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
         >
-          Continue to scope
+          Start
         </button>
-        {!canContinue && <p className="mt-2 text-sm text-muted">Choose a public dataset or upload a file to continue.</p>}
-      </div>
+      </FadeIn>
     </div>
   );
 }

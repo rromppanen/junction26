@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function Loading() {
   return (
     <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8" aria-busy="true">
-      <p className="mb-10 text-sm"><Link href="/" className="link">Back to national view</Link></p>
+      <p className="mb-10 text-sm"><Link href="/map" className="link">Back to national view</Link></p>
       <p className="text-sm text-muted">Cancer care brief</p>
       <div className="mt-2 h-12 w-2/3 max-w-md rounded-[2px] bg-par-soft sm:h-[5.5rem]" />
       <p className="mt-7 max-w-xl font-serif text-[1.35rem] leading-snug sm:text-[1.7rem]" role="status">

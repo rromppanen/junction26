@@ -11,9 +11,11 @@ const snapshot = JSON.parse(readFileSync(join(root, "src/data/snapshot.json"), "
 const counties = snapshot.regions.filter((r) => r.kind === "county").map((r) => r.id);
 
 const pages = [
-  { path: "/", expect: "Gap Radar" },
+  { path: "/", expect: "What should we look at?" },
+  { path: "/map", expect: "Gap Radar" },
   { path: "/simulator", expect: "Breast screening simulator" },
-  { path: "/analyse", expect: "Analysis setup progress" },
+  { path: "/analyse", expect: "What should we look at?" },
+  { path: "/findings", expect: "Gap Radar" },
   ...counties.flatMap((id) => [
     { path: `/county/${id}`, expect: "Cancer care brief" },
     { path: `/county/${id}/memo`, expect: "Hallitusmuistio" },

@@ -16,7 +16,7 @@ export default function NotFound() {
         to choose a county, compare screening figures or open the simulator.
       </p>
       <p className="mt-6 text-sm">
-        <Link href="/" className="link font-semibold">
+        <Link href="/map" className="link font-semibold">
           Return to national view
         </Link>
       </p>

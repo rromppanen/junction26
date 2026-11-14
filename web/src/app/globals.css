@@ -277,3 +277,33 @@ button:disabled { cursor: not-allowed; }
   .responsive-options td[data-label]::before { content: attr(data-label); text-align: left; color: var(--muted); font-weight: 400; }
 }
 @media print { .skip-link { display: none; } .primary-action { display: none; } }
+
+/*
+  Conversational intake (/analyse): each screen and each question fades in, and fades out before the next.
+  `.fade-in` takes an optional --delay so lines on one screen arrive one after another.
+*/
+@keyframes intake-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.fade-in {
+  animation: intake-in 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--delay, 0ms);
+}
+.fade-out {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 320ms ease-in, transform 320ms ease-in;
+}
+@keyframes intake-pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+.thinking-dot { animation: intake-pulse 1.2s ease-in-out infinite; }
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+@media (prefers-reduced-motion: reduce) {
+  .fade-in { animation-duration: 1ms; animation-delay: 0ms; }
+  .fade-out { transition-duration: 1ms; }
+  .thinking-dot { animation: none; opacity: 0.6; }
+}

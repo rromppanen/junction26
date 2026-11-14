@@ -22,7 +22,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
         >
           Try again
         </button>
-        <Link href="/" className="link">
+        <Link href="/map" className="link">
           Return to national view
         </Link>
       </p>

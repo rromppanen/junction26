@@ -165,9 +165,9 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
     <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-4 pb-10 pt-5 sm:px-6">
       <OpenOnHash />
       <AppHeader>
-        <HeaderLink href="/" icon={ArrowLeft} label="Map" />
+        <HeaderLink href="/map" icon={ArrowLeft} label="Map" />
         <HeaderLink href={`/county/${regionId}/memo`} icon={FileText} label="Memo (FI)" title="One-page board memo in Finnish" />
-        <HeaderLink href="/analyse" icon={FileUp} label="Analyse your data" title="Bring your own aggregate data" />
+        <HeaderLink href="/" icon={FileUp} label="Analyse your data" title="Bring your own aggregate data" />
         <HeaderLink href={`/simulator?county=${regionId}`} icon={Gauge} label="Breast screening simulator" title="What raising breast screening attendance here would be worth" />
       </AppHeader>
 
