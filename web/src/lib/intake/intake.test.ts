@@ -110,6 +110,9 @@ describe("personalDataHeaders", () => {
     "email", "Sähköposti", "personal id", "henkilotunnus",
     "hospital_patient_name", "county_patient_name", "unit_patient_name", "alue_patient_name", "kunta_asiakas_nimi", "ohjelma_henkilön_nimi",
     "kunta_asiakkaan_nimi", "alue_potilaan_nimi", "sairaala_potilaan_nimi", "asukkaan nimi", "kunnan_asukkaan_nimi",
+    "kuntalaisen nimi", "kuntalaisten nimi", "lapsen nimi", "opiskelijan nimi", "nimi", "name",
+    // fail closed: two qualifier tokens are not on the place/organisation allow-list
+    "residential_area_name",
   ])("flags %s", h => expect(personalDataHeaders([h])).toEqual([h]));
   it("flags NFD-encoded Finnish headers", () => {
     const h = "henkilo\u0308tunnus";

@@ -3,21 +3,17 @@ const SUBSTRINGS: RegExp[] = [
 ];
 const ID_TOKENS = new Set(["hetu", "ssn", "dob", "etunimi", "sukunimi", "firstname", "lastname", "fullname"]);
 const NAME_TOKENS = new Set(["name", "nimi"]);
-/** Qualifier stems meaning the "name" is a place/organisation/programme, not a person (prefix match covers Finnish inflections). */
-const NON_PERSON_STEMS = [
-  "area", "region", "count", "municipal", "programme", "program", "group", "language", "dataset", "file", "table", "column",
-  "unit", "hospital", "organi", "district",
-  "kunta", "kunnan", "kuntayhtym", "seutukun", "alue", "hyvinvointialue", "maakun", "sairaanhoitopiir", "sairaala",
-  "yksikk", "yksikö", "ohjelm", "seulon",
-];
-
 /**
- * A header with a person qualifier is never exempted by a place/organisation qualifier.
- * Finnish stems are cut before consonant gradation so inflected forms match:
- * asiakas/asiakkaan -> "asiak", potilas/potilaan -> "potila", asukas/asukkaan -> "asuk",
- * henkilö/henkilön/henkilo -> "henkil" (also over-flags henkilöstön nimi, staff: deliberately conservative).
+ * Closed list of place/organisation words (incl. Finnish genitives). A name header is exempt only when it is
+ * exactly one of these followed by the name token (fail closed: anything else with a name token is flagged).
  */
-const PERSON_STEMS = ["patient", "potila", "asiak", "asuk", "henkil", "client", "customer", "person", "resident"];
+const PLACE_TOKENS = [
+  "kunta", "kunnan", "alue", "alueen", "hyvinvointialue", "hyvinvointialueen", "maakunta", "maakunnan",
+  "sairaanhoitopiiri", "sairaanhoitopiirin", "kuntayhtymä", "kuntayhtymän", "seutukunta", "seutukunnan",
+  "sairaala", "sairaalan", "yksikkö", "yksikön", "ohjelma", "ohjelman", "kieli", "kielen",
+  "area", "region", "county", "municipality", "district", "hospital", "unit", "programme", "program", "group", "language",
+];
+const PLACE_NAME_HEADER = new RegExp(`^(?:${PLACE_TOKENS.join("|")})(?:[\\s_-]?nimi|[\\s_-]name)$`);
 
 export function personalDataHeaders(headers: string[]): string[] {
   return headers.filter(h => {
@@ -26,7 +22,6 @@ export function personalDataHeaders(headers: string[]): string[] {
     const tokens = k.split(/[^a-zäöå0-9]+/).filter(Boolean);
     if (tokens.some(t => ID_TOKENS.has(t))) return true;
     if (!tokens.some(t => NAME_TOKENS.has(t))) return false;
-    if (tokens.some(t => PERSON_STEMS.some(s => t.startsWith(s)))) return true;
-    return !tokens.some(t => NON_PERSON_STEMS.some(s => t.startsWith(s)));
+    return !PLACE_NAME_HEADER.test(k);
   });
 }
