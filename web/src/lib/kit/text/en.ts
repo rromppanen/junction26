@@ -48,6 +48,9 @@ export const en: KitText = {
     thanksBody: "There is nothing else you need to do.",
     hub: "Sample hub",
     home: "Home",
+    scheduledTitle: "Pickup booked",
+    scheduledBody: "Keep the return envelope ready. When the time comes, the robot sets off from the sample hub and you can follow it here.",
+    sendNow: "Send the robot now",
   },
   test: {
     name: "Bowel cancer screening",

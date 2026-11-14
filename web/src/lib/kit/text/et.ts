@@ -48,6 +48,9 @@ export const et: KitText = {
     thanksBody: "Sul ei ole vaja enam midagi teha.",
     hub: "Proovipunkt",
     home: "Kodu",
+    scheduledTitle: "Äravõtmine on broneeritud",
+    scheduledBody: "Hoia tagastusümbrik valmis. Kui aeg kätte jõuab, sõidab robot välja ja saad seda siin jälgida.",
+    sendNow: "Saada robot kohe",
   },
   test: {
     name: "Soolevähi sõeluuring",

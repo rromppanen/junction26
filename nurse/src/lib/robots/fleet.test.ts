@@ -228,3 +228,29 @@ describe("a pickup booked on the phone", () => {
     expect(tripsOf([bad])[0].home).toEqual(homeOf(booked.person));
   });
 });
+
+describe("a pickup booked for a later window", () => {
+  const slotAt = T0 + 3_600_000;
+  const booked = (extra: Sample["events"] = []): Sample => ({
+    id: "me",
+    person: { id: "me", name: "Aino K.", age: 62, municipality: "Helsinki", area: "Kallio", lang: "fi" },
+    events: [{ type: "invited", at: T0 - 1000 }, { type: "sampleTaken", at: T0 - 500 }, { type: "pickupBooked", at: T0, travelMs: 15_000, slotAt }, ...extra],
+  });
+
+  it("waits at the hub until the window starts", () => {
+    const s = booked();
+    expect(stageOf(s, T0 + 60_000)).toBe("pickupBooked");
+    const [trip] = tripsOf([s]);
+    expect(trip.bookedAt).toBe(slotAt);
+    expect(viewOf([s], T0 + 60_000, trip.robotId).status.kind).toBe("idle");
+    expect(stageOf(s, slotAt + 1000)).toBe("robotEnRoute");
+    expect(viewOf([s], slotAt + 1000, trip.robotId).status.kind).toBe("outbound");
+  });
+
+  it("leaves early when the phone sends the robot now", () => {
+    const s = booked([{ type: "robotDispatched", at: T0 + 120_000 }]);
+    const [trip] = tripsOf([s]);
+    expect(trip.bookedAt).toBe(T0 + 120_000);
+    expect(stageOf(s, T0 + 125_000)).toBe("robotEnRoute");
+  });
+});

@@ -1,4 +1,4 @@
-import { ROBOT_TRAVEL_MS, ROBOT_WAIT_FLAG_MS, flagsOf, stageOf, type Person, type Sample } from "@/lib/sample/model";
+import { ROBOT_TRAVEL_MS, ROBOT_WAIT_FLAG_MS, departureOf, flagsOf, stageOf, type Person, type Sample } from "@/lib/sample/model";
 
 /**
  * The robot fleet, derived from the sample events.
@@ -83,6 +83,7 @@ export type Trip = {
   hub: HubId;
   home: LatLng;
   slot?: string;
+  /** When the robot leaves the hub: the booking, the start of a later booked window, or when the phone sent it. */
   bookedAt: number;
   /** One-way driving time, in ms. */
   travelMs: number;
@@ -218,6 +219,9 @@ export function tripsOf(samples: Sample[]): Trip[] {
       if (e.type !== "pickupBooked") return;
       const travelMs = e.travelMs ?? ROBOT_TRAVEL_MS;
       const end = events.slice(i + 1).find((x) => x.type === "pickedUp" || x.type === "pickupBooked");
+      // A booked window that has not started keeps the robot at its hub; one replaced before it set off never ran.
+      const leaves = departureOf(s, e);
+      if (end && end.at < leaves) return;
       // The phone sends its route as [lng, lat]; the map works in [lat, lng].
       const route = sharedRoute(e.route);
       drafts.push({
@@ -227,9 +231,9 @@ export function tripsOf(samples: Sample[]): Trip[] {
         home: route ? route[route.length - 1] : homeOf(s.person),
         ...(route ? { route } : {}),
         ...(e.slot ? { slot: e.slot } : {}),
-        bookedAt: e.at,
+        bookedAt: leaves,
         travelMs,
-        ...(end ? { leftAt: Math.max(end.at, e.at + travelMs) } : {}),
+        ...(end ? { leftAt: Math.max(end.at, leaves + travelMs) } : {}),
         handedOver: end?.type === "pickedUp",
       });
     });

@@ -48,6 +48,9 @@ export const fi: KitText = {
     thanksBody: "Sinun ei tarvitse tehdä enää mitään.",
     hub: "Näyteasema",
     home: "Koti",
+    scheduledTitle: "Nouto varattu",
+    scheduledBody: "Pidä palautuskuori valmiina. Kun aika koittaa, robotti lähtee keräyspisteestä ja voit seurata sitä täällä.",
+    sendNow: "Lähetä robotti nyt",
   },
   test: {
     name: "Suolistosyövän seulonta",

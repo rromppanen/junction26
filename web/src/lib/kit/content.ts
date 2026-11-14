@@ -114,6 +114,10 @@ export type Ui = {
   thanksBody: string;
   hub: string;
   home: string;
+  /** A pickup booked for a later window. */
+  scheduledTitle: string;
+  scheduledBody: string;
+  sendNow: string;
 };
 
 export type KitText = { ui: Ui; test: TestText; robot: StepText[] };
