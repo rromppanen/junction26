@@ -128,6 +128,8 @@ export function ScreeningSimulator({
   );
   const [seed, setSeed] = useState(42);
   const [csvNote, setCsvNote] = useState<string | null>(null);
+  // Outcomes built on placeholder assumptions stay hidden until the user asks for them.
+  const [showIllustrative, setShowIllustrative] = useState(false);
 
   const byId = useMemo(() => new Map(counties.map((c) => [c.id, c])), [counties]);
   const focusCounty = focus !== null ? byId.get(focus) ?? null : null;
@@ -182,6 +184,7 @@ export function ScreeningSimulator({
   const badMix = invalidStageMix(P);
   const placeholders = assumptions.filter((a) => a.status === "placeholder").length;
   const target = P.target_attendance;
+  const showOutcomes = placeholders === 0 || showIllustrative;
 
   // Headline: one county when focused, otherwise every county counted.
   let headline: string;
@@ -200,7 +203,7 @@ export function ScreeningSimulator({
 
   const tableRows = counties
     .map((c) => ({ c, r: simulate(P, c.attendance, c.population, c.women), gap: Math.max(target - c.attendance, 0) }))
-    .sort((a, b) => b.r.ly - a.r.ly || a.c.attendance - b.c.attendance);
+    .sort((a, b) => (showOutcomes ? b.r.ly - a.r.ly : b.r.screens - a.r.screens) || a.c.attendance - b.c.attendance);
   const maxLy = Math.max(...tableRows.map((x) => x.r.ly), 1e-9);
 
   return (
@@ -216,10 +219,31 @@ export function ScreeningSimulator({
           {headline}
         </h1>
         <p className="mt-4 max-w-3xl font-serif text-lg leading-snug">
-          Screening helps by finding cancers at an earlier stage. Move the target or any assumption and the figures below
-          follow: what closing the gap gains in life-years and deaths averted, what it costs, and how sure we can be.
+          Screening helps by finding cancers at an earlier stage. The extra screens come from observed attendance and
+          population figures. Life-years, deaths averted and costs need stage, survival and cost figures that are not yet
+          sourced, so they are shown only on request, as an illustration.
         </p>
-        <div className="mt-7 grid grid-cols-2 gap-x-6 gap-y-6 sm:flex sm:flex-wrap sm:gap-x-12">
+        {!showOutcomes && (
+          <div className="mt-6 flex max-w-3xl flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowIllustrative(true)}
+              className="inline-flex items-center gap-1.5 rounded-[3px] border border-rule px-3 py-1.5 text-sm hover:bg-par-soft"
+            >
+              <TriangleAlert aria-hidden size={14} /> Show illustrative outcomes
+            </button>
+            <span className="text-sm text-muted">
+              Built on {placeholders} placeholder assumptions; not for quoting.
+            </span>
+          </div>
+        )}
+        {showOutcomes && (<>
+        {placeholders > 0 && (
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.08em] text-behind">
+            Illustration: {placeholders} placeholder assumptions, not for quoting
+          </p>
+        )}
+        <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-6 sm:flex sm:flex-wrap sm:gap-x-12">
           <Stat value={num(t.ly, 1)} label="life-years gained a year" />
           <Stat value={num(t.deaths, 1)} label="breast cancer deaths averted a year" />
           <Stat value={eurShort(t.net)} label="net cost a year" />
@@ -237,6 +261,7 @@ export function ScreeningSimulator({
           target is 10% fewer cancer deaths: about 1,330 a year from today&rsquo;s 13,300 (strategy p. 5). Closing these
           gaps would avert about {num(t.deaths, 1)} of them each year.
         </p>
+        </>)}
         <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
           <span className="text-muted">
             {focusCounty ? `Showing ${focusCounty.name}.` : `${scope.length} ${scope.length === 1 ? "county" : "counties"} counted.`}{" "}
@@ -332,8 +357,8 @@ export function ScreeningSimulator({
           <section aria-labelledby="county-h">
             <IconHeading icon={ListOrdered} id="county-h" className="text-xl">What closing each gap is worth</IconHeading>
             <p className="mb-4 mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
-              <EvidenceTag kind="simulated" />
-              Per year, for one year of diagnoses. Untick a county to leave it out of the totals.
+              <EvidenceTag kind={showOutcomes ? "simulated" : "observed"} />
+              {showOutcomes ? "Per year, for one year of diagnoses." : "Extra screens a year from observed attendance and population."} Untick a county to leave it out of the totals.
             </p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -345,9 +370,11 @@ export function ScreeningSimulator({
                     <th scope="col" className="py-2 pr-3 text-right font-normal" title="Change a year, least-squares over the years shown">Trend</th>
                     <th scope="col" className="py-2 pr-3 text-right font-normal">Gap</th>
                     <th scope="col" className="py-2 pr-3 text-right font-normal">Extra screens</th>
+                    {showOutcomes && (<>
                     <th scope="col" className="py-2 pr-3 text-right font-normal">Life-years</th>
                     <th scope="col" className="py-2 pr-3 text-right font-normal">Deaths averted</th>
                     <th scope="col" className="py-2 text-right font-normal">Net cost</th>
+                    </>)}
                   </tr>
                 </thead>
                 <tbody>
@@ -381,6 +408,7 @@ export function ScreeningSimulator({
                         </td>
                         <td className="py-1.5 pr-3 text-right tabular-nums">{has ? num(gap, 1) : "at target"}</td>
                         <td className="py-1.5 pr-3 text-right tabular-nums">{has ? num(r.screens) : "–"}</td>
+                        {showOutcomes && (<>
                         <td className="whitespace-nowrap py-1.5 pr-3 text-right tabular-nums">
                           {has && (
                             <span
@@ -393,6 +421,7 @@ export function ScreeningSimulator({
                         </td>
                         <td className="py-1.5 pr-3 text-right tabular-nums">{has ? num(r.deaths, 2) : "–"}</td>
                         <td className="py-1.5 text-right tabular-nums">{has ? eur(r.net) : "–"}</td>
+                        </>)}
                       </tr>
                     );
                   })}
@@ -403,9 +432,11 @@ export function ScreeningSimulator({
                     <th scope="row" className="py-2 pr-3 text-left">Counted</th>
                     <td colSpan={3} />
                     <td className="py-2 pr-3 text-right tabular-nums">{num(t.screens)}</td>
+                    {showOutcomes && (<>
                     <td className="py-2 pr-3 text-right tabular-nums">{num(t.ly, 1)}</td>
                     <td className="py-2 pr-3 text-right tabular-nums">{num(t.deaths, 2)}</td>
                     <td className="py-2 text-right tabular-nums">{eur(t.net)}</td>
+                    </>)}
                   </tr>
                 </tfoot>
               </table>
@@ -419,6 +450,7 @@ export function ScreeningSimulator({
             </More>
           </section>
 
+          {showOutcomes && (
           <details className="group" open={false}>
             <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-[3px] border border-rule px-3 py-2 font-semibold hover:bg-par-soft [&::-webkit-details-marker]:hidden">
               <SlidersHorizontal aria-hidden size={16} className="text-muted" />
@@ -494,6 +526,7 @@ export function ScreeningSimulator({
             </section>
           </div>
           </details>
+          )}
         </div>
       </div>
     </div>

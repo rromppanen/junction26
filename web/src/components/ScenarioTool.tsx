@@ -68,7 +68,7 @@ function Programme({ p }: { p: ScenarioProgramme }) {
 
       <div className="mt-3 grid gap-x-6 gap-y-4 sm:grid-cols-3">
         <Field id={`${id}-inv`} label="People invited per year" value={invited} onChange={setInvited} placeholder="e.g. your county's invitation count" />
-        <Field id={`${id}-cost`} label="Cost per screen (€)" value={cost} onChange={setCost} source={p.costPerScreen} placeholder="your cost per screen" />
+        <Field id={`${id}-cost`} label="Cost per screen (€)" value={cost} onChange={setCost} source={p.costPerScreen} placeholder="your cost per screen" emptyHint="No public Finnish cost per screen exists for this programme. Enter your own figure." />
         <Field id={`${id}-rate`} label="Cancers found per 1,000 screened" value={rate} onChange={setRate} source={p.cancersPer1000Screened} placeholder="your detection rate" />
       </div>
 
@@ -168,9 +168,9 @@ function Cell({ children, last, none }: { children: React.ReactNode; last?: bool
 }
 
 function Field({
-  id, label, value, onChange, source, placeholder,
+  id, label, value, onChange, source, placeholder, emptyHint,
 }: {
-  id: string; label: string; value: string; onChange: (v: string) => void; source?: Cited | null; placeholder: string;
+  id: string; label: string; value: string; onChange: (v: string) => void; source?: Cited | null; placeholder: string; emptyHint?: string;
 }) {
   return (
     <div>
@@ -191,6 +191,7 @@ function Field({
           <a href={source.url} target="_blank" rel="noreferrer" className="link">{source.label}</a>. {source.note} Change it to use your own.
         </p>
       )}
+      {!source && emptyHint && value === "" && <p className="mt-1 text-xs text-muted">{emptyHint}</p>}
     </div>
   );
 }

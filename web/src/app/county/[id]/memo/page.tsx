@@ -8,6 +8,7 @@ import { describeFingerprintFi, fmtFi, whatItTakesFi } from "@/lib/memoFi";
 import { PrintButton } from "@/components/PrintButton";
 import type { LiveSnippet } from "@/lib/context";
 import { loadPathway } from "@/lib/pathwayData";
+import { colorectalScreeningOperator } from "@/lib/screeningOperator";
 import { MemoExtras } from "@/components/MemoExtras";
 import { countyMortality, type MortalityRow } from "@/lib/mortality";
 import MORTALITY_ROWS from "@/data/mortality.json";
@@ -44,6 +45,7 @@ export default async function MemoPage({
 
   const fp = describeFingerprintFi(diagnosePathway(facts, INDICATORS));
   const pathwayView = loadPathway(regionId);
+  const operator = colorectalScreeningOperator(region.name);
   const citable = [...live.snippets, ...(peer?.snippets ?? [])];
   const sourceIds = [...new Set(brief.recommendations.flatMap((r) => r.sources))];
   const idx = new Map(sourceIds.map((s, i) => [s, i + 1]));
@@ -79,7 +81,7 @@ export default async function MemoPage({
         <p className="mt-2 text-sm font-semibold">{fp}</p>
       </header>
 
-      {proposal && pathwayView && <MemoProposal view={pathwayView} params={proposal} />}
+      {proposal && pathwayView && <MemoProposal view={pathwayView} params={proposal} operator={operator} />}
       <MemoExtras mortality={mortality} pathway={pathwayView?.pathway ?? null} showOption={!proposal} />
 
       <section aria-labelledby="m-act">

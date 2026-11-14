@@ -4,6 +4,8 @@ import { COLORECTAL_SOURCE } from "@/lib/pathwayData";
 import { WAIT_SOURCE } from "@/data/registryWaits";
 import { OPTION_EVIDENCE } from "@/data/pathwayCosts";
 import { More } from "@/components/ui";
+import { colorectalScreeningOperator, HUS_SCREENING_SOURCE } from "@/lib/screeningOperator";
+import { EVIDENCE } from "@/data/evidence";
 
 const n = (v: number) => v.toLocaleString("en-GB");
 
@@ -25,6 +27,8 @@ export function PathwayFunnel({ view, name }: { view: PathwayView; name: string 
     { label: "Cancer found", count: p.findings.cancer },
   ];
   const wait = waits[0];
+  const operator = colorectalScreeningOperator(name);
+  const privateCare = EVIDENCE.find((e) => e.id === "roadmap-p11-lymphoma");
 
   return (
     <div>
@@ -40,6 +44,13 @@ export function PathwayFunnel({ view, name }: { view: PathwayView; name: string 
           <>{name} is at or above the best quarter of counties at both steps of colorectal screening.</>
         )}
       </p>
+      {operator && (
+        <p className="mt-2 max-w-3xl text-sm text-muted">
+          Who acts: {operator} organises colorectal screening for {name}, so a fix at either step needs {operator}&rsquo;s
+          screening unit as well as the county.{" "}
+          <a href={HUS_SCREENING_SOURCE} target="_blank" rel="noreferrer" className="link">HUS, 2 February 2026</a>.
+        </p>
+      )}
 
       <div className="mt-6 overflow-x-auto">
         <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
@@ -123,7 +134,7 @@ export function PathwayFunnel({ view, name }: { view: PathwayView; name: string 
 
       <More label="What these figures can't tell you" icon={TriangleAlert} className="mt-1">
         <ul className="list-[square] space-y-1.5 pl-5 text-ink marker:text-par">
-          <li>&ldquo;No colonoscopy in the programme&rdquo; is not proof that no examination happened: some people are examined in private or occupational care, and some have a medical reason not to be.</li>
+          <li>&ldquo;No colonoscopy in the programme&rdquo; is not proof that no examination happened: some people are examined in private or occupational care, and some have a medical reason not to be. Where more people use private or occupational care, part of this gap may be people examined outside the programme.{privateCare && <> Private care is a common route in Finland: <a href={privateCare.url} target="_blank" rel="noreferrer" className="link">Cancer roadmap, p. {privateCare.page}</a>.</>}</li>
           <li>Expected findings use Finland&rsquo;s yield per colonoscopy in {p.year} ({(p.yield.cancerPerColonoscopy * 100).toFixed(1)}% cancer, {(p.yield.advancedPerColonoscopy * 100).toFixed(1)}% advanced precursor), not {name}&rsquo;s own. People who don&rsquo;t come may differ.</li>
           <li>Waiting times are medians read from a chart. {OPTION_EVIDENCE.standard.note}</li>
           <li>The newest year is still being completed by the Registry, so this uses {p.year}.</li>
