@@ -32,15 +32,26 @@ Keep this section current. On Sunday morning it becomes the submission form text
 - **Nurse board (`/nurse`):** every participant by stage, with their language and interpreter need. People who fall behind are flagged first: no sample 14 days after the invitation (with reminder status), a positive result with no colonoscopy booked after 7 days, a robot waiting at the door, a sample waiting to be registered at the lab. The nurse sends a reminder, records a call or books a colonoscopy from the person's drawer. These thresholds are our assumptions, not clinical deadlines.
 - **Robots (`/nurse/robots`):** the simulated pickup fleet (30 robots, six hubs in Helsinki, Espoo and Vantaa) on a street map, with destinations shown by pickup code, not by name.
 
-**How it works.** The sample logic is plain tested code: an event log per person, the stage derived from it, the flag rules and the robot simulation. The phone and the board share one event log behind `/api/samples` (Upstash Redis on Vercel), so a phone and a laptop see each other's actions. Walking routes come from the public FOSSGIS OSRM router. The kit instructions follow the lab's sampling leaflet, and the registry figures above are in the pitch deck with their sources. The app uses no AI model.
+**How it works.** The sample logic is plain tested code: an event log per person, the stage derived from it, the flag rules and the robot simulation. The phone and the board share one event log behind `/api/samples` (Upstash Redis on Vercel), so a phone and a laptop see each other's actions. Walking routes come from the public FOSSGIS OSRM router. The sampling steps follow the HUS kit leaflet in order, and the registry figures above are in the pitch deck with their sources. The app uses no AI model.
 
-**Strategy fit.** Participation is Goal 2 of the national cancer strategy. The Goal 3 indicator we track is the time from a positive test to colonoscopy, which the nurse board flags per person.
+**Strategy fit.** Participation is Goal 2 of the National Cancer Strategy 2026–2035 (80% in every wellbeing services county). The Goal 3 indicator we track is the time from a positive test to colonoscopy, which the nurse board flags per person. Sub-goal 1.3 asks that people whose mother tongue is not Finnish or Swedish reach the same screening participation as Finnish and Swedish speakers (strategy pp. 19–20), which is the group the app is built around.
+
+**Who gains most.** People with another mother tongue, most of whom live in cities (56% of Finland's foreign-language speakers live in Uusimaa), and people with disabilities, who have lower odds of doing a stool test (OR 0.72, Ricciardi et al. 2024) and no longer need a trip to post it.
 
 **Cost.** In Helsinki the service could replace up to about €74,000 a year of postage: 29,226 reply-paid return envelopes at €2.07 and one paper reminder at €1.03 to each of 12,789 non-returners (Posti contract prices from 1 October 2026, VAT 0; one reminder each is our assumption). This is before robot and SMS costs, so it is not a net saving.
 
-**What's new.** _TBD by the team._
+**What's new.** Today the invitation arrives as a letter, the person posts the sample by the next working day or takes it to a lab, and nobody sees who stopped where. farmagusta changes three things:
 
-**What's next.** _TBD by the team._
+- One guided journey on the person's phone, in their own language, from the invitation to the handover.
+- A robot collects the sample from the door, so nobody has to find a post box or a lab.
+- Each step is logged per person, so a nurse sees who stopped where and can send a reminder or call with an interpreter. The same log tracks the days from a positive test to colonoscopy.
+
+**What's next.** One district pilot in Helsinki, against the usual invitation in the same period:
+
+- Measure the test-return rate in the whole assigned group and the days from a positive test to colonoscopy, split by mother tongue and sex.
+- Find a robot pickup partner and price one pickup against a €2.07 return envelope.
+- Have the nine translations reviewed by professional translators, and test the service with migrants and people with disabilities.
+- Keep the post and the phone for people without a smartphone, and connect the lab's sample registration, which the prototype only simulates.
 
 Demo: invented people; the robot, lab and bookings are simulated.
 
