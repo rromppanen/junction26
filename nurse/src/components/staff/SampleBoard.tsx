@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, ChevronRight } from "lucide-react";
+import { AlertTriangle, BellOff, ChevronRight, Send } from "lucide-react";
 import { AppHeader, DemoBar } from "@/components/NurseNav";
-import { flagsOf, stageOf, STAGES_FOR_BOARD, type EventType, type Stage } from "@/lib/sample/model";
+import { flagsOf, reminderNote, stageOf, STAGES_FOR_BOARD, type EventType, type Flag, type Stage } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
 import { pickupCode } from "@/lib/robots/fleet";
 import { MiniTimeline } from "./MiniTimeline";
@@ -14,6 +14,20 @@ import {
 } from "./boardShared";
 
 export { DEMO_NOTE };
+
+function unreminded(r: Row): boolean {
+  return r.flags.some((f) => f.kind === "noSample" && (f.remindedDaysAgo === null || f.remindedDaysAgo === undefined));
+}
+
+/** Tells a reminded person apart from one nobody has contacted yet. */
+function ReminderTag({ flag }: { flag: Flag }) {
+  const none = flag.remindedDaysAgo === null || flag.remindedDaysAgo === undefined;
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${none ? "bg-behind-soft text-behind" : "bg-par-soft text-muted"}`}>
+      {none ? <BellOff size={12} aria-hidden /> : <Send size={12} aria-hidden />} {reminderNote(flag)}
+    </span>
+  );
+}
 
 /** Stages where the robots page refers to the sample by its anonymous pickup code. */
 const IN_PICKUP: Stage[] = ["sampleTaken", "robotEnRoute", "robotAtDoor", "pickedUp"];
@@ -42,6 +56,8 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
         .map((s): Row => ({ s, stage: stageOf(s, now), flags: flagsOf(s, now) }))
         .sort((a, b) =>
           (b.flags.length > 0 ? 1 : 0) - (a.flags.length > 0 ? 1 : 0) ||
+          // Among the flagged, people nobody has reminded yet come first.
+          (unreminded(b) ? 1 : 0) - (unreminded(a) ? 1 : 0) ||
           (a.s.id === ME ? 0 : 1) - (b.s.id === ME ? 0 : 1) ||
           msInStage(b.s, now) - msInStage(a.s, now)),
     [samples, now],
@@ -186,6 +202,7 @@ export function SampleBoard({ embed = false }: { embed?: boolean }) {
                               <AlertTriangle size={12} aria-hidden /> {flags[0].label}
                             </span>
                           )}
+                          {flags[0] && reminderNote(flags[0]) && <ReminderTag flag={flags[0]} />}
                         </span>
                         <span className="block text-muted">
                           {p.area ? `${p.area}, ` : ""}{p.municipality} · {p.homeLanguage ? `${p.homeLanguage} · app ` : ""}{p.lang.toUpperCase()}{p.interpreter ? ` · interpreter: ${p.interpreter}` : ""}

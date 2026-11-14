@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { AlertTriangle, X } from "lucide-react";
 import { MiniTimeline } from "./MiniTimeline";
+import { reminderNote } from "@/lib/sample/model";
 import { SampleActions } from "./SampleActions";
 import { EVENT_LABEL, STAGE_LABEL, stepIndex, timeFmt, type ActFn, type Row } from "./boardShared";
 
@@ -68,7 +69,7 @@ export function SampleDrawer({ row, now, busy, act, status, onClose }: {
         </p>
         {row.flags.map((f) => (
           <p key={f.kind} className="mt-2 flex items-start gap-1 rounded-md bg-behind-soft px-2 py-1 text-sm font-medium text-behind">
-            <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden /> {f.label}
+            <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden /> {f.label}{reminderNote(f) ? `. ${reminderNote(f)}.` : ""}
           </p>
         ))}
 
