@@ -77,7 +77,7 @@ export function IntakeFlow() {
         <ol className="flex flex-wrap gap-2 text-sm">
           {([['data', 'Choose data'], ['reading', 'Review data'], ['ask', 'Clarify scope'], ['done', 'Ready']] as const).map(([step, label], i) => (
             <li key={step} aria-current={phase === step ? "step" : undefined}
-              className={`rounded-md border px-3 py-2 ${phase === step ? "border-ink bg-ink text-paper" : "border-rule text-muted"}`}>{i + 1}. {label}</li>
+              className={`rounded-md border px-3 py-2 ${phase === step ? "border-brand bg-brand text-white" : "border-rule text-muted"}`}>{i + 1}. {label}</li>
           ))}
         </ol>
       </nav>
@@ -227,7 +227,7 @@ function StepDone({
           <button
             type="button"
             onClick={() => onFindings(setup(fileOk))}
-            className="rounded-[6px] bg-ink px-6 py-3 font-medium text-white"
+            className="rounded-xl bg-brand px-6 py-3 font-medium text-white"
           >
             {fileOk ? "See the findings" : settled.countyId !== null ? "Open county brief" : "Explore counties on the map"}
           </button>

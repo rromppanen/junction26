@@ -67,7 +67,7 @@ function ChoiceControl({
               const v = Number(e.target.value);
               if (e.target.value !== "" && Number.isFinite(v)) onChange(Math.min(hi, Math.max(lo, v)));
             }}
-            className="w-20 rounded-[3px] border border-rule bg-paper px-1.5 py-0.5 text-right tabular-nums"
+            className="w-20 rounded-md border border-rule bg-paper px-1.5 py-0.5 text-right tabular-nums"
           />
           <span className="text-sm text-muted">{m.unit}</span>
         </span>
@@ -240,11 +240,11 @@ export function ScreeningSimulator({
           Screening helps by finding cancers at an earlier stage. Choose a target and what you would spend to reach it.
         </p>
 
-        <div role="group" aria-labelledby="assumptions-h" className="mt-7 rounded-[4px] border border-rule bg-surface p-4 sm:p-5">
+        <div role="group" aria-labelledby="assumptions-h" className="mt-7 rounded-lg border border-rule bg-surface p-4 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 id="assumptions-h" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Your choices</h2>
             {changed && (
-              <button type="button" onClick={reset} className="inline-flex items-center gap-1.5 rounded-[3px] px-2 py-0.5 text-sm text-muted hover:bg-par-soft hover:text-ink">
+              <button type="button" onClick={reset} className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-sm text-muted hover:bg-par-soft hover:text-ink">
                 <RotateCcw aria-hidden size={13} /> Reset
               </button>
             )}
@@ -273,12 +273,12 @@ export function ScreeningSimulator({
             />
             <fieldset className="grid content-start gap-1.5">
               <legend className="mb-1.5 font-medium">Evidence</legend>
-              <div className="grid grid-cols-3 overflow-hidden rounded-[3px] border border-ink">
+              <div className="grid grid-cols-3 overflow-hidden rounded-md border border-ink">
                 {SCENARIOS.map((s) => (
                   <label
                     key={s.id}
                     className={`cursor-pointer px-1 py-1 text-center text-sm focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-ink ${
-                      scenario === s.id ? "bg-ink font-semibold text-paper" : "bg-paper hover:bg-par-soft"
+                      scenario === s.id ? "bg-brand font-semibold text-white" : "bg-paper hover:bg-par-soft"
                     }`}
                   >
                     <input
@@ -317,7 +317,7 @@ export function ScreeningSimulator({
             Finland as a whole: {num(national ?? NaN, 1)}% in {year}.
           </span>
           {(focusCounty || scope.length < gapCounties(counties, target).length) && (
-            <button type="button" onClick={showAll} className="rounded-[3px] px-2 py-1 text-ink underline decoration-rule underline-offset-4 hover:bg-par-soft">
+            <button type="button" onClick={showAll} className="rounded-md px-2 py-1 text-ink underline decoration-rule underline-offset-4 hover:bg-par-soft">
               Show every county
             </button>
           )}
@@ -328,7 +328,7 @@ export function ScreeningSimulator({
           )}
         </div>
         {placeholders > 0 && (
-          <p className="mt-5 flex max-w-3xl items-start gap-2 rounded-[4px] bg-par-soft px-3 py-2.5 text-sm" role="status">
+          <p className="mt-5 flex max-w-3xl items-start gap-2 rounded-lg bg-par-soft px-3 py-2.5 text-sm" role="status">
             <TriangleAlert aria-hidden size={16} className="mt-0.5 shrink-0" />
             <span>{placeholders} of the figures in the loaded file are placeholders. Treat the results as an illustration.</span>
           </p>
@@ -459,7 +459,7 @@ export function ScreeningSimulator({
             )}
             <EvidenceTables assumptions={assumptions} P={P} />
             <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-              <label className="relative inline-flex cursor-pointer items-center gap-1.5 rounded-[3px] border border-rule px-2.5 py-1 text-muted hover:bg-par-soft hover:text-ink focus-within:outline focus-within:outline-2 focus-within:outline-ink">
+              <label className="relative inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-rule px-2.5 py-1 text-muted hover:bg-par-soft hover:text-ink focus-within:outline focus-within:outline-2 focus-within:outline-ink">
                 <Upload aria-hidden size={14} /> Use your own figures (CSV)
                 <input
                   type="file"
@@ -475,7 +475,7 @@ export function ScreeningSimulator({
               <button
                 type="button"
                 onClick={() => downloadFile("screening-simulator-assumptions.csv", assumptionsToCsv(assumptions, choices), "text/csv;charset=utf-8")}
-                className="inline-flex items-center gap-1.5 rounded-[3px] border border-rule px-2.5 py-1 text-muted hover:bg-par-soft hover:text-ink"
+                className="inline-flex items-center gap-1.5 rounded-md border border-rule px-2.5 py-1 text-muted hover:bg-par-soft hover:text-ink"
               >
                 <Download aria-hidden size={14} /> Download assumptions (CSV)
               </button>
@@ -486,7 +486,7 @@ export function ScreeningSimulator({
                     setCsvNote("Your browser blocked the new tab. Allow pop-ups for this site to save the PDF.");
                   }
                 }}
-                className="inline-flex items-center gap-1.5 rounded-[3px] border border-rule px-2.5 py-1 text-muted hover:bg-par-soft hover:text-ink"
+                className="inline-flex items-center gap-1.5 rounded-md border border-rule px-2.5 py-1 text-muted hover:bg-par-soft hover:text-ink"
               >
                 <FileText aria-hidden size={14} /> Save as PDF
               </button>
@@ -495,7 +495,7 @@ export function ScreeningSimulator({
           </section>
 
           <details className="group" open={false}>
-            <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-[3px] border border-rule px-3 py-2 font-semibold hover:bg-par-soft [&::-webkit-details-marker]:hidden">
+            <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-md border border-rule px-3 py-2 font-semibold hover:bg-par-soft [&::-webkit-details-marker]:hidden">
               <SlidersHorizontal aria-hidden size={16} className="text-muted" />
               Show the analysis: what drives the result and how sure we can be
               <ChevronDown aria-hidden size={15} className="transition-transform group-open:rotate-180" />
@@ -516,7 +516,7 @@ export function ScreeningSimulator({
                 <button
                   type="button"
                   onClick={() => setSeed((s) => (s * 48271) % 2147483647)}
-                  className="inline-flex items-center gap-1.5 rounded-[3px] border border-rule px-2.5 py-1 text-sm hover:bg-par-soft"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-rule px-2.5 py-1 text-sm hover:bg-par-soft"
                 >
                   <Dices aria-hidden size={14} /> Draw again
                 </button>

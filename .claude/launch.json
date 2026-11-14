@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "gap-radar",
+      "name": "lapi",
       "runtimeExecutable": "/Users/Daniel/.nvm/versions/node/v22.23.4/bin/npm",
       "runtimeArgs": ["--prefix", "web", "run", "dev"],
       "port": 3000

@@ -4,7 +4,7 @@ Every figure is one the app shows. If the app changes, check the number on scree
 
 ## In one breath
 
-Finland's cancer strategy promises equal care in every county, but nobody can see where each county loses its patients. Gap Radar shows the step where people drop off, costs the options, and hands the county a board memo to act on.
+Finland's cancer strategy promises equal care in every county, but nobody can see where each county loses its patients. Läpi shows the step where people drop off, costs the options, and hands the county a board memo to act on.
 
 **Say the limit before a judge does:** public aggregate data only. Capacity monitoring and national rollout are the vision, not this weekend's build.
 

@@ -26,7 +26,7 @@ export function GapGrid({ findings, delay = 0 }: { findings: Finding[]; delay?: 
             <FadeIn delay={delay + Math.min(i * STAGGER_MS, MAX_DELAY_MS)} className="h-full">
               <Link
                 href={`/findings/${encodeURIComponent(gapId(f))}`}
-                className="group flex h-full flex-col rounded-[6px] border border-rule bg-surface p-4 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-ink hover:shadow-[0_6px_20px_-12px_rgba(23,34,38,0.35)] focus-visible:border-ink"
+                className="group flex h-full flex-col rounded-xl border border-rule bg-surface p-4 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-ink hover:shadow-[0_6px_20px_-12px_rgba(23,34,38,0.35)] focus-visible:border-ink"
               >
                 <div className="flex items-center justify-between gap-2 text-caption text-muted">
                   <span className="inline-flex items-center gap-1.5">

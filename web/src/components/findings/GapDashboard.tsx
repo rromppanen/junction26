@@ -34,7 +34,7 @@ export function GapDashboard({ id }: { id: string }) {
         <FadeIn className="space-y-4">
           <h1 className="text-heading font-semibold">This gap is not in the current analysis</h1>
           <p className="text-lede text-muted">Your file stays in this browser tab only, so a gap link works only where the analysis was run.</p>
-          <Link href={loaded === "missing" ? "/" : "/findings"} className="inline-block rounded-[6px] bg-ink px-6 py-3 font-medium text-white">
+          <Link href={loaded === "missing" ? "/" : "/findings"} className="inline-block rounded-xl bg-brand px-6 py-3 font-medium text-white">
             {loaded === "missing" ? "Start an analysis" : "All gaps"}
           </Link>
         </FadeIn>
@@ -180,7 +180,7 @@ function PathwayStrip({ detail, label }: { detail: GapDetail; label: string }) {
                 Wait {group.waitDays.toFixed(0)} d vs {rest.waitDays?.toFixed(0)} d
               </p>
             )}
-            <div className={`h-full rounded-[6px] border p-3 ${here || (finding.metric === "wait" && i === waitAt) ? "border-2 border-behind bg-surface" : "border-rule"}`}>
+            <div className={`h-full rounded-xl border p-3 ${here || (finding.metric === "wait" && i === waitAt) ? "border-2 border-behind bg-surface" : "border-rule"}`}>
               <p className="flex items-center justify-between text-small font-semibold">
                 {st.name}
                 {i < steps.length - 1 && <ArrowRight aria-hidden size={14} className="hidden text-muted md:block" />}

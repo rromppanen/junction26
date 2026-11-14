@@ -1,4 +1,4 @@
-# Deploying Gap Radar
+# Deploying Läpi
 
 The demo link in the submission must work in an incognito window on Sunday. These steps put the app on Vercel's free tier. A team member with a Vercel account has to do them; nobody's keys go in the repo.
 

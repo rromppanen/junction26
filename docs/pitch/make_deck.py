@@ -1,4 +1,4 @@
-"""Builds docs/pitch/gap-radar-deck-mockup.pdf: a 12-slide 16:9 startup-style deck with matplotlib (no extra installs).
+"""Builds docs/pitch/lapi-deck-mockup.pdf: a 12-slide 16:9 startup-style deck with matplotlib (no extra installs).
 
 Run: python docs/pitch/make_deck.py   (DECK_PREVIEW=<dir> also writes PNG previews)
 One idea per slide, under ~30 words. Every figure is one the app shows (Sotkanet, Cancer Registry, Statistics
@@ -19,9 +19,9 @@ from matplotlib.colors import LinearSegmentedColormap, to_rgb
 from matplotlib.patches import Circle, FancyBboxPatch, Wedge
 
 BG, BG2, FG, DIM, LINE = "#0b1316", "#121d21", "#f2f4f1", "#8a979c", "#25333a"
-RED, BLUE, PAPER, INK = "#e05a43", "#5b9cc6", "#eef0ec", "#172226"
+RED, BLUE, PAPER, INK = "#e39a4a", "#5b9cc6", "#f5f8f7", "#12272e"  # RED is the amber "behind" colour, matching the app
 W, H = 16, 9
-OUT = Path(os.environ.get("DECK_OUT") or Path(__file__).with_name("gap-radar-deck-mockup.pdf"))
+OUT = Path(os.environ.get("DECK_OUT") or Path(__file__).with_name("lapi-deck-mockup.pdf"))
 TOTAL = 12
 
 FONT = {}
@@ -84,7 +84,7 @@ def slide(pdf, n, draw, bg=BG, source=None):
     fig.patch.set_facecolor(bg)
     draw(ax)
     fg_dim = DIM if bg == BG else "#56636a"
-    t(ax, 0.8, 8.3, "GAP RADAR", 11, "black", fg_dim, va="center")
+    t(ax, 0.8, 8.3, "LÄPI", 11, "black", fg_dim, va="center")
     t(ax, 15.2, 8.3, f"{n:02d} / {TOTAL}", 10, "regular", fg_dim, va="center", ha="right")
     if source:
         t(ax, 0.8, 0.5, source, 9, "regular", fg_dim)
@@ -99,7 +99,7 @@ with PdfPages(OUT) as pdf:
     def s1(ax):
         glow(ax, 12.2, 4.2, 7, BLUE, 0.28)
         radar(ax, 12.2, 4.2, 3.4)
-        t(ax, 0.8, 5.6, "Gap Radar", 80, "black", va="center")
+        t(ax, 0.8, 5.6, "Läpi", 80, "black", va="center")
         t(ax, 0.85, 4.15, "Your postcode shouldn't decide\nwhen your cancer is found.", 26, "light", FG, va="top", linespacing=1.3)
         t(ax, 0.85, 1.4, "Team [names]   ·   Junction 2026   ·   AstraZeneca: Equal Care Across Finland", 12, "regular", DIM)
     slide(pdf, 1, s1)

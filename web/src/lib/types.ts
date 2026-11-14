@@ -1,4 +1,4 @@
-// Shared contracts for Gap Radar. Owned by the integrator; agents must not change these shapes.
+// Shared contracts for Läpi. Owned by the integrator; agents must not change these shapes.
 
 export type PathwayStage = "detection" | "referral" | "diagnosis" | "treatment" | "outcome";
 
