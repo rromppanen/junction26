@@ -12,7 +12,7 @@ import { DataBadge } from "@/components/DataBadge";
 import { Colophon } from "@/components/Colophon";
 import { AppHeader, HeaderLink, IconHeading, More, Stat, StatusIcon } from "@/components/ui";
 import { STATUS_LABEL, STATUS_TEXT, STAGE_LABEL, fmt, fmtGap, shortName } from "@/components/format";
-import { CalendarDays, ExternalLink, Gauge, HeartPulse, ListOrdered, Map as MapIcon, Route, ScanSearch, type LucideIcon } from "lucide-react";
+import { CalendarDays, ExternalLink, FileUp, Gauge, HeartPulse, ListOrdered, Map as MapIcon, Route, ScanSearch, type LucideIcon } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -117,6 +117,7 @@ export default async function RadarPage({
   return (
     <main className="mx-auto max-w-6xl px-4 pb-10 pt-5 sm:px-6">
       <AppHeader>
+        <HeaderLink href="/analyse" icon={FileUp} label="Analyse your data" title="Bring your own aggregate data" />
         <HeaderLink href="/simulator" icon={Gauge} label="Simulator" title="What closing the breast screening gap would be worth" />
         <DataBadge ds={ds} />
       </AppHeader>
