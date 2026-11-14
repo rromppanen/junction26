@@ -30,10 +30,14 @@ describe("parseCSV", () => {
     const wide = Array.from({ length: 31 }, (_, i) => `h${i}`);
     expect(() => parseCSV(wide.join(",") + "\n" + wide.map(() => "1").join(","))).toThrow(/at most 30 columns/);
   });
+  it("accepts exactly 30 columns", () => {
+    const cols = Array.from({ length: 30 }, (_, i) => `h${i}`);
+    expect(parseCSV(cols.join(",") + "\n" + cols.map(() => "1").join(",")).headers).toHaveLength(30);
+  });
   it("rejects 5,001 rows", () => {
     expect(() => parseCSV("a\n" + Array.from({ length: 5001 }, () => "1").join("\n"))).toThrow(/5,000 rows/);
   });
-  it("accepts exactly 30 columns and 5,000 rows", () => {
+  it("accepts exactly 5,000 rows", () => {
     expect(parseCSV("a\n" + Array.from({ length: 5000 }, () => "1").join("\n")).rows).toHaveLength(5000);
   });
   it("rejects duplicate headers and ragged rows", () => {
@@ -106,10 +110,11 @@ describe("personalDataHeaders", () => {
     "email", "Sähköposti", "personal id", "henkilötunnus".replace("henkilö", "henkilö"),
   ])("flags %s", h => expect(personalDataHeaders([h])).toEqual([h]));
   it("flags NFD-encoded Finnish headers", () => {
-    const h = "henkilötunnus";
+    const h = "henkilo\u0308tunnus";
     expect(personalDataHeaders([h])).toEqual([h]);
   });
-  it.each(["kunta", "alue", "area name", "kuntanimi", "programme_name", "region_name", "municipality name", "county name", "vuosi"])(
+  it.each(["kunta", "alue", "area name", "kuntanimi", "programme_name", "region_name", "municipality name", "county name", "vuosi",
+    "hyvinvointialueen nimi", "maakunnan nimi", "sairaanhoitopiirin nimi", "kuntayhtymän nimi", "alueen nimi", "unit_name", "hospital_name"])(
     "does not flag %s", h => expect(personalDataHeaders([h])).toEqual([]));
 });
 
