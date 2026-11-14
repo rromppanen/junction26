@@ -12,10 +12,10 @@ const counties = snapshot.regions.filter((r) => r.kind === "county").map((r) => 
 
 const pages = [
   { path: "/", expect: "What should we look at?" },
-  { path: "/map", expect: "Gap Radar" },
+  { path: "/map", expect: "Läpi" },
   { path: "/simulator", expect: "Breast screening simulator" },
   { path: "/analyse", expect: "What should we look at?" },
-  { path: "/findings", expect: "Gap Radar" },
+  { path: "/findings", expect: "Läpi" },
   ...counties.flatMap((id) => [
     { path: `/county/${id}`, expect: "Cancer care brief" },
     { path: `/county/${id}/memo`, expect: "Hallitusmuistio" },

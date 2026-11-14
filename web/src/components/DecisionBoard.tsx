@@ -186,7 +186,7 @@ function Field({ id, label, value, onChange, source, placeholder = "" }: {
       <input
         id={id} type="number" inputMode="decimal" min={0} step="any" value={value} placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-[3px] border border-rule bg-paper px-2.5 py-1.5 text-base tabular-nums"
+        className="mt-1 w-full rounded-md border border-rule bg-paper px-2.5 py-1.5 text-base tabular-nums"
       />
       {source && value === String(source.value) && (
         <p className="mt-1 text-xs text-muted">

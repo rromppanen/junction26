@@ -94,7 +94,7 @@ function Programme({ p }: { p: ScenarioProgramme }) {
                   key={x.label}
                   type="button"
                   onClick={() => setCustom(Math.round(x.target! * 10) / 10)}
-                  className="rounded-[3px] border border-rule px-2.5 py-1 text-sm hover:bg-par-soft"
+                  className="rounded-md border border-rule px-2.5 py-1 text-sm hover:bg-par-soft"
                 >
                   {x.label} ({x.target.toFixed(1)}%)
                 </button>
@@ -184,7 +184,7 @@ function Field({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-[3px] border border-rule bg-paper px-2.5 py-1.5 text-base tabular-nums"
+        className="mt-1 w-full rounded-md border border-rule bg-paper px-2.5 py-1.5 text-base tabular-nums"
       />
       {source && value === String(source.value) && (
         <p className="mt-1 text-xs text-muted">

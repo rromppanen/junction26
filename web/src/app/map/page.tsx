@@ -132,7 +132,7 @@ export default async function RadarPage({
           <CountyPicker counties={countyList} />
         </div>
       </section>
-      <div className="mb-10 flex flex-col gap-3 rounded-[4px] bg-surface px-3 py-3 text-sm sm:px-4">
+      <div className="mb-10 flex flex-col gap-3 rounded-lg bg-surface px-3 py-3 text-sm sm:px-4">
         <nav aria-label="Measure" className="flex flex-wrap gap-x-8 gap-y-2">
           {measureGroups().map((g) => {
             const Icon = GroupIcon(g.stage);
@@ -149,7 +149,7 @@ export default async function RadarPage({
                       key={i.slug}
                       href={`/map?ind=${i.slug}`}
                       title={i.nameEn}
-                      className={`rounded-[3px] px-2.5 py-1 ${on ? "bg-ink font-semibold text-paper" : "text-ink hover:bg-par-soft"}`}
+                      className={`rounded-md px-2.5 py-1 ${on ? "bg-brand font-semibold text-white" : "text-ink hover:bg-par-soft"}`}
                       aria-current={on ? "page" : undefined}
                     >
                       {PHRASE[i.slug]?.tab ?? i.nameEn}
@@ -170,7 +170,7 @@ export default async function RadarPage({
               <Link
                 key={y}
                 href={`/map?ind=${ind.slug}&year=${y}`}
-                className={`font-narrow rounded-[3px] px-2 py-1 tabular-nums ${y === year ? "bg-ink font-semibold text-paper" : "text-ink hover:bg-par-soft"}`}
+                className={`font-narrow rounded-md px-2 py-1 tabular-nums ${y === year ? "bg-brand font-semibold text-white" : "text-ink hover:bg-par-soft"}`}
                 aria-current={y === year ? "page" : undefined}
               >
                 {y}
@@ -340,7 +340,7 @@ export default async function RadarPage({
           This measure on Sotkanet
           <ExternalLink aria-hidden size={12} />
         </a>
-        <More label="About Gap Radar" className="basis-full">
+        <More label="About Läpi" className="basis-full">
           <Colophon />
         </More>
       </footer>

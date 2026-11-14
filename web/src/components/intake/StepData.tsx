@@ -21,7 +21,7 @@ type Props = {
   onContinue: () => void;
 };
 
-const tile = "flex w-full items-start gap-3 rounded-[6px] border p-4 text-left transition-colors";
+const tile = "flex w-full items-start gap-3 rounded-xl border p-4 text-left transition-colors";
 
 /** The first screen: a title, one instruction and two choices. Nothing else. */
 export function StepData({ datasets, table, fileName, onDatasets, onFile, onContinue }: Props) {
@@ -134,7 +134,7 @@ export function StepData({ datasets, table, fileName, onDatasets, onFile, onCont
                 aria-pressed={on}
                 title={`${d.description} (${d.source})`}
                 onClick={() => toggleDataset(d.id)}
-                className={`rounded-full border px-3 py-1 text-small ${on ? "border-ink bg-ink text-white" : "border-rule text-muted hover:border-par"}`}
+                className={`rounded-full border px-3 py-1 text-small ${on ? "border-brand bg-brand text-white" : "border-rule text-muted hover:border-par"}`}
               >
                 {d.nameEn}
               </button>
@@ -165,7 +165,7 @@ export function StepData({ datasets, table, fileName, onDatasets, onFile, onCont
           type="button"
           disabled={!canContinue}
           onClick={onContinue}
-          className="rounded-[6px] bg-ink px-6 py-3 font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
+          className="rounded-xl bg-brand px-6 py-3 font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
         >
           Start
         </button>

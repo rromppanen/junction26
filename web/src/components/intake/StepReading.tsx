@@ -82,10 +82,10 @@ export function StepReading({ input, fileName, onUnderstood, onBack }: Props) {
       <FadeIn className="space-y-6">
         <p className="text-title font-semibold">I couldn&apos;t read the data just now.</p>
         <div className="flex gap-3">
-          <button type="button" onClick={() => setAttempt((n) => n + 1)} className="rounded-[6px] bg-ink px-5 py-2.5 font-medium text-white">
+          <button type="button" onClick={() => setAttempt((n) => n + 1)} className="rounded-xl bg-brand px-5 py-2.5 font-medium text-white">
             Try again
           </button>
-          <button type="button" onClick={onBack} className="rounded-[6px] border border-rule px-5 py-2.5 hover:bg-par-soft">
+          <button type="button" onClick={onBack} className="rounded-xl border border-rule px-5 py-2.5 hover:bg-par-soft">
             Back
           </button>
         </div>

@@ -12,7 +12,7 @@ export default function NotFound() {
       </p>
       <h1 className="text-heading font-semibold tracking-[-0.015em] sm:text-display">There&rsquo;s no page at this address</h1>
       <p className="mt-4 max-w-xl text-muted">
-        This address doesn&rsquo;t match a page in Gap Radar. Check the address or return to the national view
+        This address doesn&rsquo;t match a page in Läpi. Check the address or return to the national view
         to choose a county, compare screening figures or open the simulator.
       </p>
       <p className="mt-6 text-sm">

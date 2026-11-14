@@ -12,7 +12,7 @@ describe("GET /county/[id]/measure", () => {
     const res = await call("960");
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toMatch(/^text\/csv/);
-    expect(res.headers.get("content-disposition")).toContain("gap-radar-mittarit-960.csv");
+    expect(res.headers.get("content-disposition")).toContain("lapi-mittarit-960.csv");
     const lines = (await res.text()).trim().split(/\r?\n/);
     expect(lines[0]).toBe("kuukausi,syopa,mittari,mediaani_vrk,potilaita");
     expect(lines).toHaveLength(2);

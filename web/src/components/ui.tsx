@@ -55,7 +55,7 @@ export function More({
 }) {
   return (
     <details open={open} className={`more group ${className}`}>
-      <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-[3px] py-2 text-sm text-muted hover:text-ink [&::-webkit-details-marker]:hidden">
+      <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-md py-2 text-sm text-muted hover:text-ink [&::-webkit-details-marker]:hidden">
         <Icon aria-hidden size={15} strokeWidth={2} className="shrink-0" />
         <span>{label}</span>
         <ChevronDown aria-hidden size={14} className="shrink-0 transition-transform group-open:rotate-180" />
@@ -114,7 +114,7 @@ export function HeaderLink({
 export function Stat({ value, label, tone = "" }: { value: React.ReactNode; label: React.ReactNode; tone?: string }) {
   return (
     <div>
-      <div className={`font-narrow text-3xl font-bold leading-none tabular-nums sm:text-4xl ${tone}`}>{value}</div>
+      <div className={`text-3xl font-semibold leading-none tracking-[-0.02em] tabular-nums sm:text-4xl ${tone}`}>{value}</div>
       <div className="mt-1.5 text-sm text-muted">{label}</div>
     </div>
   );

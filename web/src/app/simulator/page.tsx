@@ -157,7 +157,7 @@ export default async function SimulatorPage({ searchParams }: { searchParams: Pr
 
       <footer className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4 text-xs text-muted">
         <DataBadge ds={ds} />
-        <More label="About Gap Radar" className="basis-full">
+        <More label="About Läpi" className="basis-full">
           <Colophon />
         </More>
       </footer>

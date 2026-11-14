@@ -1,31 +1,35 @@
 @import "tailwindcss";
 
 /*
-  Gap Radar palette.
-  Paper is a cool lichen grey, not cream. Status colours are a rust/lake-blue pair
-  so "behind" and "ahead" stay distinguishable for red-green colour-blind readers.
-  Links use ink, so the two status colours only ever mean status.
-  Contrast on paper: ink 15:1, muted 5.4:1, behind 5.0:1, ahead 6.3:1, par 3.3:1 (outlines only, not text).
+  Läpi palette: clinical and calm.
+  A near-white page with white cards, deep blue-green ink, and teal for the brand and primary actions.
+  Status colours are an amber/lake-blue pair, so "behind" and "ahead" stay distinguishable for
+  red-green colour-blind readers, and a gap reads as "act here" rather than an alarm.
+  Teal is never a status colour, so the two status colours only ever mean status.
+  Contrast on paper: ink 14.5:1, muted 6.1:1, behind 5.6:1 (5.0:1 on its soft tint), ahead 6.4:1, brand 5.8:1, par 3.7:1 (outlines only, not text).
 */
 :root {
-  --paper: #eef0ec;
-  --surface: #f8f9f6;
-  --ink: #172226;
-  --muted: #56636a;
-  --rule: #cdd3d0;
-  --nordic: #172226; /* kept as an alias for older class names; now ink */
-  --behind: #b0412e;
-  --behind-soft: #f3ddd5;
-  --ahead: #2a5c7d;
-  --ahead-soft: #dce7ee;
-  --par: #7a868b; /* darkened from #8a969b so dashed "no figure" outlines reach 3:1 */
-  --par-soft: #e1e5e3;
-  /* Text selection and the focus ring: neutral, so they never read as a status. */
-  --highlight: #d9dfcf;
+  --paper: #f5f8f7;
+  --surface: #ffffff;
+  --ink: #12272e;
+  --muted: #4c6168;
+  --rule: #d5e0dd;
+  --nordic: #12272e; /* kept as an alias for older class names; now ink */
+  --brand: #0f6e56;
+  --brand-strong: #085041;
+  --brand-soft: #e1f5ee;
+  --behind: #a34a08;
+  --behind-soft: #fbead3;
+  --ahead: #245f88;
+  --ahead-soft: #e2edf5;
+  --par: #6d8582;
+  --par-soft: #e6eeec;
+  /* Text selection and the focus ring: a pale teal wash, never a status colour. */
+  --highlight: #cdeee2;
 
   /*
     Type scale: a major third (1.25) on a 16px body, rounded to whole pixels.
-    Archivo carries every step; Source Serif only sets the brief's prose.
+    Inter carries every step, prose included.
       caption 12   small 13   body 16   lede 20   title 25   heading 31   display 39   hero 49
   */
   --step--2: 0.75rem;
@@ -59,8 +63,12 @@
   --color-par: var(--par);
   --color-par-soft: var(--par-soft);
   --color-highlight: var(--highlight);
-  --font-sans: var(--font-archivo);
-  --font-serif: var(--font-source-serif);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  /* One calm sans for everything; prose that used the serif now reads in Inter too. */
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-inter);
 
   /* The scale as Tailwind sizes: text-caption, text-small, text-lede, text-title, text-heading, text-display, text-hero. */
   --text-caption: var(--step--2);
@@ -88,7 +96,7 @@
   body {
     background: var(--paper);
     color: var(--ink);
-    font-family: var(--font-archivo), system-ui, sans-serif;
+    font-family: var(--font-inter), system-ui, sans-serif;
     font-size: var(--step-0);
     line-height: 1.5;
     font-feature-settings: "tnum" 0;
@@ -133,7 +141,7 @@
     so a component can still restyle its own ring.
   */
   :focus-visible {
-    outline: 2px solid var(--ink);
+    outline: 2px solid var(--brand);
     outline-offset: 2px;
     box-shadow: 0 0 0 5px var(--highlight);
   }
@@ -144,9 +152,9 @@
   }
 }
 
-/* Long Finnish compound names ("Pohjois-Pohjanmaa") set in Archivo's condensed width. */
+/* Long Finnish compound names ("Pohjois-Pohjanmaa"): Inter set a little tighter; they can break at the hyphen. */
 .font-narrow {
-  font-stretch: 72%;
+  letter-spacing: -0.02em;
 }
 
 .link {
@@ -259,12 +267,12 @@ input[type="checkbox"], input[type="radio"] { width: 1.25rem; height: 1.25rem; }
 button:disabled { cursor: not-allowed; }
 .skip-link { position: fixed; top: 1rem; left: 1rem; z-index: 100; transform: translateY(-200%); padding: .75rem 1rem; background: var(--ink); color: var(--paper); border-radius: .375rem; }
 .skip-link:focus { transform: translateY(0); }
-.option-card { border: 1px solid var(--rule); border-radius: .5rem; background: var(--surface); padding: 1rem; }
+.option-card { border: 1px solid var(--rule); border-radius: .75rem; background: var(--surface); padding: 1rem; }
 .option-card dl { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: .5rem 1rem; font-size: .875rem; }
 .option-card dt { color: var(--muted); }
 .option-card dd { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
-.primary-action { display: inline-flex; min-height: 2.75rem; align-items: center; justify-content: center; gap: .5rem; border-radius: .375rem; background: var(--ink); color: var(--paper); padding: .625rem 1rem; font-size: .875rem; font-weight: 600; }
-.primary-action:hover { background: #33454d; }
+.primary-action { display: inline-flex; min-height: 2.75rem; align-items: center; justify-content: center; gap: .5rem; border-radius: .5rem; background: var(--brand); color: #fff; padding: .625rem 1rem; font-size: .875rem; font-weight: 600; }
+.primary-action:hover { background: var(--brand-strong); }
 @media (max-width: 639px) {
   .responsive-options { min-width: 0 !important; }
   .responsive-options thead { display: none; }
@@ -306,4 +314,13 @@ button:disabled { cursor: not-allowed; }
   .fade-in { animation-duration: 1ms; animation-delay: 0ms; }
   .fade-out { transition-duration: 1ms; }
   .thinking-dot { animation: none; opacity: 0.6; }
+}
+
+@keyframes draw-check {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+.draw-check { animation: draw-check 0.7s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .draw-check { animation: none; }
 }

@@ -205,7 +205,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
               {(i === 0 || parts[i - 1].step !== p.step) && (
                 <span className={`mr-1 text-xs font-semibold uppercase tracking-[0.06em] text-muted ${i ? "ml-3 border-l border-rule pl-3" : ""}`}>{p.step}</span>
               )}
-              <a href={`#${p.id}`} className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[3px] px-2.5 py-1.5 hover:bg-par-soft">
+              <a href={`#${p.id}`} className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 hover:bg-par-soft">
                 <p.icon aria-hidden size={15} strokeWidth={2} className="text-muted" />
                 {p.label}
               </a>
@@ -433,7 +433,7 @@ export default async function CountyPage({ params }: { params: Promise<{ id: str
       <footer className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-ink pt-4 text-xs text-muted">
         <DataBadge ds={ds} />
         <span>{region.name}</span>
-        <More label="About Gap Radar" className="basis-full">
+        <More label="About Läpi" className="basis-full">
           <Colophon />
         </More>
       </footer>
