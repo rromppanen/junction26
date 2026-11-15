@@ -69,6 +69,13 @@ aside { display:none; }
 .pilot { margin-top:70px; display:flex; flex-direction:column; gap:25px; font-size:40px; line-height:1.45; }
 .demo-link { display:inline-block; margin-top:64px; font:500 42px Poppins,Arial,sans-serif; color:var(--brand); text-decoration:none; border-bottom:2px solid var(--brand); padding-bottom:6px; }
 .demo-link span { color:var(--accent); padding-left:20px; }
+.savings .cost-note { margin-top:28px; font-size:32px; line-height:1.4; }
+.cost-calculations { display:grid; grid-template-columns:repeat(3,1fr); gap:32px; margin-top:32px; }
+.cost-calculations > div { border-top:2px solid var(--rule); padding-top:16px; }
+.cost-calculations h3 { font:600 24px/1.4 'Open Sans',Arial,sans-serif; letter-spacing:0; color:var(--muted); margin-bottom:10px; }
+.cost-calculations p { font-size:30px; line-height:1.4; font-variant-numeric:tabular-nums; }
+.cost-calculations .result { color:var(--brand); font-weight:600; }
+.cost-total { margin-top:14px; font-size:27px; line-height:1.4; color:var(--muted); }
 /* Closing slide: the website wordmark and one final message. */
 .closing { background:var(--brand); color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
 .closing .closing-logo { font:600 154px/1.1 Poppins,Arial,sans-serif; letter-spacing:-8px; color:#fff; }
@@ -139,7 +146,11 @@ aside { display:none; }
 <aside>The nurse can see where a person stopped and choose a follow-up action. The flags are simple rules, not diagnoses or inferences about someone’s motivation. No sample 14 days after invitation and no colonoscopy booking seven days after a positive result are demo assumptions. A real service would need clinical review of these rules and its escalation process.</aside>
 </section>
 <section id="savings" class="slide savings">
-<h2>What return mail costs today</h2><p class="number cost blue">≈ €240,000</p><p class="stat-caption">a year in the capital region</p><p class="lede cost-note">Estimated return postage and envelopes<br>at the national 80% participation target</p><p class="caveat">Gross mailing cost only. Robot costs are not included; envelope cost is an estimate.</p>
+<h2>What return mail costs today</h2><p class="number cost blue">≈ €240,000</p><p class="stat-caption">a year in the capital region</p><p class="lede cost-note">Estimated return postage and envelopes<br>at the national 80% participation target</p><div class="cost-calculations" aria-label="Annual return mail cost calculation">
+<div><h3>Invitations per year</h3><p>235,677 people ÷ 2 years</p><p class="result">= 117,838.5 kits</p></div>
+<div><h3>Return postage at 80%</h3><p>117,838.5 × 80% × €2.07</p><p class="result">= €195,140.56</p></div>
+<div><h3>Return envelope in every kit</h3><p>117,838.5 × €0.40</p><p class="result">= €47,135.40</p></div>
+</div><p class="cost-total">€195,140.56 + €47,135.40 = <strong>€242,275.96 a year</strong>, rounded to ≈ €240,000</p><p class="caveat">Gross mailing cost only. Robot costs are not included; envelope cost is an estimate.</p>
 <footer><p>Statistics Finland, 2025 population · Posti, October 2026 prices · National Cancer Strategy</p><span>13</span></footer>
 <aside>The estimate covers Helsinki, Espoo, Vantaa and Kauniainen. There are 235,677 people aged 56–74. Dividing by two gives 117,838.5 invitations a year. At 80% participation, 94,270.8 samples incur €2.07 reply postage (€195,140.56). An estimated €0.40 return envelope in every kit adds €47,135.40, for €242,275.96, rounded to approximately €240,000. This is a scenario estimate for gross mailing costs, not net savings. It excludes robot running costs and SMS costs; outgoing invitations still use the post. Population: Statistics Finland table 11re, 31 December 2025. Postage: Posti contract price list, 1 October 2026, VAT 0. Envelope price is our estimate.</aside>
 </section>
