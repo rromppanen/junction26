@@ -1,6 +1,6 @@
 import type { KitText } from "../content";
 
-/** Finnish. Stool test steps follow Fimlab's 2026 Finnish leaflet. */
+/** Finnish. Stool test steps follow HUS's sampling leaflet (10.12.2025). */
 export const fi: KitText = {
   ui: {
     chooseLang: "Valitse kieli",
@@ -20,7 +20,7 @@ export const fi: KitText = {
     back: "Takaisin",
     sampleDone: "Valmis, varaa nouto",
     bookTitle: "Milloin robotti saa tulla?",
-    bookBody: "Mahdollisimman pian on paras. Näyte pitää lähettää viimeistään seuraavana päivänä.",
+    bookBody: "Mahdollisimman pian on paras. Näyte pitää palauttaa viimeistään seuraavana arkipäivänä.",
     asap: "Mahdollisimman pian",
     asapNote: "Robotti lähtee heti",
     today: "Tänään",
@@ -40,14 +40,17 @@ export const fi: KitText = {
     mapError: "Karttaa ei voitu ladata. Robotti on silti matkalla.",
     arrived: "Robotti on perillä",
     arrivedBody: "Se odottaa ovesi edessä.",
-    openLid: "Avaa kansi",
-    lidClosed: "Kansi on kiinni",
+    openLid: "Avaa lokeroni",
+    lidClosed: "Lokero on suljettu",
     thanksTitle: "Kiitos. Näyte on matkalla laboratorioon",
     readMore: "Lue lisää",
     restartDemo: "Aloita demo alusta",
     thanksBody: "Sinun ei tarvitse tehdä enää mitään.",
     hub: "Näyteasema",
     home: "Koti",
+    scheduledTitle: "Nouto varattu",
+    scheduledBody: "Pidä palautuskuori valmiina. Kun aika koittaa, robotti lähtee keräyspisteestä ja voit seurata sitä täällä.",
+    sendNow: "Lähetä robotti nyt",
   },
   test: {
     name: "Suolistosyövän seulonta",
@@ -64,16 +67,16 @@ export const fi: KitText = {
       close: "Päätös on sinun. Jos osallistut, voit tehdä sen kotona omaan tahtiisi, eikä kenenkään tarvitse tulla sisälle.",
     },
     steps: [
-      { title: "Ota näyteputki pussista.", body: "Putkessa on väritöntä nestettä, jossa on haitallisia aineita. Älä koske putken sisäosaan tai nesteeseen. Jätä imeytystyyny pussiin." },
-      { title: "Ulosta puhtaalle alustalle.", body: "Esimerkiksi kertakäyttölautanen tai sanomalehti käy. Älä ota näytettä suoraan WC-pöntöstä." },
-      { title: "Avaa vihreä korkki kiertämällä.", body: "Näytetikku on kiinni korkissa. Jos uloste on kovaa, kostuta sitä hiukan vedellä. Jos se on löysää, kuivaa tikku ensin WC-paperilla." },
-      { title: "Sivele tikkua ulosteessa 2–3 kertaa.", body: "Liikuta tikkua edestakaisin. Riittää, että tikun kierteinen kärki on ulosteen peitossa." },
-      { title: "Paina korkki kiinni, kunnes se napsahtaa.", body: "Älä avaa korkkia enää." },
-      { title: "Ravista putkea voimakkaasti muutaman kerran." },
-      { title: "Kirjoita päivämäärä tarraan ja kiinnitä se putkeen.", body: "Tarra on esitietolomakkeessa. Kiinnitä se pystyyn putken litteälle sivulle." },
-      { title: "Laita putki takaisin pussiin ja sulje pussi." },
-      { title: "Täytä esitietolomake.", body: "Mieluiten sähköisesti: fimlab.fi/suolistoseulontalomake. Jos täytät paperilomakkeen, laita se pussin mukaan." },
-      { title: "Laita pussi palautuskuoreen.", body: "Robotti hakee kuoren ovelta. Näyte pitää lähettää vuorokauden kuluessa, joten varaa nouto seuraavaksi." },
+      { title: "Tarkista näytteenottopaketin sisältö.", body: "Paketissa on näyteputki, palautuspussi, joka suojaa näytettä, ja imuliina. Huom! Putken neste sisältää terveydelle haitallisia aineita. Älä koske nesteeseen äläkä putken tai korkin sisäpuolelle." },
+      { title: "Ulosta puhtaalle alustalle.", body: "Käytä tukevaa alustaa, esimerkiksi paperia, sanomalehteä tai kertakäyttölautasta. Näytettä ei saa ottaa WC-pöntöstä." },
+      { title: "Avaa vihreä korkki kiertämällä.", body: "Näytetikku on kiinni korkissa. Jos uloste on kovaa, kostuta sitä hieman vedellä, jotta näyte tarttuu tikkuun. Jos uloste on löysää, pyyhi tikku kuivaksi esimerkiksi WC-paperilla ennen kuin painat sen ulosteeseen." },
+      { title: "Sivele tikkua edestakaisin ulosteessa 2–3 kertaa.", body: "Näytettä on tarpeeksi, kun tikun kierteinen kärki on ulosteen peitossa." },
+      { title: "Laita korkki ja tikku takaisin putkeen ja paina, kunnes korkki napsahtaa.", body: "Paina huolellisesti. Älä avaa korkkia enää." },
+      { title: "Ravista putkea voimakkaasti muutaman kerran.", body: "Tee tämä, kun korkki on kunnolla kiinni." },
+      { title: "Merkitse päivämäärä näytetarraan ja kiinnitä tarra putkeen.", body: "Tarra on kiinni kutsukirjeessä. Kirjoita siihen näytteenottopäivä, irrota viivakoodillinen tarra paperista ja liimaa se pystyyn putken litteälle puolelle." },
+      { title: "Laita putki palautuspussiin ja sulje pussi huolellisesti.", body: "Palautuspussi tuli kutsun mukana, ja sen sisällä on imuliina." },
+      { title: "Täytä seulonnan esitiedot.", body: "Sähköisesti osoitteessa seula.hus.fi tai kirjeen QR-koodilla. Tunnus: näytetarran H-kirjaimella alkava numero. Salasana: henkilötunnuksesi alkuosa. Jos sähköinen lomake ei onnistu, täytä kirjeen mukana tullut paperilomake." },
+      { title: "Laita suljettu palautuspussi pahviseen palautuskuoreen.", body: "Jos täytit paperilomakkeen, laita sekin kuoreen. Säilytä näyte huoneenlämmössä. Näyte pitää palauttaa viimeistään näytteenottoa seuraavana arkipäivänä, joten varaa robotin nouto seuraavaksi." },
     ],
     resultWait: "Saat tuloksen noin kuukauden kuluessa, ensisijaisesti sähköisenä kirjeenä.",
     negative: { title: "Näytteessä ei ollut verta", body: "Sinut kutsutaan seuraavan kerran kahden vuoden päästä. Jos sinulla on oireita sitä ennen, ota yhteys terveysasemaan." },
@@ -81,8 +84,8 @@ export const fi: KitText = {
   },
   robot: [
     { title: "Mene robotin luo.", body: "Se odottaa ovesi edessä. Ota palautuskuori mukaan." },
-    { title: "Avaa kansi sovelluksesta.", body: "Kansi aukeaa vain sinun puhelimellasi, kun olet robotin vieressä." },
+    { title: "Avaa oma lokerosi sovelluksesta.", body: "Robotissa on useita lokeroita. Vain sinun lokerosi aukeaa, ja vain puhelimellasi robotin vieressä." },
     { title: "Laita kuori robotin sisään.", body: "Aseta se lappeelleen lokeroon." },
-    { title: "Sulje kansi.", body: "Paina kantta, kunnes se lukittuu. Robotti lähtee sitten laboratorioon." },
+    { title: "Sulje lokero.", body: "Paina kansi kiinni, kunnes se lukittuu. Robotti hakee sitten muut lähellä olevat näytteet ja palaa laboratorioon." },
   ],
 };

@@ -1,11 +1,19 @@
-import { ROBOT_TRAVEL_MS, ROBOT_WAIT_FLAG_MS, flagsOf, stageOf, type Person, type Sample } from "@/lib/sample/model";
+import { ROBOT_TRAVEL_MS, ROBOT_WAIT_FLAG_MS, departureOf, flagsOf, stageOf, type Person, type Sample } from "@/lib/sample/model";
 
 /**
  * The robot fleet, derived from the sample events.
  * The samples hold no robots: a "pickupBooked" event dispatches one, which drives out for
- * the booking's travel time, waits at the door until "pickedUp", then drives back for the same time.
- * Replaying every booking in order gives each trip a robot, so every tab shows the same result.
+ * the booking's travel time, waits at the door until "pickedUp", then drives back to its hub.
+ * A robot has COMPARTMENTS compartments, each opened on its own, so one run can collect from
+ * several homes close to each other: bookings that share a `run` are its stops, in compartment
+ * order, and each later stop starts when the robot leaves the previous door.
+ * Replaying every booking in order gives each run a robot, so every tab shows the same result.
  */
+
+/** Compartments per robot. Each opens on its own, so a robot can collect from this many homes in one run. */
+export const COMPARTMENTS = 4;
+/** A run only adds a home within this distance (km, straight line) of its previous stop. */
+export const NEARBY_KM = 2;
 
 /** [latitude, longitude] */
 export type LatLng = [number, number];
@@ -76,6 +84,7 @@ export const FLEET: Robot[] = PER_HUB.flatMap(([hub, n]) => Array.from({ length:
   hub,
 }));
 
+/** One stop of a run: a robot's leg to a home, its wait at the door and, after the last stop, its way back. */
 export type Trip = {
   robotId: string;
   sampleId: string;
@@ -83,12 +92,31 @@ export type Trip = {
   hub: HubId;
   home: LatLng;
   slot?: string;
+  /** The run this stop belongs to, and the compartment the person uses (1 is the first stop). */
+  run: string;
+  compartment: number;
+  /** Number of stops in the run. */
+  stops: number;
+  /** Where this leg starts: the hub (or the phone's start point) for the first stop, else the previous home. */
+  from: LatLng;
+  /**
+   * When the robot sets off on this leg: the booking, the start of a later booked window or when the phone
+   * sent it for the first stop; when the robot left the previous door for later stops (Infinity until then).
+   */
   bookedAt: number;
-  /** One-way driving time, in ms. */
+  /** Driving time of this leg, in ms. */
   travelMs: number;
+  /** The street route from the phone's booking, hub first and home last; absent for simulated households. */
+  route?: LatLng[];
   /** When the robot left the door: the sample was handed over, or the booking was replaced. */
   leftAt?: number;
   handedOver: boolean;
+  /** Where the run ends (its start point) and how long the last stop's drive back takes. */
+  backTo: LatLng;
+  returnMs: number;
+  last: boolean;
+  /** When the robot is back with the whole run, once the last stop is done. */
+  backAt?: number;
 };
 
 export type RobotStatus =
@@ -97,7 +125,8 @@ export type RobotStatus =
   | { kind: "atDoor"; trip: Trip; waitedMs: number; flagged: boolean }
   | { kind: "returning"; trip: Trip; progress: number; etaMs: number };
 
-export type RobotView = { robot: Robot; status: RobotStatus };
+/** What a robot is doing, and every stop of its current run in compartment order (empty when idle). */
+export type RobotView = { robot: Robot; status: RobotStatus; run: Trip[] };
 
 export function hash(s: string): number {
   let h = 2166136261;
@@ -185,49 +214,108 @@ export function splitLine(line: LatLng[], t: number): { done: LatLng[]; ahead: L
   return { done: line, ahead: [line[line.length - 1]] };
 }
 
+/**
+ * A route shared by the phone ([lng, lat] points) as map points ([lat, lng]), or undefined when it is
+ * missing or malformed: anyone can write to the shared demo log, so only finite coordinate pairs pass.
+ */
+export function sharedRoute(raw: unknown): LatLng[] | undefined {
+  if (!Array.isArray(raw) || raw.length < 2 || raw.length > 500) return undefined;
+  const out: LatLng[] = [];
+  for (const p of raw) {
+    if (!Array.isArray(p) || p.length !== 2) return undefined;
+    const [lng, lat] = p as unknown[];
+    if (typeof lng !== "number" || typeof lat !== "number" || !Number.isFinite(lng) || !Number.isFinite(lat)) return undefined;
+    if (Math.abs(lng) > 180 || Math.abs(lat) > 90) return undefined;
+    out.push([lat, lng]);
+  }
+  return out;
+}
+
 export function routeKey(t: Pick<Trip, "hub" | "sampleId">): string {
   return `${t.hub}:${t.sampleId}`;
 }
 
-/** Every pickup booking as a trip, oldest first, each given a robot from the person's hub. */
+/** Every pickup booking as a stop of a run, runs in departure order, each run given a robot from its hub. */
 export function tripsOf(samples: Sample[]): Trip[] {
-  type Draft = Omit<Trip, "robotId">;
-  const drafts: Draft[] = [];
+  type Draft = Omit<Trip, "robotId" | "stops" | "from" | "backTo" | "returnMs" | "last" | "backAt" | "leftAt" | "handedOver"> & {
+    endAt?: number;
+    picked: boolean;
+  };
+  const runs = new Map<string, Draft[]>();
   for (const s of samples) {
     const events = [...s.events].sort((a, b) => a.at - b.at);
     events.forEach((e, i) => {
       if (e.type !== "pickupBooked") return;
-      const travelMs = e.travelMs ?? ROBOT_TRAVEL_MS;
       const end = events.slice(i + 1).find((x) => x.type === "pickedUp" || x.type === "pickupBooked");
-      drafts.push({
+      // A booked window that has not started keeps the robot at its hub; one replaced before it set off never ran.
+      const leaves = departureOf(s, e);
+      if (end && end.at < leaves) return;
+      // The phone sends its route as [lng, lat]; the map works in [lat, lng].
+      const route = sharedRoute(e.route);
+      const run = typeof e.run === "string" ? e.run : `${s.id}@${e.at}`;
+      const list = runs.get(run) ?? [];
+      runs.set(run, list);
+      list.push({
         sampleId: s.id,
         person: s.person,
         hub: hubOf(s.person),
-        home: homeOf(s.person),
+        home: route ? route[route.length - 1] : homeOf(s.person),
+        ...(route ? { route } : {}),
         ...(e.slot ? { slot: e.slot } : {}),
-        bookedAt: e.at,
-        travelMs,
-        ...(end ? { leftAt: Math.max(end.at, e.at + travelMs) } : {}),
-        handedOver: end?.type === "pickedUp",
+        run,
+        compartment: typeof e.compartment === "number" ? e.compartment : 1,
+        bookedAt: leaves,
+        travelMs: e.travelMs ?? ROBOT_TRAVEL_MS,
+        ...(end ? { endAt: end.at } : {}),
+        picked: end?.type === "pickedUp",
       });
     });
   }
-  drafts.sort((a, b) => a.bookedAt - b.bookedAt || a.sampleId.localeCompare(b.sampleId));
+
+  // Each stop's leg starts when the robot left the previous door; the last stop drives back to the start.
+  const built: Omit<Trip, "robotId">[][] = [];
+  for (const drafts of runs.values()) {
+    drafts.sort((a, b) => a.compartment - b.compartment || a.bookedAt - b.bookedAt);
+    const first = drafts[0];
+    const start: LatLng = first.route ? first.route[0] : HUBS[first.hub].at;
+    let from = start;
+    let prevLeft: number | undefined;
+    const stops = drafts.map((d, k) => {
+      const legStart = k === 0 ? d.bookedAt : Math.min(d.bookedAt, prevLeft ?? Infinity);
+      const leftAt = d.endAt === undefined ? undefined : Math.max(d.endAt, legStart + d.travelMs);
+      const { endAt: _end, picked, ...rest } = d;
+      void _end;
+      const stop = { ...rest, from, bookedAt: legStart, ...(leftAt === undefined ? {} : { leftAt }), handedOver: picked };
+      from = d.home;
+      prevLeft = leftAt;
+      return stop;
+    });
+    const last = stops[stops.length - 1];
+    // A single stop drives back the way it came; a longer run drives back from its last home at the same pace.
+    const msPerDeg = first.travelMs / Math.max(1e-4, dist(start, first.home));
+    const returnMs = stops.length === 1 ? first.travelMs : Math.max(3_000, Math.round(dist(last.home, start) * msPerDeg));
+    const backAt = last.leftAt === undefined ? undefined : last.leftAt + returnMs;
+    built.push(stops.map((t, i) => ({
+      ...t, stops: stops.length, backTo: start, returnMs, last: i === stops.length - 1, ...(backAt === undefined ? {} : { backAt }),
+    })));
+  }
+  built.sort((a, b) => a[0].bookedAt - b[0].bookedAt || a[0].sampleId.localeCompare(b[0].sampleId));
 
   const busyUntil = new Map<string, number>(FLEET.map((r) => [r.id, -Infinity]));
-  return drafts.map((d) => {
+  return built.flatMap((run) => {
+    const d = run[0];
     const pool = FLEET.filter((r) => r.hub === d.hub);
     const robot =
       pool.find((r) => (busyUntil.get(r.id) ?? -Infinity) <= d.bookedAt) ??
       pool.reduce((best, r) => ((busyUntil.get(r.id) ?? 0) < (busyUntil.get(best.id) ?? 0) ? r : best));
-    busyUntil.set(robot.id, d.leftAt === undefined ? Infinity : d.leftAt + d.travelMs);
-    return { ...d, robotId: robot.id };
+    busyUntil.set(robot.id, run[run.length - 1].backAt ?? Infinity);
+    return run.map((t) => ({ ...t, robotId: robot.id }));
   });
 }
 
 function statusFor(trip: Trip, now: number): RobotStatus | null {
-  const arrive = trip.bookedAt + trip.travelMs;
   if (now < trip.bookedAt) return null;
+  const arrive = trip.bookedAt + trip.travelMs;
   if (now < arrive) {
     return { kind: "outbound", trip, progress: (now - trip.bookedAt) / trip.travelMs, etaMs: arrive - now };
   }
@@ -235,14 +323,16 @@ function statusFor(trip: Trip, now: number): RobotStatus | null {
     const waitedMs = now - arrive;
     return { kind: "atDoor", trip, waitedMs, flagged: waitedMs > ROBOT_WAIT_FLAG_MS };
   }
-  const back = trip.leftAt + trip.travelMs;
+  // After a stop that is not the last, the next stop's leg takes over.
+  if (!trip.last) return null;
+  const back = trip.leftAt + trip.returnMs;
   if (now < back) {
-    return { kind: "returning", trip, progress: (now - trip.leftAt) / trip.travelMs, etaMs: back - now };
+    return { kind: "returning", trip, progress: (now - trip.leftAt) / trip.returnMs, etaMs: back - now };
   }
   return null;
 }
 
-/** What every robot is doing now. */
+/** What every robot is doing now, with the stops of its current run. */
 export function fleetAt(trips: Trip[], now: number): RobotView[] {
   return FLEET.map((robot) => {
     let status: RobotStatus = { kind: "idle" };
@@ -251,11 +341,12 @@ export function fleetAt(trips: Trip[], now: number): RobotView[] {
       const s = statusFor(t, now);
       if (s) status = s;
     }
-    return { robot, status };
+    const run = status.kind === "idle" ? [] : trips.filter((t) => t.run === status.trip.run).sort((a, b) => a.compartment - b.compartment);
+    return { robot, status, run };
   });
 }
 
-/** Where the robot is on the map, given the route its trip follows (hub first, home last). */
+/** Where the robot is on the map, given the line its current leg follows (start first, home last). */
 export function positionOf(v: RobotView, route: LatLng[] | undefined, parkedIndex: number): LatLng {
   const s = v.status;
   if (s.kind === "idle") {
@@ -263,15 +354,15 @@ export function positionOf(v: RobotView, route: LatLng[] | undefined, parkedInde
     return [lat - 0.0012, lng - 0.0045 + parkedIndex * 0.003];
   }
   if (s.kind === "atDoor") return s.trip.home;
-  const line = route ?? curvedRoute(HUBS[s.trip.hub].at, s.trip.home, routeKey(s.trip));
+  const line = route ?? s.trip.route ?? curvedRoute(s.trip.from, s.trip.home, routeKey(s.trip));
   return pointAlong(line, s.kind === "outbound" ? s.progress : 1 - s.progress);
 }
 
-/** Trips whose robot is back at the hub, newest first. */
+/** Stops whose robot is back at the hub with the whole run, newest first. */
 export function finishedTrips(trips: Trip[], now: number): Trip[] {
   return trips
-    .filter((t) => t.leftAt !== undefined && now >= t.leftAt + t.travelMs)
-    .sort((a, b) => (b.leftAt ?? 0) - (a.leftAt ?? 0));
+    .filter((t) => t.backAt !== undefined && now >= t.backAt)
+    .sort((a, b) => (b.backAt ?? 0) - (a.backAt ?? 0));
 }
 
 /** Samples taken at home with no robot booked yet, longest waiting first. */
@@ -285,10 +376,20 @@ export function readyForPickup(samples: Sample[], now: number): Sample[] {
  * grouped by the hub they wait at; longest waiting first within a hub.
  */
 export function awaitingIntake(samples: Sample[], now: number): { hub: HubId; samples: Sample[] }[] {
-  const arrivedAt = (s: Sample) => s.events.findLast((e) => e.type === "pickedUp")?.at ?? now;
+  // A sample on a run reaches the hub when the whole run is back; without a booked run (seeded
+  // history), when its own pickup's drive back ends, as the board's flag says.
+  const onRun = new Map<string, number | undefined>();
+  for (const t of tripsOf(samples)) if (t.handedOver) onRun.set(t.sampleId, t.backAt);
+  const arrivedAt = (s: Sample): number | undefined => {
+    if (onRun.has(s.id)) return onRun.get(s.id);
+    return flagsOf(s, now).some((f) => f.kind === "awaitingIntake") ? (s.events.findLast((e) => e.type === "pickedUp")?.at ?? now) : undefined;
+  };
   const waiting = samples
-    .filter((s) => flagsOf(s, now).some((f) => f.kind === "awaitingIntake"))
-    .sort((a, b) => arrivedAt(a) - arrivedAt(b));
+    .filter((s) => {
+      const at = arrivedAt(s);
+      return at !== undefined && now >= at && stageOf(s, now) === "pickedUp";
+    })
+    .sort((a, b) => (arrivedAt(a) ?? 0) - (arrivedAt(b) ?? 0));
   return (Object.keys(HUBS) as HubId[])
     .map((hub) => ({ hub, samples: waiting.filter((s) => hubOf(s.person) === hub) }))
     .filter((g) => g.samples.length > 0);
@@ -320,50 +421,132 @@ const BURST_PER_HUB = 3;
 
 export type SimAction = {
   sampleId: string;
-  event: { type: "pickupBooked"; slot: string; travelMs: number; at?: number } | { type: "pickedUp" };
+  event:
+    | { type: "pickupBooked"; slot: string; travelMs: number; at?: number; run?: string; compartment?: number; after?: string }
+    | { type: "pickedUp" }
+    | { type: "robotDispatched"; at: number };
 };
 
+/** Driving time between two points at ROBOT_SPEED_KMH along streets, sped up by `speed`. */
+function legMs(from: LatLng, to: LatLng, speed: SimSpeed): number {
+  const km = dist(from, to) * 111.32 * DETOUR;
+  return Math.max(3_000, Math.round(((km / ROBOT_SPEED_KMH) * 3_600_000) / speed));
+}
+
+/** Up to `n` waiting homes, each the nearest within NEARBY_KM of the previous stop (and, if given, from the same hub). */
+export function nearbyChain(from: LatLng, pool: Sample[], n: number, hub?: HubId): Sample[] {
+  const left = pool.filter((s) => hub === undefined || hubOf(s.person) === hub);
+  const out: Sample[] = [];
+  let at = from;
+  while (out.length < n) {
+    let best = -1;
+    let bestKm = Infinity;
+    left.forEach((s, i) => {
+      const km = dist(at, homeOf(s.person)) * 111.32;
+      if (km <= NEARBY_KM && km < bestKm) {
+        best = i;
+        bestKm = km;
+      }
+    });
+    if (best < 0) break;
+    const [s] = left.splice(best, 1);
+    out.push(s);
+    at = homeOf(s.person);
+  }
+  return out;
+}
+
 /**
- * The next simulated events for everyone except the phone user: hand samples to robots
- * waiting at the door, and book a robot for the sample that has waited longest
- * when its hub has a robot free. Pure, so every tab would decide the same.
+ * The next simulated events for everyone except the phone user: hand samples to robots waiting at
+ * the door, send a run on to its next stop once the robot has left the previous door, add nearby
+ * homes to the phone's run, and book a run (up to COMPARTMENTS nearby homes) for the sample that has
+ * waited longest when its hub has a robot free. Pure, so every tab would decide the same.
  */
 export function simStep(samples: Sample[], now: number, me: string, slotLabel: string, speed: SimSpeed = 1): SimAction[] {
   const trips = tripsOf(samples);
   const actions: SimAction[] = [];
+  const byId = new Map(samples.map((s) => [s.id, s]));
 
   // People come to the door 15–50 s after the robot arrives, whatever the driving speed.
   for (const t of trips) {
-    if (t.sampleId === me || t.leftAt !== undefined) continue;
+    if (t.sampleId === me || t.leftAt !== undefined || !Number.isFinite(t.bookedAt)) continue;
     const delay = NO_ANSWER_IDS.includes(t.sampleId) ? NO_ANSWER_MS : 15_000 + (hash(t.sampleId) % 8) * 5_000;
     if (now >= t.bookedAt + t.travelMs + delay) actions.push({ sampleId: t.sampleId, event: { type: "pickedUp" } });
   }
 
+  // A later stop is sent on its way, dated to when the robot left the previous door.
+  for (const t of trips) {
+    if (t.compartment === 1) continue;
+    const prev = trips.find((x) => x.run === t.run && x.compartment === t.compartment - 1);
+    const s = byId.get(t.sampleId);
+    const booking = s?.events.findLast((e) => e.type === "pickupBooked");
+    if (!prev || prev.leftAt === undefined || now < prev.leftAt || !s || !booking) continue;
+    if (!Number.isFinite(departureOf(s, booking))) actions.push({ sampleId: t.sampleId, event: { type: "robotDispatched", at: prev.leftAt } });
+  }
+
+  const waitingAll = readyForPickup(samples, now).filter((s) => s.id !== me);
+  const taken = new Set<string>();
+  const runOf = (first: Sample, rest: Sample[], at?: number): SimAction[] => {
+    const run = `${first.id}@${at ?? now}`;
+    taken.add(first.id);
+    const out: SimAction[] = [{
+      sampleId: first.id,
+      event: { type: "pickupBooked", slot: slotLabel, travelMs: travelMsFor(first.person, speed), run, compartment: 1, ...(at === undefined ? {} : { at }) },
+    }];
+    let prev = first;
+    rest.forEach((s, i) => {
+      taken.add(s.id);
+      out.push({
+        sampleId: s.id,
+        event: { type: "pickupBooked", slot: slotLabel, travelMs: legMs(homeOf(prev.person), homeOf(s.person), speed), run, compartment: i + 2, after: prev.id },
+      });
+      prev = s;
+    });
+    return out;
+  };
+
+  // The phone's robot comes to the phone first, then takes nearby homes in its other compartments.
+  for (const t of trips) {
+    if (t.sampleId !== me || t.stops !== 1 || t.leftAt !== undefined || now < t.bookedAt) continue;
+    const near = nearbyChain(t.home, waitingAll.filter((s) => !taken.has(s.id)), COMPARTMENTS - 1);
+    let prevId = me;
+    let prevHome = t.home;
+    near.forEach((s, i) => {
+      taken.add(s.id);
+      actions.push({
+        sampleId: s.id,
+        event: { type: "pickupBooked", slot: slotLabel, travelMs: legMs(prevHome, homeOf(s.person), speed), run: t.run, compartment: i + 2, after: prevId },
+      });
+      prevId = s.id;
+      prevHome = homeOf(s.person);
+    });
+  }
+
   const gap = DISPATCH_GAP_MS * (60 / speed);
-  const lastBooking = Math.max(-Infinity, ...trips.filter((t) => t.sampleId !== me).map((t) => t.bookedAt));
+  const firstStops = trips.filter((t) => t.sampleId !== me && t.compartment === 1);
+  const lastBooking = Math.max(-Infinity, ...firstStops.map((t) => t.bookedAt).filter(Number.isFinite));
   const fleet = fleetAt(trips, now);
   const idlePerHub = new Map<HubId, number>();
   for (const v of fleet) if (v.status.kind === "idle") idlePerHub.set(v.robot.hub, (idlePerHub.get(v.robot.hub) ?? 0) + 1);
-  const waiting = readyForPickup(samples, now).filter((s) => s.id !== me && idlePerHub.has(hubOf(s.person)));
-  const book = (s: Sample, at?: number): SimAction => ({
-    sampleId: s.id,
-    event: { type: "pickupBooked", slot: slotLabel, travelMs: travelMsFor(s.person, speed), ...(at === undefined ? {} : { at }) },
-  });
+  const waiting = () => waitingAll.filter((s) => !taken.has(s.id) && idlePerHub.has(hubOf(s.person)));
+  const chainFor = (s: Sample) => nearbyChain(homeOf(s.person), waitingAll.filter((x) => x.id !== s.id && !taken.has(x.id)), COMPARTMENTS - 1, hubOf(s.person));
 
-  if (fleet.every((v) => v.status.kind === "idle" || v.status.trip.sampleId === me)) {
+  if (fleet.every((v) => v.status.kind === "idle" || v.run.some((t) => t.sampleId === me))) {
     // Quiet map (page just opened or demo reset): show a fleet already at work.
-    // A few robots per hub are booked as if they had left earlier, each part-way to its home.
+    // A few runs per hub are booked as if they had left earlier, each part-way to its first home.
     const sent = new Map<HubId, number>();
-    for (const s of waiting) {
+    for (const s of waiting()) {
+      if (taken.has(s.id)) continue;
       const hub = hubOf(s.person);
       const n = sent.get(hub) ?? 0;
       if (n >= Math.min(BURST_PER_HUB, idlePerHub.get(hub) ?? 0)) continue;
       sent.set(hub, n + 1);
       const travelled = ((hash(s.id) % 80) + 5) / 100; // 5–84 % of the way there
-      actions.push(book(s, Math.round(now - travelMsFor(s.person, speed) * travelled)));
+      actions.push(...runOf(s, chainFor(s), Math.round(now - travelMsFor(s.person, speed) * travelled)));
     }
-  } else if (now - lastBooking >= gap && waiting[0]) {
-    actions.push(book(waiting[0]));
+  } else if (now - lastBooking >= gap) {
+    const first = waiting()[0];
+    if (first) actions.push(...runOf(first, chainFor(first)));
   }
   return actions;
 }

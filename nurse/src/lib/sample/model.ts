@@ -24,8 +24,21 @@ export type SampleEvent = {
   note?: string;
   /** for pickupBooked and colonoscopyBooked */
   slot?: string;
+  /** for pickupBooked: when the booked window starts (epoch ms); a later window waits for it. */
+  slotAt?: number;
   /** for pickupBooked: how long the robot drives one way, in ms. Absent means ROBOT_TRAVEL_MS (the phone demo). */
   travelMs?: number;
+  /**
+   * for pickupBooked from the phone: the robot's street route as [lng, lat] points, hub first and the
+   * door last (rounded to about 10 m), so the nurse map drives the same trip to the same place.
+   */
+  route?: [number, number][];
+  /** for pickupBooked: the robot run this pickup belongs to; runs collect from several nearby homes. */
+  run?: string;
+  /** for pickupBooked: the robot compartment this person uses (1 is the run's first stop). */
+  compartment?: number;
+  /** for pickupBooked: the sample collected just before this one; the robot comes here only after leaving that door. */
+  after?: string;
 };
 
 export type Person = {
@@ -101,14 +114,32 @@ function has(s: Sample, type: EventType): boolean {
   return s.events.some((e) => e.type === type);
 }
 
+/**
+ * When the robot for this booking sets off: when the phone sent it (robotDispatched), otherwise the
+ * start of the booked window if it lies ahead, otherwise the booking itself (as soon as possible,
+ * and every simulated household).
+ */
+export function departureOf(s: Sample, booking: SampleEvent): number {
+  const later = s.events.filter((e) => e !== booking && e.at >= booking.at);
+  const next = Math.min(...later.filter((e) => e.type === "pickupBooked").map((e) => e.at), Infinity);
+  const sent = Math.min(...later.filter((e) => e.type === "robotDispatched" && e.at < next).map((e) => e.at), Infinity);
+  if (Number.isFinite(sent)) return sent;
+  // A later stop of a run waits until the robot is sent on from the previous door.
+  if (booking.after) return Infinity;
+  return Math.max(booking.at, booking.slotAt ?? booking.at);
+}
+
 export function stageOf(s: Sample, now: number): Stage {
   const m = latestMilestone(s);
   if (!m) return "invited";
   switch (m.type) {
     case "sampleTaken":
       return "sampleTaken";
-    case "pickupBooked":
-      return now < m.at + travelOf(s) ? "robotEnRoute" : "robotAtDoor";
+    case "pickupBooked": {
+      const leaves = departureOf(s, m);
+      if (now < leaves) return "pickupBooked";
+      return now < leaves + travelOf(s) ? "robotEnRoute" : "robotAtDoor";
+    }
     case "pickedUp":
       return "pickedUp";
     case "atLab":
@@ -130,7 +161,9 @@ export function stageOf(s: Sample, now: number): Stage {
 export function robotProgress(s: Sample, now: number): number | null {
   const m = latestMilestone(s);
   if (!m || m.type !== "pickupBooked") return null;
-  const p = (now - m.at) / travelOf(s);
+  const leaves = departureOf(s, m);
+  if (now < leaves) return null;
+  const p = (now - leaves) / travelOf(s);
   return Math.min(1, Math.max(0, p));
 }
 
@@ -174,7 +207,7 @@ export function flagsOf(s: Sample, now: number): Flag[] {
 
   const m = latestMilestone(s);
   if (m && m.type === "pickupBooked") {
-    const waited = now - (m.at + travelOf(s));
+    const waited = now - (departureOf(s, m) + travelOf(s));
     if (waited > ROBOT_WAIT_FLAG_MS) {
       flags.push({ kind: "robotWaiting", label: `Robot has waited ${Math.floor(waited / 1000)} s at the door` });
     }

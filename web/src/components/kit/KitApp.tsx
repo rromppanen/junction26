@@ -13,7 +13,7 @@ import { pickupWindows, type Window } from "@/lib/kit/slots";
 import { StepAnimation } from "./StepAnimation";
 import { TrackingMap } from "./TrackingMap";
 import { ROBOT_ROUTE } from "@/data/robotRoute";
-import type { LngLat } from "@/lib/kit/route";
+import { shareableRoute, type LngLat } from "@/lib/kit/route";
 import { forgetRobotRoute, locateAndRoute, storedRoute } from "./useRobotRoute";
 import "./animations.css";
 
@@ -61,7 +61,7 @@ export function KitApp() {
   const router = useRouter();
   /** The demo's start page links here with start=1: begin a fresh run from the invitation. */
   const fresh = params.get("start") === "1";
-  const { samples, now, add, reset } = useSamples();
+  const { samples, now, add, restart: restartPerson } = useSamples();
   const me = samples.find((s) => s.id === ME);
 
   const [mounted, setMounted] = useState(false);
@@ -79,7 +79,8 @@ export function KitApp() {
   const stepKey = STEP_KEY;
   useEffect(() => {
     if (fresh) {
-      reset();
+      // Only this phone's person starts again; the nurse board and other people keep their progress.
+      restartPerson(ME);
       clearLocal();
       router.replace("/kit");
       setMounted(true);
@@ -93,7 +94,7 @@ export function KitApp() {
     const raw = readStored(stepKey);
     const s = Number(raw);
     if (raw !== null && Number.isInteger(s) && s >= INVITE) setStepState(s);
-    // Runs once on load; reset, clearLocal and router are stable for that purpose.
+    // Runs once on load; restartPerson, clearLocal and router are stable for that purpose.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepKey]);
 
@@ -142,10 +143,23 @@ export function KitApp() {
     }
     setRoute(r);
     setLocating("idle");
-    // travelMs lets the nurse app's fleet drive the same robot on the same clock as this phone.
-    act({ type: "pickupBooked", slot: label, travelMs: ROBOT_TRAVEL_MS, ...(at !== undefined ? { slotAt: at } : {}) });
-    act({ type: "robotDispatched" });
+    // travelMs and route let the nurse app's fleet drive the same robot, on the same clock and the
+    // same streets, to the same door as this phone.
+    act({ type: "pickupBooked", slot: label, travelMs: ROBOT_TRAVEL_MS, route: shareableRoute(r), ...(at !== undefined ? { slotAt: at } : {}) });
+    // As soon as possible, or a window already under way: the robot leaves now. A later window waits
+    // for its start (or for the person to send the robot early); see scheduledFor below.
+    if (at === undefined || at <= Date.now()) act({ type: "robotDispatched" });
   }
+
+  /** The start of a booked window the robot is waiting for, or undefined once it has been sent. */
+  const booking = me ? lastOf(me, "pickupBooked") : undefined;
+  const scheduledFor = stage === "pickupBooked" ? booking?.slotAt : undefined;
+  const windowStarted = scheduledFor !== undefined && now >= scheduledFor;
+  useEffect(() => {
+    // The window has started: send the robot, dated to the window's start so the nurse map agrees.
+    if (scheduledFor !== undefined && windowStarted) act({ type: "robotDispatched", at: scheduledFor });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scheduledFor, windowStarted]);
 
   // When the robot reaches the door the app moves on to the arrival steps by itself (and buzzes where phones can).
   const prevStage = useRef(stage);
@@ -178,7 +192,7 @@ export function KitApp() {
     if (Date.now() - shownAt.current < CLICK_GUARD_MS) return;
     fn();
   };
-  const act = (e: Omit<SampleEvent, "at">) => add(ME, e);
+  const act = (e: Omit<SampleEvent, "at"> & { at?: number }) => add(ME, e);
 
   const lang: KitLang = storedLang ?? (me && isKitLang(me.person.lang) ? me.person.lang : "fi");
   const info = langInfo(lang);
@@ -238,7 +252,7 @@ export function KitApp() {
   function renderScreen() {
     if (!me) return null;
     const restart = (
-      <button type="button" onClick={() => { reset(); clearLocal(); }}
+      <button type="button" onClick={() => { restartPerson(ME); clearLocal(); }}
         className="mx-auto mt-4 inline-flex min-h-12 items-center gap-2 rounded-xl border border-rule px-5 text-sm font-semibold text-muted hover:bg-brand-soft">
         <RotateCcw aria-hidden size={16} />{t.restartDemo}
       </button>
@@ -303,7 +317,11 @@ export function KitApp() {
       );
     }
 
-    // Choosing any time sends the robot at once (a demo shortcut; a real service would wait for the window).
+    // A later window is booked: show when the robot comes, with a way to send it early.
+    if (scheduledFor !== undefined) {
+      return <Scheduled key="scheduled" t={t} slot={booking?.slot ?? ""} onSendNow={guarded(() => act({ type: "robotDispatched" }))} />;
+    }
+
     if (stage === "sampleTaken" || stage === "pickupBooked") {
       return <Booking key="book" lang={lang} t={t} now={now} locating={locating} onBook={(label, at) => void book(label, at)}
         onRetry={() => pending.current && void book(pending.current.label, pending.current.at)} />;
@@ -588,6 +606,20 @@ function Booking({ lang, t, now, locating, onBook, onRetry }: {
         </button>
       </div>
     </>
+  );
+}
+
+/** A pickup booked for a later window: when the robot comes, and a way to send it now instead. */
+function Scheduled({ t, slot, onSendNow }: { t: Ui; slot: string; onSendNow: () => void }) {
+  return (
+    <Body footer={<Primary onClick={onSendNow}>{t.sendNow}</Primary>}>
+      <div className="flex flex-col items-center gap-3 pt-10 text-center">
+        <span className="flex size-16 items-center justify-center rounded-full bg-brand-soft text-brand"><Clock aria-hidden size={30} /></span>
+        <p className="font-semibold text-muted">{t.scheduledTitle}</p>
+        <h1 className="text-3xl font-semibold text-brand-strong">{slot}</h1>
+        <p className="max-w-sm leading-relaxed text-muted">{t.scheduledBody}</p>
+      </div>
+    </Body>
   );
 }
 

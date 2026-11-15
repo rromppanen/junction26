@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { decodePolyline6, hubNear, metresBetween, splitRoute, type LngLat } from "./route";
+import { decodePolyline6, hubNear, metresBetween, shareableRoute, SHARED_ROUTE_POINTS, splitRoute, type LngLat } from "./route";
+import { MAX_EVENT_CHARS } from "@/lib/sample/sync-core";
 import { ROBOT_ROUTE, ROUTE_METRES } from "@/data/robotRoute";
 
 const line: LngLat[] = [[24.8, 60.17], [24.81, 60.17], [24.82, 60.17]];
@@ -50,5 +51,21 @@ describe("decodePolyline6", () => {
   });
   it("rejects a truncated string", () => {
     expect(() => decodePolyline6("_")).toThrow();
+  });
+});
+
+describe("shareableRoute", () => {
+  const long: LngLat[] = Array.from({ length: 400 }, (_, i) => [24.9512345 + i * 1e-5, 60.1712345 + i * 1e-5]);
+
+  it("keeps both ends, caps the points and rounds to about 10 m", () => {
+    const out = shareableRoute(long);
+    expect(out).toHaveLength(SHARED_ROUTE_POINTS);
+    expect(out[0]).toEqual([24.9512, 60.1712]);
+    expect(out.at(-1)).toEqual([Math.round(long[399][0] * 1e4) / 1e4, Math.round(long[399][1] * 1e4) / 1e4]);
+  });
+
+  it("fits a pickup event into the shared log", () => {
+    const event = { type: "pickupBooked", at: Date.now(), slot: "As soon as possible", travelMs: 15_000, route: shareableRoute(long) };
+    expect(JSON.stringify(event).length).toBeLessThan(MAX_EVENT_CHARS);
   });
 });

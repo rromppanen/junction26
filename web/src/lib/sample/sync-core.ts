@@ -5,21 +5,38 @@ import { seedSamples } from "./seed";
  * Shared demo state, kept as an append-only log so that the phone, the nurse board and the
  * robot simulation can all write at once without overwriting each other.
  * The state is always `seedSamples(seedAt)` with the log's entries applied in order.
- * A reset starts a new log with a new `seedAt`.
+ * A reset starts a new log with a new `seedAt`; a RESTART entry starts one person again.
  *
  * Keep this file identical in web/ and nurse/.
  */
-export type LogEntry = { uid: string; id: string; event: SampleEvent };
+
+/**
+ * Log-only event: puts one person back to their seed state, timed from `at`. The phone app writes
+ * it to start its person again without wiping everyone else's progress on the shared demo.
+ */
+export const RESTART = "restarted";
+export type LogEvent = SampleEvent | { type: typeof RESTART; at: number };
+export type LogEntry = { uid: string; id: string; event: LogEvent };
 
 /** What GET /api/samples returns: the entries from index `from` onwards. */
 export type LogPage = { seedAt: number; from: number; entries: LogEntry[]; durable: boolean };
 
 export const MAX_ENTRIES_PER_POST = 50;
+/** Largest event, as JSON: room for a pickup's shared route (at most SHARED_ROUTE_POINTS points). */
+export const MAX_EVENT_CHARS = 4_000;
 export const MAX_LOG_LENGTH = 20_000;
+
+export function applyEntry(samples: Sample[], e: Omit<LogEntry, "uid">): Sample[] {
+  if (e.event.type === RESTART) {
+    const fresh = seedSamples(e.event.at).find((s) => s.id === e.id);
+    return fresh ? samples.map((s) => (s.id === e.id ? fresh : s)) : samples;
+  }
+  return addEvent(samples, e.id, e.event);
+}
 
 export function buildSamples(seedAt: number, entries: readonly LogEntry[]): Sample[] {
   let samples = seedSamples(seedAt);
-  for (const e of entries) samples = addEvent(samples, e.id, e.event);
+  for (const e of entries) samples = applyEntry(samples, e);
   return samples;
 }
 
@@ -38,7 +55,7 @@ export function parseEntries(v: unknown): LogEntry[] | null {
     const r = raw as Record<string, unknown>;
     if (typeof r.uid !== "string" || r.uid.length === 0 || r.uid.length > 64) return null;
     if (typeof r.id !== "string" || r.id.length === 0 || r.id.length > 64) return null;
-    if (!isEvent(r.event) || JSON.stringify(r.event).length > 1_000) return null;
+    if (!isEvent(r.event) || JSON.stringify(r.event).length > MAX_EVENT_CHARS) return null;
     out.push({ uid: r.uid, id: r.id, event: r.event });
   }
   return out;

@@ -13,12 +13,15 @@ Use these as **mentor insights**, which the challenge accepts as evidence ("publ
 5. **Treatment guidelines exist, but nobody monitors them** [2:13–2:43]. Care is reviewed afterwards, when the data is already old.
 6. **Make the strategy real, not theoretical; don't try to solve everything at once** [2:43–2:58].
 
-## What this means for Gap Radar
+## What this means for farmagusta
 
-- Confirms the "start measuring" kit and the measured gaps (points 5–6).
-- Main change: turn the brief into a **scenario tool** (point 1–2): the user adjusts a target (e.g. screening attendance) and sees people affected, cost and expected cancers found earlier, with every cost assumption cited and editable.
-- Main user: a wellbeing services county's cancer care lead (point 3).
-- Point 4 (patient view) is noted for the pitch, not built.
+On Friday these points shaped the team's first direction, Läpi, a costed scenario tool for a county's cancer care lead ([archive](../archive/README.md)). farmagusta, the product we submit, takes them differently:
+
+- **Point 4 (the patient can't see the next step)** is now the core: the phone app shows the person each step, from the invitation to the handover, in their own language.
+- **Point 5 (nobody monitors)**: the nurse board flags everyone who falls behind, including a positive test with no colonoscopy booked after 7 days.
+- **Point 3 (user group)**: we chose public screening services, with the invited person and the screening nurse as users.
+- **Points 1–2 (cost and options)**: covered only by the postage comparison and the pilot, which prices a robot pickup against a return envelope. farmagusta does not compare options for a county.
+- **Point 6 (don't solve everything)**: one programme, one city, one pilot.
 
 ## Original transcript
 

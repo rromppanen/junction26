@@ -233,3 +233,34 @@ button:disabled { cursor: not-allowed; }
   border-radius: 9999px; border: 2px solid #fff; background: var(--ink); box-shadow: 0 1px 4px rgba(29, 37, 44, 0.35);
 }
 .home-pin.is-flagged span { background: var(--behind); box-shadow: 0 0 0 6px rgba(163, 74, 8, 0.25); }
+
+/* Keep Leaflet below the map controls and participant action drawer. */
+.hospital-map { z-index: 0; }
+#map-filters input[type="checkbox"] { accent-color: var(--brand); flex-shrink: 0; }
+
+.participant-pin { background: none; border: 0; }
+.participant-pin span { display: block; width: 100%; height: 100%; border: 2px solid var(--brand); border-radius: 50%; background: white; box-shadow: 0 1px 4px #1d252c40; }
+.participant-pin span.is-flagged { border-color: white; background: var(--behind); }
+.waiting-pin span { border-color: var(--ink); }
+
+.workspace-panel { position: absolute; inset-block: 0; left: 0; z-index: 1100; width: min(22rem, 90vw); overflow-y: auto; border-right: 1px solid var(--rule); background: white; padding: 1rem; box-shadow: 8px 0 24px #1d252c10; }
+@media (min-width: 768px) { .workspace-panel { position: static; flex-shrink: 0; box-shadow: none; } }
+.filter-group { border-bottom: 1px solid var(--rule); }
+.filter-group > summary { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto 12px; min-height: 3rem; align-items: center; gap: .5rem; cursor: pointer; list-style: none; font-size: .8125rem; font-weight: 500; }
+.filter-group > summary::-webkit-details-marker { display: none; }
+.filter-group > summary::after { content: ""; grid-column: 4; justify-self: center; width: 6px; height: 6px; border-right: 1px solid var(--muted); border-bottom: 1px solid var(--muted); transform: rotate(45deg); }
+.filter-group[open] > summary::after { transform: rotate(225deg); }
+.filter-group > summary > svg { color: var(--muted); }
+.filter-count { grid-column: 3; font-size: .6875rem; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+.filter-option { display: flex; min-height: 2.75rem; align-items: center; gap: .625rem; font-size: .8125rem; cursor: pointer; }
+.layer-option { padding: .375rem 0; }
+.layer-icon { display: flex; width: 1.5rem; align-items: center; justify-content: center; color: var(--muted); }
+.layer-option.is-on .layer-icon { color: var(--brand); }
+.queue-tab { display: inline-flex; min-height: 2.75rem; align-items: center; gap: .375rem; margin-bottom: -1px; padding: .5rem .5rem; border-bottom: 2px solid transparent; font-size: .75rem; color: var(--muted); }
+.queue-tab + .queue-tab { margin-left: .75rem; }
+.queue-tab.is-active { border-bottom-color: var(--brand); color: var(--brand-strong); font-weight: 600; }
+.queue-count { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+.patient-row { display: flex; width: 100%; align-items: center; gap: .75rem; padding: .75rem .25rem; text-align: left; }
+.patient-row:hover { background: var(--paper); }
+.map-key > span { display: inline-flex; align-items: center; gap: .25rem; }
+.stop-pin span { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; border: 2px solid var(--brand); border-radius: 50%; background: white; color: var(--brand); font-size: 11px; font-weight: 700; }

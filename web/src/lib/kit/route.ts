@@ -1,5 +1,19 @@
 export type LngLat = [number, number];
 
+/** At most this many points of a robot route go into the shared demo log. */
+export const SHARED_ROUTE_POINTS = 80;
+
+/**
+ * The route as shared with the nurse map: at most SHARED_ROUTE_POINTS points, keeping both ends,
+ * rounded to 4 decimals (about 10 m), so the shared log does not hold the phone's exact position.
+ */
+export function shareableRoute(route: LngLat[]): LngLat[] {
+  const round = ([lng, lat]: LngLat): LngLat => [Math.round(lng * 1e4) / 1e4, Math.round(lat * 1e4) / 1e4];
+  if (route.length <= SHARED_ROUTE_POINTS) return route.map(round);
+  const step = (route.length - 1) / (SHARED_ROUTE_POINTS - 1);
+  return Array.from({ length: SHARED_ROUTE_POINTS }, (_, i) => round(route[Math.round(i * step)]));
+}
+
 /** Metres between two [lng, lat] points (equirectangular: exact enough for a few kilometres). */
 export function metresBetween(a: LngLat, b: LngLat): number {
   const R = 6_371_000;
