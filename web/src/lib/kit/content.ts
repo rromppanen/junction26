@@ -134,6 +134,8 @@ export type Ui = {
   scheduledTitle: string;
   scheduledBody: string;
   sendNow: string;
+  /** Under the send-now button: it exists only to show the robot in a demo. */
+  sendNowNote: string;
 };
 
 export type KitText = { ui: Ui; test: TestText; robot: StepText[] };

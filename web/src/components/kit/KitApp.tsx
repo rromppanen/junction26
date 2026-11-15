@@ -654,7 +654,12 @@ export function Finding({ t, onFound }: { t: Ui; onFound: () => void }) {
 /** A pickup booked for a later window: when the robot comes, and a way to send it now instead. */
 function Scheduled({ t, slot, onSendNow }: { t: Ui; slot: string; onSendNow: () => void }) {
   return (
-    <Body footer={<Primary onClick={onSendNow}>{t.sendNow}</Primary>}>
+    <Body footer={
+      <>
+        <button type="button" onClick={onSendNow} aria-describedby="send-now-note" className="primary-action !min-h-14 w-full !rounded-xl !text-base">{t.sendNow}</button>
+        <p id="send-now-note" className="mt-2 text-center text-xs text-muted">{t.sendNowNote}</p>
+      </>
+    }>
       <div className="flex flex-col items-center gap-3 pt-10 text-center">
         <span className="flex size-16 items-center justify-center rounded-full bg-brand-soft text-brand"><Clock aria-hidden size={30} /></span>
         <p className="font-semibold text-muted">{t.scheduledTitle}</p>
