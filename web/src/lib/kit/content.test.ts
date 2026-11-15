@@ -10,10 +10,9 @@ describe("kit text", () => {
       expect(TEXT[code].test.steps).toHaveLength(STEP_ANIMS.length);
       expect(TEXT[code].robot).toHaveLength(ROBOT_ANIMS.length);
     });
-    it(`${code}: the steps carry HUS's specifics (seula.hus.fi, H-number, 2–3 strokes)`, () => {
+    it(`${code}: the steps carry HUS's specifics (seula.hus.fi, 2–3 strokes)`, () => {
       const all = TEXT[code].test.steps.map((s) => `${s.title} ${s.body ?? ""}`).join(" ");
       expect(all).toContain("seula.hus.fi");
-      expect(all).toMatch(/\bH\b/);
       expect(all).toMatch(/2–3|۲ تا ۳/);
       expect(all.toLowerCase()).not.toContain("fimlab");
     });

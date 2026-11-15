@@ -1,6 +1,5 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import type { Anim } from "@/lib/kit/content";
 import "./animations.css";
 
@@ -134,9 +133,6 @@ const SCENES: Record<Anim, { d: number; fade: boolean; draw: () => React.ReactNo
       ))}
     </>
   ) },
-  // Back panel, then the bag, then the front pocket over the bag's lower half. The flap is drawn
-  // twice: behind the back panel while it stands open, in front once it folds past the top edge.
-  envelope: { d: 4.4, fade: true, draw: () => <EnvelopeScene /> },
   robotArrive: { d: 3.6, fade: true, draw: () => (
     <>
       <Ground />
@@ -157,10 +153,12 @@ const SCENES: Record<Anim, { d: number; fade: boolean; draw: () => React.ReactNo
   robotPlace: { d: 3.6, fade: true, draw: () => (
     <>
       <Ground />
+      {/* The sealed return bag goes in standing on its side, so one row of compartments holds many. */}
       <Robot lidClass="a-lid-open" lidBehind light={false} cargo={
         <g className="a a-dropin">
-          <rect x={76} y={4} width={48} height={30} rx={3} fill="#fff" {...W} />
-          <path d="M76 8 L100 22 L124 8" fill="none" {...W} strokeWidth={2} />
+          <rect x={86} y={-4} width={28} height={52} rx={4} fill="#fff" {...W} />
+          <line x1={90} y1={4} x2={110} y2={4} stroke={RULE} strokeWidth={3} strokeLinecap="round" />
+          <rect x={95} y={14} width={10} height={26} rx={4} fill={LIQUID} stroke={INK} strokeWidth={1.5} opacity={0.7} />
         </g>
       } />
     </>
@@ -191,66 +189,6 @@ const SCENES: Record<Anim, { d: number; fade: boolean; draw: () => React.ReactNo
     </>
   ) },
 };
-
-/*
-  The envelope flap changes shape rather than flipping, so it never thins to a line: the tip travels
-  from above the envelope to over the pocket, and the sides bow outwards on the way, as a folding
-  flap does seen from the front. Corners stay on the envelope's top corners and the shut flap's
-  point meets the pocket's V. SMIL drives the shape (CSS cannot morph a path in Safari).
-*/
-const FLAP_OPEN = "M40 70 Q70 50 100 30 Q130 50 160 70 Z";
-const FLAP_MID = "M40 70 Q70 60 100 66 Q130 60 160 70 Z";
-const FLAP_SHUT = "M40 70 Q70 90 100 110 Q130 90 160 70 Z";
-/*
-  The fold is one movement split across the two drawings at the top edge. The first half speeds up
-  into the hand-over and the second leaves it at the same speed (both curves have slope 1 there),
-  and each half lasts in proportion to how far the point travels (36 and 44 units), so the flap
-  never pauses at the edge.
-*/
-const HOLD = "0 0 1 1";
-const FOLD_IN = "0.5 0 0.75 0.75";
-const FOLD_OUT = "0.25 0.25 0.5 1";
-
-function EnvelopeScene() {
-  const still = usePrefersReducedMotion();
-  const D = "4.4s";
-  return (
-    <>
-      <path d={still ? FLAP_SHUT : FLAP_OPEN} fill={SOFT} {...W} opacity={still ? 0 : 1}>
-        {!still && <>
-          <animate attributeName="d" dur={D} repeatCount="indefinite" calcMode="spline"
-            values={`${FLAP_OPEN};${FLAP_OPEN};${FLAP_MID};${FLAP_MID}`} keyTimes="0;0.54;0.63;1" keySplines={`${HOLD};${FOLD_IN};${HOLD}`} />
-          <animate attributeName="opacity" dur={D} repeatCount="indefinite" calcMode="discrete" values="1;0" keyTimes="0;0.63" />
-        </>}
-      </path>
-      <rect x={40} y={70} width={120} height={66} rx={4} fill={SOFT} {...W} />
-      <g className="a a-intoenv">
-        <rect x={70} y={8} width={60} height={44} rx={5} fill="#fff" {...W} />
-        <line x1={76} y1={16} x2={124} y2={16} stroke={BRAND} strokeWidth={3} strokeLinecap="round" />
-      </g>
-      {/* The pocket's V runs from the top corners to the shut flap's point, so the shut flap lies exactly on it. */}
-      <path d="M40 70 L100 110 L160 70 V132 a4 4 0 0 1 -4 4 H44 a4 4 0 0 1 -4 -4 Z" fill="#fff" {...W} />
-      <path d={still ? FLAP_SHUT : FLAP_MID} fill="#fff" {...W} opacity={still ? 1 : 0}>
-        {!still && <>
-          <animate attributeName="d" dur={D} repeatCount="indefinite" calcMode="spline"
-            values={`${FLAP_MID};${FLAP_MID};${FLAP_SHUT};${FLAP_SHUT}`} keyTimes="0;0.63;0.74;1" keySplines={`${HOLD};${FOLD_OUT};${HOLD}`} />
-          <animate attributeName="opacity" dur={D} repeatCount="indefinite" calcMode="discrete" values="0;1" keyTimes="0;0.63" />
-        </>}
-      </path>
-    </>
-  );
-}
-
-function subscribeMotion(cb: () => void) {
-  const q = window.matchMedia("(prefers-reduced-motion: reduce)");
-  q.addEventListener("change", cb);
-  return () => q.removeEventListener("change", cb);
-}
-
-/** SMIL ignores the CSS reduced-motion rule, so the envelope checks the setting itself. */
-function usePrefersReducedMotion(): boolean {
-  return useSyncExternalStore(subscribeMotion, () => window.matchMedia("(prefers-reduced-motion: reduce)").matches, () => false);
-}
 
 export function StepAnimation({ anim, className = "" }: { anim: Anim; className?: string }) {
   const scene = SCENES[anim];

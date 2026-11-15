@@ -1,16 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Map as MlMap } from "maplibre-gl";
-import { BatteryFull, Check, ChevronRight, Clock, Globe, Loader2, MapPin, Signal, Wifi, X } from "lucide-react";
+import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
+import { BatteryFull, Check, ChevronLeft, ChevronRight, Clock, Globe, Loader2, MapPin, Signal, Wifi, X } from "lucide-react";
 import { REAL_TRIP_MS } from "@/lib/sample/model";
 import { langInfo, ROBOT_ANIMS, SOURCES, STEP_ANIMS, TEXT, type KitLang, type TestText, type Ui } from "@/lib/kit/content";
 import { pickupWindows, type Window } from "@/lib/kit/slots";
-import { ArrivedMoment, Body, LanguageList, Nav, Primary, StepView } from "@/components/kit/KitApp";
-import { TrackingMap } from "@/components/kit/TrackingMap";
+import { ArrivedMoment, Body, Finding, FIND_MS, FOUND_MS, LanguageList, Nav, Primary, StepView } from "@/components/kit/KitApp";
+import { STYLE, TrackingMap } from "@/components/kit/TrackingMap";
 import { StepAnimation } from "@/components/kit/StepAnimation";
-import { HYPE_ROUTE } from "@/data/reelRoute";
-import { splitRoute } from "@/lib/kit/route";
+import { HYPE, HYPE_ROUTE } from "@/data/reelRoute";
+import { splitRoute, type LngLat } from "@/lib/kit/route";
 import { createFleetMap, easeInOutSine, type FleetMap } from "./fleetMap";
 import { arrivingMs, Caption, CAPTION_LEAVE_MS, readingMs } from "./Caption";
 import { CAPTIONS, type CaptionItem } from "./captions";
@@ -37,6 +37,9 @@ const CROSSFADE_MS = 500;
 /** The phone sliding aside to make room for the captions, and back. */
 const SLIDE_MS = 1300;
 const FLY_MS = 2300;
+/** How long the finger drags the pin map, and how far it moves (phone pixels): down and to the right. */
+const PAN_MS = 1700;
+const DRAG: [number, number] = [70, 120];
 /** Reading pauses are scaled by this: lower plays the reel faster. */
 const PACE = 0.8;
 
@@ -44,7 +47,9 @@ const PACE = 0.8;
 type TripClock = { dispatchedAt: number | null; live: boolean };
 const progressOf = (c: TripClock) => (c.dispatchedAt === null ? 0 : Math.min(1, (performance.now() - c.dispatchedAt) / TRAVEL_MS));
 
-type Screen = "invite" | "about" | "how" | "step" | "swoop" | "book" | "track";
+type Screen = "invite" | "about" | "how" | "step" | "swoop" | "book" | "pin" | "finding" | "track";
+/** The pin screen: the map waits, is dragged under the pin, finds where the robot can stop, and shows it. */
+type PinStage = "start" | "moving" | "snapping" | "ready";
 type Arrival = "enRoute" | "showing" | "leaving" | "done";
 type Finger = { id: number; x: number; y: number; mode: "tap" | "drag" | "lift" };
 type Camera = { s: number; tx: number; ty: number; ms: number };
@@ -78,7 +83,8 @@ export function Reel() {
   const [lang, setLang] = useState<KitLang>("fi");
   const [why, setWhy] = useState<"open" | "closing" | null>(null);
   const [chosen, setChosen] = useState<Window | null>(null);
-  const [locating, setLocating] = useState(false);
+  const [pinStage, setPinStage] = useState<PinStage>("start");
+  const pinMap = useRef<MlMap | null>(null);
   const [arrival, setArrival] = useState<Arrival>("enRoute");
   const [finger, setFinger] = useState<Finger | null>(null);
   const [fit, setFit] = useState(1);
@@ -325,10 +331,37 @@ export function Reel() {
     await hold(1900);
     await tap("slot-0", () => setChosen(pickupWindows(now, 0)[0] ?? pickupWindows(now, 1)[0]));
     await hold(1000);
-    await tap("book", () => setLocating(true));
-    await sleep(1600);
+    await tap("book", () => { setPinStage("start"); setScreen("pin"); });
+
+    // 5b. Where the robot comes: the finger drags the map until the pin is on the door, the app finds the
+    // nearest spot the robot can reach, and the pickup is booked there.
+    for (let i = 0; i < 60 && !pinMap.current?.loaded(); i++) await sleep(100);
+    await hold(1300);
+    const pinEl = find("pin-map");
+    if (pinEl) {
+      const c = spot(pinEl);
+      const from = { x: c.x - DRAG[0] / 2 + 30, y: c.y - DRAG[1] / 2 + 40 };
+      setFinger({ id: ++fingerId.current, ...from, mode: "drag" });
+      await sleep(150);
+      setPinStage("moving");
+      await tween(PAN_MS, easeInOutSine, (v) => {
+        if (!fingerEl.current) return;
+        fingerEl.current.style.left = `${from.x + v * DRAG[0]}px`;
+        fingerEl.current.style.top = `${from.y + v * DRAG[1]}px`;
+      });
+      setFinger((f) => (f ? { ...f, x: from.x + DRAG[0], y: from.y + DRAG[1], mode: "lift" } : f));
+      setPinStage("snapping");
+      await sleep(330);
+      setFinger(null);
+      await sleep(500);
+    }
+    setPinStage("ready");
+    await hold(1600);
+    await tap("pin-confirm", () => setScreen("finding"));
+
+    // 5c. A pickup for now: the app looks for a free robot, finds one, and sends it.
+    await sleep(FIND_MS + FOUND_MS);
     setScreen("track");
-    setLocating(false);
 
     // 6. The robot sets off. The phone's map and sheet read its progress from the clock every frame.
     const dispatchedAt = performance.now();
@@ -496,7 +529,9 @@ export function Reel() {
       );
     }
     if (screen === "swoop") return <StepSwoop key="swoop" t={t} test={test} from={1} control={swoop} />;
-    return <Booking key="book" lang={lang} t={t} now={now} chosen={chosen} busy={locating} />;
+    if (screen === "pin") return <ReelPin key="pin" t={t} stage={pinStage} onMap={(m) => { pinMap.current = m; exposeForRender(m); }} />;
+    if (screen === "finding") return <Finding key="finding" t={t} onFound={noop} />;
+    return <Booking key="book" lang={lang} t={t} now={now} chosen={chosen} />;
   }
 
   function trackLayer() {
@@ -546,7 +581,7 @@ export function Reel() {
             </header>
             <div className="relative flex min-h-0 flex-1 flex-col">
               {/* The tracking map loads hidden under the booking screen, so it is ready when the robot sets off. */}
-              {(screen === "book" || screen === "track") && (
+              {(screen === "book" || screen === "pin" || screen === "finding" || screen === "track") && (
                 <div key="track" className="absolute inset-0 flex flex-col transition-opacity duration-500" style={{ opacity: screen === "track" ? 1 : 0 }}>
                   {trackLayer()}
                 </div>
@@ -737,24 +772,17 @@ function WhyWindow({ t, test, closing }: { t: Ui; test: TestText; closing: boole
 }
 
 /** The booking screen, as in the phone app, with the choice made by the script. */
-function Booking({ lang, t, now, chosen, busy }: { lang: KitLang; t: Ui; now: number; chosen: Window | null; busy: boolean }) {
+function Booking({ lang, t, now, chosen }: { lang: KitLang; t: Ui; now: number; chosen: Window | null }) {
   const today = pickupWindows(now, 0);
   const day: 0 | 1 = today.length ? 0 : 1;
   const windows = day === 0 ? today : pickupWindows(now, 1);
   const dayName = (d: 0 | 1) => (d === 0 ? t.today : t.tomorrow);
-  const label = (w: Window) => `${dayName(w.day)} ${w.start}–${w.end}`;
   const dateFmt = new Intl.DateTimeFormat(langInfo(lang).locale, { weekday: "short", day: "numeric", month: "numeric" });
   return (
     <>
       <div className="kit-enter min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-5">
         <h1 className="text-[1.6rem] font-semibold leading-tight">{t.bookTitle}</h1>
         <p className="mt-2 flex gap-2 text-muted"><Clock aria-hidden size={18} className="mt-1 shrink-0 text-brand" />{t.bookBody}</p>
-        <p className="mt-2 flex gap-2 text-muted"><MapPin aria-hidden size={18} className="mt-1 shrink-0 text-brand" />{t.locationWhy}</p>
-        <button type="button"
-          className="mt-5 flex min-h-16 w-full items-center justify-between gap-3 rounded-xl border-2 border-brand bg-brand-soft px-4 text-start">
-          <span><span className="block font-semibold text-brand-strong">{t.asap}</span><span className="text-sm text-muted">{t.asapNote}</span></span>
-          <ChevronRight aria-hidden className="shrink-0 text-brand" />
-        </button>
         <div>
           <div className="mt-6 grid grid-cols-2 gap-1 rounded-xl bg-paper p-1">
             {([0, 1] as const).map((d) => {
@@ -770,19 +798,114 @@ function Booking({ lang, t, now, chosen, busy }: { lang: KitLang; t: Ui; now: nu
           <div className="mt-3 grid grid-cols-3 gap-2" dir="ltr">
             {windows.map((w, i) => (
               <button key={w.at} type="button" data-reel={`slot-${i}`}
-                className={`min-h-12 rounded-lg border text-sm font-semibold tabular-nums transition-colors ${chosen?.at === w.at ? "border-brand bg-brand text-white" : "border-rule"}`}>
+                className={`flex min-h-12 flex-col items-center justify-center rounded-lg border text-sm font-semibold tabular-nums transition-colors ${chosen?.at === w.at ? "border-brand bg-brand text-white" : "border-rule"}`}>
                 {w.start}–{w.end}
+                {w.at <= now && <span className={`text-[0.7rem] font-semibold uppercase tracking-wide ${chosen?.at === w.at ? "text-white/85" : "text-brand"}`}>{t.nowSlot}</span>}
               </button>
             ))}
           </div>
         </div>
       </div>
       <div className="px-5 pb-4 pt-2" data-reel="book">
-        <button type="button" disabled={!chosen && !busy}
+        <button type="button" disabled={!chosen}
           className="primary-action !min-h-14 w-full !rounded-xl !text-base transition-opacity disabled:opacity-40">
-          {busy ? <><Loader2 aria-hidden size={18} className="animate-spin" />{t.locating}</> : chosen ? t.confirm(label(chosen)) : t.pickTime}
+          {chosen ? t.next : t.pickTime}
         </button>
       </div>
     </>
+  );
+}
+
+const pinLine = (coords: LngLat[]): GeoJSON.Feature<GeoJSON.LineString> => ({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: coords } });
+
+/**
+ * The pin screen as in the phone app (PinPicker), driven by the script: the map opens a little off the
+ * door, slides under the pin while the finger drags it, and then shows the robot's stop, the end of the
+ * robot's route, joined to the pin by a dashed line.
+ */
+function ReelPin({ t, stage, onMap }: { t: Ui; stage: PinStage; onMap: (m: MlMap) => void }) {
+  const box = useRef<HTMLDivElement>(null);
+  const map = useRef<MlMap | null>(null);
+  const stopEl = useRef<HTMLElement | null>(null);
+  const stopAt = HYPE_ROUTE[HYPE_ROUTE.length - 1];
+
+  useEffect(() => {
+    let cancelled = false;
+    let instance: MlMap | null = null;
+    (async () => {
+      const ml = await import("maplibre-gl");
+      if (cancelled || !box.current) return;
+      instance = new ml.Map({ container: box.current, style: STYLE, center: HYPE, zoom: 17, attributionControl: false, interactive: false });
+      instance.addControl(new ml.AttributionControl({ compact: true }), "top-left");
+      // Start where the door is up and to the left of the pin, so the drag down and right brings it under the pin.
+      const c = instance.project(HYPE);
+      instance.jumpTo({ center: instance.unproject([c.x + DRAG[0], c.y + DRAG[1]]) });
+      map.current = instance;
+      instance.on("load", () => {
+        if (!instance) return;
+        // The credit starts folded into its (i) button, so it does not cover the top of the map.
+        instance.getContainer().querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
+        instance.addSource("walk", { type: "geojson", data: pinLine([HYPE, HYPE]) });
+        instance.addLayer({ id: "walk", type: "line", source: "walk", layout: { "line-cap": "round" },
+          paint: { "line-color": "#004b87", "line-width": 3, "line-dasharray": [0.6, 1.8] } });
+        const el = document.createElement("div");
+        el.innerHTML = '<div class="kit-stop"></div>';
+        el.style.display = "none";
+        new ml.Marker({ element: el }).setLngLat(stopAt).addTo(instance);
+        stopEl.current = el;
+        onMap(instance);
+      });
+    })();
+    return () => {
+      cancelled = true;
+      instance?.remove();
+      map.current = null;
+    };
+    // The map is made once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    if (stage === "moving") m.easeTo({ center: HYPE, duration: PAN_MS, easing: easeInOutSine });
+    const ready = stage === "ready";
+    // Shown only once it is found; display: none and back replays its pop-in.
+    if (stopEl.current) stopEl.current.style.display = ready ? "" : "none";
+    (m.getSource("walk") as GeoJSONSource | undefined)?.setData(pinLine(ready ? [HYPE, stopAt] : [HYPE, HYPE]));
+  }, [stage, stopAt]);
+
+  const lifted = stage === "moving" || stage === "start";
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="relative min-h-0 flex-1 bg-[#eef2f1]" dir="ltr" data-reel="pin-map">
+        <div ref={box} className="h-full w-full" />
+        <div className={`kit-pin pointer-events-none absolute left-1/2 top-1/2 ${lifted ? "kit-pin-lifted" : ""}`} aria-hidden>
+          <svg viewBox="0 0 40 52" width={40} height={52}>
+            <path d="M20 50 C20 50 4 31 4 19 a16 16 0 0 1 32 0 C36 31 20 50 20 50z" fill="var(--brand)" stroke="#fff" strokeWidth={2.5} />
+            <circle cx={20} cy={19} r={6.5} fill="#fff" />
+          </svg>
+          <span className="kit-pin-shadow" />
+        </div>
+      </div>
+      <section className="relative z-10 -mt-5 rounded-t-3xl bg-surface px-5 pb-5 pt-5 shadow-[0_-8px_24px_-12px_rgba(0,60,108,0.3)]">
+        <h1 className="text-[1.4rem] font-semibold leading-tight">{t.pinTitle}</h1>
+        <p className="mt-1.5 text-sm leading-relaxed text-muted">{t.pinBody}</p>
+        <p className="mt-3 flex min-h-6 items-center gap-2 text-sm font-semibold text-brand-strong">
+          {stage === "ready"
+            ? <MapPin aria-hidden size={16} className="shrink-0 text-brand" />
+            : <Loader2 aria-hidden size={16} className="shrink-0 animate-spin text-brand" />}
+          {stage === "ready" ? t.pinHere : t.pinSnapping}
+        </p>
+        <div className="mt-4 flex gap-3">
+          <span className="flex size-14 shrink-0 items-center justify-center rounded-xl border border-rule text-brand"><ChevronLeft aria-hidden /></span>
+          <div className="flex-1" data-reel="pin-confirm">
+            <button type="button" disabled={stage !== "ready"} className="primary-action !min-h-14 w-full !rounded-xl !text-base transition-opacity disabled:opacity-40">
+              {t.pinConfirm}
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

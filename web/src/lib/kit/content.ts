@@ -6,9 +6,10 @@
  * Sources:
  * - Stool test steps: HUS, "Ohje näytteen ottamiseen, esitietojen täyttämiseen ja palautukseen"
  *   (10.12.2025), https://www.hus.fi/sites/default/files/2025-12/ohje-suolistosyovan-seulonnan-naytteen-ottamiseen-ja-esitietojen-tayttamiseen-ja-palautukseen.pdf
- *   Every step follows the leaflet's instructions in order, in our own words. Storage at room
- *   temperature and return by the next working day: HUS's bowel screening page (READ_MORE.fi).
- *   The robot replaces the HUS laboratory return box or the post.
+ *   The steps follow the leaflet's order, in our own words, kept to what the person has to do
+ *   (the letter already explains the kit's contents and the login for the background form).
+ *   The robot replaces the post: the sealed return bag goes straight into the robot, so the
+ *   leaflet's last step (the cardboard return envelope for mailing) is left out.
  * - "Why this matters": the sources listed below.
  */
 import { ar } from "./text/ar";
@@ -22,13 +23,17 @@ import { sv } from "./text/sv";
 import { uk } from "./text/uk";
 
 export type Anim =
-  | "unbag" | "base" | "twist" | "scrape" | "click" | "shake" | "label" | "rebag" | "form" | "envelope"
+  | "unbag" | "base" | "twist" | "scrape" | "click" | "shake" | "label" | "rebag" | "form"
   | "robotArrive" | "robotUnlock" | "robotPlace" | "robotClose" | "robotLeave";
 
 /** One animation per sampling step, in order. Every language's step texts follow this order. */
-export const STEP_ANIMS: Anim[] = ["unbag", "base", "twist", "scrape", "click", "shake", "label", "rebag", "form", "envelope"];
+export const STEP_ANIMS: Anim[] = ["unbag", "base", "twist", "scrape", "click", "shake", "label", "rebag", "form"];
 
-/** The robot hand-over, after the S-kaupat delivery robots (Starship): notified, walk out, unlock in the app, use the compartment, close the lid. */
+/**
+ * The robot hand-over, after the S-kaupat delivery robots (Starship): notified, walk out, unlock in the app,
+ * put the sealed return bag in your own compartment (on its side, so a compartment row holds many), close the
+ * lid. Each compartment locks on its own and opens again only at the lab.
+ */
 export const ROBOT_ANIMS: Anim[] = ["robotArrive", "robotUnlock", "robotPlace", "robotClose"];
 
 export type Source = { label: string; url: string };
@@ -81,19 +86,30 @@ export type Ui = {
   back: string;
   sampleDone: string;
   bookTitle: string;
+  /** The pickup comes within the chosen hour; the hour under way means now. */
   bookBody: string;
-  asap: string;
-  asapNote: string;
   today: string;
   tomorrow: string;
   noTimesToday: string;
-  confirm: (slot: string) => string;
-  /** Why the app asks for location before it sends the robot. */
-  locationWhy: string;
   locating: string;
+  /** No position came: the person moves the map themselves. */
   locationDenied: string;
-  tryAgain: string;
   pickTime: string;
+  /** Marks the hour under way among the pickup times. */
+  nowSlot: string;
+  /** Choosing where the robot comes: a pin on a map, moved to the door. */
+  pinTitle: string;
+  pinBody: string;
+  pinSnapping: string;
+  /** The spot nearest the pin that the robot can reach. */
+  pinHere: string;
+  pinConfirm: string;
+  myLocation: string;
+  /** A pickup for now: the app looks for a free robot, finds one, and sends it. */
+  findingTitle: string;
+  findingBody: string;
+  foundTitle: string;
+  foundBody: string;
   onTheWay: string;
   /** Seconds until the robot reaches the door. */
   arrivesIn: (seconds: number) => string;

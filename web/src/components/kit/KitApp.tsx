@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Bell, Check, ChevronLeft, ChevronRight, Clock, ExternalLink, Globe, Loader2, MapPin, RotateCcw, X } from "lucide-react";
+import { Bell, Check, ChevronLeft, ChevronRight, Clock, ExternalLink, Globe, RotateCcw, X } from "lucide-react";
 import { ROBOT_SPEEDUP, ROBOT_TRAVEL_MS, stageOf, type SampleEvent } from "@/lib/sample/model";
 import { useSamples } from "@/lib/sample/store";
 import {
@@ -14,7 +14,8 @@ import { StepAnimation } from "./StepAnimation";
 import { TrackingMap } from "./TrackingMap";
 import { ROBOT_ROUTE } from "@/data/robotRoute";
 import { shareableRoute, type LngLat } from "@/lib/kit/route";
-import { forgetRobotRoute, locateAndRoute, storedRoute } from "./useRobotRoute";
+import { forgetRobotRoute, rememberRoute, storedRoute } from "./useRobotRoute";
+import { PinPicker } from "./PinPicker";
 import "./animations.css";
 
 const ME = "me";
@@ -24,6 +25,9 @@ const STEP_KEY = "lapi.kit.progress.v3";
 const CLICK_GUARD_MS = 350;
 /** Matches the window's closing animation in animations.css. */
 const WINDOW_CLOSE_MS = 380;
+/** Looking for a free robot: how long the search runs, and how long "found" shows before the robot sets off. */
+export const FIND_MS = 2800;
+export const FOUND_MS = 1500;
 /** How long the arrival check stays (time to read it), and its fade out; the fade matches animations.css. */
 const ARRIVAL_SHOW_MS = 2600;
 const ARRIVAL_FADE_MS = 900;
@@ -72,9 +76,10 @@ export function KitApp() {
   const [route, setRoute] = useState<LngLat[]>(ROBOT_ROUTE);
   /** The moment the robot arrives: a check over the blurred map, long enough to read, then the hand-over steps. */
   const [arrival, setArrival] = useState<"showing" | "leaving" | "done">("done");
-  /** Booking waits for location: the robot is only sent once the person has allowed it. */
-  const [locating, setLocating] = useState<"idle" | "asking" | "denied">("idle");
-  const pending = useRef<{ label: string; at?: number } | null>(null);
+  /** The pickup time chosen on the booking screen, while the person places the pin for it. */
+  const [plan, setPlan] = useState<{ label: string; at: number } | null>(null);
+  /** A booked later window, sent early with "send the robot now": look for a robot first. */
+  const [sendingNow, setSendingNow] = useState(false);
 
   const stepKey = STEP_KEY;
   useEffect(() => {
@@ -113,9 +118,9 @@ export function KitApp() {
     writeStored(stepKey, null);
     setRobotStep(0);
     setPanel(null);
-    setLocating("idle");
+    setPlan(null);
+    setSendingNow(false);
     setArrival("done");
-    pending.current = null;
     setRoute(ROBOT_ROUTE);
     setStoredLang(null);
     writeStored(LANG_KEY, null);
@@ -133,22 +138,20 @@ export function KitApp() {
 
   const stage = me ? stageOf(me, now) : "invited";
 
-  async function book(label: string, at?: number) {
-    pending.current = { label, at };
-    setLocating("asking");
-    const r = await locateAndRoute();
-    if (r === "denied") {
-      setLocating("denied");
-      return;
-    }
+  /**
+   * The person placed the pin: book the pickup with the robot's route, which ends at the spot nearest
+   * the pin that the robot can reach. The hour under way means now: the app then looks for a free robot
+   * and sends it (Finding). A later hour is booked with its start, and the robot waits for it.
+   */
+  function confirmPickup(r: LngLat[]) {
+    if (!plan) return;
     setRoute(r);
-    setLocating("idle");
+    rememberRoute(r);
+    const now = plan.at <= Date.now();
     // travelMs and route let the nurse app's fleet drive the same robot, on the same clock and the
     // same streets, to the same door as this phone.
-    act({ type: "pickupBooked", slot: label, travelMs: ROBOT_TRAVEL_MS, route: shareableRoute(r), ...(at !== undefined ? { slotAt: at } : {}) });
-    // As soon as possible, or a window already under way: the robot leaves now. A later window waits
-    // for its start (or for the person to send the robot early); see scheduledFor below.
-    if (at === undefined || at <= Date.now()) act({ type: "robotDispatched" });
+    act({ type: "pickupBooked", slot: plan.label, travelMs: ROBOT_TRAVEL_MS, route: shareableRoute(r), ...(now ? {} : { slotAt: plan.at }) });
+    setPlan(null);
   }
 
   /** The start of a booked window the robot is waiting for, or undefined once it has been sent. */
@@ -317,14 +320,20 @@ export function KitApp() {
       );
     }
 
-    // A later window is booked: show when the robot comes, with a way to send it early.
-    if (scheduledFor !== undefined) {
-      return <Scheduled key="scheduled" t={t} slot={booking?.slot ?? ""} onSendNow={guarded(() => act({ type: "robotDispatched" }))} />;
+    // Choose a time, then the place.
+    if (stage === "sampleTaken") {
+      return plan
+        ? <PinPicker key="pin" t={t} onBack={() => setPlan(null)} onConfirm={confirmPickup} />
+        : <Booking key="book" lang={lang} t={t} now={now} onChoose={(label, at) => setPlan({ label, at })} />;
     }
 
-    if (stage === "sampleTaken" || stage === "pickupBooked") {
-      return <Booking key="book" lang={lang} t={t} now={now} locating={locating} onBook={(label, at) => void book(label, at)}
-        onRetry={() => pending.current && void book(pending.current.label, pending.current.at)} />;
+    if (stage === "pickupBooked") {
+      // A later window: show when the robot comes, with a way to send it early.
+      if (scheduledFor !== undefined && !sendingNow) {
+        return <Scheduled key="scheduled" t={t} slot={booking?.slot ?? ""} onSendNow={guarded(() => setSendingNow(true))} />;
+      }
+      // Now: look for a free robot, then send it.
+      return <Finding key="finding" t={t} onFound={() => { setSendingNow(false); act({ type: "robotDispatched" }); }} />;
     }
 
     // The hand-over steps once the robot is at the door.
@@ -543,10 +552,8 @@ export function ArrivedMoment({ t }: { t: Ui }) {
   );
 }
 
-function Booking({ lang, t, now, locating, onBook, onRetry }: {
-  lang: KitLang; t: Ui; now: number; locating: "idle" | "asking" | "denied"; onBook: (label: string, at?: number) => void; onRetry: () => void;
-}) {
-  const busy = locating === "asking";
+/** Pickup times: one-hour windows today and tomorrow. The hour under way is marked as now. */
+function Booking({ lang, t, now, onChoose }: { lang: KitLang; t: Ui; now: number; onChoose: (label: string, at: number) => void }) {
   const today = pickupWindows(now, 0);
   const [day, setDay] = useState<0 | 1>(today.length ? 0 : 1);
   const [chosen, setChosen] = useState<Window | null>(null);
@@ -560,18 +567,6 @@ function Booking({ lang, t, now, locating, onBook, onRetry }: {
       <div className="kit-enter min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-5">
         <h1 className="text-[1.6rem] font-semibold leading-tight">{t.bookTitle}</h1>
         <p className="mt-2 flex gap-2 text-muted"><Clock aria-hidden size={18} className="mt-1 shrink-0 text-brand" />{t.bookBody}</p>
-        <p className="mt-2 flex gap-2 text-muted"><MapPin aria-hidden size={18} className="mt-1 shrink-0 text-brand" />{t.locationWhy}</p>
-        {locating === "denied" && (
-          <div role="alert" className="mt-4 rounded-xl border-s-4 border-[#e30513] bg-[#fdecee] p-4">
-            <p className="leading-relaxed">{t.locationDenied}</p>
-            <button type="button" onClick={onRetry} className="primary-action mt-3 w-full !rounded-lg">{t.tryAgain}</button>
-          </div>
-        )}
-        <button type="button" disabled={busy} onClick={() => onBook(t.asap)}
-          className="mt-5 flex min-h-16 w-full items-center justify-between gap-3 rounded-xl border-2 border-brand bg-brand-soft px-4 text-start hover:bg-[#cddff0]">
-          <span><span className="block font-semibold text-brand-strong">{t.asap}</span><span className="text-sm text-muted">{t.asapNote}</span></span>
-          <ChevronRight aria-hidden className="shrink-0 text-brand rtl:rotate-180" />
-        </button>
         <div>
           <div role="tablist" className="mt-6 grid grid-cols-2 gap-1 rounded-xl bg-paper p-1">
             {([0, 1] as const).map((d) => {
@@ -589,23 +584,70 @@ function Booking({ lang, t, now, locating, onBook, onRetry }: {
             <p className="mt-4 text-sm text-muted">{t.noTimesToday}</p>
           ) : (
             <div className="mt-3 grid grid-cols-3 gap-2" dir="ltr">
-              {windows.map((w) => (
-                <button key={w.at} type="button" aria-pressed={chosen?.at === w.at} onClick={() => setChosen(w)}
-                  className={`min-h-12 rounded-lg border text-sm font-semibold tabular-nums ${chosen?.at === w.at ? "border-brand bg-brand text-white" : "border-rule hover:border-brand"}`}>
-                  {w.start}–{w.end}
-                </button>
-              ))}
+              {windows.map((w) => {
+                const on = chosen?.at === w.at;
+                const current = w.at <= now;
+                return (
+                  <button key={w.at} type="button" aria-pressed={on} onClick={() => setChosen(w)}
+                    className={`flex min-h-12 flex-col items-center justify-center rounded-lg border text-sm font-semibold tabular-nums ${on ? "border-brand bg-brand text-white" : "border-rule hover:border-brand"}`}>
+                    {w.start}–{w.end}
+                    {current && <span className={`text-[0.7rem] font-semibold uppercase tracking-wide ${on ? "text-white/85" : "text-brand"}`}>{t.nowSlot}</span>}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
       </div>
       <div className="px-5 pb-4 pt-2">
-        <button type="button" disabled={!chosen || busy} onClick={() => chosen && onBook(label(chosen), chosen.at)}
+        <button type="button" disabled={!chosen} onClick={() => chosen && onChoose(label(chosen), chosen.at)}
           className="primary-action !min-h-14 w-full !rounded-xl !text-base disabled:opacity-40">
-          {busy ? <><Loader2 aria-hidden size={18} className="animate-spin" />{t.locating}</> : chosen ? t.confirm(label(chosen)) : t.pickTime}
+          {chosen ? t.next : t.pickTime}
         </button>
       </div>
     </>
+  );
+}
+
+/**
+ * A pickup for now: the app looks among the robots nearby for a free one (rings spread out from the
+ * middle), finds one, and then sends it, which moves the app on to the live map.
+ */
+export function Finding({ t, onFound }: { t: Ui; onFound: () => void }) {
+  const [found, setFound] = useState(false);
+  const done = useRef(onFound);
+  done.current = onFound;
+  useEffect(() => {
+    const a = setTimeout(() => setFound(true), FIND_MS);
+    return () => clearTimeout(a);
+  }, []);
+  useEffect(() => {
+    if (!found) return;
+    const b = setTimeout(() => done.current(), FOUND_MS);
+    return () => clearTimeout(b);
+  }, [found]);
+  return (
+    <Centered key="finding">
+      <div className={`relative mx-auto mb-4 size-48 ${found ? "kit-radar-found" : ""}`} aria-hidden>
+        <span className="kit-radar-ring" />
+        <span className="kit-radar-ring" />
+        <span className="kit-radar-ring" />
+        <span className="absolute left-1/2 top-1/2 flex size-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-brand shadow-lg">
+          <svg viewBox="0 0 24 24" width={40} height={40}>
+            <rect x={3} y={7} width={18} height={10} rx={3} fill="#fff" />
+            <circle cx={7} cy={19} r={2} fill="#fff" /><circle cx={12} cy={19} r={2} fill="#fff" /><circle cx={17} cy={19} r={2} fill="#fff" />
+            <path d="M5 7V2l5 1.5L5 5" fill="#fff" stroke="#fff" strokeWidth={1.2} strokeLinejoin="round" />
+          </svg>
+        </span>
+        {found && (
+          <span className="kit-found-badge absolute right-8 top-8 flex size-10 items-center justify-center rounded-full border-4 border-surface bg-[#2e8b57] text-white">
+            <Check size={20} strokeWidth={3} />
+          </span>
+        )}
+      </div>
+      <h1 className="text-2xl font-semibold text-brand-strong" aria-live="polite">{found ? t.foundTitle : t.findingTitle}</h1>
+      <p className="text-muted">{found ? t.foundBody : t.findingBody}</p>
+    </Centered>
   );
 }
 

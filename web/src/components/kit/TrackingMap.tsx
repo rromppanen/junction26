@@ -6,7 +6,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { splitRoute, type LngLat } from "@/lib/kit/route";
 
 /** OpenFreeMap: free vector tiles from OpenStreetMap data, no key needed. */
-const STYLE = "https://tiles.openfreemap.org/styles/positron";
+export const STYLE = "https://tiles.openfreemap.org/styles/positron";
 
 const PADDING = { top: 56, bottom: 48, left: 40, right: 40 };
 

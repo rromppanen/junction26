@@ -1,15 +1,14 @@
 "use client";
 
-import { ROBOT_ROUTE } from "@/data/robotRoute";
 import { hubNear, type LngLat } from "@/lib/kit/route";
 
 const ROUTE_KEY = "lapi.kit.route";
 const LOCATE_TIMEOUT_MS = 15_000;
 
 /** Asks the app's own /api/walk for a street route; throws when it has none. */
-async function fetchRoute(from: LngLat, to: LngLat): Promise<LngLat[]> {
+async function fetchRoute(from: LngLat, to: LngLat, signal?: AbortSignal): Promise<LngLat[]> {
   const q = (p: LngLat) => `${p[0].toFixed(6)},${p[1].toFixed(6)}`;
-  const res = await fetch(`/api/walk?from=${q(from)}&to=${q(to)}`);
+  const res = await fetch(`/api/walk?from=${q(from)}&to=${q(to)}`, { signal });
   if (!res.ok) throw new Error(`/api/walk answered ${res.status}`);
   const { route } = (await res.json()) as { route?: LngLat[] };
   if (!Array.isArray(route) || route.length < 2) throw new Error("/api/walk returned no route");
@@ -42,35 +41,41 @@ export function forgetRobotRoute() {
   }
 }
 
+/** Remembers the route the robot was sent on, so a reload shows the same one. */
+export function rememberRoute(route: LngLat[]) {
+  store(route);
+}
+
 /**
- * Asks the browser for the person's location and plans the robot's walking route to it from a hub
- * nearby. Resolves to the route once it is saved, or to "denied" when the person refuses or no
- * position comes (the robot is not sent then). A browser without geolocation gets the demo route in
- * Tapiola; if no router answers, a straight line from the hub.
+ * The person's position from the browser, or null when they refuse, none comes in time, or the
+ * browser has no geolocation. The pin map starts there; without it the person moves the map themselves.
  */
-export function locateAndRoute(): Promise<LngLat[] | "denied"> {
+export function currentPosition(): Promise<LngLat | null> {
   return new Promise((resolve) => {
     if (!("geolocation" in navigator)) {
-      store(ROBOT_ROUTE);
-      resolve(ROBOT_ROUTE);
+      resolve(null);
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const home: LngLat = [pos.coords.longitude, pos.coords.latitude];
-        const hub = hubNear(home);
-        let route: LngLat[];
-        try {
-          route = await fetchRoute(hub, home);
-        } catch (e) {
-          console.warn("walking route unavailable, using a straight line", e);
-          route = [hub, home];
-        }
-        store(route);
-        resolve(route);
-      },
-      () => resolve("denied"),
+      (pos) => resolve([pos.coords.longitude, pos.coords.latitude]),
+      () => resolve(null),
       { enableHighAccuracy: true, timeout: LOCATE_TIMEOUT_MS, maximumAge: 60_000 },
     );
   });
+}
+
+/**
+ * The robot's walking route from a hub nearby to the pin. The router snaps the pin to the nearest
+ * street or path, so the route's last point is the spot the robot can actually reach; that is where
+ * it stops. If no router answers, a straight line to the pin itself.
+ */
+export async function routeToPin(pin: LngLat, signal?: AbortSignal): Promise<{ route: LngLat[]; snapped: boolean }> {
+  const hub = hubNear(pin);
+  try {
+    return { route: await fetchRoute(hub, pin, signal), snapped: true };
+  } catch (e) {
+    if (signal?.aborted) throw e;
+    console.warn("walking route unavailable, using a straight line", e);
+    return { route: [hub, pin], snapped: false };
+  }
 }
