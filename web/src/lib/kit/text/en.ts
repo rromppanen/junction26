@@ -57,6 +57,7 @@ export const en: KitText = {
     scheduledTitle: "Pickup booked",
     scheduledBody: "Keep the return bag ready. When the time comes, a robot sets off and you can follow it here.",
     sendNow: "Send the robot now",
+    sendNowNote: "Demo only: skips the wait so you can see the robot right away.",
   },
   test: {
     name: "Bowel cancer screening",

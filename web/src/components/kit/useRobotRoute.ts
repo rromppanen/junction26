@@ -1,6 +1,6 @@
 "use client";
 
-import { hubNear, type LngLat } from "@/lib/kit/route";
+import { metresBetween, robotStart, type LngLat } from "@/lib/kit/route";
 
 const ROUTE_KEY = "farmagusta.kit.route";
 const LOCATE_TIMEOUT_MS = 15_000;
@@ -65,14 +65,17 @@ export function currentPosition(): Promise<LngLat | null> {
 }
 
 /**
- * The robot's walking route from a hub nearby to the pin. The router snaps the pin to the nearest
+ * The robot's walking route from the nearest hub to the pin. The router snaps the pin to the nearest
  * street or path, so the route's last point is the spot the robot can actually reach; that is where
  * it stops. If no router answers, a straight line to the pin itself.
  */
 export async function routeToPin(pin: LngLat, signal?: AbortSignal): Promise<{ route: LngLat[]; snapped: boolean }> {
-  const hub = hubNear(pin);
+  const hub = robotStart(pin);
   try {
-    return { route: await fetchRoute(hub, pin, signal), snapped: true };
+    // The router starts at the street nearest the hub; the hub itself comes first, so the nurse map
+    // sees the route leave it.
+    const route = await fetchRoute(hub, pin, signal);
+    return { route: metresBetween(route[0], hub) > 1 ? [hub, ...route] : route, snapped: true };
   } catch (e) {
     if (signal?.aborted) throw e;
     console.warn("walking route unavailable, using a straight line", e);

@@ -147,6 +147,14 @@ export function hubOf(person: Person): HubId {
   return (person.area && AREAS[person.area]?.hub) || "meilahti";
 }
 
+/**
+ * The hub a phone route starts at, if any. The phone app sets off from the nearest hub
+ * (ROBOT_HUBS in web/src/lib/kit/route.ts), so the robot leaves from there on this map too.
+ */
+export function hubAt(at: LatLng): HubId | undefined {
+  return (Object.values(HUBS).find((h) => dist(h.at, at) * 111.32 < 0.3))?.id;
+}
+
 /** A stable spot a few hundred metres from the neighbourhood centre, so homes do not overlap. */
 export function homeOf(person: Person): LatLng {
   const centre = (person.area && AREAS[person.area]?.at) || HUBS.meilahti.at;
@@ -154,6 +162,12 @@ export function homeOf(person: Person): LatLng {
   const angle = ((h % 360) * Math.PI) / 180;
   const r = 0.0015 + ((h >>> 9) % 100) / 100 * 0.0025; // degrees of latitude, about 170–450 m
   return [centre[0] + Math.sin(angle) * r, centre[1] + (Math.cos(angle) * r) / Math.cos((centre[0] * Math.PI) / 180)];
+}
+
+/** Where a sample's home is on the map: the door the phone pinned for its latest pickup, else homeOf. */
+export function placeOf(s: Sample): LatLng {
+  const route = sharedRoute(s.events.findLast((e) => e.type === "pickupBooked" && e.route)?.route);
+  return route ? route[route.length - 1] : homeOf(s.person);
 }
 
 /** A gentle curve from the hub to the home, used until (or instead of) a street route. */
@@ -258,7 +272,7 @@ export function tripsOf(samples: Sample[]): Trip[] {
       list.push({
         sampleId: s.id,
         person: s.person,
-        hub: hubOf(s.person),
+        hub: (route && hubAt(route[0])) || hubOf(s.person),
         home: route ? route[route.length - 1] : homeOf(s.person),
         ...(route ? { route } : {}),
         ...(e.slot ? { slot: e.slot } : {}),

@@ -57,6 +57,7 @@ export const sv: KitText = {
     scheduledTitle: "Hämtningen är bokad",
     scheduledBody: "Ha returpåsen redo. När det är dags ger sig en robot av och du kan följa den här.",
     sendNow: "Skicka roboten nu",
+    sendNowNote: "Endast för demon: hoppar över väntan så att du ser roboten direkt.",
   },
   test: {
     name: "Screening för tarmcancer",

@@ -57,6 +57,7 @@ export const so: KitText = {
     scheduledTitle: "Qaadista waa la ballansaday",
     scheduledBody: "Bacda celinta diyaar u hay. Marka waqtigu yimaado, robot ayaa ambabaxaya waadna halkan ka daba-gali kartaa.",
     sendNow: "Robot-ka hadda dir",
+    sendNowNote: "Kaliya bandhig ahaan: waxay ka boodaysaa sugitaanka si aad robot-ka isla markiiba u aragto.",
   },
   test: {
     name: "Baaritaanka kansarka mindhicirka",
