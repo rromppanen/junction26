@@ -17,7 +17,7 @@ Keep this section current. On Sunday morning it becomes the submission form text
 | Technologies | Next.js, TypeScript, Tailwind CSS, MapLibre GL, Leaflet, OpenStreetMap routing (OSRM), Upstash Redis, Vercel, Vitest, GitHub Actions |
 | Demo link | https://farmagusta.vercel.app |
 | Source link | https://github.com/rromppanen/junction26 |
-| Pitch deck | [`docs/pitch/farmagusta-screening-attendance.pptx`](docs/pitch/farmagusta-screening-attendance.pptx) |
+| Pitch deck | [PDF](docs/pitch/farmagusta-screening-attendance.pdf) · [PowerPoint](docs/pitch/farmagusta-screening-attendance.pptx) |
 | Pitch video (max 2:00) | _TBD_ |
 
 ## Description
@@ -70,7 +70,10 @@ Without Upstash keys the shared event log lives in the dev server's memory. Run 
 
 ## Team
 
-_TBD: names and roles._
+- Daniel Nikkar
+- Inka Hiltunen
+- Kuutti Niku
+- Roope Romppanen
 
 ## Docs
 

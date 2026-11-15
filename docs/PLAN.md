@@ -61,7 +61,7 @@ Mark the ones we actually go to and who goes.
 - [ ] Technologies list
 - [ ] Demo link works in an incognito window
 - [ ] Source link
-- [ ] Pitch deck exported to PDF in [`docs/pitch/`](pitch/), from [`farmagusta-screening-attendance.pptx`](pitch/farmagusta-screening-attendance.pptx)
+- [x] Pitch deck exported to [PDF](pitch/farmagusta-screening-attendance.pdf), from [PowerPoint](pitch/farmagusta-screening-attendance.pptx)
 - [ ] Pitch video **≤ 2:00** (check the exact length before uploading)
 - [ ] Submitted to every challenge we qualify for
 - [ ] Final submission before Sun 10:00
