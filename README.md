@@ -38,7 +38,7 @@ Keep this section current. On Sunday morning it becomes the submission form text
 
 **Who gains most.** People with another mother tongue, most of whom live in cities (56% of Finland's foreign-language speakers live in Uusimaa), and people with disabilities, who have lower odds of doing a stool test (OR 0.72, Ricciardi et al. 2024) and no longer need a trip to post it.
 
-**Cost.** In Helsinki the service could replace up to about €74,000 a year of postage: 29,226 reply-paid return envelopes at €2.07 and one paper reminder at €1.03 to each of 12,789 non-returners (Posti contract prices from 1 October 2026, VAT 0; one reminder each is our assumption). This is before robot and SMS costs, so it is not a net saving.
+**Cost.** In Helsinki, Espoo, Vantaa and Kauniainen, 235,677 people are aged 56–74 (Statistics Finland). Invited every two years, that is about 118,000 kits a year. At the 80% goal, about 94,000 samples come back, each in a Posti business-reply envelope at €2.07 (contract price, VAT 0), and every kit carries a prepaid cardboard return envelope, which we estimate at €0.40. Robot pickup would avoid about €240,000 of mailing a year, or about €218,000 at today's return rate of about 70%. This is gross mailing cost avoided, before robot running costs, which the pilot will price.
 
 **What's new.** Today the invitation arrives as a letter, the person posts the sample by the next working day or takes it to a lab, and nobody sees who stopped where. farmagusta changes three things:
 

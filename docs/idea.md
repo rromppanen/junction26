@@ -12,7 +12,7 @@ All figures are from the Finnish Cancer Registry's bowel screening statistics fo
 
 - **Helsinki misses the goal by 10 points.** 69.6% of those invited returned the test, against 73.5% in Finland and the national cancer strategy's goal of 80%. That is 12,789 people a year who did not return it.
 - **The gap is widest by mother tongue.** Nationally, 53.4% of people with another or missing mother tongue took part, against 74.5% of Finnish, Swedish or Sami speakers. Men took part less than women: 69.2% against 77.7%.
-- **After a positive test, Helsinki waits longer.** The median wait from a positive test to colonoscopy was about 3.4 months, against 1.9 in Finland. The Registry publishes this only as a chart, so the values are read by hand ([`registryWaits.ts`](../web/src/data/registryWaits.ts)).
+- **After a positive test, Helsinki waits longer.** The median wait from a positive test to colonoscopy was about 3.4 months, against 1.9 in Finland. The Registry publishes this only as a chart, so the values are read by hand ([research note](research/2026-11-14-screening-pathway-drop-off.md)).
 - **21% of Helsinki's residents speak a foreign language**, against 11% in Finland (City of Helsinki, end of 2025).
 
 ## Why people don't take part
@@ -55,7 +55,7 @@ The flag thresholds are our assumptions, not clinical deadlines. The demo uses i
 
 ## Cost
 
-In Helsinki, the service could replace up to about €74,000 a year of postage: 29,226 reply-paid return envelopes at €2.07, and one paper reminder at €1.03 to each of 12,789 non-returners (Posti contract prices from 1.10.2026, VAT 0). Sending each non-returner one reminder is our assumption. This figure is gross postage avoided, before robot and SMS costs, so it is not a net saving. The cost of one robot pickup is not known yet.
+In Helsinki, Espoo, Vantaa and Kauniainen, 235,677 people are aged 56–74 (Statistics Finland). Invited every two years, that is about 118,000 kits a year. At the 80% goal, about 94,000 samples come back, each in a Posti business-reply envelope at €2.07 (contract price, VAT 0), and every kit carries a prepaid cardboard return envelope, which we estimate at €0.40. Robot pickup would avoid about €240,000 of mailing a year, or about €218,000 at today's return rate of about 70%. This is gross mailing cost avoided, before robot running costs, which the pilot will price. The cost of one robot pickup is not known yet.
 
 ## The proposal: one district pilot in Helsinki
 

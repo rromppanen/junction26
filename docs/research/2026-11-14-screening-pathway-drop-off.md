@@ -12,7 +12,7 @@ The Finnish Cancer Registry's annual screening reports contain counts for each s
 | Breast | <https://stats.cancerregistry.fi/joukkistilastot/rinta.html> | 13.11.2026 | `736943ae3ee8d665173e52affd00dae9bf328c37962c3ae89f54504fc046380c` |
 | Cervical | <https://stats.cancerregistry.fi/joukkistilastot/kohtu.html> | 13.11.2026 | `275e967bd2c9e38455f21261fa15d88e8ea9407cc67f01d282044463ac58f5b7` |
 
-- The three reports share one HTML structure. The colorectal report is parsed by `web/scripts/ingest-registry.ts` into `web/src/data/registry.json`.
+- The three reports share one HTML structure. An ingest script parsed the colorectal report during the event; it was removed with the dashboard it fed and remains in git history.
 - All figures below were parsed from the report tables, not typed by hand. The exception is the waiting times, which the reports publish only as charts; those values are read from the chart and marked "about".
 - The colorectal report includes findings reported to the Registry by 15.5.2026. It says the data is completed retrospectively, so the latest year can still change.
 - Bowel cancer survival is Sotkanet indicator 3627 for 2024, from the app's own snapshot.
