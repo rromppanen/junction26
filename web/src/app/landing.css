@@ -1,6 +1,7 @@
 /*
   The start page. Same brand as the deck and the apps: Poppins wordmark with the teal dot,
   the robot photo from the deck cover, a mono "telemetry" tag, HUS blue for actions.
+  The first screen is the demo's instructions on the left and the photo on the right.
 */
 
 .fg {
@@ -23,54 +24,54 @@
   .fg-wrap { padding: 0 2.5rem; }
 }
 
-/* Hero: the deck cover, as a page */
-.fg-hero {
+/* Which device is reading: a computer gets the QR code, a phone is the phone. */
+.fg-wide-only { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .fg-wide-only { display: revert; }
+  .fg-narrow-only { display: none; }
+}
+
+/* First screen: instructions, then the photo; side by side on a wide screen. */
+.fg-top {
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 1000px) {
+  .fg-top {
+    display: grid;
+    grid-template-columns: minmax(34rem, 46%) 1fr;
+    min-height: 100svh;
+  }
+  .fg-guide { grid-column: 1; grid-row: 1; }
+  .fg-photo { grid-column: 2; grid-row: 1; }
+}
+
+.fg-photo {
   position: relative;
-  min-height: min(60svh, 34rem);
+  height: 26svh;
+  min-height: 11rem;
   overflow: hidden;
   background: #0a0d10;
-  color: #fff;
-  display: flex;
 }
-.fg-hero-photo {
+@media (min-width: 1000px) {
+  .fg-photo { height: auto; min-height: 0; }
+}
+.fg-photo-img {
   object-fit: cover;
-  object-position: 28% 70%;
+  object-position: 30% 62%;
 }
-.fg-hero-shade {
+.fg-photo-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(10, 13, 16, 0.82) 0%, rgba(10, 13, 16, 0.5) 38%, rgba(10, 13, 16, 0.1) 70%, rgba(10, 13, 16, 0.55) 100%);
-}
-.fg-hero-text {
-  position: relative;
-  padding-top: 2.5rem;
-  padding-bottom: 2.5rem;
-}
-.fg-wordmark {
-  font-family: var(--font-poppins), sans-serif;
-  font-weight: 600;
-  font-size: clamp(3.75rem, 13vw, 9rem);
-  line-height: 0.9;
-  letter-spacing: -0.055em;
-}
-.fg-dot { color: var(--fg-teal); }
-.fg-title {
-  margin-top: 0.75rem;
-  max-width: 34ch;
-  font-family: var(--font-poppins), sans-serif;
-  font-weight: 500;
-  font-size: clamp(1.375rem, 3vw, 2.25rem);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  text-wrap: balance;
+  background: linear-gradient(180deg, rgba(10, 13, 16, 0.25) 0%, rgba(10, 13, 16, 0) 40%, rgba(10, 13, 16, 0.35) 100%);
 }
 
 /* The telemetry tag beside the robot, as on the deck cover. Decorative. */
 .fg-tag {
   display: none;
   position: absolute;
-  left: 54%;
-  top: 56%;
+  left: 58%;
+  top: 50%;
   padding: 0.7rem 1rem;
   border-left: 3px solid var(--fg-teal);
   background: rgba(10, 13, 16, 0.82);
@@ -80,6 +81,7 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #e9edf0;
+  white-space: nowrap;
 }
 .fg-tag p:first-child { color: var(--fg-teal); font-weight: 600; }
 .fg-tag::before {
@@ -101,7 +103,7 @@
   background: var(--fg-teal);
   vertical-align: 0.1em;
 }
-@media (min-width: 900px) {
+@media (min-width: 1200px) {
   .fg-tag { display: block; }
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -109,45 +111,127 @@
 }
 @keyframes fg-blink { 50% { opacity: 0.2; } }
 
-/* The two doors into the demo */
-.fg-doors {
-  display: grid;
-  gap: 0;
-  padding-top: 1rem;
+/* The instructions */
+.fg-guide {
+  padding: 1.75rem 1rem 2.5rem;
 }
-@media (min-width: 900px) {
-  .fg-doors { grid-template-columns: 1fr 1fr; padding-top: 0; }
+@media (min-width: 640px) {
+  .fg-guide { padding: 2.5rem 2.5rem 3rem; }
 }
-.fg-door {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-  padding: 2rem 0;
-  border-bottom: 1px solid var(--rule);
+@media (min-width: 1000px) {
+  .fg-guide { padding: 2.75rem 3.5rem 3rem; }
 }
-@media (min-width: 900px) {
-  .fg-door { padding: 2.25rem 3rem 2.5rem 0; border-bottom: 0; }
-  .fg-door + .fg-door { padding: 2.25rem 0 2.5rem 3rem; border-left: 1px solid var(--rule); }
+.fg-wordmark {
+  font-family: var(--font-poppins), sans-serif;
+  font-weight: 600;
+  font-size: clamp(3rem, 6vw, 5rem);
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+  color: var(--ink);
+}
+.fg-dot { color: var(--fg-teal); }
+.fg-title {
+  margin-top: 0.5rem;
+  max-width: 30ch;
+  font-family: var(--font-poppins), sans-serif;
+  font-weight: 500;
+  font-size: clamp(1.125rem, 2vw, 1.5rem);
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--brand-strong);
+  text-wrap: balance;
 }
 .fg-kicker {
+  margin-top: 2rem;
   font-family: var(--fg-mono);
   font-size: 0.75rem;
+  font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
 }
-.fg-door-title {
+
+.fg-steps {
+  margin-top: 0.5rem;
+  counter-reset: step;
+}
+.fg-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem 0 1.25rem 3rem;
+  border-top: 1px solid var(--rule);
+  counter-increment: step;
+}
+.fg-step::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 1.05rem;
   font-family: var(--font-poppins), sans-serif;
   font-weight: 600;
-  font-size: clamp(2.25rem, 5vw, 3.25rem);
+  font-size: 2rem;
   line-height: 1;
-  letter-spacing: -0.04em;
-  color: var(--brand-strong);
+  color: var(--accent);
 }
-.fg-door-text {
-  max-width: 30rem;
-  font-size: 1.125rem;
-  line-height: 1.55;
+.fg-step-title {
+  font-family: var(--font-poppins), sans-serif;
+  font-weight: 600;
+  font-size: 1.1875rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.fg-step > div > .fg-step-title { margin-bottom: 0.75rem; }
+.fg-step-text {
+  max-width: 34rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.fg-step-text strong { color: var(--ink); font-weight: 600; }
+
+.fg-scan {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.fg-qr {
+  width: 9.5rem;
+  height: 9.5rem;
+  flex-shrink: 0;
+  padding: 0.6rem;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 0.5rem;
+}
+.fg-qr svg { display: block; width: 100%; height: 100%; }
+.fg-scan-text { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.9375rem; line-height: 1.45; }
+.fg-url {
+  font-family: var(--fg-mono);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--brand-strong);
+  overflow-wrap: anywhere;
+}
+.fg-link {
+  margin-top: 0.6rem;
+  align-self: flex-start;
+  font-weight: 600;
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.fg-link:focus-visible { outline: 3px solid var(--fg-orange); outline-offset: 3px; }
+.fg-scan-warn {
+  margin-top: 0.4rem;
+  max-width: 22rem;
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--behind);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--behind);
 }
 
 /* Same button as the patient app: HUS blue, 48px tall */
@@ -158,7 +242,6 @@
   gap: 0.5rem;
   align-self: flex-start;
   min-height: 3rem;
-  margin-top: 0.25rem;
   padding: 0 1.4rem;
   border-radius: 0.75rem;
   background: var(--brand);
@@ -168,85 +251,8 @@
 }
 .fg-btn:hover { background: var(--brand-strong); }
 .fg-btn:focus-visible { outline: 3px solid var(--fg-orange); outline-offset: 3px; }
-@media (max-width: 899px) {
-  .fg-btn { align-self: stretch; }
-}
-
-.fg-scan {
-  align-items: center;
-  gap: 1.25rem;
-  margin-top: 0.75rem;
-}
-.fg-qr {
-  width: 11rem;
-  height: 11rem;
-  flex-shrink: 0;
-  padding: 0.7rem;
-  background: #fff;
-  border: 1px solid var(--rule);
-  border-radius: 0.5rem;
-}
-.fg-qr svg { display: block; width: 100%; height: 100%; }
-.fg-scan-title { font-weight: 600; }
-.fg-scan-url {
-  margin-top: 0.15rem;
-  font-family: var(--fg-mono);
-  font-size: 0.8125rem;
-  color: var(--muted);
-}
-.fg-scan-warn {
-  margin-top: 0.5rem;
-  max-width: 22rem;
-  padding-left: 0.6rem;
-  border-left: 3px solid var(--behind);
-  font-size: 0.875rem;
-  line-height: 1.45;
-  color: var(--behind);
-}
-/* The QR code is for a laptop or desktop, whatever the window width; a phone already is the phone. */
-.fg-wide-only { display: none; }
-@media (hover: hover) and (pointer: fine) {
-  .fg-wide-only { display: flex; flex-wrap: wrap; }
-}
-
-/* Try both at once */
-.fg-both {
-  padding-top: 2.5rem;
-  padding-bottom: 3.5rem;
-}
-@media (min-width: 900px) {
-  .fg-both { border-top: 1px solid var(--rule); }
-}
-.fg-both-title {
-  font-family: var(--font-poppins), sans-serif;
-  font-weight: 600;
-  font-size: 1.25rem;
-  letter-spacing: -0.01em;
-}
-.fg-steps {
-  display: grid;
-  gap: 0.75rem;
-  margin-top: 1rem;
-  counter-reset: step;
-}
-@media (min-width: 900px) {
-  .fg-steps { grid-template-columns: repeat(3, 1fr); gap: 2rem; }
-}
-.fg-steps li {
-  display: flex;
-  gap: 0.75rem;
-  align-items: baseline;
-  font-size: 1.0625rem;
-  line-height: 1.45;
-  counter-increment: step;
-}
-.fg-steps li::before {
-  content: counter(step);
-  font-family: var(--font-poppins), sans-serif;
-  font-weight: 600;
-  font-size: 1.75rem;
-  line-height: 1;
-  color: var(--accent);
+@media (max-width: 639px) {
+  .fg-btn { align-self: stretch; width: 100%; }
 }
 
 /* Why it matters: one number */

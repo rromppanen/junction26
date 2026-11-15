@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodePolyline6, hubNear, metresBetween, shareableRoute, SHARED_ROUTE_POINTS, splitRoute, type LngLat } from "./route";
+import { decodePolyline6, HUB_REACH_M, hubNear, metresBetween, robotStart, ROBOT_HUBS, shareableRoute, SHARED_ROUTE_POINTS, splitRoute, type LngLat } from "./route";
 import { MAX_EVENT_CHARS } from "@/lib/sample/sync-core";
 import { ROBOT_ROUTE, ROUTE_METRES } from "@/data/robotRoute";
 
@@ -35,6 +35,21 @@ describe("hubNear", () => {
     const m = metresBetween(home, hubNear(home));
     expect(m).toBeGreaterThan(500);
     expect(m).toBeLessThan(1500);
+  });
+});
+
+describe("robotStart", () => {
+  it("sets off from the nearest hub in the capital region", () => {
+    // Kallio: the Meilahti lab is nearest.
+    expect(robotStart([24.9497, 60.1841])).toEqual(ROBOT_HUBS[0]);
+    // Kontula: Itäkeskus.
+    expect(robotStart([25.083, 60.236])).toEqual(ROBOT_HUBS[1]);
+  });
+
+  it("uses a stand-in hub nearby outside the region", () => {
+    const tampere: LngLat = [23.76, 61.4978];
+    expect(robotStart(tampere)).toEqual(hubNear(tampere));
+    expect(ROBOT_HUBS.every((h) => metresBetween(tampere, h) > HUB_REACH_M)).toBe(true);
   });
 });
 
