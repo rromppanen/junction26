@@ -62,25 +62,40 @@ aside { display:none; }
 .slot.empty { border:2px dashed var(--rule); } .slot.open { background:var(--brand); color:white; } .slot.locked { background:var(--ink); color:white; } .slot.lab { background:var(--brand-soft); color:var(--brand); border:3px solid var(--brand); }
 .compartments p { font-size:32px; color:var(--muted); }
 .fleet h2 { font-size:64px; line-height:1.12; }
-.dashboard { display:block; margin:42px auto 0; width:1280px; height:720px; object-fit:contain; border:1px solid var(--rule); box-shadow:0 12px 32px rgba(0,60,108,.10); }
+.dashboard { position:absolute; left:640px; top:300px; width:1152px; height:648px; object-fit:contain; border:1px solid var(--rule); box-shadow:0 12px 32px rgba(0,60,108,.10); }
+.fleet-notes { position:absolute; left:128px; top:310px; width:430px; }
+.fleet-notes > div { padding:24px 0; border-top:2px solid var(--rule); }
+.fleet-notes h3 { font:600 34px/1.25 'Open Sans',Arial,sans-serif; letter-spacing:0; color:var(--brand); }
+.fleet-notes p { margin-top:12px; font-size:28px; line-height:1.45; color:var(--muted); }
+.fleet-caption { position:absolute; left:640px; top:246px; font-size:30px; color:var(--brand); }
+
 .fleet { padding-top:72px; } .fleet footer { bottom:24px; font-size:20px; }
 .actions { margin-top:90px; } .actions>div { grid-template-columns:760px 70px 1fr; padding:40px 0; } .actions p { font-size:36px; } .actions strong { font-size:36px; }
-.cost { font-size:192px; margin-top:76px; letter-spacing:-8px; } .cost-note { margin-top:45px; }
 .pilot { margin-top:70px; display:flex; flex-direction:column; gap:25px; font-size:40px; line-height:1.45; }
 .demo-link { display:inline-block; margin-top:64px; font:500 42px Poppins,Arial,sans-serif; color:var(--brand); text-decoration:none; border-bottom:2px solid var(--brand); padding-bottom:6px; }
 .demo-link span { color:var(--accent); padding-left:20px; }
-.savings .cost-note { margin-top:28px; font-size:32px; line-height:1.4; }
-.cost-calculations { display:grid; grid-template-columns:repeat(3,1fr); gap:32px; margin-top:32px; }
-.cost-calculations > div { border-top:2px solid var(--rule); padding-top:16px; }
-.cost-calculations h3 { font:600 24px/1.4 'Open Sans',Arial,sans-serif; letter-spacing:0; color:var(--muted); margin-bottom:10px; }
-.cost-calculations p { font-size:30px; line-height:1.4; font-variant-numeric:tabular-nums; }
-.cost-calculations .result { color:var(--brand); font-weight:600; }
-.cost-total { margin-top:14px; font-size:27px; line-height:1.4; color:var(--muted); }
+.cost-scenario { margin-top:20px; font-size:34px; color:var(--muted); }
+.cost-layout { display:grid; grid-template-columns:730px 1fr; gap:94px; align-items:center; margin-top:55px; }
+.cost-headline { font:600 122px/1.1 Poppins,Arial,sans-serif; letter-spacing:-6px; color:var(--brand); white-space:nowrap; }
+.cost-caption { font-size:40px; margin-top:24px; }
+.cost-region { color:var(--muted); font-size:28px; margin-top:35px; line-height:1.5; }
+.cost-ledger { width:100%; border-collapse:collapse; }
+.cost-ledger tr { border-bottom:2px solid var(--rule); }
+.cost-ledger th { width:300px; text-align:left; font:600 40px/1.3 Poppins,Arial,sans-serif; letter-spacing:-1px; padding:21px 20px 21px 0; white-space:nowrap; }
+.cost-ledger td { font-size:29px; line-height:1.4; padding:21px 0; color:var(--muted); }
+.cost-ledger .total { border-top:3px solid var(--brand); border-bottom:0; }
+.cost-ledger .total th,.cost-ledger .total td { color:var(--brand); }
 .root-causes { margin-top:60px; }
 .root-causes > div { padding:27px 0; }
 .root-causes .cause { color:var(--ink); font-size:34px; line-height:1.25; }
 .root-causes small { display:block; font-size:24px; line-height:1.4; color:var(--muted); margin-top:10px; }
 .root-causes strong { font-size:36px; }
+.ref { font:500 22px/1 'Open Sans',Arial,sans-serif; vertical-align:super; color:var(--brand); text-decoration:none; margin-left:5px; white-space:nowrap; }
+.strategy-line { position:absolute; left:128px; right:128px; bottom:177px; font-size:27px; line-height:1.35; color:var(--brand); }
+.limitations-list { margin-top:72px; }
+.limitations-list > div { display:grid; grid-template-columns:410px 1fr; gap:65px; border-top:2px solid var(--rule); padding:34px 0; align-items:start; }
+.limitations-list h3 { font:600 36px/1.3 'Open Sans',Arial,sans-serif; letter-spacing:0; color:var(--brand); }
+.limitations-list p { font-size:34px; line-height:1.4; color:var(--muted); }
 /* Closing slide: the website wordmark and one final message. */
 .closing { background:var(--brand); color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
 .closing .closing-logo { font:600 154px/1.1 Poppins,Arial,sans-serif; letter-spacing:-8px; color:#fff; }
@@ -95,74 +110,104 @@ aside { display:none; }
 <aside>We built farmagusta to help people finish their bowel screening test. It guides them in their own language, collects the sample at the door and gives nurses a way to follow up. The robot, lab and bookings are simulated in the demo.</aside>
 </section>
 <section id="gap" class="slide ">
-<h2>Too many tests never come back</h2><div class="stat-layout"><div><p class="number amber">30.4<span>%</span></p><p class="stat-caption">of invited people in Helsinki<br>did not return their test</p></div><p class="side-note">12,789 people<br><span>Helsinki, 2024</span></p></div>
+<h2>Too many tests never come back</h2><div class="stat-layout"><div><p class="number amber">30.4<span>%</span></p><p class="stat-caption">of invited people in Helsinki<br>did not return their test <a class="ref" href="https://stats.cancerregistry.fi/joukkistilastot/suolisto.html" aria-label="Reference 1">[1]</a></p></div><p class="side-note">12,789 people<br><span>Helsinki, 2024</span></p></div>
 <div class="proportion" role="img" aria-label="69.6 percent returned the test; 30.4 percent did not"><span style="width:69.6%"></span><span style="width:30.4%"></span></div><div class="bar-labels"><p>Returned</p><p class="amber">Not returned</p></div>
-<footer><p><a href="https://stats.cancerregistry.fi/joukkistilastot/suolisto.html">Finnish Cancer Registry · Helsinki, 2024</a></p><span>02</span></footer>
+<p class="strategy-line">Goal 2: 80% screening participation in every county <a class="ref" href="https://fican.fi/wp-content/uploads/2026/01/National_Cancer_Strategy_2026-2035_Finland.pdf" aria-label="Reference 2">[2]</a></p>
+<footer><p><a href="https://stats.cancerregistry.fi/joukkistilastot/suolisto.html">[1] Finnish Cancer Registry · Helsinki, 2024</a> · <a href="https://fican.fi/wp-content/uploads/2026/01/National_Cancer_Strategy_2026-2035_Finland.pdf">[2] National Cancer Strategy, p. 5</a></p><span>02</span></footer>
 <aside>In 2024, 12,789 people invited to bowel screening in Helsinki did not return the test: 30.4% of invitees. That is the gap we want to address. Returning the test is the first step before a result or any follow-up can happen.</aside>
 </section>
 <section id="goal3" class="slide ">
-<h2>Earlier detection matters</h2><p class="lede">Five-year survival in the Flanders FIT screening study</p><div class="comparison"><div><p class="number blue">94<span>%</span></p><p>Found through screening</p></div><div><p class="number amber">62<span>%</span></p><p>Did not take part</p></div></div><p class="caveat">Observed survival in the study. Lead-time bias affects the comparison.</p>
-<footer><p>Tran et al., 2023 · Int J Environ Res Public Health, 20(2):1654</p><span>03</span></footer>
-<aside>Goal 3 of the cancer strategy concerns equal and effective care. In the Flanders study, five-year survival was 94% for cancers found through screening, compared with 62% in people who did not take part. This observational comparison includes lead-time bias and should not be read as a causal effect estimate. The study also reported stage I–II detection in 67% versus 40%.</aside>
+<h2>Earlier detection matters</h2><p class="lede">Five-year relative survival, Flanders FIT study <a class="ref" href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9864341/" aria-label="Reference 3">[3]</a></p><div class="comparison"><div><p class="number blue">94<span>%</span></p><p>Found through screening</p></div><div><p class="number amber">62<span>%</span></p><p>Did not take part</p></div></div><p class="caveat">Observed survival in the study. Lead-time bias affects the comparison.</p>
+<p class="strategy-line">Goal 3: survival and timely cancer care <a class="ref" href="https://fican.fi/wp-content/uploads/2026/01/National_Cancer_Strategy_2026-2035_Finland.pdf" aria-label="Reference 2">[2]</a></p>
+<footer><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9864341/">[3] Tran et al., 2023 · Rounded study figures</a> · <a href="https://fican.fi/wp-content/uploads/2026/01/National_Cancer_Strategy_2026-2035_Finland.pdf">[2] National Cancer Strategy, pp. 5, 33</a></p><span>03</span></footer>
+<aside>Goal 3 of the cancer strategy concerns equal and effective care. In the Flanders study, five-year relative survival was 93.8% for screen-detected cancers and 61.9% for FIT non-participants, rounded to 94% and 62% on the slide. This observational comparison includes lead-time bias and should not be read as a causal effect estimate. The study also reported stage I–II detection in 67% versus 40%.</aside>
 </section>
 <section id="language" class="slide ">
-<h2>The gap is wider for<br>other language groups</h2><p class="lede">Bowel screening participation in Finland, 2024</p><div class="language-chart"><div class="chart-row"><p>Finnish, Swedish or Sami mother tongue</p><div class="track"><span class="fill blue-fill" style="width:74.5%"></span></div><strong>74.5%</strong></div><div class="chart-row"><p>Other or missing mother tongue</p><div class="track"><span class="fill amber-fill" style="width:53.4%"></span></div><strong class="amber">53.4%</strong></div></div>
-<footer><p><a href="https://stats.cancerregistry.fi/joukkistilastot/suolisto.html">Finnish Cancer Registry · Participation by mother tongue, 2024</a></p><span>04</span></footer>
+<h2>The gap is wider for<br>other language groups</h2><p class="lede">Bowel screening participation in Finland, 2024 <a class="ref" href="https://stats.cancerregistry.fi/joukkistilastot/suolisto.html" aria-label="Reference 1">[1]</a></p><div class="language-chart"><div class="chart-row"><p>Finnish, Swedish or Sami mother tongue</p><div class="track"><span class="fill blue-fill" style="width:74.5%"></span></div><strong>74.5%</strong></div><div class="chart-row"><p>Other or missing mother tongue</p><div class="track"><span class="fill amber-fill" style="width:53.4%"></span></div><strong class="amber">53.4%</strong></div></div>
+<p class="strategy-line">Strategy 1.3: close the participation gap between language groups <a class="ref" href="https://fican.fi/wp-content/uploads/2026/01/National_Cancer_Strategy_2026-2035_Finland.pdf" aria-label="Reference 2">[2]</a></p>
+<footer><p><a href="https://stats.cancerregistry.fi/joukkistilastot/suolisto.html">[1] Finnish Cancer Registry · Mother tongue, 2024</a> · <a href="https://fican.fi/wp-content/uploads/2026/01/National_Cancer_Strategy_2026-2035_Finland.pdf">[2] National Cancer Strategy, pp. 19–20</a></p><span>04</span></footer>
 <aside>Participation was 74.5% among people whose mother tongue was Finnish, Swedish or Sami, and 53.4% among people with another or missing mother tongue. The Registry counts are 299,347 of 401,645 and 10,524 of 19,720. These figures show an association; they do not establish language as the cause.</aside>
 </section>
 <section id="reasons" class="slide ">
 <h2>Make the test easier to finish</h2><div class="pairs root-causes">
-<div><div><p class="cause">The leaflet is hard to understand</p><small>Available in Finnish, Swedish and English</small></div><span>→</span><strong>Guidance in nine languages</strong></div>
-<div><div><p class="cause">The test feels unnecessary</p><small>32.9% of non-users in one survey</small></div><span>→</span><strong>Explain why screening matters</strong></div>
-<div><div><p class="cause">People mean to do it, then forget</p><small>SMS trial: 53.7% → 64.2% returned</small></div><span>→</span><strong>Reminders and a clear next step</strong></div>
-<div><div><p class="cause">Returning it feels unpleasant or difficult</p><small>Discomfort, embarrassment or limited mobility</small></div><span>→</span><strong>A pickup at your door</strong></div>
+<div><div><p class="cause">The leaflet is hard to understand</p><small>Reviewed HUS guidance: Finnish, Swedish, English <a class="ref" href="https://www.hus.fi/en/patient/treatments-and-examinations/colorectal-cancer-screening" aria-label="Reference 4">[4]</a></small></div><span>→</span><strong>Guidance in nine languages</strong></div>
+<div><div><p class="cause">The test feels unnecessary</p><small>32.9% of non-users in a US survey <a class="ref" href="https://doi.org/10.1186/s12889-015-1908-x" aria-label="Reference 5">[5]</a></small></div><span>→</span><strong>Explain why screening matters</strong></div>
+<div><div><p class="cause">People mean to do it, then forget</p><small>SMS trial: 53.7% → 64.2% returned at 30 days <a class="ref" href="https://publichealth.jmir.org/2024/1/e57959" aria-label="Reference 6">[6]</a></small></div><span>→</span><strong>Reminders and a clear next step</strong></div>
+<div><div><p class="cause">Returning it feels unpleasant or difficult</p><small>Discomfort: 59.6% <a class="ref" href="https://doi.org/10.1186/s12889-015-1908-x" aria-label="Reference 5">[5]</a> · Disability: OR 0.72 <a class="ref" href="https://doi.org/10.3390/curroncol31110517" aria-label="Reference 7">[7]</a></small></div><span>→</span><strong>A pickup at your door</strong></div>
 </div>
-<footer><p>HUS kit instructions · Gordon & Green, 2015 · Vives et al., 2024 · Ricciardi et al., 2024</p><span>05</span></footer>
+<footer><p><a href="https://www.hus.fi/en/patient/treatments-and-examinations/colorectal-cancer-screening">[4] HUS</a> · <a href="https://doi.org/10.1186/s12889-015-1908-x">[5] Gordon &amp; Green, 2015</a> · <a href="https://publichealth.jmir.org/2024/1/e57959">[6] Vives et al., 2024</a> · <a href="https://doi.org/10.3390/curroncol31110517">[7] Ricciardi et al., 2024</a></p><span>05</span></footer>
 <aside>The earlier deck identified four barriers: understanding the leaflet, seeing a need for the test, remembering to complete it, and discomfort or difficulty returning the sample. The HUS leaflet is available in Finnish, Swedish and English. Gordon and Green’s US survey reported that 32.9% of non-users considered the test unnecessary and 59.6% named discomfort, disgust or embarrassment among their reasons. In Vives et al.’s randomised trial, an SMS reminder raised kit return from 53.7% to 64.2% at 30 days. Ricciardi et al. reported lower odds of a stool test among people with disabilities (OR 0.72). These findings motivate nine-language guidance, plain explanations, reminders and doorstep pickup. They come from different settings and are not measured effects of farmagusta.</aside>
 </section>
 <section id="app" class="slide app">
 <div class="intro-copy"><h2>The letter<br>opens the app</h2><p class="lede">Scan the QR code.<br>Choose your language.</p></div><div class="letter"><img src="assets/invitation-qr.png" alt="Invitation letter with a QR code"></div><img class="intro-phone" src="assets/app-language-phone.png" alt="Language selection in the farmagusta app">
-<footer><p>Prototype</p><span>06</span></footer>
+<footer><p>Prototype <a class="ref" href="https://github.com/rromppanen/junction26" aria-label="Reference 11">[11]</a></p><span>06</span></footer>
 <aside>The invitation still arrives by post. Its QR code opens farmagusta, starting with language choice. The app supports Finnish, Swedish, English, Russian, Estonian, Arabic, Ukrainian, Somali and Persian, with right-to-left layout where needed.</aside>
 </section>
 <section id="flow" class="slide flow">
 <h2>Four steps, all from home</h2><div class="phones"><div><img src="assets/app-language.png" alt="App step: Choose a language"><p><span>01</span>Choose a language</p></div><div><img src="assets/app-step2.png" alt="App step: Take the sample"><p><span>02</span>Take the sample</p></div><div><img src="assets/app-pickup-pin.png" alt="App step: Book a pickup"><p><span>03</span>Book a pickup</p></div><div><img src="assets/app-tracking.png" alt="App step: Hand it over"><p><span>04</span>Hand it over</p></div></div>
-<footer><p>Prototype · Robots, lab and bookings are simulated</p><span>07</span></footer>
+<footer><p><a href="https://www.hus.fi/en/patient/treatments-and-examinations/colorectal-cancer-screening">[4] Sampling guidance: HUS</a> · Prototype <a class="ref" href="https://github.com/rromppanen/junction26" aria-label="Reference 11">[11]</a> · Robot, lab and bookings simulated</p><span>07</span></footer>
 <aside>The app takes the person from language selection through ten illustrated sampling steps, a pickup booking and live tracking at the door. The sampling order follows the HUS kit leaflet. A pickup can be booked as soon as possible or in a one-hour window.</aside>
 </section>
 <section id="privacy" class="slide privacy">
-<img class="privacy-photo" src="assets/robot-kerb.jpg" alt="An S-kaupat grocery robot at the kerb"><div class="privacy-copy"><h2>An ordinary<br>delivery robot</h2><div class="plain-list"><p>No medical markings</p><p>Opened with the person’s phone</p><p>Pickup codes on the map</p></div></div>
-<footer><p>Proposed service · Photo: CC0, Wikimedia Commons</p><span>08</span></footer>
+<img class="privacy-photo" src="assets/robot-kerb.jpg" alt="An S-kaupat grocery robot at the kerb"><div class="privacy-copy"><h2>An ordinary<br>delivery robot</h2><div class="plain-list"><p>No medical markings</p><p>Opened with the person’s phone <a class="ref" href="https://www.starship.xyz/our-robots/">[8]</a></p><p>Pickup codes on the map</p></div></div>
+<footer><p>Proposed medical service <a class="ref" href="https://github.com/rromppanen/junction26" aria-label="Reference 11">[11]</a> · <a href="https://www.starship.xyz/our-robots/">[8] Starship: robot access</a> · Photo: CC0, Wikimedia Commons</p><span>08</span></footer>
 <aside>The proposed service uses the kind of robot already delivering groceries, with no medical markings. Each pickup is identified on the map by a code. Phone-controlled access and dedicated sample compartments are part of the proposed service, not a deployed clinical integration. Patient names remain available to nurses in their workspace.</aside>
 </section>
 <section id="stack" class="slide ">
-<h2>Use an existing delivery fleet</h2><p class="lede">A proposed integration with Starship</p><div class="route-steps"><div><span>01</span><h3>farmagusta</h3><p>Book and group pickups</p></div><b aria-hidden="true">→</b><div><span>02</span><h3>Robot partner</h3><p>Collect at the door</p></div><b aria-hidden="true">→</b><div><span>03</span><h3>Lab</h3><p>Receive and register</p></div></div><p class="caveat">The delivery integration and clinical handling still need a partner pilot.</p>
-<footer><p>Starship partner API documentation · Delivery fleet simulated in the prototype</p><span>09</span></footer>
+<h2>Use an existing delivery fleet</h2><p class="lede">A proposed integration with Starship <a class="ref" href="https://www.starship.xyz/delivery-apps/" aria-label="Reference 8">[8]</a></p><div class="route-steps"><div><span>01</span><h3>farmagusta</h3><p>Book and group pickups</p></div><b aria-hidden="true">→</b><div><span>02</span><h3>Robot partner</h3><p>Collect at the door</p></div><b aria-hidden="true">→</b><div><span>03</span><h3>Lab</h3><p>Receive and register</p></div></div><p class="caveat">The delivery integration and clinical handling still need a partner pilot.</p>
+<footer><p><a href="https://www.starship.xyz/delivery-apps/">[8] Starship delivery-app integration</a> · Medical use is a team proposal <a class="ref" href="https://github.com/rromppanen/junction26" aria-label="Reference 11">[11]</a></p><span>09</span></footer>
 <aside>We propose using an existing fleet rather than building a robot. Starship publishes a partner API for delivery jobs and status. farmagusta handles booking, pickup grouping and nurse visibility; the robot partner would handle physical delivery. Medical sample handling and the compartment insert would need to be developed and validated with the partner. No commercial partnership is claimed.</aside>
 </section>
 <section id="compartments" class="slide ">
 <h2>One locked compartment per sample</h2><div class="compartments"><div><h3>First pickup</h3><div class="slots"><div class="slot open">A</div><div class="slot empty"></div><div class="slot empty"></div><div class="slot empty"></div></div><p>A opens. The others stay shut.</p></div><div><h3>Next pickup</h3><div class="slots"><div class="slot locked">A</div><div class="slot open">B</div><div class="slot empty"></div><div class="slot empty"></div></div><p>B opens. A stays locked.</p></div><div><h3>At the lab</h3><div class="slots"><div class="slot lab">A</div><div class="slot lab">B</div><div class="slot empty"></div><div class="slot empty"></div></div><p>Staff access the collected samples.</p></div></div><p class="caveat">Proposed compartment insert. Hardware access is simulated in the demo.</p>
-<footer><p>Proposed hardware design · Four compartments per robot in the current demo</p><span>10</span></footer>
+<footer><p>Proposed hardware design <a class="ref" href="https://github.com/rromppanen/junction26" aria-label="Reference 11">[11]</a> · Four simulated compartments per robot; partner validation needed</p><span>10</span></footer>
 <aside>Each sample needs its own compartment so a later pickup cannot expose an earlier sample. The current demo models four compartments per robot. The hardware insert and phone-controlled access are proposals requiring partner validation. The intended rule is that a patient can open only the compartment assigned to that pickup; collected samples remain locked until lab intake.</aside>
 </section>
 <section id="fleet" class="slide fleet">
-<h2>See who needs help.<br>Act from the map.</h2><img class="dashboard" src="assets/nurse-dashboard.png" alt="Nurse workspace with a patient queue and the robot fleet map">
-<footer><p>Working prototype · Invented patients and simulated fleet</p><span>11</span></footer>
+<h2>See who needs help.<br>Act from the map.</h2>
+<div class="fleet-notes">
+<div><h3>Plan pickups</h3><p>Group nearby pickups into one run.</p></div>
+<div><h3>Track samples</h3><p>Follow progress from pickup to lab.</p></div>
+<div><h3>Act on flags</h3><p>Remind, call or book appointments.</p></div>
+</div>
+<p class="fleet-caption">30 robots · 6 hubs <a class="ref" href="https://github.com/rromppanen/junction26" aria-label="Reference 11">[11]</a></p>
+<img class="dashboard" src="assets/nurse-dashboard.png" alt="Nurse workspace with a patient queue and the robot fleet map">
+<footer><p>Working prototype <a class="ref" href="https://github.com/rromppanen/junction26" aria-label="Reference 11">[11]</a> · Invented people; fleet simulated</p><span>11</span></footer>
 <aside>The nurse workspace combines a live map, a patient queue and filters. Nurses can open a patient to send a reminder, record a call, register an arrived sample or book a colonoscopy where appropriate. The demo has 30 robots across six hubs. Multi-stop runs collect up to four samples before returning for nurse intake.</aside>
 </section>
 <section id="signals" class="slide ">
 <h2>A clear next action for the nurse</h2><div class="actions"><div><p>No sample after 14 days</p><span>→</span><strong>Send a reminder</strong></div><div><p>Robot waiting at the door</p><span>→</span><strong>Check the pickup</strong></div><div><p>Positive result, no booking after 7 days</p><span>→</span><strong>Arrange a colonoscopy</strong></div></div><p class="caveat">Demo thresholds are our assumptions, not clinical deadlines.</p>
-<footer><p>Rules implemented in the prototype</p><span>12</span></footer>
+<p class="strategy-line">Goal 3.1: timely care. Pilot measure: positive test → colonoscopy time <a class="ref" href="https://fican.fi/wp-content/uploads/2026/01/National_Cancer_Strategy_2026-2035_Finland.pdf" aria-label="Reference 2">[2]</a></p>
+<footer><p>Prototype rules <a class="ref" href="https://github.com/rromppanen/junction26" aria-label="Reference 11">[11]</a> · <a href="https://fican.fi/wp-content/uploads/2026/01/National_Cancer_Strategy_2026-2035_Finland.pdf">[2] National Cancer Strategy, p. 33</a> · Timing measure is a proposed proxy</p><span>12</span></footer>
 <aside>The nurse can see where a person stopped and choose a follow-up action. The flags are simple rules, not diagnoses or inferences about someone’s motivation. No sample 14 days after invitation and no colonoscopy booking seven days after a positive result are demo assumptions. A real service would need clinical review of these rules and its escalation process.</aside>
 </section>
 <section id="savings" class="slide savings">
-<h2>What return mail costs today</h2><p class="number cost blue">≈ €240,000</p><p class="stat-caption">a year in the capital region</p><p class="lede cost-note">Estimated return postage and envelopes<br>at the national 80% participation target</p><div class="cost-calculations" aria-label="Annual return mail cost calculation">
-<div><h3>Invitations per year</h3><p>235,677 people ÷ 2 years</p><p class="result">= 117,838.5 kits</p></div>
-<div><h3>Return postage at 80%</h3><p>117,838.5 × 80% × €2.07</p><p class="result">= €195,140.56</p></div>
-<div><h3>Return envelope in every kit</h3><p>117,838.5 × €0.40</p><p class="result">= €47,135.40</p></div>
-</div><p class="cost-total">€195,140.56 + €47,135.40 = <strong>€242,275.96 a year</strong>, rounded to ≈ €240,000</p><p class="caveat">Gross mailing cost only. Robot costs are not included; envelope cost is an estimate.</p>
-<footer><p>Statistics Finland, 2025 population · Posti, October 2026 prices · National Cancer Strategy</p><span>13</span></footer>
-<aside>The estimate covers Helsinki, Espoo, Vantaa and Kauniainen. There are 235,677 people aged 56–74. Dividing by two gives 117,838.5 invitations a year. At 80% participation, 94,270.8 samples incur €2.07 reply postage (€195,140.56). An estimated €0.40 return envelope in every kit adds €47,135.40, for €242,275.96, rounded to approximately €240,000. This is a scenario estimate for gross mailing costs, not net savings. It excludes robot running costs and SMS costs; outgoing invitations still use the post. Population: Statistics Finland table 11re, 31 December 2025. Postage: Posti contract price list, 1 October 2026, VAT 0. Envelope price is our estimate.</aside>
+<h2>Return-mail base cost: a yearly scenario</h2>
+<p class="cost-scenario">Capital region · Full-age rollout at 80% participation <a class="ref" href="https://fican.fi/wp-content/uploads/2026/01/National_Cancer_Strategy_2026-2035_Finland.pdf" aria-label="Reference 2">[2]</a></p>
+<div class="cost-layout">
+<div><p class="cost-headline">≈ €240,000</p><p class="cost-caption">a year in return mail</p><p class="cost-region">Helsinki, Espoo, Vantaa<br>and Kauniainen</p></div>
+<table class="cost-ledger" aria-label="Annual return mail calculation"><tbody>
+<tr><th scope="row">235,677</th><td>People aged 56–74 <a class="ref" href="https://pxdata.stat.fi/PxWeb/pxweb/en/StatFin/StatFin__vaerak/statfin_vaerak_pxt_11re.px/" aria-label="Reference 9">[9]</a></td></tr>
+<tr><th scope="row">÷ 2</th><td>Every 2 years → 117,839 kits/year</td></tr>
+<tr><th scope="row">× 80%</th><td>94,271 samples returned</td></tr>
+<tr><th scope="row">× €2.07 <a class="ref" href="https://assets.ctfassets.net/dvxpcmq06s7e/NBjq2IyKk3qCsIP1mqWYp/4df58c076869fe32f5f32ab112a65ebc/202608_Posti_Kirje-suoramarkkinointi-ja_lehtipalveluiden_sopimushinnasto_FI_1.10.2026_alkaen_WEB.pdf" aria-label="Reference 10">[10]</a></th><td>Postage base fee → €195,141</td></tr>
+<tr><th scope="row">+ €47,136</th><td>117,839 envelopes × €0.40 (estimate)</td></tr>
+<tr class="total"><th scope="row">= €242,277</th><td>Annual total</td></tr>
+</tbody></table>
+</div>
+<p class="caveat">Excludes weight/account fees and robot costs. Rounded planning estimate; envelope price assumed.</p>
+<footer><p><a href="https://pxdata.stat.fi/PxWeb/pxweb/en/StatFin/StatFin__vaerak/statfin_vaerak_pxt_11re.px/">[9] Statistics Finland, table 11re</a> · <a href="https://assets.ctfassets.net/dvxpcmq06s7e/NBjq2IyKk3qCsIP1mqWYp/4df58c076869fe32f5f32ab112a65ebc/202608_Posti_Kirje-suoramarkkinointi-ja_lehtipalveluiden_sopimushinnasto_FI_1.10.2026_alkaen_WEB.pdf">[10] Posti, Oct. 2026, p. 26</a> · <a href="https://fican.fi/wp-content/uploads/2026/01/National_Cancer_Strategy_2026-2035_Finland.pdf">[2] 80% target, p. 5</a></p><span>13</span></footer>
+<aside>The estimate covers Helsinki, Espoo, Vantaa and Kauniainen, with 235,677 people aged 56–74. The slide rounds annual counts to whole kits and samples: 235,677 ÷ 2 = 117,838.5, shown as 117,839 kits; 117,839 × 80% = 94,271.2, shown as 94,271 returns. Return postage is 94,271 × €2.07 = €195,140.97, rounded to €195,141. An estimated €0.40 envelope in all 117,839 kits costs €47,135.60, rounded to €47,136. The displayed sum is €242,277, presented as approximately €240,000. Calculating without intermediate rounding gives €242,275.96; the difference is display rounding. This is a base-cost planning scenario, not total postage or net savings. The Posti tariff lists Economyvastaus at €2.07 per item plus €17.24/kg, with account and possible handling fees. Weight, account, handling, robot and SMS costs are excluded. The invitation still goes by post. The age range 56–74 is a full-rollout planning cohort; HUS’s 2026 invitation cohorts are narrower, so this is not a claim about actual 2026 annual expenditure. Population: Statistics Finland table 11re, 31 December 2025. Postage: Posti contract price list, 1 October 2026, VAT 0. Envelope price is our estimate.</aside>
+</section>
+<section id="limitations" class="slide limitations">
+<h2>What still needs validation</h2>
+<div class="limitations-list">
+<div><h3>Simulated operations</h3><p>Invented people. Robots, laboratory processing and appointments are simulated.</p></div>
+<div><h3>Reminder evidence</h3><p>The evidence supports reminders <a class="ref" href="https://publichealth.jmir.org/2024/1/e57959" aria-label="Reference 6">[6]</a>. Robot pickup still needs testing.</p></div>
+<div><h3>Partner validation</h3><p>Compartment hardware and medical collection need validation with a delivery partner.</p></div>
+</div>
+<footer><p>Prototype assumptions <a class="ref" href="https://github.com/rromppanen/junction26" aria-label="Reference 11">[11]</a> · <a href="https://publichealth.jmir.org/2024/1/e57959">[6] Vives et al., 2024</a> · No measured effect of robot pickup</p><span>14</span></footer>
+<aside>The demo uses invented people. Robots, laboratory processing and appointments are simulated. The evidence we cite supports reminders, not robot pickup, and the proposed compartments and medical collection service would need validation with a delivery partner. The Vives trial tested reminders in a pharmacy-based FIT programme; it did not test robots or this prototype.</aside>
 </section>
 <section id="closing" class="slide closing">
 <p class="closing-logo" aria-label="farmagusta">farmagusta<span aria-hidden="true">.</span></p>
