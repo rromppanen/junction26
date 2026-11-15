@@ -76,6 +76,11 @@ aside { display:none; }
 .cost-calculations p { font-size:30px; line-height:1.4; font-variant-numeric:tabular-nums; }
 .cost-calculations .result { color:var(--brand); font-weight:600; }
 .cost-total { margin-top:14px; font-size:27px; line-height:1.4; color:var(--muted); }
+.root-causes { margin-top:60px; }
+.root-causes > div { padding:27px 0; }
+.root-causes .cause { color:var(--ink); font-size:34px; line-height:1.25; }
+.root-causes small { display:block; font-size:24px; line-height:1.4; color:var(--muted); margin-top:10px; }
+.root-causes strong { font-size:36px; }
 /* Closing slide: the website wordmark and one final message. */
 .closing { background:var(--brand); color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
 .closing .closing-logo { font:600 154px/1.1 Poppins,Arial,sans-serif; letter-spacing:-8px; color:#fff; }
@@ -106,9 +111,14 @@ aside { display:none; }
 <aside>Participation was 74.5% among people whose mother tongue was Finnish, Swedish or Sami, and 53.4% among people with another or missing mother tongue. The Registry counts are 299,347 of 401,645 and 10,524 of 19,720. These figures show an association; they do not establish language as the cause.</aside>
 </section>
 <section id="reasons" class="slide ">
-<h2>Make the test easier to finish</h2><div class="pairs"><div><p>Hard to understand</p><span>→</span><strong>Guidance in nine languages</strong></div><div><p>Easy to put off</p><span>→</span><strong>Reminders and a clear next step</strong></div><div><p>Hard to return</p><span>→</span><strong>A pickup at your door</strong></div></div>
+<h2>Make the test easier to finish</h2><div class="pairs root-causes">
+<div><div><p class="cause">The leaflet is hard to understand</p><small>Available in Finnish, Swedish and English</small></div><span>→</span><strong>Guidance in nine languages</strong></div>
+<div><div><p class="cause">The test feels unnecessary</p><small>32.9% of non-users in one survey</small></div><span>→</span><strong>Explain why screening matters</strong></div>
+<div><div><p class="cause">People mean to do it, then forget</p><small>SMS trial: 53.7% → 64.2% returned</small></div><span>→</span><strong>Reminders and a clear next step</strong></div>
+<div><div><p class="cause">Returning it feels unpleasant or difficult</p><small>Discomfort, embarrassment or limited mobility</small></div><span>→</span><strong>A pickup at your door</strong></div>
+</div>
 <footer><p>HUS kit instructions · Gordon & Green, 2015 · Vives et al., 2024 · Ricciardi et al., 2024</p><span>05</span></footer>
-<aside>The design addresses understanding, follow-through and returning the sample. The phone app explains why the test matters and gives step-by-step instructions in nine languages. Reminders and nurse follow-up address delays; doorstep pickup removes the trip to a post box or lab. The supporting research covers perceived lack of need, forgetting, discomfort and disability. These studies motivate the design; we have not measured the prototype’s effect on participation.</aside>
+<aside>The earlier deck identified four barriers: understanding the leaflet, seeing a need for the test, remembering to complete it, and discomfort or difficulty returning the sample. The HUS leaflet is available in Finnish, Swedish and English. Gordon and Green’s US survey reported that 32.9% of non-users considered the test unnecessary and 59.6% named discomfort, disgust or embarrassment among their reasons. In Vives et al.’s randomised trial, an SMS reminder raised kit return from 53.7% to 64.2% at 30 days. Ricciardi et al. reported lower odds of a stool test among people with disabilities (OR 0.72). These findings motivate nine-language guidance, plain explanations, reminders and doorstep pickup. They come from different settings and are not measured effects of farmagusta.</aside>
 </section>
 <section id="app" class="slide app">
 <div class="intro-copy"><h2>The letter<br>opens the app</h2><p class="lede">Scan the QR code.<br>Choose your language.</p></div><div class="letter"><img src="assets/invitation-qr.png" alt="Invitation letter with a QR code"></div><img class="intro-phone" src="assets/app-language-phone.png" alt="Language selection in the farmagusta app">

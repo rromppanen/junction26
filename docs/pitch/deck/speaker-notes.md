@@ -27,7 +27,7 @@ Sources and detail: Source: Finnish Cancer Registry, colorectal cancer screening
 
 ## 5. Make the test easier to finish
 
-The design addresses understanding, follow-through and returning the sample. The phone app explains why the test matters and gives step-by-step instructions in nine languages. Reminders and nurse follow-up address delays; doorstep pickup removes the trip to a post box or lab. The supporting research covers perceived lack of need, forgetting, discomfort and disability. These studies motivate the design; we have not measured the prototype’s effect on participation.
+The earlier deck identified four barriers: understanding the leaflet, seeing a need for the test, remembering to complete it, and discomfort or difficulty returning the sample. The HUS leaflet is available in Finnish, Swedish and English. Gordon and Green’s US survey reported that 32.9% of non-users considered the test unnecessary and 59.6% named discomfort, disgust or embarrassment among their reasons. In Vives et al.’s randomised trial, an SMS reminder raised kit return from 53.7% to 64.2% at 30 days. Ricciardi et al. reported lower odds of a stool test among people with disabilities (OR 0.72). These findings motivate nine-language guidance, plain explanations, reminders and doorstep pickup. They come from different settings and are not measured effects of farmagusta.
 
 Sources and detail: [1] HUS, instructions for collecting and returning the sample · [2] Gordon &amp; Green 2015, BMC Public Health · [3] Vives et al. 2024, JMIR Public Health Surveill · [4] Ricciardi et al. 2024, Current Oncology
 
