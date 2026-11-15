@@ -16,19 +16,24 @@ export function SampleActions({
   now,
   busy,
   act,
+  onDraftChange,
 }: {
   row: Row;
   now: number;
   busy: boolean;
   act: ActFn;
+  onDraftChange?: (dirty: boolean) => void;
 }) {
   const callRef = useRef<HTMLButtonElement>(null);
   const [calling, setCalling] = useState(false);
   const [note, setNote] = useState("");
   function closeCall() {
+    setNote("");
+    onDraftChange?.(false);
     setCalling(false);
     requestAnimationFrame(() => callRef.current?.focus());
   }
+  const hasDraft = calling && Boolean(note.trim());
   const open = row.stage !== "done" && row.stage !== "negative";
   const intake = row.flags.some((flag) => flag.kind === "awaitingIntake");
   const booked = row.s.events.findLast(
@@ -63,11 +68,16 @@ export function SampleActions({
           {open ? "Next step" : "Screening status"}
         </h3>
         <p className="mt-1 text-sm text-muted">{nextStep}</p>
+        {hasDraft && (
+          <p className="mt-2 text-xs text-muted">
+            Save or cancel the call note before updating screening.
+          </p>
+        )}
         {intake && (
           <button
             type="button"
             className="primary-action mt-3 w-full"
-            disabled={busy}
+            disabled={busy || hasDraft}
             onClick={() => act(row, "atLab")}
           >
             <PackageCheck size={16} aria-hidden />
@@ -79,7 +89,7 @@ export function SampleActions({
             <button
               type="button"
               className={BTN}
-              disabled={busy}
+              disabled={busy || hasDraft}
               onClick={() => act(row, "resultNegative")}
             >
               <FlaskConical size={16} aria-hidden />
@@ -88,7 +98,7 @@ export function SampleActions({
             <button
               type="button"
               className={BTN}
-              disabled={busy}
+              disabled={busy || hasDraft}
               onClick={() => act(row, "resultPositive")}
             >
               <FlaskConical size={16} aria-hidden />
@@ -106,7 +116,7 @@ export function SampleActions({
                 key={slot}
                 type="button"
                 className={`${BTN} justify-start`}
-                disabled={busy}
+                disabled={busy || hasDraft}
                 onClick={() => act(row, "colonoscopyBooked", { slot })}
               >
                 <CalendarCheck size={16} aria-hidden />
@@ -120,7 +130,7 @@ export function SampleActions({
           <button
             type="button"
             className="primary-action mt-3"
-            disabled={busy}
+            disabled={busy || hasDraft}
             onClick={() => act(row, "colonoscopyDone")}
           >
             <CheckCircle2 size={16} aria-hidden />
@@ -180,7 +190,10 @@ export function SampleActions({
                 placeholder="What happened and what was agreed?"
                 id={`call-note-${id}`}
                 value={note}
-                onChange={(e) => setNote(e.target.value)}
+                onChange={(e) => {
+                  setNote(e.target.value);
+                  onDraftChange?.(Boolean(e.target.value.trim()));
+                }}
                 className="mt-1 w-full resize-y rounded border border-rule p-3 text-sm"
               />
               <div className="mt-2 flex gap-2">

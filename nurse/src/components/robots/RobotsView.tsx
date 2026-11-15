@@ -226,9 +226,7 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
     )
       return;
     add(row.s.id, { type, ...extra });
-    setStatus(
-      `${EVENT_LABEL[type]} recorded for ${row.s.person.name}`,
-    );
+    setStatus(`${EVENT_LABEL[type]} recorded for ${row.s.person.name}`);
     setBusy(true);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setBusy(false), 800);
@@ -727,8 +725,8 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
         </div>
       </div>
       <p
-        role="status"
-        aria-live="polite"
+        role={sel ? undefined : "status"}
+        aria-live={sel ? "off" : "polite"}
         className={
           status
             ? "shrink-0 border-t border-rule bg-white px-4 py-2 text-sm text-brand-strong"
