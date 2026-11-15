@@ -57,6 +57,7 @@ export const fi: KitText = {
     scheduledTitle: "Nouto varattu",
     scheduledBody: "Pidä palautuspussi valmiina. Kun aika koittaa, robotti lähtee matkaan ja voit seurata sitä täällä.",
     sendNow: "Lähetä robotti nyt",
+    sendNowNote: "Vain esittelyä varten: ohittaa odotuksen, jotta näet robotin heti.",
   },
   test: {
     name: "Suolistosyövän seulonta",
