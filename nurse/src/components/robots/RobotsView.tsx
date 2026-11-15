@@ -208,7 +208,9 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
     requestAnimationFrame(() =>
       (returnFocus.current?.isConnected
         ? returnFocus.current
-        : mapRegion.current
+        : patientsOpen
+          ? patientsButton.current
+          : mapRegion.current
       )?.focus(),
     );
   }
@@ -225,7 +227,7 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
       return;
     add(row.s.id, { type, ...extra });
     setStatus(
-      `Recorded: ${EVENT_LABEL[type].toLowerCase()} for ${row.s.person.name}.`,
+      `${EVENT_LABEL[type]} recorded for ${row.s.person.name}`,
     );
     setBusy(true);
     if (timer.current) clearTimeout(timer.current);
@@ -541,18 +543,32 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
                 }}
               />
             )}
-            {mounted && visible.length === 0 && (
-              <div className="absolute inset-x-4 bottom-16 z-[1000] rounded-lg border border-rule bg-white p-4 text-sm shadow">
-                <p>No people match these filters.</p>
+            {mounted && !Object.values(layers).some(Boolean) && (
+              <div className="absolute inset-x-4 bottom-16 z-[1000] rounded border border-rule bg-white p-4 text-sm shadow sm:left-auto sm:w-72">
+                <p>All map layers are hidden.</p>
                 <button
                   type="button"
                   className={`${BTN} mt-2`}
-                  onClick={clearFilters}
+                  onClick={() => setLayers(INITIAL_LAYERS)}
                 >
-                  Show everyone
+                  Show map layers
                 </button>
               </div>
             )}
+            {mounted &&
+              Object.values(layers).some(Boolean) &&
+              visible.length === 0 && (
+                <div className="absolute inset-x-4 bottom-16 z-[1000] rounded-lg border border-rule bg-white p-4 text-sm shadow">
+                  <p>No people match these filters.</p>
+                  <button
+                    type="button"
+                    className={`${BTN} mt-2`}
+                    onClick={clearFilters}
+                  >
+                    Show everyone
+                  </button>
+                </div>
+              )}
             {(robot || hub) && (
               <section
                 aria-label="Map selection"
