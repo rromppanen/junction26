@@ -6,8 +6,8 @@ import { seedSamples } from "./seed";
 import { applyEntry, buildSamples, MAX_ENTRIES_PER_POST, RESTART, type LogEntry, type LogPage } from "./sync-core";
 
 // v4: Helsinki-area demo data, half Finnish or Swedish speakers. A new key makes open browsers reseed instead of keeping the old people.
-const KEY = "lapi.demo.v4";
-const CHANNEL = "lapi-demo";
+const KEY = "farmagusta.demo.v4";
+const CHANNEL = "farmagusta-demo";
 
 const EMPTY: Sample[] = [];
 let cache: { raw: string | null; samples: Sample[] } | null = null;

@@ -19,9 +19,9 @@ import { PinPicker } from "./PinPicker";
 import "./animations.css";
 
 const ME = "me";
-const LANG_KEY = "lapi.kit.language";
+const LANG_KEY = "farmagusta.kit.language";
 // Versioned: older builds stored the step index differently.
-const STEP_KEY = "lapi.kit.progress.v3";
+const STEP_KEY = "farmagusta.kit.progress.v3";
 const CLICK_GUARD_MS = 350;
 /** Matches the window's closing animation in animations.css. */
 const WINDOW_CLOSE_MS = 380;

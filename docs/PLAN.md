@@ -16,9 +16,8 @@ This is the team's one place for decisions, the task split and the submission ch
 
 ## Decision
 
-- Challenge: AstraZeneca "Equal Care Across Finland". Pre-submission text is in the README's submission fields; it can be changed until Sun 10:00. The Gemini API and Context.dev bounties were planned for Läpi. The app now uses no AI model, so decide whether they still apply before entering them.
+- Challenge: AstraZeneca "Equal Care Across Finland". Pre-submission text is in the README's submission fields; it can be changed until Sun 10:00.
 - Product: **farmagusta**, a guided home bowel-screening test in nine languages, robot pickup of the sample and a nurse board that flags everyone who falls behind. The story is in [idea.md](idea.md).
-- Direction change: on Sat 14.11 the team dropped the county dashboard Läpi (formerly Gap Radar) for farmagusta. Its documents are in the [archive](archive/README.md).
 - Why this: Helsinki returns 69.6% of bowel screening tests against the 80% goal, and people with another mother tongue take part least (53.4% against 74.5%, Finnish Cancer Registry 2024). The mentors said the patient can't see the next step and nobody monitors the guidelines.
 - Main judging criteria to hit: **Innovation** (unlike other projects), **Impact** (share of affected people actually helped), **Implementation** (realistic, viable, feasible). Each partner also judges its own challenge with its own criteria.
 

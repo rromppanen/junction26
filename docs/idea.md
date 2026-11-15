@@ -4,7 +4,7 @@
 
 farmagusta guides the person invited to bowel cancer screening through the home test in their own language. A robot collects the sample from the door, and a nurse board flags everyone who falls behind.
 
-Challenge: AstraZeneca, *Equal Care Across Finland* ([challenge.md](challenge.md)). Pitch deck: [farmagusta-screening-attendance.pptx](pitch/farmagusta-screening-attendance.pptx). Pitch and Q&A: [pitch/script.md](pitch/script.md). The team's earlier direction, Läpi, is in the [archive](archive/README.md).
+Challenge: AstraZeneca, *Equal Care Across Finland* ([challenge.md](challenge.md)). Pitch deck: [farmagusta-pitch.pdf](pitch/deck/farmagusta-pitch.pdf). Pitch and Q&A: [pitch/script.md](pitch/script.md).
 
 ## The problem
 

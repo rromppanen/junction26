@@ -6,8 +6,8 @@ import { MAX_LOG_LENGTH, type LogEntry, type LogPage } from "./sync-core";
  * every server instance shares one log. Without them the log lives in this process's memory,
  * which is enough for local development but is not shared between serverless instances.
  */
-const SEED_KEY = "lapi:demo:seedAt";
-const LOG_KEY = "lapi:demo:log";
+const SEED_KEY = "farmagusta:demo:seedAt";
+const LOG_KEY = "farmagusta:demo:log";
 
 type Redis = { url: string; token: string };
 
@@ -39,7 +39,7 @@ function results(replies: Reply[]): unknown[] {
 }
 
 // In-memory fallback, kept on globalThis so dev-server reloads keep it.
-const mem = ((globalThis as { __lapiLog?: { seedAt: number; log: LogEntry[] } }).__lapiLog ??= {
+const mem = ((globalThis as { __farmagustaLog?: { seedAt: number; log: LogEntry[] } }).__farmagustaLog ??= {
   seedAt: Date.now(),
   log: [],
 });

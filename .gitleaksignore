@@ -1,3 +1,3 @@
-# False positive: the name of the localStorage slot for cached map routes ("lapi.routes.v1"), not a credential.
+# False positive: the name of the localStorage slot for cached map routes, not a credential.
 # The constant has since been renamed; this entry covers the earlier commit only.
 d583431d2bc9d2572365f31068ea69ad2ff72b4c:nurse/src/lib/robots/routes.ts:generic-api-key:13

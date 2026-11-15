@@ -10,7 +10,7 @@ import { routeKey, type LatLng, type Trip } from "./fleet";
  * the map keeps its drawn curve, so the demo never depends on the network.
  */
 const ROUTER = "https://routing.openstreetmap.de/routed-foot/route/v1/foot";
-const ROUTE_CACHE_NAME = "lapi.routes.v1";
+const ROUTE_CACHE_NAME = "farmagusta.routes.v1";
 
 const cache = new Map<string, LatLng[]>();
 const failed = new Set<string>();

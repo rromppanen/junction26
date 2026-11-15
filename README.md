@@ -86,7 +86,6 @@ Without Upstash keys the shared event log lives in the dev server's memory. Run 
 | [docs/PLAN.md](docs/PLAN.md) | Deadlines, decisions and the submission checklist |
 | [docs/DEPLOY.md](docs/DEPLOY.md) | Deploying both apps to Vercel |
 | [docs/research/](docs/research/) | Mentor notes and research behind the figures |
-| [docs/archive/](docs/archive/README.md) | The team's earlier direction, Läpi, kept for history |
 
 ## License
 

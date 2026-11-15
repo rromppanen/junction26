@@ -2,7 +2,7 @@
 
 import { hubNear, type LngLat } from "@/lib/kit/route";
 
-const ROUTE_KEY = "lapi.kit.route";
+const ROUTE_KEY = "farmagusta.kit.route";
 const LOCATE_TIMEOUT_MS = 15_000;
 
 /** Asks the app's own /api/walk for a street route; throws when it has none. */
