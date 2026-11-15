@@ -8,6 +8,7 @@ import { MAX_LOG_LENGTH, type LogEntry, type LogPage } from "./sync-core";
  */
 const SEED_KEY = "farmagusta:demo:seedAt";
 const LOG_KEY = "farmagusta:demo:log";
+const LEASE_KEY = "farmagusta:demo:simLease";
 
 type Redis = { url: string; token: string };
 
@@ -118,4 +119,50 @@ export async function resetLog(): Promise<number> {
   const out = await call<Reply>(r, "", ["EVAL", RESET, "2", SEED_KEY, LOG_KEY, String(Date.now())]);
   if (out.error) throw new Error(`Redis error: ${out.error}`);
   return Number(out.result);
+}
+
+// ---- Who runs the household simulation ---------------------------------------------------------
+
+/**
+ * How long a simulation lease lasts without renewal. Every open robots page would otherwise run the
+ * simulation and write the same bookings twice (robots jumping between runs, vanishing, reappearing).
+ */
+export const LEASE_MS = 6_000;
+
+const CLAIM = `
+local cur = redis.call('GET', KEYS[1])
+if (not cur) or cur == ARGV[1] then
+  redis.call('SET', KEYS[1], ARGV[1], 'PX', ARGV[2])
+  return ARGV[1]
+end
+return cur`;
+
+const RELEASE = `
+if redis.call('GET', KEYS[1]) == ARGV[1] then redis.call('DEL', KEYS[1]) end
+return 1`;
+
+const memLease = ((globalThis as { __farmagustaLease?: { holder: string; until: number } }).__farmagustaLease ??= { holder: "", until: 0 });
+
+/**
+ * Claims (or renews) the simulation lease for `id`; returns who holds it now. With `release`, gives it
+ * up if `id` holds it, so another page can take over at once.
+ */
+export async function claimLease(id: string, release = false, now = Date.now()): Promise<string> {
+  const r = redis();
+  if (!r) {
+    if (release) {
+      if (memLease.holder === id) memLease.until = 0;
+      return "";
+    }
+    if (!memLease.holder || memLease.holder === id || now >= memLease.until) {
+      memLease.holder = id;
+      memLease.until = now + LEASE_MS;
+    }
+    return memLease.holder;
+  }
+  const out = release
+    ? await call<Reply>(r, "", ["EVAL", RELEASE, "1", LEASE_KEY, id])
+    : await call<Reply>(r, "", ["EVAL", CLAIM, "1", LEASE_KEY, id, String(LEASE_MS)]);
+  if (out.error) throw new Error(`Redis error: ${out.error}`);
+  return release ? "" : String(out.result ?? "");
 }

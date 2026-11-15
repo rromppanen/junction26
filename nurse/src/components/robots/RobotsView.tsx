@@ -44,6 +44,7 @@ import {
   type SimSpeed,
   type HubId,
 } from "@/lib/robots/fleet";
+import { useSimLease } from "@/lib/robots/simLease";
 import { useRoutes } from "@/lib/robots/routes";
 
 const LiveMap = dynamic(() => import("./LiveMap"), {
@@ -97,6 +98,7 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
   const [sampleId, setSampleId] = useState<string | null>(null);
   const [hubId, setHubId] = useState<HubId | null>(null);
   const [simulate, setSimulate] = useState(true);
+  const leader = useSimLease(mounted && simulate);
   const [speed, setSpeed] = useState<SimSpeed>(20);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -177,7 +179,8 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
   const group = intake.find((g) => g.hub === hubId);
 
   useEffect(() => {
-    if (!mounted || !simulate || now === lastTick.current) return;
+    // Only the page holding the lease simulates; every other open page just watches.
+    if (!mounted || !simulate || !leader || now === lastTick.current) return;
     lastTick.current = now;
     for (const a of simStep(
       samples,
@@ -187,7 +190,7 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
       speed,
     ))
       add(a.sampleId, a.event);
-  }, [mounted, simulate, speed, now, samples, add]);
+  }, [mounted, simulate, leader, speed, now, samples, add]);
 
   function clearFilters() {
     setQuery("");
@@ -475,6 +478,9 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
                     />
                     Simulate other households
                   </label>
+                  {simulate && !leader && (
+                    <p className="text-xs">Running in another open window.</p>
+                  )}
                   <label className="block">
                     Speed for new trips
                     <select
