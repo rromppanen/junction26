@@ -176,7 +176,24 @@ export function NursePatients({
       </ul>
       {patients.length === 0 && (
         <p className="py-6 text-sm text-muted">
-          No patients match. Try another name, queue or location.
+          {rows.length === 0
+            ? "No patients in the selected locations. Choose a location in Filters."
+            : attention
+              ? "No patients need attention in this queue."
+              : "No patients match this search."}
+          {(query || attention) && (
+            <button
+              type="button"
+              className={`${BTN} mt-3 w-full`}
+              onClick={() => {
+                setQuery("");
+                setAttention(false);
+                setLimit(12);
+              }}
+            >
+              Show all patients
+            </button>
+          )}
         </p>
       )}
       {patients.length > 12 && (
