@@ -57,6 +57,7 @@ export const et: KitText = {
     scheduledTitle: "Äravõtmine on broneeritud",
     scheduledBody: "Hoia tagastuskott valmis. Kui aeg kätte jõuab, hakkab robot teele ja saad seda siin jälgida.",
     sendNow: "Saada robot kohe",
+    sendNowNote: "Ainult demo jaoks: jätab ootamise vahele, et näeksid robotit kohe.",
   },
   test: {
     name: "Soolevähi sõeluuring",

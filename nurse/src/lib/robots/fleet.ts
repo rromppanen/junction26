@@ -1,3 +1,4 @@
+import { seedSamples } from "@/lib/sample/seed";
 import { ROBOT_TRAVEL_MS, ROBOT_WAIT_FLAG_MS, departureOf, flagsOf, stageOf, type Person, type Sample } from "@/lib/sample/model";
 
 /**
@@ -377,6 +378,27 @@ export function finishedTrips(trips: Trip[], now: number): Trip[] {
   return trips
     .filter((t) => t.backAt !== undefined && now >= t.backAt)
     .sort((a, b) => (b.backAt ?? 0) - (a.backAt ?? 0));
+}
+
+/** Keep about this many simulated households waiting for a robot, so the map never runs dry. */
+export const WAITING_TARGET = 12;
+
+/**
+ * A simulated household to start again, so robots keep coming however long the demo runs: one whose
+ * pickup is over and whose robot is back, and whose seed state is a sample waiting for a robot.
+ * Only when fewer than WAITING_TARGET are waiting, and one at a time, so the map changes gradually.
+ */
+export function householdToRecycle(samples: Sample[], now: number, me: string): string | undefined {
+  const waiting = readyForPickup(samples, now).filter((s) => s.id !== me).length;
+  if (waiting >= WAITING_TARGET) return undefined;
+  const trips = tripsOf(samples);
+  const busy = new Set(trips.filter((t) => t.backAt === undefined || t.backAt > now).map((t) => t.sampleId));
+  const seedWaits = new Set(readyForPickup(seedSamples(now), now).map((s) => s.id));
+  const doneAt = (s: Sample) => s.events.reduce((a, e) => Math.max(a, e.at), 0);
+  return samples
+    .filter((s) => s.id !== me && seedWaits.has(s.id) && !busy.has(s.id))
+    .filter((s) => ["pickedUp", "atLab", "negative", "positive", "colonoscopyBooked", "done"].includes(stageOf(s, now)))
+    .sort((a, b) => doneAt(a) - doneAt(b))[0]?.id;
 }
 
 /** Samples taken at home with no robot booked yet, longest waiting first. */

@@ -4,8 +4,7 @@ Open **edits/04-full-demo-scaffold-v01.mp4** for the complete two-minute story. 
 
 ## In this folder
 
-- `source/`: all 17 original clips copied from Downloads. Originals are unchanged, including their audio.
-- `selects/`: short, colour-converted landscape selects. Five original takes are used in the full scaffold; repeated, sideways and setup takes are excluded.
+- `source/` and `selects/` (removed before submission; in git history): the original clips and the short landscape selects used in the full scaffold.
 - `edits/04-full-demo-scaffold-v01.mp4`: the main two-minute scaffold, 1920×1080, 24 fps, muted for narration.
 - `edits/01-opening-v01.mp4` and `02-ending-v01.mp4`: shorter opening and ending options from the initial cut.
 - `edits/03-assembly-preview-v01.mp4`: compact initial assembly, with one middle slate. Use 04 for the full planned story.

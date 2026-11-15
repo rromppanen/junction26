@@ -40,4 +40,4 @@ Optional settings in `.env.local`, which is never committed:
 | `src/lib/sample/` | The sample model: an event log per person, the stage derived from it, the flag rules, the robot simulation and the sync between tabs and devices. Counterparts in `../nurse`; keep event and storage contracts compatible, preserving its separate nurse intake step |
 | `src/lib/kit/` | Kit content and the nine translations (`text/`), pickup slots and robot routes |
 | `src/components/kit/` | The phone app's screens, step animations and tracking map |
-| `src/data/` | Finnish Cancer Registry figures (`registry.json`, from `npm run ingest:registry`) and the wait to colonoscopy read from the Registry's chart (`registryWaits.ts`) |
+| `src/data/` | The fixed routes for the kit robot and the demo reel (`robotRoute.ts`, `reelRoute.ts`, `reelFleetRoutes.json`) |
