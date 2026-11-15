@@ -8,7 +8,6 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "ingest:registry": "tsx scripts/ingest-registry.ts",
     "check": "npm run lint && npm test && npm run build",
     "smoke": "node scripts/smoke.mjs"
   },
