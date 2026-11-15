@@ -17,7 +17,7 @@ Keep this section current. On Sunday morning it becomes the submission form text
 | Technologies | Next.js, TypeScript, Tailwind CSS, MapLibre GL, Leaflet, OpenStreetMap routing (OSRM), Upstash Redis, Vercel, Vitest, GitHub Actions |
 | Demo link | https://farmagusta.vercel.app |
 | Source link | https://github.com/rromppanen/junction26 |
-| Pitch deck | [PDF](docs/pitch/farmagusta-screening-attendance.pdf) · [PowerPoint](docs/pitch/farmagusta-screening-attendance.pptx) |
+| Pitch deck | [PDF](docs/pitch/deck/farmagusta-pitch.pdf) · [HTML](docs/pitch/deck/farmagusta-pitch.html) · [speaker notes](docs/pitch/deck/speaker-notes.md). Earlier version: [PDF](docs/pitch/farmagusta-screening-attendance.pdf) · [PowerPoint](docs/pitch/farmagusta-screening-attendance.pptx) |
 | Pitch video (max 2:00) | _TBD_ |
 
 ## Description
@@ -32,7 +32,7 @@ Keep this section current. On Sunday morning it becomes the submission form text
 - **Nurse board (`/nurse`):** every participant by stage, with their language and interpreter need. People who fall behind are flagged first: no sample 14 days after the invitation (with reminder status), a positive result with no colonoscopy booked after 7 days, a robot waiting at the door, a sample waiting to be registered at the lab. The nurse sends a reminder, records a call or books a colonoscopy from the person's drawer. These thresholds are our assumptions, not clinical deadlines.
 - **Robots (`/nurse/robots`):** the simulated pickup fleet (30 robots, six hubs in Helsinki, Espoo and Vantaa) on a street map, with destinations shown by pickup code, not by name.
 
-**How it works.** The sample logic is plain tested code: an event log per person, the stage derived from it, the flag rules and the robot simulation. The phone and the board share one event log behind `/api/samples` (Upstash Redis on Vercel), so a phone and a laptop see each other's actions. Walking routes come from the public FOSSGIS OSRM router. The sampling steps follow the HUS kit leaflet in order, and the registry figures above are in the pitch deck with their sources. The app uses no AI model.
+**How it works.** The sample logic is plain tested code: an event log per person, the stage derived from it, the flag rules and the robot simulation. The phone and the board share one event log behind `/api/samples` (Upstash Redis on Vercel), so a phone and a laptop see each other's actions. Walking routes come from the public FOSSGIS OSRM router. The sampling steps follow the HUS kit leaflet in order, and the registry figures above are in the pitch deck with their sources. Robot routes are planned with shortest-path search of the A* family, a classic AI planning method; the flag rules are plain tested code, so a nurse can see why someone is flagged.
 
 **Strategy fit.** Participation is Goal 2 of the National Cancer Strategy 2026–2035 (80% in every wellbeing services county). The Goal 3 indicator we track is the time from a positive test to colonoscopy, which the nurse board flags per person. Sub-goal 1.3 asks that people whose mother tongue is not Finnish or Swedish reach the same screening participation as Finnish and Swedish speakers (strategy pp. 19–20), which is the group the app is built around.
 

@@ -1,0 +1,1856 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=1920">
+<title>farmagusta pitch deck</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&display=swap">
+<style>
+* { margin: 0 }
+html { background: #05070a }
+body { font: 32px/1.2 sans-serif; display: flex; flex-direction: column; align-items: center; gap: 40px; padding: 40px 0 }
+body > section { width: 1920px; height: 1080px; overflow: hidden; box-sizing: border-box; position: relative; isolation: isolate; flex-shrink: 0 }
+aside { display: none }
+h1 { font-size: 96px; font-weight: 600 } h2 { font-size: 64px; font-weight: 600 } h3 { font-size: 44px; font-weight: 600 }
+@media print { @page { size: 1920px 1080px; margin: 0 } html { background: none } body { display: block; padding: 0 } body > section { page-break-after: always; break-after: page } * { animation: none !important } }
+
+:root {
+  --black: #0a0d10;
+  --white: #f4f5f2;
+  --grey: #b9c0c6;
+  --teal: #19c3c0;
+  --navy: #003c6c;
+  --orange: #ff8a3d;
+}
+
+body {
+  font-family: 'Geist', Arial, sans-serif;
+  color: var(--white);
+}
+
+section {
+  background: var(--black);
+  padding: 128px;
+  box-sizing: border-box;
+}
+
+h1, h2, h3 {
+  font-family: 'Geist', Arial, sans-serif;
+  color: var(--white);
+}
+
+.mono {
+  font-family: 'Geist Mono', 'Courier New', monospace;
+}
+
+/* Cover: full-bleed photo, giant wordmark, HUD lock-on around the robot */
+.cover .photo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  object-fit: cover;
+}
+.cover .shade-top {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  background: linear-gradient(180deg, rgba(10,13,16,0.92) 0%, rgba(10,13,16,0.7) 28%, rgba(10,13,16,0.15) 52%, rgba(10,13,16,0) 62%);
+}
+.cover .shade-bottom {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  background: linear-gradient(0deg, rgba(10,13,16,0.75) 0%, rgba(10,13,16,0) 22%);
+}
+.cover .wordmark {
+  position: absolute;
+  left: 112px;
+  top: 40px;
+  width: 1700px;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 248px;
+  font-weight: 600;
+  letter-spacing: -14px;
+  line-height: 1.1;
+  color: var(--white);
+  white-space: nowrap;
+}
+.cover .dot {
+  color: var(--teal);
+}
+.cover .tagline {
+  position: absolute;
+  left: 128px;
+  top: 330px;
+  width: 1100px;
+  font-size: 56px;
+  font-weight: 500;
+  letter-spacing: -1.5px;
+  color: var(--white);
+}
+.cover .hud {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+}
+.cover .readout {
+  position: absolute;
+  left: 1150px;
+  top: 560px;
+  width: 560px;
+  box-sizing: border-box;
+  padding: 28px 32px;
+  background: rgba(10,13,16,0.78);
+  border-left: 4px solid var(--teal);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cover .readout p {
+  font-size: 26px;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--grey);
+}
+.cover .readout .status {
+  color: var(--teal);
+  font-weight: 600;
+}
+.cover .readout .val {
+  color: var(--white);
+}
+.cover .meta {
+  position: absolute;
+  left: 128px;
+  bottom: 56px;
+  width: 1664px;
+  display: flex;
+  justify-content: flex-end;
+}
+.cover .meta p {
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--grey);
+}
+
+/* Shared content-slide parts */
+.eyebrow {
+  font-size: 24px;
+  letter-spacing: 3px;
+  color: var(--teal);
+}
+.source {
+  position: absolute;
+  left: 128px;
+  bottom: 56px;
+  width: 1664px;
+  font-size: 24px;
+  line-height: 1.35;
+  color: #7d878f;
+}
+.source a {
+  color: #7d878f;
+}
+
+/* Gap slide */
+.gap {
+  padding: 128px 128px 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+.gap .top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 96px;
+}
+.gap .claim {
+  width: 1560px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.gap .big {
+  font-size: 240px;
+  font-weight: 600;
+  letter-spacing: -12px;
+  line-height: 0.95;
+  color: var(--orange);
+}
+.gap .statement {
+  font-size: 56px;
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -1.5px;
+  color: var(--white);
+}
+.gap .sub {
+  font-size: 28px;
+  color: var(--grey);
+}
+.gap .why {
+  width: 560px;
+  box-sizing: border-box;
+  padding: 32px 36px;
+  border: 2px solid #2a3239;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gap .why .label {
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--grey);
+}
+.gap .why .num {
+  font-size: 96px;
+  font-weight: 600;
+  letter-spacing: -4px;
+  line-height: 1;
+  color: var(--white);
+}
+.gap .why .text {
+  font-size: 28px;
+  line-height: 1.3;
+  color: var(--grey);
+}
+.gap .pipe {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gap .pipe .total {
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--grey);
+}
+.gap .bar {
+  display: flex;
+  height: 72px;
+}
+.gap .seg-in {
+  flex: 28615;
+  background: #2f3a43;
+  border-radius: 8px 0 0 8px;
+}
+.gap .seg-out {
+  flex: 12432;
+  background: var(--orange);
+  border-radius: 0 8px 8px 0;
+}
+.gap .labels {
+  display: flex;
+}
+.gap .lab-in {
+  flex: 28615;
+  font-size: 24px;
+  letter-spacing: 1px;
+  line-height: 1.35;
+  color: var(--grey);
+}
+.gap .lab-out {
+  flex: 12432;
+  padding-left: 16px;
+  font-size: 24px;
+  letter-spacing: 1px;
+  line-height: 1.35;
+  color: var(--orange);
+}
+.gap .claim { animation: rise 700ms 100ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.gap .why { animation: fadein 600ms 500ms ease-out both; }
+.gap .seg-in { animation: fadein 500ms 300ms ease-out both; }
+.gap .seg-out { animation: slidein 600ms 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.gap .labels { animation: fadein 500ms 800ms ease-out both; }
+
+/* Language slide */
+.lang {
+  padding: 128px 128px 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+.lang .headline {
+  width: 1500px;
+  font-size: 72px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -3px;
+}
+.lang .chart {
+  position: relative;
+  width: 1664px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding-top: 8px;
+}
+.lang .colhead {
+  position: absolute;
+  left: 1380px;
+  top: 0;
+  width: 284px;
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--grey);
+  text-align: right;
+}
+.lang .row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lang .rowlabel {
+  font-size: 26px;
+  letter-spacing: 1px;
+  color: var(--grey);
+}
+.lang .rowbody {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+}
+.lang .bar {
+  width: 1300px;
+  height: 88px;
+  display: flex;
+}
+.lang .seg-in {
+  background: #2f3a43;
+  border-radius: 8px 0 0 8px;
+}
+.lang .seg-out {
+  background: var(--orange);
+  border-radius: 0 8px 8px 0;
+}
+.lang .val {
+  width: 316px;
+  font-size: 88px;
+  font-weight: 600;
+  letter-spacing: -4px;
+  line-height: 1;
+  text-align: right;
+  color: var(--white);
+}
+.lang .accent {
+  color: var(--orange);
+}
+.lang .kicker {
+  font-size: 40px;
+  font-weight: 500;
+  letter-spacing: -1px;
+  color: var(--white);
+}
+.lang .headline { animation: rise 700ms 100ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.lang .chart { animation: fadein 600ms 400ms ease-out both; }
+.lang .kicker { animation: fadein 600ms 900ms ease-out both; }
+
+/* Reasons slide */
+.reasons {
+  padding: 128px 128px 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.reasons .headline {
+  font-size: 64px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+}
+.reasons .rows {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+}
+.reasons .row {
+  display: grid;
+  grid-template-columns: 64px 760px 56px 1fr;
+  gap: 24px;
+  align-items: center;
+  padding: 20px 24px;
+  border-top: 2px solid #232b31;
+}
+.reasons .n {
+  font-size: 24px;
+  color: var(--grey);
+}
+.reasons .why {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.reasons .stmt {
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  color: var(--white);
+}
+.reasons .ev {
+  font-size: 24px;
+  line-height: 1.35;
+  color: var(--grey);
+}
+.reasons .arrow {
+  font-size: 40px;
+  color: var(--teal);
+}
+.reasons .fix {
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  color: var(--white);
+}
+.reasons .key {
+  background: rgba(25,195,192,0.10);
+  border-top: 2px solid var(--teal);
+  border-radius: 0 0 12px 12px;
+}
+.reasons .key .fix {
+  font-weight: 600;
+  color: var(--teal);
+}
+.reasons .row { animation: slidein 500ms ease-out both; }
+.reasons .row:nth-child(1) { animation-delay: 200ms; }
+.reasons .row:nth-child(2) { animation-delay: 320ms; }
+.reasons .row:nth-child(3) { animation-delay: 440ms; }
+.reasons .row:nth-child(4) { animation-delay: 650ms; }
+
+/* App slide */
+.app .text {
+  width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.app .headline {
+  font-size: 64px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+}
+.app .steps {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 20px;
+}
+.app .step {
+  display: flex;
+  gap: 24px;
+  padding-top: 20px;
+  border-top: 2px solid #232b31;
+}
+.app .sn {
+  font-size: 24px;
+  color: var(--teal);
+  min-width: 40px;
+}
+.app .st {
+  font-size: 32px;
+  line-height: 1.25;
+  color: var(--white);
+}
+.app .paper {
+  position: absolute;
+  left: 780px;
+  top: 340px;
+  width: 588px;
+  box-sizing: border-box;
+  padding: 24px;
+  background: #fbfbf8;
+  border-radius: 10px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+}
+.app .paper img {
+  width: 540px;
+  height: 340px;
+  object-fit: contain;
+}
+.app .ring {
+  position: absolute;
+  left: 825px;
+  top: 544px;
+  width: 141px;
+  height: 141px;
+  box-sizing: border-box;
+  border: 5px solid var(--teal);
+  border-radius: 12px;
+}
+.app .scanline {
+  color: var(--teal);
+  border-width: 3px;
+  border-style: dashed;
+}
+.app .scan {
+  position: absolute;
+  left: 1100px;
+  top: 806px;
+  width: 200px;
+  font-size: 24px;
+  letter-spacing: 3px;
+  color: var(--teal);
+}
+.app .paperlabel {
+  position: absolute;
+  left: 780px;
+  top: 290px;
+  width: 560px;
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--grey);
+}
+.app .phone {
+  position: absolute;
+  left: 1376px;
+  top: 110px;
+  width: 416px;
+  height: 860px;
+  border-radius: 56px;
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+}
+.app .phone img {
+  width: 416px;
+  height: 860px;
+  object-fit: cover;
+}
+.app .text { animation: rise 600ms 100ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.app .paper { animation: rise 600ms 300ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.app .ring { animation: fadein 400ms 800ms ease-out both; }
+.app .scan { animation: fadein 400ms 1000ms ease-out both; }
+.app .phone { animation: rise 700ms 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+/* Flow slide */
+.flow {
+  padding: 96px 128px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+.flow .headline {
+  font-size: 64px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+}
+.flow .cols {
+  display: grid;
+  grid-template-columns: 416px 416px 416px 416px;
+}
+.flow .col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+.flow .frame {
+  padding: 10px;
+  background: #1b2026;
+  border-radius: 44px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+}
+.flow .frame img {
+  width: 256px;
+  height: 551px;
+  object-fit: cover;
+  border-radius: 34px;
+}
+.flow .label {
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+.flow .num {
+  font-size: 24px;
+  color: var(--teal);
+}
+.flow .title {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  color: var(--white);
+}
+.flow .title.key {
+  color: var(--teal);
+}
+.flow .sub {
+  font-size: 24px;
+  line-height: 1.3;
+  color: var(--grey);
+}
+.flow .arr {
+  position: absolute;
+  top: 456px;
+  width: 48px;
+  font-size: 44px;
+  color: var(--teal);
+  text-align: center;
+}
+.flow .a1 { left: 520px; }
+.flow .a2 { left: 936px; }
+.flow .a3 { left: 1352px; }
+.flow .col { animation: rise 600ms both cubic-bezier(0.2, 0.7, 0.2, 1); }
+.flow .col:nth-child(1) { animation-delay: 100ms; }
+.flow .col:nth-child(2) { animation-delay: 250ms; }
+.flow .col:nth-child(3) { animation-delay: 400ms; }
+.flow .col:nth-child(4) { animation-delay: 550ms; }
+.flow .arr { animation: fadein 400ms 800ms ease-out both; }
+
+/* Fleet slide */
+.fleet {
+  padding: 112px 128px 160px;
+}
+.fleet .headline {
+  width: 1664px;
+  margin-top: 20px;
+  font-size: 60px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+}
+.fleet .points {
+  position: absolute;
+  left: 128px;
+  top: 300px;
+  width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.fleet .pt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 14px;
+  border-top: 2px solid #232b31;
+}
+.fleet .pn {
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--teal);
+}
+.fleet .pn.alert {
+  color: var(--orange);
+}
+.fleet .pb {
+  font-size: 24px;
+  line-height: 1.3;
+  color: var(--white);
+}
+.fleet .shot {
+  position: absolute;
+  left: 640px;
+  top: 300px;
+  width: 1152px;
+  height: 648px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid #2a3239;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+}
+.fleet .shot img {
+  width: 1152px;
+  height: 648px;
+  object-fit: cover;
+}
+.fleet .tag {
+  position: absolute;
+  font-size: 24px;
+  letter-spacing: 2px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--teal);
+  color: #0a0d10;
+  font-weight: 600;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+.fleet .t1 { left: 640px; top: 246px; width: 300px; }
+.fleet .t2 { left: 1232px; top: 246px; width: 560px; text-align: right; }
+.fleet .source {
+  bottom: 48px;
+}
+.fleet .pt { animation: slidein 500ms both ease-out; }
+.fleet .pt:nth-child(1) { animation-delay: 300ms; }
+.fleet .pt:nth-child(2) { animation-delay: 420ms; }
+.fleet .pt:nth-child(3) { animation-delay: 540ms; }
+.fleet .pt:nth-child(4) { animation-delay: 660ms; }
+.fleet .shot { animation: rise 700ms 150ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.fleet .tag { animation: fadein 400ms 900ms ease-out both; }
+
+/* Savings slide */
+.savings {
+  padding: 128px 128px 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+.savings .body {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 80px;
+}
+.savings .claim {
+  width: 740px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.savings .big {
+  font-size: 148px;
+  font-weight: 600;
+  letter-spacing: -6px;
+  line-height: 0.95;
+  color: var(--teal);
+  white-space: nowrap;
+}
+.savings .statement {
+  font-size: 48px;
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -1.5px;
+  color: var(--white);
+}
+.savings .checks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+.savings .check {
+  font-size: 28px;
+  line-height: 1.3;
+  color: var(--grey);
+}
+.savings .ck {
+  color: var(--teal);
+}
+.savings .ledger {
+  width: 800px;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid #2a3239;
+  border-radius: 14px;
+  padding: 12px 32px;
+  box-sizing: border-box;
+}
+.savings .lr {
+  display: flex;
+  gap: 28px;
+  align-items: baseline;
+  padding: 18px 0;
+  border-top: 2px solid #1d242a;
+}
+.savings .lr:first-child {
+  border-top: none;
+}
+.savings .lv {
+  width: 210px;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--white);
+  white-space: nowrap;
+}
+.savings .ll {
+  width: 520px;
+  font-size: 24px;
+  line-height: 1.3;
+  color: var(--grey);
+}
+.savings .total {
+  border-top: 2px solid var(--teal);
+}
+.savings .total .lv {
+  color: var(--teal);
+}
+.savings .total .ll {
+  color: var(--white);
+}
+.savings .claim { animation: rise 700ms 100ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.savings .lr { animation: slidein 450ms both ease-out; }
+.savings .lr:nth-child(1) { animation-delay: 300ms; }
+.savings .lr:nth-child(2) { animation-delay: 400ms; }
+.savings .lr:nth-child(3) { animation-delay: 500ms; }
+.savings .lr:nth-child(4) { animation-delay: 600ms; }
+.savings .lr:nth-child(5) { animation-delay: 700ms; }
+.savings .lr:nth-child(6) { animation-delay: 850ms; }
+
+/* Privacy slide */
+.privacy .photo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 900px;
+  height: 1080px;
+  object-fit: cover;
+}
+.privacy .chip {
+  position: absolute;
+  left: 64px;
+  top: 880px;
+  width: 640px;
+  box-sizing: border-box;
+  padding: 14px 20px;
+  background: rgba(10,13,16,0.85);
+  border-left: 4px solid var(--teal);
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--white);
+  white-space: nowrap;
+}
+.privacy .panel {
+  position: absolute;
+  left: 992px;
+  top: 128px;
+  width: 800px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.privacy .headline {
+  font-size: 60px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+}
+.privacy .pts {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 12px;
+}
+.privacy .pp {
+  display: flex;
+  gap: 24px;
+  padding-top: 18px;
+  border-top: 2px solid #232b31;
+}
+.privacy .pk {
+  font-size: 24px;
+  color: var(--teal);
+  min-width: 40px;
+}
+.privacy .pv {
+  font-size: 30px;
+  line-height: 1.3;
+  color: var(--white);
+}
+.privacy .callback {
+  margin-top: 8px;
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--orange);
+}
+.privacy .source {
+  left: 992px;
+  width: 800px;
+}
+.privacy .photo { animation: fadein 700ms ease-out both; }
+.privacy .chip { animation: slidein 500ms 700ms ease-out both; }
+.privacy .panel { animation: rise 700ms 200ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+/* Stack slide */
+.stack {
+  padding: 128px 128px 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.stack .headline {
+  font-size: 60px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+}
+.stack .groups {
+  display: grid;
+  grid-template-columns: 638px 638px 296px;
+  gap: 46px;
+  margin-top: 20px;
+}
+.stack .g {
+  font-size: 24px;
+  letter-spacing: 3px;
+  padding-bottom: 10px;
+}
+.stack .gours {
+  color: var(--teal);
+  border-bottom: 3px solid var(--teal);
+}
+.stack .gship {
+  color: var(--white);
+  border-bottom: 3px solid var(--white);
+}
+.stack .glab {
+  color: var(--grey);
+  border-bottom: 3px solid var(--grey);
+}
+.stack .pipe {
+  display: flex;
+  align-items: stretch;
+}
+.stack .card {
+  width: 296px;
+  box-sizing: border-box;
+  padding: 24px 24px 28px;
+  border-radius: 12px;
+  background: #121920;
+  border: 2px solid #232b31;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.stack .card.ours {
+  border-color: var(--teal);
+}
+.stack .ck {
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--grey);
+}
+.stack .ours .ck {
+  color: var(--teal);
+}
+.stack .cv {
+  font-size: 28px;
+  line-height: 1.3;
+  color: var(--white);
+}
+.stack .ar {
+  width: 46px;
+  font-size: 36px;
+  color: var(--teal);
+  text-align: center;
+  align-self: center;
+}
+.stack .stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 24px;
+  margin-top: 28px;
+}
+.stack .st {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 18px;
+  border-top: 2px solid #232b31;
+}
+.stack .sv {
+  font-size: 64px;
+  font-weight: 600;
+  letter-spacing: -3px;
+  line-height: 1;
+  color: var(--white);
+}
+.stack .sl {
+  font-size: 24px;
+  color: var(--grey);
+}
+.stack .card { animation: rise 500ms both ease-out; }
+.stack .card:nth-child(1) { animation-delay: 150ms; }
+.stack .card:nth-child(3) { animation-delay: 300ms; }
+.stack .card:nth-child(5) { animation-delay: 450ms; }
+.stack .card:nth-child(7) { animation-delay: 600ms; }
+.stack .card:nth-child(9) { animation-delay: 750ms; }
+.stack .ar { animation: fadein 400ms 900ms ease-out both; }
+.stack .stats { animation: fadein 600ms 1000ms ease-out both; }
+
+/* Compartments slide */
+.comp {
+  padding: 128px 128px 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.comp .headline {
+  font-size: 60px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+}
+.comp .sub {
+  font-size: 32px;
+  color: var(--grey);
+}
+.comp .panels {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-top: 44px;
+}
+.comp .panel {
+  width: 470px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.comp .plabel {
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--teal);
+}
+.comp .plabel.lab {
+  color: var(--white);
+}
+.comp .grid {
+  display: grid;
+  grid-template-columns: 130px 130px 130px;
+  gap: 10px 14px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: #121920;
+  border: 2px solid #232b31;
+}
+.comp .c {
+  height: 34px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding-left: 16px;
+}
+.comp .c.e {
+  border: 2px dashed #39434c;
+}
+.comp .c.o {
+  background: var(--teal);
+}
+.comp .c.o .cl {
+  color: #0a0d10;
+}
+.comp .c.l {
+  background: #3a4651;
+}
+.comp .c.k {
+  background: #1e2a33;
+  border: 3px solid var(--white);
+}
+.comp .cl {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--white);
+}
+.comp .cap {
+  font-size: 26px;
+  line-height: 1.3;
+  color: var(--white);
+}
+.comp .arrow {
+  font-size: 44px;
+  color: var(--teal);
+  margin-top: 150px;
+}
+.comp .legend {
+  display: flex;
+  gap: 40px;
+  margin-top: 20px;
+}
+.comp .lg {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  letter-spacing: 1px;
+  color: var(--grey);
+}
+.comp .sw {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+}
+.comp .so { background: #19c3c0; }
+.comp .sl { background: #3a4651; }
+.comp .sk { background: #1e2a33; border: 3px solid #f4f5f2; box-sizing: border-box; }
+.comp .sw { border-radius: 5px; width: 40px; }
+.comp .se { border: 2px dashed #39434c; box-sizing: border-box; }
+.comp .panel { animation: rise 600ms both cubic-bezier(0.2, 0.7, 0.2, 1); }
+.comp .panel:nth-child(1) { animation-delay: 200ms; }
+.comp .panel:nth-child(3) { animation-delay: 500ms; }
+.comp .panel:nth-child(5) { animation-delay: 800ms; }
+.comp .arrow { animation: fadein 400ms 1000ms ease-out both; }
+
+/* Signals slide */
+.sig {
+  padding: 128px 128px 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.sig .headline {
+  font-size: 60px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+}
+.sig .thead {
+  display: grid;
+  grid-template-columns: 560px 520px 1fr;
+  gap: 32px;
+  padding: 0 24px;
+  margin-top: 24px;
+}
+.sig .thead p {
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--grey);
+}
+.sig .rows {
+  display: flex;
+  flex-direction: column;
+}
+.sig .row {
+  display: grid;
+  grid-template-columns: 560px 520px 1fr;
+  gap: 32px;
+  align-items: center;
+  padding: 22px 24px;
+  border-top: 2px solid #232b31;
+}
+.sig .stage {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.sig .dots {
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: #3a4651;
+  white-space: nowrap;
+  min-width: 112px;
+}
+.sig .dots .on {
+  color: var(--teal);
+}
+.sig .st {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--white);
+}
+.sig .means {
+  font-size: 28px;
+  line-height: 1.3;
+  color: var(--grey);
+}
+.sig .act {
+  font-size: 28px;
+  line-height: 1.3;
+  color: var(--white);
+}
+.sig .key {
+  background: rgba(255,138,61,0.10);
+  border-top: 2px solid var(--orange);
+  border-radius: 0 0 12px 12px;
+}
+.sig .key .dots .on {
+  color: var(--orange);
+}
+.sig .key .means {
+  color: var(--orange);
+}
+.sig .row { animation: slidein 500ms both ease-out; }
+.sig .row:nth-child(1) { animation-delay: 200ms; }
+.sig .row:nth-child(2) { animation-delay: 320ms; }
+.sig .row:nth-child(3) { animation-delay: 440ms; }
+.sig .row:nth-child(4) { animation-delay: 600ms; }
+
+/* Goal 3 slide */
+.g3 {
+  padding: 128px 128px 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.g3 .headline {
+  width: 1500px;
+  font-size: 60px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+}
+.g3 .body {
+  display: flex;
+  justify-content: space-between;
+  gap: 80px;
+  margin-top: 32px;
+}
+.g3 .chart {
+  width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.g3 .clabel, .g3 .hlabel {
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--grey);
+}
+.g3 .brow {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.g3 .bname {
+  width: 170px;
+  flex-shrink: 0;
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--white);
+}
+.g3 .track {
+  width: 520px;
+  flex-shrink: 0;
+  height: 64px;
+  display: flex;
+}
+.g3 .bar {
+  height: 64px;
+  border-radius: 0 8px 8px 0;
+}
+.g3 .bar.hel {
+  width: 520px;
+  background: var(--orange);
+}
+.g3 .bar.fin {
+  width: 291px;
+  background: #5b6873;
+}
+.g3 .bval {
+  font-size: 48px;
+  font-weight: 600;
+  letter-spacing: -2px;
+  color: var(--white);
+  white-space: nowrap;
+}
+.g3 .bval.orange {
+  color: var(--orange);
+}
+.g3 .note {
+  font-size: 26px;
+  color: var(--grey);
+}
+.g3 .how {
+  width: 680px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.g3 .hp {
+  display: flex;
+  gap: 20px;
+  padding-top: 16px;
+  border-top: 2px solid #232b31;
+}
+.g3 .hn {
+  font-size: 24px;
+  color: var(--teal);
+  min-width: 36px;
+}
+.g3 .hv {
+  font-size: 30px;
+  line-height: 1.3;
+  color: var(--white);
+}
+.g3 .pilot {
+  margin-top: 28px;
+  padding: 20px 28px;
+  border-left: 4px solid var(--teal);
+  background: rgba(25,195,192,0.08);
+  font-size: 30px;
+  line-height: 1.3;
+  color: var(--white);
+}
+.g3 .pk {
+  color: var(--teal);
+  font-size: 24px;
+  letter-spacing: 2px;
+}
+.g3 .chart { animation: rise 600ms 150ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.g3 .how { animation: rise 600ms 400ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.g3 .pilot { animation: fadein 500ms 800ms ease-out both; }
+
+/* Goal 3 slide, survival version */
+.g3b {
+  padding: 128px 128px 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.g3b .headline {
+  width: 1600px;
+  font-size: 60px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+}
+.g3b .body {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 72px;
+  margin-top: 36px;
+}
+.g3b .cmp {
+  width: 1040px;
+  display: flex;
+  flex-direction: column;
+}
+.g3b .chead, .g3b .crow {
+  display: grid;
+  grid-template-columns: 360px 380px 300px;
+  align-items: center;
+}
+.g3b .chead p {
+  font-size: 24px;
+  letter-spacing: 2px;
+  padding-bottom: 14px;
+}
+.g3b .crow {
+  padding: 18px 0;
+  border-top: 2px solid #232b31;
+}
+.g3b .cl {
+  font-size: 32px;
+  color: var(--white);
+}
+.g3b .cv {
+  font-size: 96px;
+  font-weight: 600;
+  letter-spacing: -4px;
+  line-height: 1;
+}
+.g3b .teal { color: var(--teal); }
+.g3b .orange { color: var(--orange); }
+.g3b .cnote {
+  margin-top: 14px;
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--grey);
+}
+.g3b .fi {
+  width: 552px;
+  box-sizing: border-box;
+  padding: 30px 34px;
+  border: 2px solid #2a3239;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.g3b .fl {
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--grey);
+}
+.g3b .fn {
+  font-size: 96px;
+  font-weight: 600;
+  letter-spacing: -4px;
+  line-height: 1;
+  color: var(--white);
+}
+.g3b .ft {
+  font-size: 28px;
+  line-height: 1.3;
+  color: var(--grey);
+}
+.g3b .job {
+  margin-top: 28px;
+  padding: 20px 28px;
+  border-left: 4px solid var(--teal);
+  background: rgba(25,195,192,0.08);
+  font-size: 32px;
+  line-height: 1.3;
+  color: var(--white);
+}
+.g3b .jk {
+  color: var(--teal);
+  font-size: 24px;
+  letter-spacing: 2px;
+}
+.g3b .cmp { animation: rise 600ms 150ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.g3b .fi { animation: rise 600ms 400ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.g3b .job { animation: fadein 500ms 800ms ease-out both; }
+
+/* Ask slide */
+.ask {
+  padding: 128px 128px 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.ask .headline {
+  font-size: 72px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -3px;
+}
+.ask .cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 32px;
+  margin-top: 32px;
+}
+.ask .col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 28px 30px 32px;
+  border: 2px solid #232b31;
+  border-radius: 14px;
+  background: #10161b;
+}
+.ask .col.ready {
+  border-color: var(--teal);
+}
+.ask .ch {
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--teal);
+}
+.ask .it {
+  font-size: 30px;
+  line-height: 1.3;
+  color: var(--white);
+}
+.ask .it.link {
+  font-family: 'Geist Mono', 'Courier New', monospace;
+  font-size: 28px;
+  color: var(--teal);
+}
+.ask .honest {
+  font-size: 24px;
+  line-height: 1.4;
+  color: var(--grey);
+  margin-top: 8px;
+}
+.ask .sign {
+  position: absolute;
+  left: 128px;
+  bottom: 64px;
+  width: 1664px;
+  display: flex;
+  align-items: baseline;
+  gap: 28px;
+  padding-top: 24px;
+  border-top: 2px solid #232b31;
+}
+.ask .wm {
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 48px;
+  font-weight: 600;
+  letter-spacing: -2px;
+  color: var(--white);
+}
+.ask .dot {
+  color: var(--teal);
+}
+.ask .tl {
+  font-size: 30px;
+  color: var(--grey);
+}
+.ask .col { animation: rise 600ms both cubic-bezier(0.2, 0.7, 0.2, 1); }
+.ask .col:nth-child(1) { animation-delay: 150ms; }
+.ask .col:nth-child(2) { animation-delay: 300ms; }
+.ask .col:nth-child(3) { animation-delay: 450ms; }
+.ask .sign { animation: fadein 600ms 900ms ease-out both; }
+
+@keyframes drift {
+  from { transform: scale(1.1); }
+  to { transform: scale(1); }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes lockon {
+  from { opacity: 0; transform: scale(1.12); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes slidein {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.cover .photo { animation: drift 7s cubic-bezier(0.2, 0.6, 0.2, 1) both; }
+.cover .wordmark { animation: rise 800ms 150ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.cover .tagline { animation: rise 700ms 400ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.cover .hud { animation: lockon 600ms 800ms cubic-bezier(0.3, 0.8, 0.3, 1) both; }
+.cover .readout { animation: slidein 500ms 1100ms ease-out both; }
+.cover .meta { animation: fadein 600ms 900ms ease-out both; }
+
+</style></head><body>
+<section id="cover" class="cover">
+<img class="photo" src="assets/robot-cover.jpg" alt="An S-kaupat delivery robot at ground level on a Finnish street">
+<div class="shade-top"></div>
+<div class="shade-bottom"></div>
+<svg class="hud" viewBox="0 0 1920 1080" width="1920" height="1080" aria-label="Targeting brackets locked on the robot, with a line to its status readout"><g fill="none" stroke="#19c3c0" stroke-width="5" stroke-linecap="square"><path d="M230 540 V480 H290"/><path d="M1030 480 H1090 V540"/><path d="M230 900 V960 H290"/><path d="M1090 900 V960 H1030"/></g><path d="M1090 600 H1150" stroke="#19c3c0" stroke-width="3"/><circle cx="1090" cy="600" r="7" fill="#19c3c0"/></svg>
+<h1 class="wordmark">farmagusta<span class="dot">.</span></h1>
+<p class="tagline">The robot fleet for sample delivery.</p>
+<div class="readout mono">
+<p class="status">● FG-07 · EN ROUTE TO LAB</p>
+<p>PAYLOAD <span class="val">FIT SAMPLE ×1</span></p>
+<p>PICKUP <span class="val">#4821 · DOOR</span></p>
+<p>ETA LAB <span class="val">00:14:32</span></p>
+</div>
+<div class="meta mono">
+<p>JUNCTION 2026 · HELSINKI</p>
+</div>
+<aside>Hi, we’re farmagusta: the robot fleet for sample delivery. Robots like this one already deliver groceries for S-kaupat across Helsinki. We put them to work collecting bowel screening samples from people’s doors.</aside>
+</section>
+
+<section id="gap" class="gap">
+<p class="eyebrow mono">THE GAP · HELSINKI · BOWEL CANCER SCREENING</p>
+<div class="top">
+<div class="claim">
+<p class="big">30.3%</p>
+<p class="statement">of people invited to bowel cancer screening in Helsinki never returned the test.</p>
+<p class="sub">12,432 people in 2023. Still 30.4% in 2024.</p>
+</div>
+</div>
+<div class="pipe">
+<p class="total mono">41,047 INVITED · HELSINKI 2023</p>
+<div class="bar"><div class="seg-in"></div><div class="seg-out"></div></div>
+<div class="labels mono">
+<p class="lab-in">28,615 RETURNED THE TEST → ENTER THE SCREENING PATHWAY</p>
+<p class="lab-out">12,432 NEVER RETURNED → NEVER ENTER IT</p>
+</div>
+</div>
+<p class="source mono">Source: Finnish Cancer Registry, colorectal cancer screening statistics, <a href="https://stats.cancerregistry.fi/joukkistilastot/suolisto.html">stats.cancerregistry.fi/joukkistilastot/suolisto.html</a>. Helsingin kaupunki 2023–2024. Retrieved 13.11.2026.</p>
+<aside>In 2023, Helsinki invited 41,047 people to bowel cancer screening. 12,432 of them, 30.3%, never sent the test back. In 2024 it was the same: 30.4%. These people never enter the pathway at all: no result, no colonoscopy, no early treatment. All figures are from the Finnish Cancer Registry’s screening statistics.</aside>
+</section>
+
+<section id="goal3" class="g3b">
+<p class="eyebrow mono">GOAL 3 · EQUAL AND EFFECTIVE CANCER CARE</p>
+<h2 class="headline">Goal 3 is survival. Survival starts with returning the test.</h2>
+<div class="body">
+<div class="cmp">
+<div class="chead mono"><p></p><p class="teal">FOUND BY SCREENING</p><p class="orange">DIDN’T TAKE PART</p></div>
+<div class="crow"><p class="cl">Caught at stage I–II</p><p class="cv teal">67%</p><p class="cv orange">40%</p></div>
+<div class="crow"><p class="cl">Alive after 5 years</p><p class="cv teal">94%</p><p class="cv orange">62%</p></div>
+<p class="cnote mono">FIT SCREENING PROGRAMME, FLANDERS [2]</p>
+</div>
+<div class="fi">
+<p class="fl mono">IN FINLAND [1]</p>
+<p class="fn">1 in 5</p>
+<p class="ft">bowel cancers among people invited in 2022 were in someone who never returned the test (259 of 1,241).</p>
+</div>
+</div>
+<p class="job"><span class="jk mono">OUR JOB</span> Move people from the orange column to the teal one, starting with those the letter misses.</p>
+<p class="source mono">[1] Finnish Cancer Registry, colorectal screening statistics: cancers by route, people eligible in 2022. [2] Tran et al. 2023, Int J Environ Res Public Health 20(2):1654. Survival comparisons include lead-time bias.</p>
+<aside>The challenge asks us to cover Goal 3 of the national cancer strategy: equal and effective cancer care, measured by survival and cancer deaths. Here is the link. In Finland, one in five bowel cancers among people invited to screening in 2022 was in someone who never returned the test: 259 of 1,241, from the Cancer Registry. And where a cancer is found matters. In the Flanders FIT screening programme, cancers found by screening were caught at stage one or two 67% of the time, against 40% in people who didn’t take part, and five-year survival was 94% against 62%. Part of that survival gap is lead time, because screening finds cancers earlier, but the stage difference is real. So every non-returner we bring into the pathway is a chance to move a cancer from the orange column to the teal one, and because the gap is widest for people with another mother tongue, this is also the equal part of Goal 3.</aside>
+</section>
+
+<section id="language" class="lang">
+<p class="eyebrow mono">THE GAP IS WIDEST BY LANGUAGE · FINLAND 2024</p>
+<h2 class="headline">Foreign-language speakers skip bowel screening almost twice as often.</h2>
+<div class="chart">
+<p class="colhead mono">NEVER RETURNED</p>
+<div class="row">
+<p class="rowlabel mono">FINNISH, SWEDISH OR SAMI MOTHER TONGUE · 74.5% RETURNED</p>
+<div class="rowbody">
+<div class="bar"><div class="seg-in" style="flex:745"></div><div class="seg-out" style="flex:255"></div></div>
+<p class="val">25.5%</p>
+</div>
+</div>
+<div class="row">
+<p class="rowlabel mono">OTHER OR MISSING MOTHER TONGUE · 53.4% RETURNED</p>
+<div class="rowbody">
+<div class="bar"><div class="seg-in" style="flex:534"></div><div class="seg-out" style="flex:466"></div></div>
+<p class="val accent">46.6%</p>
+</div>
+</div>
+</div>
+<p class="kicker">Nearly <span class="accent">1 in 2</span> never enter the pathway at all.</p>
+<p class="source mono">Source: Finnish Cancer Registry, colorectal cancer screening statistics 2024, participation by mother tongue, whole country: 299,347 of 401,645 (Finnish, Swedish or Sami) and 10,524 of 19,720 (other or missing). <a href="https://stats.cancerregistry.fi/joukkistilastot/suolisto.html">stats.cancerregistry.fi/joukkistilastot/suolisto.html</a>, retrieved 13.11.2026.</p>
+<aside>The gap is widest by language. In 2024, 74.5% of people whose mother tongue is Finnish, Swedish or Sami returned the bowel screening test. For people with another or missing mother tongue it was 53.4%. Put the other way round: 46.6% never returned it, against 25.5%, so they are almost twice as likely to skip screening entirely. By birthplace the gap is even larger: only 40.5% of invited people born in Africa returned the test. This is an association in the Registry’s figures; it does not prove language is the cause. Same source as before: the Finnish Cancer Registry.</aside>
+</section>
+
+<section id="reasons" class="reasons">
+<p class="eyebrow mono">WHY PEOPLE SKIP → WHAT FARMAGUSTA DOES</p>
+<h2 class="headline">Four reasons people skip. One fix for each.</h2>
+<div class="rows">
+<div class="row">
+<p class="n mono">01</p>
+<div class="why"><p class="stmt">The letter is hard to understand.</p><p class="ev mono">Kit leaflet only in Finnish, Swedish, English [1]</p></div>
+<p class="arrow">→</p>
+<p class="fix">Instructions in the preferred language.</p>
+</div>
+<div class="row">
+<p class="n mono">02</p>
+<div class="why"><p class="stmt">They don’t see why it matters.</p><p class="ev mono">32.9% of non-users called it unnecessary [2]</p></div>
+<p class="arrow">→</p>
+<p class="fix">Explains why, and answers questions.</p>
+</div>
+<div class="row">
+<p class="n mono">03</p>
+<div class="why"><p class="stmt">They mean to do it, then forget.</p><p class="ev mono">SMS reminder RCT: 53.7% → 64.2% returned [3]</p></div>
+<p class="arrow">→</p>
+<p class="fix">Reminders and one clear next step.</p>
+</div>
+<div class="row key">
+<p class="n mono">04</p>
+<div class="why"><p class="stmt">Returning a stool sample is gross, and hard if you can’t get out.</p><p class="ev mono">59.6% of non-users list disgust as one reason [2]<br>Disability: OR 0.72 for doing a stool test [4]</p></div>
+<p class="arrow">→</p>
+<p class="fix">A robot picks it up from your door. You never leave home.</p>
+</div>
+</div>
+<p class="source mono">[1] HUS, instructions for collecting and returning the sample · [2] Gordon &amp; Green 2015, BMC Public Health · [3] Vives et al. 2024, JMIR Public Health Surveill · [4] Ricciardi et al. 2024, Current Oncology</p>
+<aside>Research points to four reasons people skip. One: the letter is hard to understand. The HUS kit leaflet is in Finnish, Swedish and English only, and we saw the language gap on the last slide. Two: people don’t see why it matters. In a US survey, a third of non-users thought the test was unnecessary. Three: people mean to do it and forget. In a randomised trial in Catalonia, one SMS reminder lifted kit return from 53.7% to 64.2% at 30 days. Four: returning a stool sample is gross and embarrassing. In the same survey, 59.6% of non-users named discomfort, disgust or embarrassment among their reasons, the most common one but not the only one, and for people with disabilities it is harder still: their odds of doing a stool test are 28% lower. Today you post it or take it to a HUS lab by the next working day. farmagusta answers each one: instructions in the person’s preferred language, nine today, plain explanations and answers, reminders with one clear next step, and most importantly, a robot that collects the sample from your door. Sources: Finnish Cancer Registry 2024; HUS sampling and return instructions (hus.fi); Gordon and Green 2015, BMC Public Health, doi 10.1186/s12889-015-1908-x; Vives et al. 2024, JMIR Public Health Surveill, doi 10.2196/57959; Ricciardi et al. 2024, Current Oncology 31(11):7023–7039.</aside>
+</section>
+
+<section id="app" class="app">
+<div class="paper"><img src="assets/invitation-qr.png" alt="Section of the farmagusta invitation letter: step 2 says to scan the QR code, choose your language and review the instructions; below it the QR code and sample ID"></div>
+<div class="ring"></div>
+<svg class="scanline-svg" viewBox="0 0 1920 1080" width="1920" height="1080" style="position:absolute;left:0;top:0;pointer-events:none" aria-hidden="true"><path d="M895 685 V790 H1350" fill="none" stroke="#19c3c0" stroke-width="3" stroke-dasharray="10 8"/><path d="M1340 780 L1360 790 L1340 800" fill="none" stroke="#19c3c0" stroke-width="3"/></svg>
+<p class="scan mono">SCAN</p>
+<p class="paperlabel mono">THE INVITATION LETTER</p>
+<div class="phone"><img src="assets/app-language-phone.png" alt="farmagusta phone app, first screen: you are invited to bowel cancer screening, choose your language from nine options"></div>
+<div class="text">
+<p class="eyebrow mono">THE PRODUCT</p>
+<h2 class="headline">A QR code on the letter opens the app.</h2>
+<div class="steps">
+<div class="step"><p class="sn mono">01</p><p class="st">Scan the QR code on the invitation letter.</p></div>
+<div class="step"><p class="sn mono">02</p><p class="st">Pick your language: 9 to choose from.</p></div>
+<div class="step"><p class="sn mono">03</p><p class="st">Follow the steps, then book a robot pickup.</p></div>
+</div>
+</div>
+<aside>The invitation still arrives by post, but now it carries a QR code. Scan it with your phone camera and farmagusta opens on your own invitation. The first thing it asks is your language: nine to choose from, including Arabic, Somali, Ukrainian and Persian. From there it walks you through the test step by step, answers questions about the kit, and lets you book a robot to collect the sample.</aside>
+</section>
+
+<section id="flow" class="flow">
+<h2 class="headline">From letter to doorstep in four steps.</h2>
+<div class="cols">
+<div class="col">
+<div class="frame"><img src="assets/app-language.png" alt="App screen: you are invited to bowel cancer screening, choose your language from nine options"></div>
+<div class="label"><p class="num mono">01</p><p class="title">Pick a language</p><p class="sub">9 languages, right to left for Arabic and Persian</p></div>
+</div>
+<div class="col">
+<div class="frame"><img src="assets/app-step2.png" alt="App screen: step 2 of 10, pass stool onto something clean, with an illustration"></div>
+<div class="label"><p class="num mono">02</p><p class="title">Take the sample</p><p class="sub">10 illustrated steps, following the HUS kit leaflet</p></div>
+</div>
+<div class="col">
+<div class="frame"><img src="assets/app-pickup-pin.png" alt="App screen: where should the robot come? A map with a pin at the door and a Book the pickup here button"></div>
+<div class="label"><p class="num mono">03</p><p class="title">Book a robot</p><p class="sub">Choose an hour and drop a pin at your door</p></div>
+</div>
+<div class="col">
+<div class="frame"><img src="assets/app-tracking.png" alt="App screen: the robot is on its way, arriving in about 16 seconds, its route drawn on a map"></div>
+<div class="label"><p class="num mono">04</p><p class="title key">Hand it over</p><p class="sub">Track it live, hand over the sample at your door</p></div>
+</div>
+</div>
+<p class="arr a1">→</p>
+<p class="arr a2">→</p>
+<p class="arr a3">→</p>
+<aside>Here is the whole journey. One: pick your language, nine today, with Arabic and Persian shown right to left. Two: take the sample, with ten illustrated steps that follow the HUS kit leaflet in order. Three: book a robot pickup, as soon as possible or within a one-hour window, and drop a pin where the robot can reach your door. Four: watch the robot arrive on the map and hand over the sample at your door. No post box, no trip to the lab. In the demo the robot, the lab and the bookings are simulated.</aside>
+</section>
+
+<section id="privacy" class="privacy">
+<img class="photo" src="assets/robot-kerb.jpg" alt="An S-kaupat grocery delivery robot waiting at the kerb on an ordinary Helsinki street">
+<p class="chip mono">WHAT THE NEIGHBOURS SEE: GROCERIES</p>
+<div class="panel">
+<p class="eyebrow mono">PRIVACY BY DESIGN</p>
+<h2 class="headline">It looks like a grocery delivery. Because it’s the same robot.</h2>
+<div class="pts">
+<div class="pp"><p class="pk mono">01</p><p class="pv">Already an everyday sight: <b>1,000,000+</b> grocery robot deliveries in Finland. [1]</p></div>
+<div class="pp"><p class="pk mono">02</p><p class="pv">No courier at the door, no medical markings on the robot.</p></div>
+<div class="pp"><p class="pk mono">03</p><p class="pv">The lid opens only with your phone. The system sees a pickup code, not your name.</p></div>
+</div>
+<p class="callback mono">REASON 04 · EMBARRASSMENT → HANDLED</p>
+</div>
+<p class="source mono">[1] Starship Technologies, 10.12.2025: S-kaupat robots completed one million orders in Finland; 650+ robots in about 80 towns. Photo: CC0, Wikimedia Commons.</p>
+<aside>Remember reason four: returning a stool sample is embarrassing. Our answer is that nobody can tell. The robot that comes to your door is the same kind of robot that already brings groceries: S-kaupat robots have made over a million deliveries in Finland, so your neighbours see a grocery delivery. There is no courier to face and nothing on the robot that says medical. The lid opens only with your phone, and in our system the robot’s destination is a pickup code, not your name.</aside>
+</section>
+
+<section id="stack" class="stack">
+<p class="eyebrow mono">THE STACK · HOW A PICKUP RUNS</p>
+<h2 class="headline">We don’t build robots. Starship already runs them.</h2>
+<div class="groups mono">
+<p class="g gours">FARMAGUSTA</p>
+<p class="g gship">STARSHIP</p>
+<p class="g glab">LAB</p>
+</div>
+<div class="pipe">
+<div class="card ours"><p class="ck mono">APP</p><p class="cv">The patient books a pickup time.</p></div>
+<p class="ar">→</p>
+<div class="card ours"><p class="ck mono">BACKEND</p><p class="cv">AI route planning batches nearby pickups into one run.</p></div>
+<p class="ar">→</p>
+<div class="card ship"><p class="ck mono">STARSHIP API</p><p class="cv">Creates jobs, loads robots, streams live status.</p></div>
+<p class="ar">→</p>
+<div class="card ship"><p class="ck mono">ROBOT</p><p class="cv">Drives itself to the door. Only the patient’s phone opens it.</p></div>
+<p class="ar">→</p>
+<div class="card lab"><p class="ck mono">LAB HUB</p><p class="cv">The sample is scanned in and registered.</p></div>
+</div>
+<div class="stats">
+<div class="st"><p class="sv">3,000+</p><p class="sl">Starship robots worldwide</p></div>
+<div class="st"><p class="sv">10M+</p><p class="sl">deliveries completed</p></div>
+<div class="st"><p class="sv">650+</p><p class="sl">robots in Finland, ~80 towns</p></div>
+<div class="st"><p class="sv">18 h</p><p class="sl">per charge, in all weathers</p></div>
+</div>
+<p class="source mono">Starship Technologies: delivery-apps partner API (create jobs, load robots, status updates, cancellations); our-robots page; press release 10.12.2025. The clinical integration and per-sample compartments are our proposal, to be validated with Starship.</p>
+<aside>We don’t build robots. Starship already runs more than 3,000 of them, with over 10 million deliveries, and more than 650 in Finland alone through S-kaupat. Here is how a pickup runs. The patient books a time in our app. Our backend batches nearby pickups into one run with AI route planning. It sends the jobs to Starship’s partner API, which creates delivery jobs, loads robots and streams live status back to the nurse dashboard. The robot drives itself to the door, operating autonomously with a human able to help remotely, and only the patient’s phone opens the lid. Then it returns to the lab hub, where the sample is scanned in and registered. Starship publishes this API for partners; the clinical integration and separate sample compartments are our proposal to build with them.</aside>
+</section>
+
+<section id="compartments" class="comp">
+<p class="eyebrow mono">PRIVACY INSIDE THE ROBOT</p>
+<h2 class="headline">Every sample gets its own locked compartment.</h2>
+<p class="sub">Return packages lie flat in slim slots. Each opens once, locks itself, and only the lab opens it again.</p>
+<div class="panels">
+<div class="panel">
+<p class="plabel mono">STOP 1 · PATIENT A</p>
+<div class="grid">
+<div class="c o"><p class="cl mono">A</p></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div>
+</div>
+<p class="cap">A’s phone opens compartment A. Sample in, lid shut, it locks.</p>
+</div>
+<p class="arrow">→</p>
+<div class="panel">
+<p class="plabel mono">STOP 2 · PATIENT B</p>
+<div class="grid">
+<div class="c l"><p class="cl mono">A</p></div><div class="c o"><p class="cl mono">B</p></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div>
+</div>
+<p class="cap">B’s phone opens only B. A stays locked: B can’t reach it.</p>
+</div>
+<p class="arrow">→</p>
+<div class="panel">
+<p class="plabel mono lab">LAB HUB</p>
+<div class="grid">
+<div class="c k"><p class="cl mono">A</p></div><div class="c k"><p class="cl mono">B</p></div><div class="c k"><p class="cl mono">C</p></div><div class="c k"><p class="cl mono">D</p></div><div class="c k"><p class="cl mono">E</p></div><div class="c k"><p class="cl mono">F</p></div><div class="c k"><p class="cl mono">G</p></div><div class="c k"><p class="cl mono">H</p></div><div class="c k"><p class="cl mono">I</p></div><div class="c k"><p class="cl mono">J</p></div><div class="c k"><p class="cl mono">K</p></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div><div class="c e"></div>
+</div>
+<p class="cap">Only the lab’s key opens filled compartments. Every opening is logged.</p>
+</div>
+</div>
+<div class="legend mono">
+<p class="lg"><span class="sw so"></span>OPEN FOR ITS PATIENT</p>
+<p class="lg"><span class="sw sl"></span>LOCKED</p>
+<p class="lg"><span class="sw sk"></span>LAB ACCESS ONLY</p>
+<p class="lg"><span class="sw se"></span>EMPTY</p>
+</div>
+<p class="source mono">Proposed design: a custom compartment insert for Starship’s locked cargo bay, built and validated with Starship. The demo simulates the compartments.</p>
+<aside>Return packages lie flat in slim slots, so one robot can carry them from a whole neighbourhood. One robot collects from many homes in one run, so we have to make sure the next patient can never reach the previous patient’s sample. Every pickup gets its own compartment. At the first stop, patient A’s phone opens compartment A. They put the sample in, close the lid, and it locks automatically. At the next stop, patient B’s phone opens only compartment B; A stays locked and B cannot reach it. Patients can never reopen a compartment, not even their own. Only the lab’s key opens the filled compartments, and every opening is logged, so the chain of custody runs from the door to the lab. This is a proposed insert for Starship’s cargo bay that we would build and validate with Starship; in the demo, the compartments are simulated.</aside>
+</section>
+
+<section id="fleet" class="fleet">
+<p class="eyebrow mono">THE BACKEND · NURSE DASHBOARD</p>
+<h2 class="headline">One screen runs the fleet and tracks every patient.</h2>
+<div class="points">
+<div class="pt"><p class="pn mono">AI ROUTE PLANNING</p><p class="pb">AI plans the fastest route for every robot using proven search algorithms: the same answer every time.</p></div>
+<div class="pt"><p class="pn mono">ADAPTS LIVE</p><p class="pb">New bookings are added to a robot’s route on the fly. One robot sweeps a whole neighbourhood in one run.</p></div>
+<div class="pt"><p class="pn mono">TRACKING</p><p class="pb">Logs every step: app opened, sample taken, picked up, at lab, result.</p></div>
+<div class="pt"><p class="pn mono alert">FLAGS</p><p class="pb">Flags patients who fall behind: no sample, robot waiting, positive without colonoscopy.</p></div>
+</div>
+<div class="shot"><img src="assets/nurse-dashboard.png" alt="farmagusta nurse dashboard: patient list with statuses on the left, live map of robot routes between six hubs in Helsinki, Espoo and Vantaa on the right"></div>
+<p class="tag t1 mono">PATIENT STATUS</p>
+<p class="tag t2 mono">LIVE FLEET · 30 ROBOTS · 6 HUBS</p>
+<p class="source mono">Route planning: shortest-path search of the A* family (Hart, Nilsson &amp; Raphael 1968). Flag thresholds are our assumptions. Demo data and fleet are simulated.</p>
+<aside>Behind the app is one dashboard. On the right, the fleet: 30 robots across six hubs in Helsinki, Espoo and Vantaa. AI plans every robot’s route with proven shortest-path search, the A* family of algorithms used in navigation, so the plan is predictable: the same input always gives the same route. When someone books a pickup, it is added to a nearby robot’s route on the fly. A sample tube is tiny, so one robot can sweep a whole neighbourhood in one run. On the left, every patient: the dashboard logs each step automatically, from opening the app to the result, and flags the patients who fall behind: no sample after 14 days, a robot waiting at the door, or a positive result with no colonoscopy booked. The thresholds are our assumptions, and the data and fleet in the demo are simulated.</aside>
+</section>
+
+<section id="signals" class="sig">
+<p class="eyebrow mono">REAL-TIME PATIENT STATE</p>
+<h2 class="headline">Every step is logged, so even silence tells us something.</h2>
+<div class="thead mono">
+<p>WHERE THEY STOPPED</p>
+<p>WHAT IT TELLS US</p>
+<p>WHAT HAPPENS</p>
+</div>
+<div class="rows">
+<div class="row">
+<div class="stage"><p class="dots mono"><span class="on">●</span>○○○</p><p class="st">Letter sent, app never opened</p></div>
+<p class="means">The invitation didn’t land: language, attention or no smartphone.</p>
+<p class="act">Reminder, then a nurse call with an interpreter.</p>
+</div>
+<div class="row">
+<div class="stage"><p class="dots mono"><span class="on">●●</span>○○</p><p class="st">App opened, no sample</p></div>
+<p class="means">They know what to do, but hesitate or forget.</p>
+<p class="act">A reminder with one clear next step.</p>
+</div>
+<div class="row">
+<div class="stage"><p class="dots mono"><span class="on">●●●</span>○</p><p class="st">Sample taken, not handed over</p></div>
+<p class="means">The return is the problem, not the will.</p>
+<p class="act">The nurse sees the robot waiting and rebooks it.</p>
+</div>
+<div class="row key">
+<div class="stage"><p class="dots mono"><span class="on">●●●●</span></p><p class="st">Positive, no colonoscopy</p></div>
+<p class="means">A delay in care: Goal 3 of the cancer strategy.</p>
+<p class="act">Flagged after 7 days, the nurse books it.</p>
+</div>
+</div>
+<p class="source mono">Stages as logged by the farmagusta prototype. Flag thresholds (14 days without a sample, 7 days without a colonoscopy) are our assumptions, not clinical deadlines.</p>
+<aside>Because the app logs every step, the nurse sees not just who is missing, but where they stopped, and each place means something different. If someone never opened the app, the invitation didn’t land: maybe the language, maybe they never noticed it, maybe no smartphone. They get a reminder, then a nurse call with an interpreter. If they opened the app but took no sample, they know what to do but hesitate or forget, so a reminder with one clear next step. If they took the sample but didn’t hand it over, the return is the problem, not the will: the nurse sees the robot waiting and rebooks it. And if the result is positive but no colonoscopy is booked, that is a delay in care, Goal 3 of the national cancer strategy: after seven days it is flagged and the nurse books it. Today, all of these people look the same: no sample came back.</aside>
+</section>
+
+<section id="savings" class="savings">
+<p class="eyebrow mono">THE SAVINGS · CAPITAL REGION</p>
+<div class="body">
+<div class="claim">
+<p class="big">€240,000</p>
+<p class="statement">a year in prepaid return mail, gone. In the capital region alone.</p>
+<div class="checks">
+<p class="check"><span class="ck mono">✓</span> Still ≈ €218,000 at today’s ~70% return rate.</p>
+<p class="check"><span class="ck mono">✓</span> Real Posti contract prices, real population data.</p>
+<p class="check"><span class="ck mono">✓</span> Scales to every city with delivery robots.</p>
+</div>
+</div>
+<div class="ledger mono">
+<div class="lr"><p class="lv">235,677</p><p class="ll">people aged 56–74 in Helsinki, Espoo, Vantaa and Kauniainen</p></div>
+<div class="lr"><p class="lv">÷ 2</p><p class="ll">invited every two years → 117,839 kits a year</p></div>
+<div class="lr"><p class="lv">× 80%</p><p class="ll">returned, the national target → 94,271 samples</p></div>
+<div class="lr"><p class="lv">× €2.07</p><p class="ll">Posti business-reply postage per sample → €195,141</p></div>
+<div class="lr"><p class="lv">+ €0.40</p><p class="ll">prepaid return envelope in every kit → €47,136</p></div>
+<div class="lr total"><p class="lv">= €242,277</p><p class="ll">a year, shown as €240,000</p></div>
+</div>
+</div>
+<p class="source mono">Statistics Finland, population by age 31.12.2025 (table 11re) · Posti contract price list from 1.10.2026, business reply €2.07 (VAT 0) · National Cancer Strategy 2026–2035, 80% participation goal · Envelope cost €0.40 is our estimate. Gross saving, before robot running costs.</p>
+<aside>Here is the money. In Helsinki, Espoo, Vantaa and Kauniainen there are 235,677 people aged 56 to 74. They are invited every two years, so about 118,000 kits go out each year. At the national target of 80%, about 94,000 samples come back, each in a Posti business-reply envelope at €2.07, plus a prepaid cardboard return envelope in every kit, which we estimate at 40 cents. That is about €242,000 a year, which we round to €240,000. Even at today’s return rate of about 70%, it is still around €218,000. The population figures are from Statistics Finland and the postage is Posti’s current contract price. This is the gross mailing cost avoided: the kit still goes out by post, and the robots have running costs we will price in the pilot.</aside>
+</section>
+
+<section id="ask" class="ask">
+<p class="eyebrow mono">THE ASK</p>
+<h2 class="headline">Let’s pilot it in one Helsinki district.</h2>
+<div class="cols">
+<div class="col">
+<p class="ch mono">WE ASK FOR</p>
+<p class="it">One district for one screening round, next to the usual letter.</p>
+<p class="it">Starship as robot partner, through its partner API.</p>
+</div>
+<div class="col">
+<p class="ch mono">WE MEASURE</p>
+<p class="it">Test-return rate against the usual letter, by mother tongue.</p>
+<p class="it">Where people stop, step by step.</p>
+<p class="it">Cost per pickup against €2.07 postage.</p>
+</div>
+<div class="col ready">
+<p class="ch mono">READY TODAY</p>
+<p class="it">The app in 9 languages.</p>
+<p class="it">The nurse dashboard with the live fleet.</p>
+<p class="it link">farmagusta.vercel.app</p>
+</div>
+</div>
+<p class="honest mono">Simulated today: the robots, the lab and the bookings. The people in the demo are invented. The post stays for anyone without a smartphone.</p>
+<div class="sign">
+<p class="wm">farmagusta<span class="dot">.</span></p>
+<p class="tl">The robot fleet for sample delivery.</p>
+</div>
+<aside>Here is what we ask. Give us one Helsinki district for one screening round, running next to the usual letter, with Starship as our robot partner through its partner API. We will measure three things: the test-return rate against the usual letter, split by mother tongue; where people stop, step by step; and the real cost of a robot pickup against the €2.07 postage it replaces. The app and the nurse dashboard work today; you can try them at farmagusta.vercel.app. The robots, the lab and the bookings are simulated, and the people in the demo are invented. Nobody loses the post: anyone without a smartphone can still return the sample the usual way. We’re farmagusta: the robot fleet for sample delivery.</aside>
+</section>
+
+</body></html>
