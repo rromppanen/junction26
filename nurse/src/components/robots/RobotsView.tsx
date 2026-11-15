@@ -83,7 +83,7 @@ const LAYER_ICONS = {
 };
 
 export function RobotsView({ embed = false }: { embed?: boolean }) {
-  const { samples, now, add, reset } = useSamples();
+  const { samples, now, synced, add, reset } = useSamples();
   const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [patientsOpen, setPatientsOpen] = useState(false);
@@ -179,8 +179,9 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
   const group = intake.find((g) => g.hub === hubId);
 
   useEffect(() => {
-    // Only the page holding the lease simulates; every other open page just watches.
-    if (!mounted || !simulate || !leader || now === lastTick.current) return;
+    // Only the page holding the lease simulates; every other open page just watches. Not before the
+    // shared log has answered either: this browser's own seed would book robots for everyone.
+    if (!mounted || !simulate || !leader || !synced || now === lastTick.current) return;
     lastTick.current = now;
     for (const a of simStep(
       samples,
@@ -190,7 +191,7 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
       speed,
     ))
       add(a.sampleId, a.event);
-  }, [mounted, simulate, leader, speed, now, samples, add]);
+  }, [mounted, simulate, leader, synced, speed, now, samples, add]);
 
   function clearFilters() {
     setQuery("");
@@ -527,6 +528,7 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
             {mounted && (
               <LiveMap
                 fleet={mapFleet}
+                now={now}
                 ready={layers.ready ? ready : []}
                 participants={layers.participants ? visible : []}
                 showRoutes={layers.routes}

@@ -54,6 +54,38 @@ export function hubNear(home: LngLat): LngLat {
   return [home[0] + 0.008, home[1] + 0.005];
 }
 
+/**
+ * The nurse map's robot hubs as [lng, lat]. Keep in step with HUBS in nurse/src/lib/robots/fleet.ts:
+ * the nurse map recognises a phone route that starts at one and takes that hub's robot.
+ */
+export const ROBOT_HUBS: readonly LngLat[] = [
+  [24.906, 60.19], // Meilahti lab
+  [25.085, 60.2115], // Itäkeskus
+  [24.993, 60.259], // Malmi
+  [25.04, 60.2935], // Tikkurila
+  [24.85, 60.26], // Myyrmäki
+  [24.74, 60.161], // Matinkylä
+];
+/** Farther than this from every hub (outside the capital region), the robot comes from hubNear instead. */
+export const HUB_REACH_M = 8_000;
+
+/**
+ * Where the phone's robot sets off: the nearest hub on the nurse map, so the board shows it leave that
+ * hub; outside the capital region, a stand-in hub nearby (hubNear).
+ */
+export function robotStart(pin: LngLat): LngLat {
+  let best: LngLat | null = null;
+  let bestM = HUB_REACH_M;
+  for (const hub of ROBOT_HUBS) {
+    const m = metresBetween(pin, hub);
+    if (m <= bestM) {
+      best = hub;
+      bestM = m;
+    }
+  }
+  return best ?? hubNear(pin);
+}
+
 /** Decodes a Google-style encoded polyline with 6-digit precision (Valhalla's format) into [lng, lat] points. */
 export function decodePolyline6(encoded: string): LngLat[] {
   const out: LngLat[] = [];

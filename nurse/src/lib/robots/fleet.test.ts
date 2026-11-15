@@ -3,7 +3,7 @@ import { ROBOT_TRAVEL_MS, stageOf, type Sample } from "@/lib/sample/model";
 import { seedSamples } from "@/lib/sample/seed";
 import {
   AREAS, DISPATCH_GAP_MS, awaitingIntake, FLEET, HUBS, NO_ANSWER_ID, finishedTrips, fleetAt, homeOf, hubOf, pointAlong, positionOf,
-  pickupCode, readyForPickup, sharedRoute, simStep, travelMsFor, tripsOf, COMPARTMENTS, awaitingIntake as intakeOf,
+  pickupCode, placeOf, readyForPickup, sharedRoute, simStep, travelMsFor, tripsOf, COMPARTMENTS, awaitingIntake as intakeOf,
 } from "./fleet";
 
 const T0 = 1_800_000_000_000;
@@ -210,8 +210,30 @@ describe("a pickup booked on the phone", () => {
   const booked: Sample = {
     id: "me",
     person: { id: "me", name: "Aino K.", age: 62, municipality: "Helsinki", area: "Kallio", lang: "fi" },
-    events: [{ type: "invited", at: T0 }, { type: "pickupBooked", at: T0 + 1000, travelMs: 15_000, route }],
+    events: [{ type: "invited", at: T0 }, { type: "pickupBooked", at: T0 + 1000, travelMs: 15_000, route }, { type: "robotDispatched", at: T0 + 1000 }],
   };
+
+  it("waits at the start until the phone has found a robot and sent it", () => {
+    const searching: Sample = { ...booked, events: booked.events.slice(0, 2) };
+    const [trip] = tripsOf([searching]);
+    expect(viewOf([searching], T0 + 5_000, trip.robotId).status.kind).toBe("idle");
+    expect(stageOf(searching, T0 + 5_000)).toBe("pickupBooked");
+    // Sent four seconds after booking: the robot sets off from the start then, it does not jump back.
+    const sent: Sample = { ...searching, events: [...searching.events, { type: "robotDispatched", at: T0 + 5_000 }] };
+    const v = viewOf([sent], T0 + 5_000, tripsOf([sent])[0].robotId);
+    expect(v.status).toMatchObject({ kind: "outbound", progress: 0 });
+  });
+
+  it("takes the robot of the hub the phone's route starts at", () => {
+    const fromMalmi: [number, number][] = [[HUBS.malmi.at[1], HUBS.malmi.at[0]], [24.99, 60.25], [24.985, 60.245]];
+    const s: Sample = { ...booked, events: [booked.events[0], { type: "pickupBooked", at: T0 + 1000, route: fromMalmi }, { type: "robotDispatched", at: T0 + 1000 }] };
+    const [trip] = tripsOf([s]);
+    expect(trip.hub).toBe("malmi");
+    expect(FLEET.find((r) => r.id === trip.robotId)?.hub).toBe("malmi");
+    expect(placeOf(s)).toEqual([60.245, 24.985]);
+    // A route from anywhere else keeps the person's own hub.
+    expect(tripsOf([booked])[0].hub).toBe("meilahti");
+  });
 
   it("drives the phone's route to the phone's door, not the made-up home", () => {
     const [trip] = tripsOf([booked]);
