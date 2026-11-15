@@ -330,7 +330,7 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
                 </button>
               </div>
               <p className="mb-3 text-xs text-muted" aria-live="polite">
-                {visible.length} of {rows.length} participants match
+                {visible.length} of {rows.length} participants shown
               </p>
               <details className="filter-group">
                 <summary>
@@ -362,7 +362,7 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
                 <summary>
                   <MapPin size={17} aria-hidden />
                   Labs & locations{" "}
-                  <span className="text-xs font-normal text-muted">
+                  <span className="filter-count">
                     {locations.length} / {Object.keys(HUBS).length}
                   </span>
                 </summary>
