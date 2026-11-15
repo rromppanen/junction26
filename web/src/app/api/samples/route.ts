@@ -1,5 +1,5 @@
 import { parseEntries } from "@/lib/sample/sync-core";
-import { appendLog, readLog, resetLog } from "@/lib/sample/sync-log";
+import { appendLog, claimLease, readLog, resetLog } from "@/lib/sample/sync-log";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +34,7 @@ export async function GET(req: Request): Promise<Response> {
  * POST /api/samples
  *   { seedAt, entries: LogEntry[] } → { status: "ok" | "stale" | "full" }
  *   { reset: true } → { seedAt }
+ *   { lease: id, release?: true } → { holder }   (who runs the household simulation)
  */
 export async function POST(req: Request): Promise<Response> {
   const text = await req.text();
@@ -46,6 +47,11 @@ export async function POST(req: Request): Promise<Response> {
   }
   try {
     if (body?.reset === true) return json({ seedAt: await resetLog() });
+    // { lease: id, release? } → { holder }: only the holder's robots page runs the household simulation.
+    if (typeof body?.lease === "string") {
+      if (body.lease.length === 0 || body.lease.length > 64) return json({ error: "Bad lease" }, 400);
+      return json({ holder: await claimLease(body.lease, body.release === true) });
+    }
     const seedAt = typeof body?.seedAt === "number" ? int(String(body.seedAt)) : null;
     const entries = parseEntries(body?.entries);
     if (seedAt === null || !entries) return json({ error: "Bad entries" }, 400);

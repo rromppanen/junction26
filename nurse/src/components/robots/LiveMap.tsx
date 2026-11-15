@@ -39,6 +39,8 @@ const COLOUR = {
 
 const HOUSE =
   '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z" fill="#fff"/></svg>';
+/** A later stop of a robot's run: an unnumbered dot, so the only numbers on the map are robots. */
+const stopIcon = L.divIcon({ className: "stop-pin", iconSize: [14, 14], iconAnchor: [7, 7], html: "<span></span>" });
 const homeIcon = L.divIcon({
   className: "home-pin",
   iconSize: [22, 22],
@@ -332,12 +334,8 @@ export default function LiveMap({
                   key={stop.sampleId}
                   position={stop.home}
                   title={`${pickupCode(stop.sampleId)} · compartment ${stop.compartment} of ${stop.stops}`}
-                  icon={L.divIcon({
-                    className: "stop-pin",
-                    iconSize: [22, 22],
-                    iconAnchor: [11, 11],
-                    html: `<span>${stop.compartment}</span>`,
-                  })}
+                  // A plain dot: numbers on the map are robot numbers only, so they never seem to change.
+                  icon={stopIcon}
                   eventHandlers={{ click: () => onSample(stop.sampleId) }}
                 >
                   <Tooltip>
@@ -374,10 +372,12 @@ export default function LiveMap({
                   offset={[0, 8]}
                   className={`hub-label${intake[h.id] ? " has-intake" : ""}`}
                 >
-                  {h.name} ·{" "}
+                  {h.name}
                   {intake[h.id]
-                    ? `${intake[h.id]} to collect`
-                    : `${parked} ready`}
+                    ? ` · ${intake[h.id]} to collect`
+                    : parked > 0
+                      ? ` · ${parked} ready`
+                      : ""}
                 </Tooltip>
               </Marker>
             );

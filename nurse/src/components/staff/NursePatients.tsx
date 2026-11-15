@@ -21,6 +21,11 @@ function patientNote(row: Row): string | null {
 }
 
 /** A focused patient queue alongside the map; actions open in the shared drawer. */
+/** How long the most pressing flag has waited, in days (0 for flags without a day count). */
+function urgency(row: Row): number {
+  return Math.max(0, ...row.flags.map((f) => f.days ?? 0));
+}
+
 export function NursePatients({
   rows,
   onSelect,
@@ -57,6 +62,8 @@ export function NursePatients({
       .sort(
         (a, b) =>
           Number(b.flags.length > 0) - Number(a.flags.length > 0) ||
+          // Most urgent first: the longest wait among a person's flags.
+          urgency(b) - urgency(a) ||
           a.s.person.name.localeCompare(b.s.person.name),
       );
   }, [rows, query, attention]);
