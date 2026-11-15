@@ -3,7 +3,7 @@
 // Run it against the deployed site shortly before the demo.
 const base = (process.argv[2] ?? "http://localhost:3000").replace(/\/$/, "");
 
-const pages = ["/", "/demo", "/kit", "/nurse", "/nurse/robots"];
+const pages = ["/", "/demo", "/kit", "/reel", "/nurse", "/nurse/robots"];
 
 const failures = [];
 for (const path of pages) {

@@ -376,7 +376,7 @@ export function KitApp() {
 }
 
 /** A screen's content fades and rises in, one child after another; the actions stay at the bottom. */
-function Body({ children, footer }: { children: React.ReactNode; footer: React.ReactNode }) {
+export function Body({ children, footer }: { children: React.ReactNode; footer: React.ReactNode }) {
   return (
     <>
       <div className="kit-enter min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-5" aria-live="polite">{children}</div>
@@ -389,7 +389,7 @@ function Centered({ children }: { children: React.ReactNode }) {
   return <div className="kit-enter flex min-h-0 flex-1 flex-col justify-center gap-3 overflow-y-auto px-5 pb-8 text-center" aria-live="polite">{children}</div>;
 }
 
-function Nav({ back, onBack, primary }: { back: string; onBack: () => void; primary: React.ReactNode }) {
+export function Nav({ back, onBack, primary }: { back: string; onBack: () => void; primary: React.ReactNode }) {
   return (
     <div className="flex gap-3">
       <button type="button" onClick={onBack} aria-label={back} className="flex size-14 shrink-0 items-center justify-center rounded-xl border border-rule text-brand hover:bg-brand-soft">
@@ -400,7 +400,7 @@ function Nav({ back, onBack, primary }: { back: string; onBack: () => void; prim
   );
 }
 
-function StepView({ anim, text, index, total, t, onBack, primary, kicker }: {
+export function StepView({ anim, text, index, total, t, onBack, primary, kicker }: {
   anim: Anim; text: StepText; index: number; total: number; t: Ui; onBack: () => void; primary: React.ReactNode; kicker?: string;
 }) {
   return (
@@ -423,7 +423,7 @@ function StepView({ anim, text, index, total, t, onBack, primary, kicker }: {
   );
 }
 
-function LanguageList({ value, onChoose }: { value: KitLang; onChoose: (l: KitLang) => void }) {
+export function LanguageList({ value, onChoose }: { value: KitLang; onChoose: (l: KitLang) => void }) {
   return (
     <ul className="grid grid-cols-2 gap-2">
       {KIT_LANGS.map((l) => (
@@ -509,7 +509,7 @@ function LiveTracking({ route, dispatchedAt, t }: { route: LngLat[]; dispatchedA
 }
 
 /** The robot is here: the map softens behind a check and a few words, then the app moves on by itself. */
-function ArrivedMoment({ t }: { t: Ui }) {
+export function ArrivedMoment({ t }: { t: Ui }) {
   return (
     <div role="status" className="kit-arrived absolute inset-0 z-20 flex items-center justify-center">
       <div className="kit-arrived-veil absolute inset-0 bg-white/40 backdrop-blur-[6px]" aria-hidden />
@@ -591,6 +591,6 @@ function Booking({ lang, t, now, locating, onBook, onRetry }: {
   );
 }
 
-function Primary({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+export function Primary({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return <button type="button" onClick={onClick} className="primary-action !min-h-14 w-full !rounded-xl !text-base">{children}</button>;
 }
