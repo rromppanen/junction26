@@ -1,8 +1,8 @@
 import { metresBetween, walkingRoute, type LngLat } from "@/lib/kit/route";
 
-/** The demo robot only ever walks a short way; anything longer is not a pickup. */
-const MAX_METRES = 5_000;
-const TIMEOUT_MS = 8_000;
+/** Robot legs are short: the phone's walk is under a kilometre, the nurse map's hub legs under 15 km. */
+const MAX_METRES = 15_000;
+const TIMEOUT_MS = 10_000;
 
 function point(v: string | null): LngLat | null {
   const parts = v?.split(",").map(Number);

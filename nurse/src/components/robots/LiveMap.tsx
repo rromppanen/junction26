@@ -16,15 +16,14 @@ import { STAGE_LABEL, type Row } from "@/components/staff/boardShared";
 import {
   AREAS,
   HUBS,
-  curvedRoute,
   homeOf,
   pickupCode,
   positionOf,
-  routeKey,
   splitLine,
   type LatLng,
   type RobotView,
 } from "@/lib/robots/fleet";
+import { legLine } from "@/lib/robots/routes";
 
 // The HUS palette of the user app (web/): brand blue for a robot on its way, like the kit's tracking map.
 const COLOUR = {
@@ -160,14 +159,8 @@ export default function LiveMap({
   const lineOf = (v: RobotView): LatLng[] | undefined => {
     if (v.status.kind === "idle") return undefined;
     const t = v.status.trip;
-    if (v.status.kind === "returning" && t.stops > 1)
-      return curvedRoute(t.backTo, t.home, `${routeKey(t)}:back`);
-    if (t.compartment > 1) return curvedRoute(t.from, t.home, routeKey(t));
-    return (
-      t.route ??
-      routes.get(routeKey(t)) ??
-      curvedRoute(t.from, t.home, routeKey(t))
-    );
+    // Street routes for every leg; the drive back after a longer run is its own route.
+    return legLine(t, routes, v.status.kind === "returning" && t.stops > 1);
   };
 
   return (
@@ -221,11 +214,7 @@ export default function LiveMap({
                   .map((stop) => (
                     <Polyline
                       key={`next-${stop.sampleId}`}
-                      positions={curvedRoute(
-                        stop.from,
-                        stop.home,
-                        routeKey(stop),
-                      )}
+                      positions={legLine(stop, routes)}
                       pathOptions={{
                         color: COLOUR.outbound,
                         weight: 3,

@@ -108,13 +108,18 @@ async function valhalla(from: LngLat, to: LngLat, signal?: AbortSignal): Promise
   return coords;
 }
 
+/** How long the first router may take, so a slow or silent OSRM still leaves Valhalla time to answer. */
+export const OSRM_TIMEOUT_MS = 4_000;
+
 /**
  * A walking route between two points along real streets and paths: the OSRM foot router first,
  * Valhalla if that fails. Throws only when both fail. Runs on the server (see /api/walk).
+ * OSRM gets at most OSRM_TIMEOUT_MS of its own; `signal` bounds the whole call.
  */
 export async function walkingRoute(from: LngLat, to: LngLat, signal?: AbortSignal): Promise<LngLat[]> {
+  const first = AbortSignal.timeout(OSRM_TIMEOUT_MS);
   try {
-    return await osrm(from, to, signal);
+    return await osrm(from, to, signal ? AbortSignal.any([signal, first]) : first);
   } catch (first) {
     try {
       return await valhalla(from, to, signal);

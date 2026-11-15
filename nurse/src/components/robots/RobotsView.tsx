@@ -146,7 +146,8 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
   const routes = useRoutes(
     useMemo(
       () =>
-        fleet.flatMap((v) => (v.status.kind === "idle" ? [] : [v.status.trip])),
+        // Every stop of every run under way, so later legs and the drive back get street routes too.
+        fleet.flatMap((v) => v.run),
       [fleet],
     ),
   );
