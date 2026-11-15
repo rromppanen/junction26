@@ -15,7 +15,7 @@ Use these as **mentor insights**, which the challenge accepts as evidence ("publ
 
 ## What this means for farmagusta
 
-On Friday these points shaped the team's first direction, Läpi, a costed scenario tool for a county's cancer care lead ([archive](../archive/README.md)). farmagusta, the product we submit, takes them differently:
+farmagusta, the product we submit, takes these points as follows:
 
 - **Point 4 (the patient can't see the next step)** is now the core: the phone app shows the person each step, from the invitation to the handover, in their own language.
 - **Point 5 (nobody monitors)**: the nurse board flags everyone who falls behind, including a positive test with no colonoscopy booked after 7 days.
