@@ -20,7 +20,7 @@ function line(coords: LngLat[]): GeoJSON.Feature<GeoJSON.LineString> {
   return { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: coords } };
 }
 
-function markerEl(kind: "robot" | "home" | "hub", label: string): HTMLElement {
+export function markerEl(kind: "robot" | "home" | "hub", label: string): HTMLElement {
   const el = document.createElement("div");
   el.setAttribute("aria-label", label);
   if (kind === "robot") {
@@ -37,12 +37,41 @@ function markerEl(kind: "robot" | "home" | "hub", label: string): HTMLElement {
   return el;
 }
 
+const ROUTE_COLOR = "#004b87";
+
+/**
+ * Draws the whole route once; hideTravelled() then hides the part behind the robot. Cutting the line
+ * with a gradient is a cheap paint change, where replacing the line's data every frame made the map
+ * re-process it in its worker each time and dropped frames.
+ */
+export function addRouteLayers(m: MlMap, route: LngLat[]) {
+  m.addSource("ahead", { type: "geojson", data: line(route), lineMetrics: true });
+  m.addLayer({ id: "ahead-casing", type: "line", source: "ahead", layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": "#ffffff", "line-width": 9 } });
+  m.addLayer({ id: "ahead", type: "line", source: "ahead", layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": ROUTE_COLOR, "line-width": 5 } });
+  hideTravelled(m, 0);
+}
+
+/** Shows only the route still ahead of the robot, `p` (0..1) of the way along. */
+export function hideTravelled(m: MlMap, p: number) {
+  const cut = Math.min(1, Math.max(0, p));
+  const gradient = (color: string) => ["step", ["line-progress"], "rgba(0,0,0,0)", cut, color];
+  // line-progress is measured along the line on the map, the same share splitRoute() uses for the robot.
+  m.setPaintProperty("ahead-casing", "line-gradient", gradient("#ffffff"));
+  m.setPaintProperty("ahead", "line-gradient", gradient(ROUTE_COLOR));
+}
+
 /**
  * A live map of the robot's route, in the style of a courier tracker: only the road still ahead is
  * drawn, and the robot moves along it as `progress` goes from 0 to 1.
  */
-export function TrackingMap({ route, progress, labels }: {
+export function TrackingMap({ route, progress, labels, pixelRatio, onMap }: {
   route: LngLat[]; progress: number; labels: { robot: string; home: string; hub: string; error: string };
+  /** Render the map sharper than the screen needs (the demo reel zooms into it). */
+  pixelRatio?: number;
+  /** Called once the map has loaded and framed the route. */
+  onMap?: (map: MlMap) => void;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const map = useRef<MlMap | null>(null);
@@ -59,8 +88,8 @@ export function TrackingMap({ route, progress, labels }: {
   function draw(p: number) {
     const m = map.current;
     if (!m || !ready.current) return;
-    const { at, ahead } = splitRoute(routeRef.current, p);
-    (m.getSource("ahead") as GeoJSONSource | undefined)?.setData(line(ahead));
+    const { at } = splitRoute(routeRef.current, p);
+    hideTravelled(m, p);
     robot.current?.setLngLat(at);
   }
 
@@ -79,6 +108,7 @@ export function TrackingMap({ route, progress, labels }: {
           attributionControl: false,
           dragRotate: false,
           pitchWithRotate: false,
+          ...(pixelRatio ? { pixelRatio } : {}),
         });
         // Credit sits at the top: the bottom of the map is under the arrival sheet.
         instance.addControl(new ml.AttributionControl({ compact: true }), "top-right");
@@ -89,11 +119,7 @@ export function TrackingMap({ route, progress, labels }: {
         });
         instance.on("load", () => {
           if (!instance) return;
-          instance.addSource("ahead", { type: "geojson", data: line(routeRef.current) });
-          instance.addLayer({ id: "ahead-casing", type: "line", source: "ahead", layout: { "line-cap": "round", "line-join": "round" },
-            paint: { "line-color": "#ffffff", "line-width": 9 } });
-          instance.addLayer({ id: "ahead", type: "line", source: "ahead", layout: { "line-cap": "round", "line-join": "round" },
-            paint: { "line-color": "#004b87", "line-width": 5 } });
+          addRouteLayers(instance, routeRef.current);
           const r = routeRef.current;
           hub.current = new ml.Marker({ element: markerEl("hub", labels.hub) }).setLngLat(r[0]).addTo(instance);
           home.current = new ml.Marker({ element: markerEl("home", labels.home) }).setLngLat(r[r.length - 1]).addTo(instance);
@@ -102,6 +128,7 @@ export function TrackingMap({ route, progress, labels }: {
           // The route may have changed (location arrived) while the style loaded: frame the current one.
           instance.fitBounds(boundsOf(r), { padding: PADDING, duration: 0 });
           draw(latest.current);
+          onMap?.(instance);
         });
         // If the style has not loaded in 12 s (offline, tiles blocked), say so instead of showing a blank box.
         setTimeout(() => {
@@ -129,6 +156,7 @@ export function TrackingMap({ route, progress, labels }: {
   useEffect(() => {
     const m = map.current;
     if (!m || !ready.current) return;
+    (m.getSource("ahead") as GeoJSONSource | undefined)?.setData(line(route));
     hub.current?.setLngLat(route[0]);
     home.current?.setLngLat(route[route.length - 1]);
     m.fitBounds(boundsOf(route), { padding: PADDING, duration: 900 });
@@ -138,6 +166,11 @@ export function TrackingMap({ route, progress, labels }: {
   useEffect(() => {
     draw(progress);
   }, [progress]);
+
+  // The demo reel sharpens the map only while its camera zooms in.
+  useEffect(() => {
+    if (pixelRatio && map.current && ready.current) map.current.setPixelRatio(pixelRatio);
+  }, [pixelRatio]);
 
   return (
     <div className="relative h-full w-full bg-[#eef2f1]">
