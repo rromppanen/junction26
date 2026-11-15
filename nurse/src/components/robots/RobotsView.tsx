@@ -40,6 +40,7 @@ import {
   pickupCode,
   readyForPickup,
   simStep,
+  householdToRecycle,
   tripsOf,
   type SimSpeed,
   type HubId,
@@ -83,7 +84,7 @@ const LAYER_ICONS = {
 };
 
 export function RobotsView({ embed = false }: { embed?: boolean }) {
-  const { samples, now, synced, add, reset } = useSamples();
+  const { samples, now, synced, add, reset, restart } = useSamples();
   const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [patientsOpen, setPatientsOpen] = useState(false);
@@ -191,7 +192,10 @@ export function RobotsView({ embed = false }: { embed?: boolean }) {
       speed,
     ))
       add(a.sampleId, a.event);
-  }, [mounted, simulate, leader, synced, speed, now, samples, add]);
+    // Keep the demo going: a finished household starts again when few are waiting, one per tick.
+    const again = householdToRecycle(samples, now, ME);
+    if (again) restart(again);
+  }, [mounted, simulate, leader, synced, speed, now, samples, add, restart]);
 
   function clearFilters() {
     setQuery("");
