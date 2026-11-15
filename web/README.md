@@ -1,6 +1,6 @@
 # web: the farmagusta main app
 
-The person's phone app and the shared demo log. The nurse board is a separate app in [`../nurse`](../nurse/README.md); this app forwards `/nurse/*` to it, so both run on one address. What the project is and why: [the root README](../README.md) and [docs/idea.md](../docs/idea.md).
+The project landing page, the person's phone app and the shared demo log. The nurse board is a separate app in [`../nurse`](../nurse/README.md); this app forwards `/nurse/*` to it, so both run on one address. What the project is and why: [the root README](../README.md) and [docs/idea.md](../docs/idea.md).
 
 ## Run and check
 
@@ -25,9 +25,10 @@ Optional settings in `.env.local`, which is never committed:
 
 | Path | What it is |
 | --- | --- |
-| `/` | Demo start page: choose the phone app or the nurse board |
+| `/` | Project landing page with phone and nurse demo links |
 | `/kit` | The phone app: language choice, what the test is, the sampling steps, robot pickup booking, live tracking and handover |
-| `/staff` | Redirects to `/nurse` |
+| `/reel` | Scripted phone walkthrough for demo recording |
+| `/staff` | Compatibility redirect to `/nurse` |
 | `/api/samples` | The shared demo event log, so a phone and a laptop see each other's actions |
 | `/api/walk` | Walking routes for the robot, from the public OSRM router with Valhalla as fallback |
 | `/api/kit/ask` | A Gemini question box limited to fixed HUS kit facts. No page links to it |
@@ -36,8 +37,7 @@ Optional settings in `.env.local`, which is never committed:
 
 | Where | What |
 | --- | --- |
-| `src/lib/sample/` | The sample model: an event log per person, the stage derived from it, the flag rules, the robot simulation and the sync between tabs and devices. Copied in `../nurse`; keep both in step |
+| `src/lib/sample/` | The sample model: an event log per person, the stage derived from it, the flag rules, the robot simulation and the sync between tabs and devices. Counterparts in `../nurse`; keep event and storage contracts compatible, preserving its separate nurse intake step |
 | `src/lib/kit/` | Kit content and the nine translations (`text/`), pickup slots and robot routes |
 | `src/components/kit/` | The phone app's screens, step animations and tracking map |
-| `src/components/staff/` | The first nurse board, now replaced by `../nurse` |
 | `src/data/` | Finnish Cancer Registry figures (`registry.json`, from `npm run ingest:registry`) and the wait to colonoscopy read from the Registry's chart (`registryWaits.ts`) |

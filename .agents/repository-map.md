@@ -5,18 +5,18 @@ Only facts that are already confirmed go here. Mark everything else _TBD_, and n
 ## Purpose and boundaries
 
 - Product or artifact: farmagusta, our Junction 2026 project for the AstraZeneca challenge "Equal Care Across Finland". Users: the person invited to bowel cancer screening and the screening nurse. See [`docs/idea.md`](../docs/idea.md) and [`docs/PLAN.md`](../docs/PLAN.md).
-- Main components: a Next.js app in `web/`. `/kit` is the phone flow for the home bowel-screening test and robot pickup; `/staff` redirects to the nurse board. Sample logic and the robot simulation are in `web/src/lib/sample/`. Demo state lives in the browser (`localStorage`) and is shared across devices through the event log at `/api/samples` (Upstash Redis on Vercel, in memory without keys). The nurse board is its own Next.js app in `nurse/`, served under `/nurse`. `web/` forwards `/nurse/*` to it (`NURSE_URL`, default http://localhost:3100) so both share one origin and the live sync works. Its board and sample code are copies of the `web/` ones; see [`nurse/README.md`](../nurse/README.md).
-- Generated artifacts: none from source. The pitch deck is `docs/pitch/farmagusta-screening-attendance.pptx`, edited by hand.
+- Main components: a Next.js app in `web/`. `/kit` is the phone flow for the home bowel-screening test and robot pickup; `/staff` redirects to the nurse board. Sample logic and the robot simulation are in `web/src/lib/sample/`. Demo state lives in the browser (`localStorage`) and is shared across devices through the event log at `/api/samples` (Upstash Redis on Vercel, in memory without keys). The nurse board is its own Next.js app in `nurse/`, served under `/nurse`. `web/` forwards `/nurse/*` to it (`NURSE_URL`, default http://localhost:3100) so both share one origin and the live sync works. Its patient UI is maintained in `nurse/`; sample logic has counterparts in both apps, with intentional differences at nurse lab intake; see [`nurse/README.md`](../nurse/README.md).
+- Pitch artifacts: the current HTML deck, PDF export, assets and speaker notes are in [`docs/pitch/deck/`](../docs/pitch/deck/README.md). The earlier PowerPoint and PDF are retained for reference. Registry ingestion (`npm run ingest:registry` in `web/`) updates `web/src/data/registry.json`.
 - Existing instructions: [`AGENTS.md`](../AGENTS.md) (agent working agreement), `.agents/instructions/` (principles, workflow, writing), `.claude/skills/` (change procedures).
 
 ## Environment and checks
 
 | Operation | Verified command or owning document | Expected evidence |
 | --- | --- | --- |
-| Prepare local environment | `cd web && npm ci`; optional settings are listed in [`web/README.md`](../web/README.md) | Install finishes |
+| Prepare local environment | Use each app's `.nvmrc`; run `npm ci` in both `web/` and `nurse/`. Optional settings are listed in [`web/README.md`](../web/README.md) | Install finishes |
 | Run affected tests | `npm test` in `web/` or `nurse/` (Vitest) | All tests pass |
-| Check static constraints | `npm run check` in `web/`: lint, tests and production build, the same as CI | Exit 0 |
-| Build or render | `npm run build` in `web/` (also type-checks); `npm run dev` serves http://localhost:3000 | Build lists the `/`, `/kit`, `/staff`, `/api/samples`, `/api/walk` and `/api/kit/ask` routes |
+| Check static constraints | `npm run check` in both `web/` and `nurse/`: lint, tests and production build, the same as CI | Exit 0 |
+| Build or render | `npm run build` in `web/` (also type-checks); `npm run dev` serves http://localhost:3000 | Build lists the `/`, `/kit`, `/reel`, `/staff`, `/api/samples`, `/api/walk` and `/api/kit/ask` routes |
 | Run the nurse app | `npm run dev` in `nurse/` (port 3100), with the `web/` dev server running; open `/nurse` on the web port | The board loads, scripts under `/nurse/_next/` return 200 |
 | Reproduce user behavior | Run both apps, open `/kit` in one tab and `/nurse` in another, book a pickup; `npm run smoke -- <base url>` loads every page | The board shows the phone's person move stage |
 

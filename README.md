@@ -29,8 +29,8 @@ Keep this section current. On Sunday morning it becomes the submission form text
 **What we built.** Two linked web apps on one address:
 
 - **Phone app (`/kit`):** in nine languages (Finnish, Swedish, English, Russian, Estonian, Arabic, Ukrainian, Somali and Persian, with right-to-left layout for Arabic and Persian). It explains the test in plain words, walks through the ten sampling steps, books a robot pickup (as soon as possible or a one-hour window), shows the robot on a live map and guides the handover at the door. A positive result tells the person that a nurse will contact them to book a colonoscopy.
-- **Nurse board (`/nurse`):** every participant by stage, with their language and interpreter need. People who fall behind are flagged first: no sample 14 days after the invitation (with reminder status), a positive result with no colonoscopy booked after 7 days, a robot waiting at the door, a sample waiting to be registered at the lab. The nurse sends a reminder, records a call or books a colonoscopy from the person's drawer. These thresholds are our assumptions, not clinical deadlines.
-- **Robots (`/nurse/robots`):** the simulated pickup fleet (30 robots, six hubs in Helsinki, Espoo and Vantaa) on a street map, with destinations shown by pickup code, not by name.
+- **Nurse workspace (`/nurse`):** a live map with an expandable patient queue and filters for stages, labs, locations and map layers. Patient details include language and interpreter need. People who fall behind appear first in the queue: no sample 14 days after the invitation (with reminder status), a positive result with no colonoscopy booked after 7 days, a robot waiting at the door, a sample waiting to be registered at the lab. The nurse sends a reminder, records a call or books a colonoscopy from the person's drawer. These thresholds are our assumptions, not clinical deadlines.
+- **Robots:** the same workspace (also available at `/nurse/robots`) shows the simulated fleet: 30 robots across six hubs in Helsinki, Espoo and Vantaa, each with up to four sample compartments. Destinations use pickup codes. Select a robot or hub to inspect its run and register returned samples.
 
 **How it works.** The sample logic is plain tested code: an event log per person, the stage derived from it, the flag rules and the robot simulation. The phone and the board share one event log behind `/api/samples` (Upstash Redis on Vercel), so a phone and a laptop see each other's actions. Walking routes come from the public FOSSGIS OSRM router. The sampling steps follow the HUS kit leaflet in order, and the registry figures above are in the pitch deck with their sources. Robot routes are planned with shortest-path search of the A* family, a classic AI planning method; the flag rules are plain tested code, so a nurse can see why someone is flagged.
 
@@ -64,7 +64,7 @@ cd web && npm ci && npm run dev      # http://localhost:3000, phone app at /kit
 cd nurse && npm ci && npm run dev    # port 3100; the main app forwards /nurse here
 ```
 
-Without Upstash keys the shared event log lives in the dev server's memory. Run `npm run check` in `web/` before pushing; CI runs the same checks.
+Without Upstash keys the shared event log lives in the dev server's memory. Run `npm run check` in both `web/` and `nurse/` before pushing; CI runs the same checks.
 
 `npm run smoke -- <base url>` loads every page once and fails on any error; run it against the deployed site before the demo. Deployment steps are in [docs/DEPLOY.md](docs/DEPLOY.md).
 

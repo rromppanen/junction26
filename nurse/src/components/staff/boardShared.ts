@@ -1,6 +1,5 @@
 import { flagsOf, STAGES_FOR_BOARD, type EventType, type Sample, type Stage } from "@/lib/sample/model";
 
-export const DEMO_NOTE = "Demo: invented people; the robot, lab and bookings are simulated.";
 export const ME = "me";
 
 export const EVENT_LABEL: Record<EventType, string> = {
@@ -20,11 +19,6 @@ export const EVENT_LABEL: Record<EventType, string> = {
   colonoscopyDone: "Colonoscopy done",
 };
 
-const MILESTONES: Partial<Record<EventType, true>> = {
-  invited: true, kitOpened: true, sampleTaken: true, pickupBooked: true, pickedUp: true, atLab: true,
-  resultNegative: true, resultPositive: true, colonoscopyBooked: true, colonoscopyDone: true,
-};
-
 export type Row = { s: Sample; stage: Stage; flags: ReturnType<typeof flagsOf> };
 export type ActFn = (row: Row, type: EventType, extra?: { note?: string; slot?: string }) => void;
 
@@ -36,21 +30,6 @@ export function matches(spec: Stage | Stage[], stage: Stage): boolean {
 export function stepIndex(stage: Stage): number {
   const i = STAGES_FOR_BOARD.findIndex((c) => matches(c.stage, stage));
   return i < 0 ? 0 : i;
-}
-
-export function msInStage(s: Sample, now: number): number {
-  let at = 0;
-  for (const e of s.events) if (MILESTONES[e.type] && e.at > at) at = e.at;
-  return Math.max(0, now - at);
-}
-
-export function inStage(s: Sample, now: number): string {
-  const ms = msInStage(s, now);
-  if (ms < 86_400_000) {
-    const min = Math.max(1, Math.floor(ms / 60_000));
-    return min >= 60 ? `${Math.floor(min / 60)} h in step` : `${min} min in step`;
-  }
-  return `${Math.floor(ms / 86_400_000)} d in step`;
 }
 
 export function colonoscopySlots(now: number): string[] {
