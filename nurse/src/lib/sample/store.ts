@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { addEvent, type Sample, type SampleEvent } from "./model";
 import { seedSamples } from "./seed";
-import { buildSamples, MAX_ENTRIES_PER_POST, type LogEntry, type LogPage } from "./sync-core";
+import { applyEntry, buildSamples, MAX_ENTRIES_PER_POST, RESTART, type LogEntry, type LogPage } from "./sync-core";
 
 // v4: Helsinki-area demo data, half Finnish or Swedish speakers. A new key makes open browsers reseed instead of keeping the old people.
 const KEY = "farmagusta.demo.v4";
@@ -235,6 +235,8 @@ export function useSamples(): {
   /** `at` defaults to now; the robot simulation backdates a few events. */
   add(id: string, e: Omit<SampleEvent, "at"> & { at?: number }): void;
   reset(): void;
+  /** Puts one person back to their seed state, for everyone. The simulation recycles finished households. */
+  restart(id: string): void;
 } {
   const samples = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [now, setNow] = useState(() => Date.now());
@@ -259,5 +261,11 @@ export function useSamples(): {
     });
   }, []);
 
-  return { samples, now, synced: synced(), add, reset };
+  const restart = useCallback((id: string) => {
+    const entry = { id, event: { type: RESTART, at: Date.now() } } as const;
+    persist(applyEntry(getSnapshot(), entry));
+    share([entry]);
+  }, []);
+
+  return { samples, now, synced: synced(), add, reset, restart };
 }
