@@ -1,0 +1,86 @@
+/* The demo reel (/reel): the stage, the phone's frame, the touch mark and the fleet overview. */
+
+.reel-stage {
+  background: radial-gradient(120% 90% at 50% 40%, #ffffff 0%, var(--paper) 55%, #dfe8ef 100%);
+  user-select: none;
+}
+
+.reel-phone {
+  border-radius: 3.4rem;
+  background: #11161a;
+  box-shadow: 0 0 0 2px #2b3238, 0 40px 80px -30px rgba(0, 40, 75, 0.45), 0 18px 40px -20px rgba(0, 0, 0, 0.35);
+}
+
+/* A pressed control sinks in a little, as under a thumb. */
+.reel-pressed { transform: scale(0.97); filter: brightness(0.93); transition: transform 0.12s ease-out, filter 0.12s ease-out; }
+
+/* The touch mark, like a phone's own screen recording shows it. */
+.reel-finger {
+  position: absolute; z-index: 60; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 9999px;
+  background: rgba(40, 46, 52, 0.28); border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18); pointer-events: none;
+}
+.reel-finger-tap { animation: reel-touch 0.17s ease-out both; }
+.reel-finger-drag { animation: reel-touch 0.15s ease-out both; }
+.reel-finger-lift { animation: reel-lift 0.33s ease-out both; }
+@keyframes reel-touch { from { opacity: 0; transform: scale(1.35); } to { opacity: 1; transform: scale(1); } }
+@keyframes reel-lift { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.5); } }
+
+/* The sweep through the steps starts from the screen as it is: no entrance animation. */
+.reel-still .kit-enter > * { animation: none; }
+
+.reel-noscrollbar { scrollbar-width: none; }
+.reel-noscrollbar::-webkit-scrollbar { display: none; }
+
+/* The fleet overview: markers pop in, and our robot pulses so it stays easy to find. */
+.reel-pop > * { animation: reel-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.35) both; }
+@keyframes reel-pop { from { opacity: 0; transform: scale(0.2); } to { opacity: 1; transform: scale(1); } }
+/* Flying back to our robot, the rest of the fleet shrinks and fades away (FLEET_OUT_MS in fleetMap.ts). */
+.reel-fleet-item { transition: opacity 0.6s ease-in, transform 0.6s ease-in; }
+.reel-fleet-out .reel-fleet-item { opacity: 0; transform: scale(0.3); }
+.reel-ours { z-index: 5; }
+.reel-ours > * { position: relative; }
+.reel-overview .reel-ours > *::after {
+  content: ""; position: absolute; inset: -4px; border-radius: 9999px; border: 3px solid var(--brand);
+  animation: reel-pulse 1.6s ease-out infinite;
+}
+@keyframes reel-pulse { from { opacity: 0.7; transform: scale(1); } to { opacity: 0; transform: scale(2.1); } }
+
+.reel-fleet-card { opacity: 0; transform: translateY(-10px); transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+.reel-fleet-card-in { opacity: 1; transform: none; }
+
+.reel-hint { animation: reel-hint 6s ease both; }
+@keyframes reel-hint { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+
+/* The Next.js development badge would show up in the recording. */
+nextjs-portal { display: none !important; }
+
+/*
+  The big on-screen text. Its words roll up into view through a mask, and roll up out of it when the
+  caption changes; the source fades in once the words are there.
+*/
+.reel-caption { --reel-caption-size: clamp(26px, 2.35vw, 46px); --reel-source-size: clamp(13px, 0.9vw, 17px); }
+/* Over the map the caption sits on a card that eases to each caption's height (set by Caption.tsx). */
+.reel-caption-panel .reel-caption-box {
+  overflow: hidden; border-radius: 1.75rem; background: rgba(255, 255, 255, 0.93);
+  box-shadow: 0 24px 60px -24px rgba(0, 40, 75, 0.45);
+  transition: height 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reel-caption-panel .reel-caption-pad { padding: 2rem 2.25rem; }
+.reel-caption-panel:not(.reel-caption-on) .reel-caption-box { opacity: 0; transform: translateY(12px); }
+/* Each word sits in a band that clips it: the words roll up into view one after another, and roll up out of
+   it when the caption leaves (at most about 0.7 s; CAPTION_LEAVE_MS waits 0.75 s before the next caption).
+   The band is a clip-path, not overflow: hidden, so words of different sizes (a ##big## one) keep sharing a
+   baseline; it reaches a little past the word so no ascender, descender or overhang is cut. */
+.reel-mask { display: inline-block; white-space: pre; clip-path: inset(-0.15em -0.1em -0.25em -0.1em); }
+.reel-slot { display: inline-block; animation: reel-slot-in 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(min(var(--i), 34) * 30ms); }
+.reel-caption-leaving .reel-slot { animation: reel-slot-out 0.42s cubic-bezier(0.6, 0, 0.8, 0.3) both; animation-delay: calc(min(var(--i), 30) * 8ms); }
+@keyframes reel-slot-in { from { transform: translateY(110%); } to { transform: none; } }
+@keyframes reel-slot-out { from { transform: none; } to { transform: translateY(-110%); } }
+/* The source fades in once the words are there, and out with them. */
+.reel-source { animation: reel-source-in 0.6s ease-out both; animation-delay: calc(min(var(--wn), 34) * 30ms + 350ms); }
+.reel-caption-leaving .reel-source { animation: reel-source-out 0.3s ease-in both; }
+@keyframes reel-source-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes reel-source-out { from { opacity: 1; } to { opacity: 0; } }
+/* A ##big## highlight: the number the caption is about, set larger. */
+.reel-word-big { font-size: 1.5em; line-height: 1.05; font-weight: 700; letter-spacing: -0.02em; }
