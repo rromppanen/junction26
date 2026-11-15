@@ -77,6 +77,8 @@ The estimate covers Helsinki, Espoo, Vantaa and Kauniainen. There are 235,677 pe
 
 Sources and detail: Statistics Finland, population by age 31.12.2025 (table 11re) · Posti contract price list from 1.10.2026, business reply €2.07 (VAT 0) · National Cancer Strategy 2026–2035, 80% participation goal · Envelope cost €0.40 is our estimate. Gross saving, before robot running costs.
 
-## 14. Start with one Helsinki district
+## 14. Making cancer screening easier to complete
 
-We are asking for a district pilot and a robot delivery partner. Compare test returns with the usual invitation in the same period, split by mother tongue, and measure time from a positive result to colonoscopy and actual pickup costs. The phone app and nurse workspace are working prototypes; the robots, lab and bookings are simulated. People without a smartphone must retain the usual postal and lab return options.
+Close with: “Making cancer screening easier to complete, so fewer people are left behind.”
+
+If asked about next steps: we are asking for a district pilot and a robot delivery partner. Compare test returns with the usual invitation in the same period, split by mother tongue, and measure time from a positive result to colonoscopy and actual pickup costs. The phone app and nurse workspace are working prototypes; the robots, lab and bookings are simulated. People without a smartphone must retain the usual postal and lab return options.

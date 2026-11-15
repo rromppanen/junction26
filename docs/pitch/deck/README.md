@@ -9,7 +9,7 @@ The current farmagusta pitch deck, 14 slides.
 | [speaker-notes.md](speaker-notes.md) | What to say on each slide, with the sources |
 | [assets/](assets/) | Photos and app screenshots used in the deck |
 
-The slides cover the participation gap (2–5), the patient journey (6–8), the proposed delivery service (9–10), the nurse workspace (11–12), and cost and pilot plans (13–14). Supporting detail and sources are in the speaker notes.
+The slides cover the participation gap (2–5), the patient journey (6–8), the proposed delivery service (9–10), the nurse workspace (11–12), the cost scenario (13), and the closing message (14). Supporting detail and sources are in the speaker notes.
 
 The theme follows the website: Poppins headings, Open Sans body text, HUS blue, pale grey surfaces and amber for flagged figures. The photo cover keeps the website’s turquoise brand dot. Fonts are bundled in `assets/fonts/` with their SIL Open Font License notices, so the deck opens without a font download.
 
