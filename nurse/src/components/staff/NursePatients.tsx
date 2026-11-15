@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ChevronRight, Search, X } from "lucide-react";
 import { BTN, STAGE_LABEL, type Row } from "./boardShared";
 import { pickupCode } from "@/lib/robots/fleet";
@@ -33,6 +33,7 @@ export function NursePatients({
   const [query, setQuery] = useState("");
   const [attention, setAttention] = useState(false);
   const [limit, setLimit] = useState(12);
+  const moreButton = useRef<HTMLButtonElement>(null);
   const flagged = rows.filter((row) => row.flags.length > 0).length;
   const patients = useMemo(() => {
     const search = query.trim().toLocaleLowerCase();
@@ -128,7 +129,11 @@ export function NursePatients({
         {patients.length} {patients.length === 1 ? "patient" : "patients"}
         {query ? " found" : " in this queue"}
       </p>
-      <ul aria-label="Patients" className="divide-y divide-rule">
+      <ul
+        id="patient-list"
+        aria-label="Patients"
+        className="divide-y divide-rule"
+      >
         {patients.slice(0, limit).map((row) => (
           <li key={row.s.id}>
             <button
@@ -174,14 +179,35 @@ export function NursePatients({
           No patients match. Try another name, queue or location.
         </p>
       )}
-      {patients.length > limit && (
-        <button
-          type="button"
-          className={`${BTN} mt-3 w-full`}
-          onClick={() => setLimit(limit + 12)}
-        >
-          Show more patients
-        </button>
+      {patients.length > 12 && (
+        <div className="mt-3 flex gap-2 border-t border-rule pt-3">
+          {patients.length > limit && (
+            <button
+              ref={moreButton}
+              type="button"
+              className={`${BTN} flex-1`}
+              aria-controls="patient-list"
+              aria-expanded={limit > 12}
+              onClick={() => setLimit(limit + 12)}
+            >
+              Show more patients
+            </button>
+          )}
+          {limit > 12 && (
+            <button
+              type="button"
+              className={`${BTN} flex-1`}
+              aria-controls="patient-list"
+              aria-expanded={true}
+              onClick={() => {
+                setLimit(12);
+                requestAnimationFrame(() => moreButton.current?.focus());
+              }}
+            >
+              Show fewer patients
+            </button>
+          )}
+        </div>
       )}
     </aside>
   );
