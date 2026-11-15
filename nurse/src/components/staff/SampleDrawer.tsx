@@ -32,8 +32,14 @@ export function SampleDrawer({
   const dialogRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const closeFn = useRef(onClose);
-  closeFn.current = onClose;
+  const dirtyNote = useRef(false);
+  function requestClose() {
+    if (dirtyNote.current && !window.confirm("Discard the unsaved call note?"))
+      return;
+    onClose();
+  }
+  const closeFn = useRef(requestClose);
+  closeFn.current = requestClose;
   const p = row.s.person;
   useEffect(() => {
     // A recorded result or booking can remove the focused action button.
@@ -80,7 +86,7 @@ export function SampleDrawer({
     <div className="fixed inset-0 z-40 flex justify-end">
       <div
         className="absolute inset-0 hidden bg-ink/30 md:block"
-        onClick={onClose}
+        onClick={requestClose}
         aria-hidden
       />
       <div
@@ -103,7 +109,7 @@ export function SampleDrawer({
           <button
             ref={closeRef}
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             aria-label="Close"
             className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-rule hover:bg-brand-soft"
           >
@@ -169,6 +175,9 @@ export function SampleDrawer({
             now={now}
             busy={busy}
             act={act}
+            onDraftChange={(dirty) => {
+              dirtyNote.current = dirty;
+            }}
           />
 
           <h3 className="mt-6 border-t border-rule pt-4 text-sm font-semibold">
@@ -185,7 +194,7 @@ export function SampleDrawer({
                   <span className="block font-medium">
                     {EVENT_LABEL[e.type]}
                   </span>
-                  <span className="block text-xs text-muted">
+                  <span className="block whitespace-pre-wrap break-words text-xs text-muted">
                     {timeFmt.format(e.at)}
                     {e.slot ? ` · ${e.slot}` : ""}
                     {e.note ? ` · ${e.note}` : ""}
