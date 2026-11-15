@@ -135,6 +135,7 @@ async function poll(): Promise<void> {
     const res = await fetch(`${SYNC_URL}?since=${since}&seedAt=${server?.seedAt ?? ""}`, { cache: "no-store" });
     if (res.status === 404) {
       mode = "local";
+      notify();
       return;
     }
     if (!res.ok) return;
@@ -221,9 +222,16 @@ function subscribe(cb: () => void): () => void {
   };
 }
 
+/** The state is the shared one, or there is none to wait for: until then it is this browser's own seed. */
+function synced(): boolean {
+  return mode === "local" || server !== null;
+}
+
 export function useSamples(): {
   samples: Sample[];
   now: number;
+  /** False until the first answer from the shared log; the robot simulation waits for it. */
+  synced: boolean;
   /** `at` defaults to now; the robot simulation backdates a few events. */
   add(id: string, e: Omit<SampleEvent, "at"> & { at?: number }): void;
   reset(): void;
@@ -251,5 +259,5 @@ export function useSamples(): {
     });
   }, []);
 
-  return { samples, now, add, reset };
+  return { samples, now, synced: synced(), add, reset };
 }

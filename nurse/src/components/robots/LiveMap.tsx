@@ -2,7 +2,7 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   MapContainer,
   Marker,
@@ -16,8 +16,8 @@ import { STAGE_LABEL, type Row } from "@/components/staff/boardShared";
 import {
   AREAS,
   HUBS,
-  homeOf,
   pickupCode,
+  placeOf,
   positionOf,
   splitLine,
   type LatLng,
@@ -60,15 +60,89 @@ function colourOf(v: RobotView): string {
   return COLOUR[s.kind];
 }
 
+// Kept between renders: a new icon makes Leaflet rebuild the marker's element.
+const robotIcons = new Map<string, L.DivIcon>();
+
 function robotIcon(v: RobotView, selected: boolean): L.DivIcon {
   const idle = v.status.kind === "idle";
   const size = idle ? 18 : 26;
-  return L.divIcon({
+  const key = `${v.robot.id}|${idle}|${selected}|${colourOf(v)}`;
+  const known = robotIcons.get(key);
+  if (known) return known;
+  const icon = L.divIcon({
     className: "robot-pin",
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
     html: `<span class="robot-dot${idle ? " is-idle" : ""}${selected ? " is-selected" : ""}" style="background:${colourOf(v)}">${v.robot.id.slice(1)}</span>`,
   });
+  robotIcons.set(key, icon);
+  return icon;
+}
+
+/** How often the robots move on the map between the board's one-second ticks. */
+const FRAME_MS = 100;
+
+/** The clock for drawing robots: the board's `now`, advanced every FRAME_MS until the next tick. */
+function useFrameClock(now: number): number {
+  const [frame, setFrame] = useState(now);
+  useEffect(() => {
+    setFrame(now);
+    const started = Date.now();
+    const t = setInterval(() => setFrame(now + Math.min(1_000, Date.now() - started)), FRAME_MS);
+    return () => clearInterval(t);
+  }, [now]);
+  return Math.max(frame, now);
+}
+
+/** The robot's status `ms` later, as long as it stays on the same leg: the progress moves on, capped at the end. */
+function later(v: RobotView, ms: number): RobotView {
+  const s = v.status;
+  if (ms <= 0 || (s.kind !== "outbound" && s.kind !== "returning")) return v;
+  const legMs = s.kind === "outbound" ? s.trip.travelMs : s.trip.returnMs;
+  return { ...v, status: { ...s, progress: Math.min(1, s.progress + ms / legMs) } };
+}
+
+/**
+ * The robots, drawn on their own clock so they glide instead of hopping once a second.
+ * Only these markers re-render that often; routes and homes follow the board's ticks.
+ */
+function RobotMarkers({
+  fleet,
+  now,
+  selected,
+  onSelect,
+  lineOf,
+}: {
+  fleet: RobotView[];
+  now: number;
+  selected: string | null;
+  onSelect: (robotId: string) => void;
+  lineOf: (v: RobotView) => LatLng[] | undefined;
+}) {
+  const frame = useFrameClock(now);
+  return (
+    <>
+      {fleet.map((v) => {
+        if (v.status.kind === "idle") return null;
+        const on = selected === v.robot.id;
+        return (
+          <Marker
+            key={v.robot.id}
+            position={positionOf(later(v, frame - now), lineOf(v), 0)}
+            icon={robotIcon(v, on)}
+            zIndexOffset={1000}
+            eventHandlers={{ click: () => onSelect(v.robot.id) }}
+            title={v.robot.name}
+          >
+            <Tooltip direction="top" offset={[0, -12]}>
+              {v.robot.name}, {statusText[v.status.kind]}:{" "}
+              {pickupCode(v.status.trip.sampleId)}
+            </Tooltip>
+          </Marker>
+        );
+      })}
+    </>
+  );
 }
 
 const hubIcon = L.divIcon({
@@ -132,6 +206,7 @@ function FitButton() {
  */
 export default function LiveMap({
   fleet,
+  now,
   ready,
   intake,
   routes,
@@ -151,6 +226,8 @@ export default function LiveMap({
   onSample: (id: string) => void;
   onHub: (id: string) => void;
   fleet: RobotView[];
+  /** The time the fleet was computed for. */
+  now: number;
   ready: Sample[];
   /** Samples waiting for a nurse, per hub id. */
   intake: Record<string, number>;
@@ -264,7 +341,7 @@ export default function LiveMap({
       {participants.map((row) => (
         <Marker
           key={`person-${row.s.id}`}
-          position={homeOf(row.s.person)}
+          position={placeOf(row.s)}
           title={`${pickupCode(row.s.id)} · ${STAGE_LABEL[row.stage]}`}
           icon={L.divIcon({
             className: "participant-pin",
@@ -284,7 +361,7 @@ export default function LiveMap({
       {ready.map((s) => (
         <Marker
           key={`ready-${s.id}`}
-          position={homeOf(s.person)}
+          position={placeOf(s)}
           title={`${pickupCode(s.id)} · waiting for a robot`}
           icon={L.divIcon({
             className: "participant-pin waiting-pin",
@@ -383,25 +460,7 @@ export default function LiveMap({
             );
           })}
 
-      {fleet.map((v) => {
-        if (v.status.kind === "idle") return null;
-        const on = selected === v.robot.id;
-        return (
-          <Marker
-            key={v.robot.id}
-            position={positionOf(v, lineOf(v), 0)}
-            icon={robotIcon(v, on)}
-            zIndexOffset={1000}
-            eventHandlers={{ click: () => onSelect(v.robot.id) }}
-            title={v.robot.name}
-          >
-            <Tooltip direction="top" offset={[0, -12]}>
-              {v.robot.name}, {statusText[v.status.kind]}:{" "}
-              {pickupCode(v.status.trip.sampleId)}
-            </Tooltip>
-          </Marker>
-        );
-      })}
+      <RobotMarkers fleet={fleet} now={now} selected={selected} onSelect={onSelect} lineOf={lineOf} />
     </MapContainer>
   );
 }

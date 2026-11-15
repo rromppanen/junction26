@@ -117,7 +117,7 @@ function has(s: Sample, type: EventType): boolean {
 /**
  * When the robot for this booking sets off: when the phone sent it (robotDispatched), otherwise the
  * start of the booked window if it lies ahead, otherwise the booking itself (as soon as possible,
- * and every simulated household).
+ * every simulated household).
  */
 export function departureOf(s: Sample, booking: SampleEvent): number {
   const later = s.events.filter((e) => e !== booking && e.at >= booking.at);
@@ -126,6 +126,9 @@ export function departureOf(s: Sample, booking: SampleEvent): number {
   if (Number.isFinite(sent)) return sent;
   // A later stop of a run waits until the robot is sent on from the previous door.
   if (booking.after) return Infinity;
+  // The phone books "now" and then looks for a free robot, which sets off when the phone sends it.
+  // Leaving at the booking would make the robot jump back to its start when that message arrives.
+  if (booking.route !== undefined && booking.slotAt === undefined) return Infinity;
   return Math.max(booking.at, booking.slotAt ?? booking.at);
 }
 
