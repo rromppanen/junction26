@@ -1,18 +1,6 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { SampleBoard } from "@/components/staff/SampleBoard";
-
-function Board() {
-  const embed = useSearchParams().get("embed") === "1";
-  return <SampleBoard embed={embed} />;
-}
-
+// next.config.ts preserves the original /staff redirect, including query parameters.
 export default function StaffPage() {
-  return (
-    <Suspense fallback={null}>
-      <Board />
-    </Suspense>
-  );
+  redirect("/nurse");
 }

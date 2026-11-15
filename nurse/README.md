@@ -1,79 +1,51 @@
-# Nurse board app
+# Nurse workspace
 
-The screening nurse's board as its own Next.js app. It shows every sample on one board and flags the stuck ones.
+The nurse side of farmagusta, our Junction 2026 screening demo. A full-height map is the main workspace; patient actions and filters open alongside it. Both `/nurse` and `/nurse/robots` open this workspace.
 
-It is served under the base path `/nurse`. The main app in `../web` forwards `/nurse/*` here, so in the browser both apps share one origin. This matters because the board and the phone app (`/kit`) sync between tabs through `localStorage` and `BroadcastChannel`, which work only within a single origin. Across devices, both poll the shared event log at `/api/samples`, served by the main app.
+## Run and check
 
-## Run it
+Use the Node version in `.nvmrc`, then:
 
 ```sh
 npm ci
 npm run dev          # http://localhost:3100/nurse
+npm run check        # lint, tests and production build, as in CI
 ```
 
-In a second terminal, start the main app: `cd ../web && npm run dev`. Then open `/nurse` on the main app's port. The board now updates live when you act in `/kit` in another tab.
+Start the main app in a second terminal (`cd ../web && npm ci && npm run dev`). Open `http://localhost:3000/nurse` to use both apps on one origin. `web/` forwards `/nurse/*` here; set its `NURSE_URL` when the nurse app runs elsewhere (default `http://localhost:3100`).
 
-If the nurse app runs elsewhere, set `NURSE_URL` for the web app, for example `NURSE_URL=https://nurse.example.com`. The default is `http://localhost:3100`.
+With both apps running, `npm run smoke -- http://localhost:3000` checks the nurse routes through the main app. Without an argument, it checks this app directly on port 3100.
 
-## Check
+## Demo workflow
 
-```sh
-npm run check        # lint, tests and build, as in CI
-npm run smoke -- http://localhost:3000   # loads /nurse through the main app
-```
+- Select a person, robot or hub on the map to inspect it and take action.
+- **Patients** opens a searchable queue, with people needing attention first. Open a patient to send a reminder, record a call, register an arrived sample or book a colonoscopy when available. The queue starts with 12 people and can show more or fewer.
+- **Filters** contains expandable groups for participants, labs and locations, map layers and screening stages. Selected labs and locations also limit the patient queue; the queue has its own search and attention filter.
+- When a complete robot run returns to its hub, its samples become ready for lab registration. A nurse can register them from the patient drawer or together from the hub.
+- **Filters → Demo settings** controls simulated households, speed for new trips (real time, 20× by default, or 60×) and reset. Reset clears recorded actions in both apps after confirmation.
 
-## Relation to web/
+The demo has 97 invented participants and 30 robots across six hubs in Helsinki, Espoo and Vantaa. Each robot can collect up to four samples on a run, with one compartment per sample. Destinations on the map use pickup codes; names are shown in the patient workspace. Robots, lab results and bookings are simulated.
 
-The board components (`src/components/staff/`) and the sample model and store (`src/lib/sample/`) are copies from `web/`. `web/` no longer serves its copy of the board (`/staff` redirects to `/nurse`), but its phone app uses the same sample model, so a fix to the shared logic goes into both places. Keep the storage key `lapi.demo.v4`, the channel name `lapi-demo` and `seed.ts` identical in both apps (the `lapi` prefix is the project's earlier name; renaming it would reset every open demo), or the live sync stops. Both apps seed the same storage, so whichever loads first would otherwise decide the demo data.
+## Code and shared state
 
-## Demo data
+| Where | Responsibility |
+| --- | --- |
+| `src/components/robots/RobotsView.tsx` | Map workspace, selection, filters, simulation and hub intake |
+| `src/components/robots/LiveMap.tsx` | Leaflet map, robot routes and markers |
+| `src/components/staff/` | Patient queue, drawer, actions and display helpers |
+| `src/lib/robots/` | Fleet assignment, multi-stop runs, simulation and route cache |
+| `src/lib/sample/` | Sample events, stage and flag rules, seed data and sync |
 
-97 invented people in Helsinki, Espoo and Vantaa (`src/lib/sample/seed.ts`). About half speak Finnish or Swedish; the other half have a minority mother tongue, for example Somali, Arabic, Russian, Estonian, Ukrainian, Kurdish, Persian, Dari, Albanian or Vietnamese, because screening reaches minority-language speakers least. The optional fields `area` (neighbourhood) and `homeLanguage` place each person on the map and show their language on the board.
+The sample model, store, seed and sync code have counterparts in `../web/src/lib/sample/`. Keep their event and storage contracts compatible. Both apps use `farmagusta.demo.v4` in `localStorage`, the `farmagusta-demo` BroadcastChannel and the same seed data. Same-origin tabs sync locally; across devices, both apps poll the event log at `/api/samples`, served by `web/`.
 
-## Pages
+The two apps deliberately differ at lab intake: the phone demo registers its own sample at the lab immediately after handover. Nurse-simulated samples wait until their robot run returns, then require nurse registration. Preserve this distinction when changing shared logic. The tests cover cross-app event labels and the nurse workflow.
 
-- `/nurse`: the board, with every sample and the stuck ones flagged.
-- `/nurse/robots`: the pickup robots on a real map of the capital region. Each robot shows where it is, the street route it follows, and whether it is on the way, at the door, waiting too long or returning. The page also lists samples taken with no pickup booked, and recent trips.
+## Maps and timing
 
-The samples hold no robots. `src/lib/robots/fleet.ts` builds the fleet from the sample events: 30 robots across six hubs. Each pickup booking goes to a free robot from the person's hub, so every tab shows the same assignment.
+The map uses Esri's World Light Gray Canvas tiles and the public FOSSGIS OSRM walking router (`routing.openstreetmap.de`), with OpenStreetMap route data. Routes are cached in `localStorage`. Later stops in a multi-stop run, and routes unavailable from the router, use drawn curves. These services require network access; choose suitable provider terms before a production deployment.
 
-**Simulate other households** (on by default, robots page only): while the page is open, one robot leaves every hub at once when the map is quiet, then the next waiting sample gets a robot every 3 seconds when its hub has one free, so about 15 robots are out at a time. The 60 waiting samples last about three minutes; **Reset demo** starts again. Each household hands its sample over a few seconds after the robot arrives. Four households (Kamal T. in Malmi among them) take 75 seconds, so the "waiting too long" flag appears. The simulation never touches the phone user (`me`). It writes ordinary events, so the board shows the same progress. **Reset demo** brings the waiting samples back.
+Robot travel times use an approximate 6 km/h speed and the selected simulation multiplier. The phone user's own trip keeps its fixed 20-second timing so the phone demo stays short.
 
-## Map services
+## Styling
 
-The map loads from the internet when the page opens. Only map tile coordinates and the coordinates of the invented homes and hubs leave the browser.
-
-- Base map: Esri's World Light Gray Canvas, no API key. (CARTO now requires a key, and OpenStreetMap's own tile servers blocked our requests.)
-- Street routes: the FOSSGIS OSRM walking router at routing.openstreetmap.de, using OpenStreetMap data. Routes are cached in `localStorage`. If the router is unreachable, the map draws a curve instead.
-
-Both services are fine for a demo, but not for production volume. Before a real deployment, pick a provider with terms that fit.
-
-## Samples waiting for a nurse
-
-When a robot is back at its hub with a sample, the sample gets the flag "Sample has arrived: collect it from the robot and register it at the lab". The board shows the flag and a **Collected and registered at the lab** button. The robots page lists the waiting samples per hub, with one button per hub, and turns the hub orange on the map.
-
-This is where `nurse/` differs from `web/` on purpose: in `web/`, putting the sample in the robot registers it at the lab at once (`store.ts`). So the phone user's own sample skips this step, and the flag exists only in the nurse app's copy of `model.ts`.
-
-The map zooms with the scroll wheel, a pinch or the + and − buttons. **Whole region** zooms back out.
-
-## Robot speed
-
-Simulated robots drive at about 6 km/h, a typical speed for sidewalk delivery robots, so a trip takes 5 to 40 minutes each way depending on the distance. Each booking stores its own driving time (`travelMs` on the `pickupBooked` event), and the board's "on the way" and "at the door" stages use it. The **Speed** selector on the robots page runs new trips 10 or 60 times faster for a demo.
-
-When the page opens on a quiet map, up to three robots per hub are booked as if they had left earlier, so the fleet is already part-way to its homes. After that, one new booking is made every 3 minutes in real time (every 3 seconds at 60×).
-
-The phone user's own robot still takes the fixed 20 seconds from `web/`, so the phone demo stays short. The earlier figures in this file (a robot every 3 seconds, about three minutes of samples) describe the 60× speed.
-
-## Anonymous destinations and demo speed
-
-The robots page and map never show a person's name. Each pickup has a code such as "Pickup 4821" (`pickupCode` in `fleet.ts`), and the page shows the code, the neighbourhood and the language. The board shows the same code next to the person for samples in the pickup steps, so a nurse can match them.
-
-The **Speed** selector now offers Real time, Demo speed (20× faster, the default) and 60×. At demo speed a trip takes under two minutes each way and a new booking is made every 9 seconds.
-
-## Look
-
-The nurse app uses the same HUS styling as the user app in `web/`: `globals.css` is a copy of `web/src/app/globals.css` (plus the map rules at the end), with Open Sans for text and Poppins for headings. The robots map follows the kit's tracking map: the road still to drive is brand blue with a white outline, the part behind is grey dots, and the destination is a house marker. When the theme changes in `web/`, copy the stylesheet again.
-
-## Reminders
-
-On the participant list, a "No sample after N days" flag carries a second tag: **No reminder yet** (orange) or **Reminder sent N d ago** (grey). Flagged people nobody has reminded sort first.
+The app has its own `src/app/globals.css`, including map and workspace rules. It shares the phone app's Open Sans and Poppins typography and brand colours; the stylesheets serve different layouts and should be edited independently.
