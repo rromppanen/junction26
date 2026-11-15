@@ -1,16 +1,24 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  AlertTriangle,
-  ArrowUpRight,
-  Search,
-  Stethoscope,
-  Users,
-  X,
-} from "lucide-react";
+import { ChevronRight, Search, X } from "lucide-react";
 import { BTN, STAGE_LABEL, type Row } from "./boardShared";
 import { pickupCode } from "@/lib/robots/fleet";
+
+function patientNote(row: Row): string | null {
+  const flag = row.flags[0];
+  if (!flag) return null;
+  switch (flag.kind) {
+    case "noSample":
+      return `No sample · ${flag.days ?? 0} days since invitation`;
+    case "awaitingIntake":
+      return "Ready for lab registration";
+    case "positiveNoBooking":
+      return "Colonoscopy not booked";
+    case "robotWaiting":
+      return "Pickup delayed";
+  }
+}
 
 /** A focused patient queue alongside the map; actions open in the shared drawer. */
 export function NursePatients({
@@ -57,28 +65,18 @@ export function NursePatients({
       aria-label="Nurse patient workspace"
       className="workspace-panel"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand">
-            <Stethoscope size={16} aria-hidden />
-            Nurse workspace
-          </div>
-          <h2 className="text-xl font-semibold">Patients</h2>
-        </div>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-base font-semibold">Patients</h2>
         <button
           type="button"
-          className={BTN}
+          className="inline-flex size-11 items-center justify-center text-muted hover:bg-paper"
           aria-label="Close patients"
           onClick={onClose}
         >
-          <X size={16} aria-hidden />
+          <X size={17} aria-hidden />
         </button>
       </div>
-      <p className="mt-2 text-xs text-muted">
-        Review a patient to send a reminder, record a call or update their
-        screening.
-      </p>
-      <label className="relative mt-4 block">
+      <label className="relative mt-2 block">
         <span className="sr-only">Search patients</span>
         <Search
           size={16}
@@ -93,10 +91,13 @@ export function NursePatients({
             setLimit(12);
           }}
           placeholder="Name, area or pickup code"
-          className="w-full rounded-lg border border-rule bg-paper py-2 pr-3 pl-9 text-sm"
+          className="w-full rounded border border-rule bg-white py-2 pr-3 pl-9 text-sm"
         />
       </label>
-      <div className="my-4 flex gap-2" aria-label="Patient queue filters">
+      <div
+        className="mt-4 flex border-b border-rule"
+        aria-label="Patient queue filters"
+      >
         <button
           type="button"
           aria-pressed={!attention}
@@ -106,8 +107,7 @@ export function NursePatients({
             setLimit(12);
           }}
         >
-          <Users size={14} aria-hidden />
-          All {rows.length}
+          All patients <span className="queue-count">{rows.length}</span>
         </button>
         <button
           type="button"
@@ -118,12 +118,15 @@ export function NursePatients({
             setLimit(12);
           }}
         >
-          <AlertTriangle size={14} aria-hidden />
-          Attention {flagged}
+          Needs attention <span className="queue-count">{flagged}</span>
         </button>
       </div>
-      <p className="mb-2 text-xs text-muted" aria-live="polite">
-        {patients.length} patients · selected locations
+      <p
+        className={query ? "mt-3 text-xs text-muted" : "sr-only"}
+        aria-live="polite"
+      >
+        {patients.length} {patients.length === 1 ? "patient" : "patients"}
+        {query ? " found" : " in this queue"}
       </p>
       <ul aria-label="Patients" className="divide-y divide-rule">
         {patients.slice(0, limit).map((row) => (
@@ -131,38 +134,35 @@ export function NursePatients({
             <button
               type="button"
               aria-haspopup="dialog"
-              className="group flex w-full items-center gap-3 py-3 text-left"
+              className="patient-row"
               onClick={() => onSelect(row.s.id)}
             >
-              <span
-                className={`flex size-9 shrink-0 items-center justify-center rounded-full ${row.flags.length ? "bg-behind-soft text-behind" : "bg-brand-soft text-brand"}`}
-              >
-                {row.flags.length ? (
-                  <AlertTriangle size={16} aria-hidden />
-                ) : (
-                  <Users size={16} aria-hidden />
-                )}
-              </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold group-hover:text-brand">
-                  {row.s.person.name}
-                  <span className="ml-1 font-normal text-muted">
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className="text-sm font-medium">
+                    {row.s.person.name}
+                  </span>
+                  <span className="shrink-0 text-xs text-muted">
+                    <span className="sr-only">Age </span>
                     {row.s.person.age}
                   </span>
                 </span>
-                <span className="block truncate text-xs text-muted">
+                <span className="mt-0.5 block text-xs text-muted">
                   {row.s.person.area || row.s.person.municipality} ·{" "}
                   {STAGE_LABEL[row.stage]}
                 </span>
-                {row.flags[0] && (
-                  <span className="mt-1 block text-xs text-behind">
-                    {row.flags[0].label}
+                {patientNote(row) && (
+                  <span
+                    className="mt-1 block text-xs text-behind"
+                    title={row.flags[0].label}
+                  >
+                    {patientNote(row)}
                   </span>
                 )}
               </span>
-              <ArrowUpRight
-                size={16}
-                className="shrink-0 text-brand"
+              <ChevronRight
+                size={14}
+                className="shrink-0 text-muted"
                 aria-hidden
               />
             </button>
@@ -170,7 +170,7 @@ export function NursePatients({
         ))}
       </ul>
       {patients.length === 0 && (
-        <p className="rounded-lg bg-paper p-4 text-sm text-muted">
+        <p className="py-6 text-sm text-muted">
           No patients match. Try another name, queue or location.
         </p>
       )}
